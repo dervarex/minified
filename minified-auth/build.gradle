@@ -1,2 +1,36 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+}
+
+group = 'com.dervarex.minified.auth'
+version = '1.0.0'
+
 description = 'Authentication utilities'
 
+repositories {
+    mavenCentral()
+
+    maven {
+        url = 'https://repo.opencollab.dev/main/'
+    }
+}
+
+dependencies {
+    implementation 'net.raphimc:MinecraftAuth:4.1.2'
+    api "net.lenni0451.commons:httpclient:1.9.2"
+    api "net.lenni0451.commons:gson:1.9.2"
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+
+    withSourcesJar()
+    withJavadocJar()
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}

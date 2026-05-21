@@ -1,2 +1,21 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+}
+
+group = 'com.dervarex.minified.java'
+
 description = 'Java platform utilities'
 
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+
+    withSourcesJar()
+    withJavadocJar()
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
