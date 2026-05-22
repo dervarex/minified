@@ -11,15 +11,15 @@ import java.util.StringJoiner;
  * Throw this when an operation must be terminated intentionally (user cancel,
  * precondition failed, safety stop) rather than due to an unexpected bug.
  */
-public class StopException extends Exception {
+public class StopException extends RuntimeException {
 
     public enum Severity { INFO, WARNING, ERROR, FATAL }
 
     private final long timestampEpochMillis = System.currentTimeMillis();
-    private final String reason;        // short human readable reason
-    private final String code;          // machine readable code (e.g. "USER_CANCEL", "PRECONDITION_FAILED")
+    private final String reason; // short human readable reason
+    private final String code; // machine readable code (e.g. "USER_CANCEL", "PRECONDITION_FAILED")
     private final Severity severity;
-    private final boolean recoverable;  // true if caller may retry later
+    private final boolean recoverable; // true if caller may retry later
     private final Map<String, String> metadata; // extra context (operation, ids, etc.)
 
     private StopException(Builder b) {
@@ -51,10 +51,10 @@ public class StopException extends Exception {
 
     public String toUserFriendlyMessage() {
         StringBuilder sb = new StringBuilder();
-        sb.append("Vorgang gestoppt: ").append(reason).append('\n');
+        sb.append("Operation stopped: ").append(reason).append('\n');
         if (!code.isBlank()) sb.append("Code: ").append(code).append('\n');
-        sb.append("Schweregrad: ").append(severity).append(", Wiederholbar: ").append(recoverable).append('\n');
-        sb.append("Zeit: ").append(getTimestampInstant()).append('\n');
+        sb.append("Severity: ").append(severity).append(", Retryable: ").append(recoverable).append('\n');
+        sb.append("Time: ").append(getTimestampInstant()).append('\n');
         if (!metadata.isEmpty()) {
             sb.append("Details:\n");
             metadata.forEach((k,v) -> sb.append("  - ").append(k).append(": ").append(v).append('\n'));
@@ -116,3 +116,4 @@ public class StopException extends Exception {
     }
 }
 
+// todo move into minified-utils

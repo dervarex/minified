@@ -5,15 +5,15 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Erweiterte Exception für fehlende Internet‑/Netzwerkverbindung.
- * Liefert strukturierte Diagnosedaten (DNS, TCP, HTTP Tests), Vorschläge für den Nutzer
- * und kann als JSON serialisiert werden.
+ * Extended Exception for missing network connection.
+ * <p>
+ * Gives Diagnostics (DNS, TCP, HTTP Tests), user suggestions and can be serialized as JSON.
  */
 public class NoConnectionException extends Exception {
 
     private final long timestampEpochMillis = System.currentTimeMillis();
     private final String actionContext;
-    private final boolean dnsResolved;
+    private final Boolean dnsResolved;
     private final boolean tcpAnyReachable;
     private final boolean httpAnyReachable;
     private final Map<String, ProbeResult> probeResults;
@@ -55,14 +55,14 @@ public class NoConnectionException extends Exception {
     public String toUserFriendlyMessage() {
         if (cachedMessage != null) return cachedMessage;
         StringBuilder sb = new StringBuilder();
-        sb.append("Internet / Netzwerk Problem für Aktion: ").append(actionContext).append('\n');
-        sb.append("OS: ").append(activeOs).append(" | Zeit: ").append(getTimestampInstant()).append('\n');
-        sb.append("DNS ok: ").append(dnsResolved).append(", TCP erreichbar: ").append(tcpAnyReachable)
-          .append(", HTTP erreichbar: ").append(httpAnyReachable).append('\n');
+        sb.append("Network Problem for Action: ").append(actionContext).append('\n');
+        sb.append("OS: ").append(activeOs).append(" - Time: ").append(getTimestampInstant()).append('\n');
+        sb.append("DNS ok: ").append(dnsResolved).append(", TCP reachable: ").append(tcpAnyReachable)
+          .append(", HTTP reachable: ").append(httpAnyReachable).append('\n');
         sb.append("Probes:\n");
         probeResults.forEach((k,v) -> sb.append("  - ").append(k).append(": ").append(v).append('\n'));
         if (!suggestions.isEmpty()) {
-            sb.append("Vorschläge:\n");
+            sb.append("Suggestions:\n");
             suggestions.forEach(s -> sb.append("  * ").append(s).append('\n'));
         }
         cachedMessage = sb.toString();
@@ -139,11 +139,11 @@ public class NoConnectionException extends Exception {
         public Builder cause(Throwable t) { this.rootCause = t; return this; }
         public NoConnectionException build() { if (suggestions.isEmpty()) autoPopulateSuggestions(); return new NoConnectionException(this); }
         private void autoPopulateSuggestions() {
-            if (!dnsResolved) suggestions.add("Prüfe DNS / Router neu starten");
-            if (!tcpAnyReachable) suggestions.add("Firewall / VPN / Proxy prüfen");
-            if (!httpAnyReachable && tcpAnyReachable) suggestions.add("Möglicher Captive Portal (Hotel WLAN?) Browser öffnen");
-            suggestions.add("Internetverbindung (LAN/WLAN) neu verbinden");
-            suggestions.add("Falls weiterhin Probleme: Offline Modus / später erneut versuchen");
+            if (!dnsResolved) suggestions.add("Check DNS and Router");
+            if (!tcpAnyReachable) suggestions.add("Check your firewall (and vpn if present)");
+            if (!httpAnyReachable && tcpAnyReachable) suggestions.add("You might be on a captive portal(hotels often have that)");
+            suggestions.add("Disconnect from the wifi and reconnect");
+            suggestions.add("Try again later, the problem might be on the server side");
         }
     }
 
@@ -161,3 +161,4 @@ public class NoConnectionException extends Exception {
         }
     }
 }
+// todo move into minified-utils

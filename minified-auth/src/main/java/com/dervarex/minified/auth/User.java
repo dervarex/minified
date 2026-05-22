@@ -2,14 +2,14 @@ package com.dervarex.minified.auth;
 
 import com.google.gson.JsonObject;
 
+/**
+ * Represents a logged-in user
+ * {@link #uuid} is the unique identifier for the user (Mojang UUID)
+ * {@link #username} is the display name of the user
+ * {@link #accessToken} is the token used for authenticated requests
+ * {@link #serializedSession} is the full session data as returned by the authentication server
+ */
 public class User {
-    /**
-     * Represents a logged-in user
-     * {@link #uuid} is the unique identifier for the user (Mojang UUID)
-     * {@link #username} is the display name of the user
-     * {@link #accessToken} is the token used for authenticated requests
-     * {@link #serializedSession} is the full session data as returned by the authentication server
-     */
     private final String uuid;
     private final String username;
     private final String accessToken;

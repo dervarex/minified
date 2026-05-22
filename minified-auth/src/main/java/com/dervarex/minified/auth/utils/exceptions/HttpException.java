@@ -10,6 +10,7 @@ import java.util.StringJoiner;
 
 /**
  * Rich HTTP exception carrying status, method, URL and a compact response snapshot.
+ * <p>
  * Use this when an HTTP call fails or returns a non-success code.
  */
 public class HttpException extends Exception {
@@ -69,16 +70,16 @@ public class HttpException extends Exception {
 
     public String toUserFriendlyMessage() {
         StringBuilder sb = new StringBuilder();
-        sb.append("HTTP Fehler ").append(statusCode);
+        sb.append("HTTP error ").append(statusCode);
         if (!statusMessage.isBlank()) sb.append(" (").append(statusMessage).append(")");
-        sb.append(" bei ").append(method).append(" ").append(url).append('\n');
+        sb.append(" at ").append(method).append(" ").append(url).append('\n');
         if (!requestId.isBlank()) sb.append("Request-Id: ").append(requestId).append('\n');
-        String retry = transientFailure ? " (vorübergehend, später erneut versuchen)" : "";
-        sb.append("Zeit: ").append(getTimestampInstant()).append(retry).append('\n');
+        String retry = transientFailure ? " (temporary, please try again later)" : "";
+        sb.append("Time: ").append(getTimestampInstant()).append(retry).append('\n');
         String ct = responseHeaders.getOrDefault("content-type", responseHeaders.getOrDefault("Content-Type", ""));
         if (!ct.isBlank()) sb.append("Content-Type: ").append(ct).append('\n');
         String body = responseSnippet(600);
-        if (!body.isBlank()) sb.append("Antwort: ").append(body);
+        if (!body.isBlank()) sb.append("Response: ").append(body);
         return sb.toString();
     }
 
@@ -135,3 +136,4 @@ public class HttpException extends Exception {
     }
 }
 
+// todo move into minified-utils

@@ -19,3 +19,5 @@ Publish to Maven Local with:
 
 Then consume with groupId `com.dervarex.minified` and the module artifactId.
 
+todo:
+license stuff!
