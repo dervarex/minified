@@ -1,8 +1,7 @@
 package com.dervarex.minified.auth;
 
-
-import com.dervarex.minified.auth.utils.exceptions.NoConnectionException;
-import com.dervarex.minified.auth.utils.network.NetworkUtil;
+import com.dervarex.minified.utils.exceptions.NoConnectionException;
+import com.dervarex.minified.utils.network.NetworkUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import net.lenni0451.commons.httpclient.HttpClient;
@@ -12,7 +11,6 @@ import net.raphimc.minecraftauth.step.java.session.StepFullJavaSession;
 import net.raphimc.minecraftauth.step.msa.StepMsaDeviceCode;
 
 import javax.crypto.SecretKey;
-import java.net.*; // diagnostics
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;

@@ -25,3 +25,32 @@ public final class LaunchUtils {
     }
 }
 
+// https://launchermeta.mojang.com/mc/game/version_manifest.json
+
+/*
+ * File file
+ * -> convert to jsonfile
+ * jsonfile. and here you have the objects, arrays and stuff
+ * example:
+ *
+{
+  "id": 10245,
+  "username": "coder_99",
+  "email": "coder_99@example.com",
+  "is_active": true,
+  "skills": ["Python", "JavaScript", "JSON"],
+  "address": {
+    "city": "Frankfurt",
+    "country": "Germany"
+  },
+  "subscription_tier": null
+}
+ * JsonFile jsonfile = new JsonFile(file)
+ * file.id / file.getId
+ * file.address.city / file.getAddress().getCity()
+ * (only use one system, eighter with getters or directly, whatever works better for you
+ * support full json spec, including nested objects, arrays, nulls, booleans, numbers and strings
+ *
+ *
+ *
+ */

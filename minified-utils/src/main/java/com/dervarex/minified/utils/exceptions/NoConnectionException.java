@@ -1,4 +1,4 @@
-package com.dervarex.minified.auth.utils.exceptions;
+package com.dervarex.minified.utils.exceptions;
 
 import java.time.Instant;
 import java.util.*;

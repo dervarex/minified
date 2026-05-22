@@ -1,13 +1,24 @@
-package com.dervarex.minified.auth.utils.network;
+package com.dervarex.minified.utils.network;
 
-import com.dervarex.minified.auth.utils.exceptions.NoConnectionException;
+import com.dervarex.minified.utils.exceptions.NoConnectionException;
 
 import java.io.IOException;
 import java.net.*;
 
 public class NetworkUtil {
     /**
-     * Not a part of the public api, but you may still use it
+     * Ensures that the user has a working internet connection
+     * <p>
+     * Example usage:
+     * <pre>{@code
+     * try {
+     *     NetworkUtil.ensureOnline("Login");
+     *     // proceed with network operation
+     * } catch (NoConnectionException e) {
+     *     // show user-friendly message
+     *     System.out.println("You do not have a network connection");
+     * }
+     * }</pre>
      * @param action a short description of the action that requires connectivity, e.g. "Login"
      * @throws NoConnectionException if there is no connection
      */

@@ -1,12 +1,8 @@
-package com.dervarex.minified.auth.utils.exceptions;
+package com.dervarex.minified.utils.exceptions;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.StringJoiner;
+import java.util.*;
 
 /**
  * Rich HTTP exception carrying status, method, URL and a compact response snapshot.
