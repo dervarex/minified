@@ -8,7 +8,7 @@ import java.security.MessageDigest;
 public class Hasher {
     private static final char[] HEX = "0123456789abcdef".toCharArray();
 
-    public String sha1(Path path) throws Exception {
+    public static String sha1(Path path) throws Exception {
 
         MessageDigest digest = MessageDigest.getInstance("SHA-1");
 

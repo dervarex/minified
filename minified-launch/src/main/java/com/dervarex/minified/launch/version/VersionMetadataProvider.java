@@ -7,6 +7,7 @@ import com.dervarex.minified.utils.json.JsonValue;
 
 import java.io.IOException;
 
+@SuppressWarnings("unused")
 public final class VersionMetadataProvider {
     private VersionMetadataProvider() {
     }

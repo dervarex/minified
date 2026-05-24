@@ -30,4 +30,5 @@ tasks.withType(JavaCompile).configureEach {
 }
 dependencies {
     implementation 'com.dervarex.minified.utils:minified-utils:1.0.0' // currently local only - todo: publish to maven central
+    compileOnly 'org.jetbrains:annotations:24.1.0'
 }

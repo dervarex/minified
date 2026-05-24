@@ -8,6 +8,7 @@ import com.dervarex.minified.utils.json.JsonValue;
 
 import java.io.IOException;
 
+@SuppressWarnings("unused")
 public final class VersionManifestClient {
     private VersionManifestClient() {
     }

@@ -1,6 +1,6 @@
 package com.dervarex.minified.launch;
 
-import com.dervarex.minified.launch.libraries.LibraryDownloader;
+import com.dervarex.minified.launch.download.libraries.LibraryDownloader;
 
 public class LibraryDownloaderTest {
     public static void main(String[] args) {
