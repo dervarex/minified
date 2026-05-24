@@ -20,10 +20,11 @@ repositories {
 dependencies {
     implementation 'net.raphimc:MinecraftAuth:4.1.2'
 
-    api "net.lenni0451.commons:httpclient:1.9.2"
+    api "net.lenni0451.commons:httpclient:1.7.1"
     api "net.lenni0451.commons:gson:1.9.2"
 
     implementation 'com.dervarex.minified.utils:minified-utils:1.0.0' // currently local only - todo: publish to maven central
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
 }
 
 java {
@@ -37,4 +38,12 @@ java {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
+}
+
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+    testLogging {
+        showStandardStreams = true
+        events "passed", "failed", "skipped", "standardOut", "standardError"
+    }
 }

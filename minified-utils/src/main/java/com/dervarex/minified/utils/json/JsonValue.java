@@ -14,6 +14,7 @@ public interface JsonValue {
     default JsonArray asArray() { throw new IllegalStateException("Not a JSON array"); }
     default String asString() { throw new IllegalStateException("Not a JSON string"); }
     default java.math.BigDecimal asNumber() { throw new IllegalStateException("Not a JSON number"); }
+    default int asInt() { throw new IllegalStateException("Not a JSON int"); }
     default boolean asBoolean() { throw new IllegalStateException("Not a JSON boolean"); }
 
     String toJson();

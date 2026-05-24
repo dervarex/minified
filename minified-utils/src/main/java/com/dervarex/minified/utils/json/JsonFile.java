@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public final class JsonFile {
     private final Path path;
@@ -18,6 +19,12 @@ public final class JsonFile {
         this.path = path;
         String content = Files.readString(path, StandardCharsets.UTF_8);
         this.root = JsonParser.parse(content);
+    }
+
+    public JsonFile(String content) {
+        this.path = null;
+        String payload = content == null ? "" : content;
+        this.root = JsonParser.parse(payload);
     }
 
     public JsonValue getRoot() { return root; }
@@ -46,4 +53,3 @@ public final class JsonFile {
 
     public String toJson() { return root.toJson(); }
 }
-

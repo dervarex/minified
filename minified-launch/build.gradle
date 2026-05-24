@@ -7,6 +7,15 @@ group = 'com.dervarex.minified.launch'
 
 description = 'Launch/runtime utilities'
 
+repositories {
+    mavenCentral()
+    mavenLocal()
+
+    maven {
+        url = 'https://repo.opencollab.dev/main/'
+    }
+}
+
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
@@ -18,4 +27,7 @@ java {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
+}
+dependencies {
+    implementation 'com.dervarex.minified.utils:minified-utils:1.0.0' // currently local only - todo: publish to maven central
 }

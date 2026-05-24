@@ -3,8 +3,9 @@ package com.dervarex.minified.utils.json;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Iterator;
 
-public final class JsonArray implements JsonValue {
+public final class JsonArray implements JsonValue, Iterable<JsonValue> {
     private final List<JsonValue> values;
 
     public JsonArray(List<JsonValue> values) {
@@ -63,5 +64,9 @@ public final class JsonArray implements JsonValue {
 
     @Override
     public String toString() { return toJson(); }
-}
 
+    @Override
+    public Iterator<JsonValue> iterator() {
+        return values.iterator();
+    }
+}

@@ -18,6 +18,9 @@ public final class JsonNumber implements JsonValue {
     public BigDecimal asNumber() { return value; }
 
     @Override
+    public int asInt() { return value.intValue(); }
+
+    @Override
     public String toJson() { return value.toPlainString(); }
 
     @Override
