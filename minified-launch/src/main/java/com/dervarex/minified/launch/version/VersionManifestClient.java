@@ -1,6 +1,5 @@
 package com.dervarex.minified.launch.version;
 
-import com.dervarex.minified.launch.ApiEndpoints;
 import com.dervarex.minified.utils.exceptions.HttpException;
 import com.dervarex.minified.utils.http.HttpUtil;
 import com.dervarex.minified.utils.json.JsonFile;

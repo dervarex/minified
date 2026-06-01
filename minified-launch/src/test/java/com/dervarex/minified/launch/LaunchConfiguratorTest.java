@@ -1,5 +1,6 @@
 package com.dervarex.minified.launch;
 
+import com.dervarex.minified.launch.launch.LaunchConfigurator;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

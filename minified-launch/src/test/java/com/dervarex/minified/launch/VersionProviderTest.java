@@ -1,5 +1,6 @@
 package com.dervarex.minified.launch;
 
+import com.dervarex.minified.launch.version.ApiEndpoints;
 import com.dervarex.minified.launch.version.VersionMetadataProvider;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;

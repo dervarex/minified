@@ -1,6 +1,6 @@
 package com.dervarex.minified.launch.download.assets;
 
-import com.dervarex.minified.launch.ApiEndpoints;
+import com.dervarex.minified.launch.version.ApiEndpoints;
 import com.dervarex.minified.launch.utils.DownloadHelper;
 import com.dervarex.minified.launch.version.VersionManifestClient;
 import com.dervarex.minified.utils.http.HttpUtil;

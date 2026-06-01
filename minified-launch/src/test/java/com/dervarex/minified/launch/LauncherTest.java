@@ -3,6 +3,9 @@ package com.dervarex.minified.launch;
 import com.dervarex.minified.auth.AuthManager;
 import com.dervarex.minified.auth.LoginState;
 import com.dervarex.minified.auth.User;
+import com.dervarex.minified.launch.launch.LaunchConfigurator;
+import com.dervarex.minified.launch.launch.Launcher;
+
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;

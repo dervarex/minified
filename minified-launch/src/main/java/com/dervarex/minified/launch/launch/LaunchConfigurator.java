@@ -1,4 +1,4 @@
-package com.dervarex.minified.launch;
+package com.dervarex.minified.launch.launch;
 
 import lombok.Getter;
 
