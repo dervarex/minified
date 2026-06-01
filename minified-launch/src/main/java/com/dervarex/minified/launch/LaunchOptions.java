@@ -1,8 +1,11 @@
 package com.dervarex.minified.launch;
 
+import lombok.Getter;
+
 import java.util.HashMap;
 import java.util.Map;
 
+@Getter
 @SuppressWarnings("unused")
 public final class LaunchOptions {
     private final Map<String, String> variables =
@@ -25,14 +28,6 @@ public final class LaunchOptions {
     ) {
         features.put(key, value);
         return this;
-    }
-
-    public Map<String, String> getVariables() {
-        return variables;
-    }
-
-    public Map<String, Boolean> getFeatures() {
-        return features;
     }
 
     public static LaunchOptions create() {

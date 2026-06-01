@@ -44,9 +44,9 @@ public class LibraryDownloader {
             NetworkUtil.ensureOnline("downloading libraries for version " + version);
             librariesDir.toFile().mkdirs();
 
-            JsonObject versionEntry = Objects.requireNonNull(VersionManifestClient
-                            .getVersionEntry(version))
-                    .asObject();
+            JsonObject versionEntry = Objects.requireNonNull
+                                      (VersionManifestClient.getVersionEntry(version))
+                                      .asObject();
 
             JsonFile versionJson = new JsonFile(
                     HttpUtil.get(versionEntry.get("url").asString())
@@ -148,22 +148,26 @@ public class LibraryDownloader {
         return allowed;
     }
 
-    private String getMinecraftOs() {
 
+
+    private String getMinecraftOs() {
         String os = System.getProperty("os.name").toLowerCase();
 
         if (os.contains("win")) {
             return "windows";
         }
 
-        if (os.contains("mac")) {
+        if (os.contains("mac") || os.contains("darwin")) {
             return "osx";
         }
 
-        if (os.contains("linux")) {
+        if (os.contains("linux")
+                //|| os.contains("bsd")
+                || os.contains("unix")) {
             return "linux";
         }
 
         return "unknown";
     }
+
 }

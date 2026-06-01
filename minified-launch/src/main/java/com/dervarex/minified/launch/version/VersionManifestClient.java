@@ -13,10 +13,21 @@ public final class VersionManifestClient {
     private VersionManifestClient() {
     }
 
+    /**
+     * @return the minecraft version manifest
+     * @throws HttpException if there is no working connection
+     * @throws IOException if there is an error reading the response
+     */
     public static JsonFile getManifest() throws HttpException, IOException {
         return new JsonFile(HttpUtil.get(ApiEndpoints.VersionManifest));
     }
 
+    /**
+     * @return all minecraft versions as an iterable of JSON values,
+     * each containing the version's metadata (id, type, url, time, releaseTime)
+     * @throws HttpException
+     * @throws IOException
+     */
     public static Iterable<JsonValue> getVersions() throws HttpException, IOException {
         return getManifest().get("versions").asArray();
     }

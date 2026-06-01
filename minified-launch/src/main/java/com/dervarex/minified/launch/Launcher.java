@@ -7,6 +7,7 @@ import com.dervarex.minified.launch.download.ClientDownloader;
 import com.dervarex.minified.launch.download.assets.AssetDownloader;
 import com.dervarex.minified.launch.download.libraries.LibraryDownloader;
 //import com.dervarex.minified.launch.patch.JarPatcher;
+import com.dervarex.minified.launch.utils.X11Helper;
 import com.dervarex.minified.launch.version.VersionMetadataProvider;
 import com.dervarex.minified.utils.exceptions.HttpException;
 import com.dervarex.minified.utils.exceptions.NoConnectionException;
@@ -34,8 +35,6 @@ public class Launcher {
      *                (for example: /path/to/client.jar)
      * @param librariesDirectory the directory containing libraries
      * @param assetsDirectory the directory containing assets
-     * @param minRam minimum RAM allocated to the JVM, in megabytes
-     * @param maxRam maximum RAM allocated to the JVM, in megabytes
      * @param launchConfig configuration used by the launcher when starting the game,
      *                     such as the number of download threads, launcher name,
      *                     and launcher version
@@ -54,8 +53,6 @@ public class Launcher {
             Path jarFile,
             Path librariesDirectory,
             Path assetsDirectory,
-            int minRam,
-            int maxRam,
             User user,
             LaunchConfigurator launchConfig) {
         try {
@@ -270,12 +267,12 @@ public class Launcher {
             List<String> jvmArgs =
                     JvmArgumentsParser.parse(
                             mergedJvm,
-                            minRam,
-                            maxRam
+                            launchConfig.getMinRam(),
+                            launchConfig.getMaxRam()
                     );
 
             // Apply variable substitution to JVM arguments
-            jvmArgs = substituteVariables(jvmArgs, options.getVariables());
+            jvmArgs = X11Helper.substituteVariables(jvmArgs, options.getVariables());
 
             JsonValue gameValue = arguments.get("game");
             JsonArray gameArray = (gameValue != null) ? gameValue.asArray() : new JsonArray();
@@ -307,29 +304,12 @@ public class Launcher {
             ProcessBuilder processBuilder =
                     new ProcessBuilder(command);
 
-            configureGraphicsEnvironment(processBuilder);
+            X11Helper.configureGraphicsEnvironment(processBuilder);
 
 
             System.out.println(
                     String.join(" ", command)
             );
-
-            /*
-            // Attempt to patch the JAR file
-            try {
-                File jarFileObj = jarFile.toFile();
-                File tempPatchedJar = new File(jarFileObj.getParent(), jarFileObj.getName() + ".patched");
-                JarPatcher.patch(jarFileObj, tempPatchedJar);
-                // If patching succeeded, replace original with patched version
-                if (tempPatchedJar.exists()) {
-                    jarFileObj.delete();
-                    tempPatchedJar.renameTo(jarFileObj);
-                }
-            } catch (Exception e) {
-                // Log but don't fail if patching fails - the JAR may still be usable
-                System.err.println("Warning: JAR patching failed, continuing without patch: " + e.getMessage());
-            }
-            */
 
             processBuilder.inheritIO();
             Process process = processBuilder.start();
@@ -348,113 +328,7 @@ public class Launcher {
         }
     }
 
-    // Normalizes the child JVM graphics environment so Linux launches can
-    // fall back to X11 when a local Xwayland display is available.
-    static void configureGraphicsEnvironment(
-            ProcessBuilder processBuilder
-    ) {
-        configureGraphicsEnvironment(
-                processBuilder,
-                Path.of("/tmp/.X11-unix")
-        );
-    }
 
-    // Normalizes the child JVM graphics environment using the supplied X11
-    // socket directory.
-    static void configureGraphicsEnvironment(
-            ProcessBuilder processBuilder,
-            Path x11SocketDirectory
-    ) {
-        Map<String, String> environment =
-                processBuilder.environment();
-
-        String display = environment.get("DISPLAY");
-
-        if (display != null && !display.isBlank()) {
-            return;
-        }
-
-        String resolvedDisplay = resolveDisplay(x11SocketDirectory);
-
-        if (resolvedDisplay == null) {
-            return;
-        }
-
-        environment.put("DISPLAY", resolvedDisplay);
-
-        String waylandDisplay = environment.get("WAYLAND_DISPLAY");
-
-        if (waylandDisplay != null && !waylandDisplay.isBlank()) {
-            environment.remove("WAYLAND_DISPLAY");
-            environment.put("XDG_SESSION_TYPE", "x11");
-        }
-
-        System.out.println(
-                "Detected X11 display " + resolvedDisplay +
-                        " for Minecraft"
-        );
-    }
-
-    // Attempts to infer an active X11 display from socket names such as X0,
-    // X1, and so on.
-    static String resolveDisplay(
-            Path x11SocketDirectory
-    ) {
-        if (x11SocketDirectory == null || !Files.isDirectory(x11SocketDirectory)) {
-            return null;
-        }
-
-        try (var sockets = Files.list(x11SocketDirectory)) {
-            return sockets
-                    .map(path -> parseDisplayNumber(
-                            path.getFileName().toString()
-                    ))
-                    .filter(Objects::nonNull)
-                    .sorted()
-                    .findFirst()
-                    .map(number -> ":" + number)
-                    .orElse(null);
-        } catch (IOException ignored) {
-            return null;
-        }
-    }
-
-    private static Integer parseDisplayNumber(
-            String socketName
-    ) {
-        if (!socketName.startsWith("X")) {
-            return null;
-        }
-
-        try {
-            return Integer.parseInt(socketName.substring(1));
-        } catch (Exception ignored) {
-            return null;
-        }
-    }
-
-    /**
-     * Replaces ${key} placeholders in the supplied arguments.
-     */
-    private static List<String> substituteVariables(
-            List<String> arguments,
-            Map<String, String> variables
-    ) {
-        ArrayList<String> result = new ArrayList<>();
-        for (String arg : arguments) {
-            String substituted = arg;
-            for (String key : variables.keySet()) {
-                String value = variables.get(key);
-                if (value == null) {
-                    value = "";
-                }
-                substituted = substituted.replace("${" + key + "}", value);
-            }
-            result.add(substituted);
-        }
-        return result;
-    }
 }
 // todo: launch in offline(cracked) mode
-// java <jvm args> <main class> <mc args>
-//todo: clean up + overloading
+// todo: clean up + overloading

@@ -136,8 +136,6 @@ public class LauncherTest {
                 Path.of("/home/dervarex/Development/tmp/jar/client.jar"),
                 Path.of("/home/dervarex/Development/tmp/libs/"),
                 Path.of("/home/dervarex/Development/tmp/assets/"),
-                2024,
-                4048,
                 user,
                 config
         );

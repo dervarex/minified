@@ -22,10 +22,23 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 /**
+ * Internal helper for downloading files and verifying SHA-1 checksums.
+ *
  * @hidden
  */
 @ApiStatus.Internal
 public class DownloadHelper {
+    /**
+     * Downloads a file asynchronously and verifies its SHA-1 checksum.
+     * Existing files with a matching checksum are skipped.
+     *
+     * @param url the download URL
+     * @param path target file path
+     * @param expectedSha1 expected SHA-1 checksum
+     * @param pool executor service used for the download task
+     * @param client HTTP client used for the request
+     * @return a Future representing the download task
+     */
     public static Future<?> download(String url, Path path, String expectedSha1, ExecutorService pool, HttpClient client) {
 
         return pool.submit(() -> {
@@ -38,7 +51,7 @@ public class DownloadHelper {
                     String existingSha1 = Hasher.sha1(path);
 
                     if (existingSha1.equalsIgnoreCase(expectedSha1)) {
-                        System.out.println("Already exists: " + path);
+                        //System.out.println("Already exists: " + path);
                         return;
                     }
 
@@ -102,7 +115,7 @@ public class DownloadHelper {
                         StandardCopyOption.REPLACE_EXISTING
                 );
 
-                System.out.println("Downloaded: " + path);
+                //System.out.println("Downloaded: " + path);
 
             } catch (Exception e) {
 
@@ -119,10 +132,13 @@ public class DownloadHelper {
         });
     }
     /**
-     * @hidden
-     * @param manifestUrl the manifest url(version url)
-     * @param type can be either server or client
-     * @return the HttpRequest
+     * Creates a download request from a version manifest.
+     *
+     * @param manifestUrl URL of the version manifest
+     * @param type download type, usually {@code client} or {@code server}
+     * @return the prepared download request
+     * @throws HttpException if the manifest request fails
+     * @throws IOException if the manifest cannot be read
      */
     public static HttpRequest prepareClientRequest(String manifestUrl, String type) throws HttpException, IOException {
         JsonFile json = new JsonFile(HttpUtil.get(manifestUrl));

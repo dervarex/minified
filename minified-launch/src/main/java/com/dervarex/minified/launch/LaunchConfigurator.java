@@ -9,6 +9,8 @@ public class LaunchConfigurator {
     private int resolutionWidth = 1920;
     private int resolutionHeight = 1080;
     private boolean customResolution = false;
+    private int minRam;
+    private int maxRam;
 
     private String launcherName = "Launcher";
     private String launcherVersion = "1.0.0";
@@ -46,6 +48,14 @@ public class LaunchConfigurator {
 
         public Builder isDemoUser(boolean demo) {
             config.demoUser = demo;
+            return this;
+        }
+        public Builder minRam(int minRam) {
+            config.minRam = minRam;
+            return this;
+        }
+        public Builder maxRam(int maxRam) {
+            config.maxRam = maxRam;
             return this;
         }
 

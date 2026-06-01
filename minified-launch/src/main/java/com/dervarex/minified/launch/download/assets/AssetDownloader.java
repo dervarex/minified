@@ -45,9 +45,9 @@ public class AssetDownloader {
             NetworkUtil.ensureOnline("downloading assets for version " + version);
             assetsDir.toFile().mkdirs();
 
-            JsonObject versionEntry = Objects.requireNonNull(VersionManifestClient
-                            .getVersionEntry(version))
-                    .asObject();
+            JsonObject versionEntry = Objects.requireNonNull
+                                      (VersionManifestClient.getVersionEntry(version))
+                                      .asObject();
 
             JsonFile versionJson = new JsonFile(
                     HttpUtil.get(versionEntry.get("url").asString())
@@ -108,6 +108,7 @@ public class AssetDownloader {
                 futures.add(DownloadHelper.download(url, output, hash, pool, client));
             }
 
+            // wait for all libraries
             for (Future<?> future : futures) {
                 future.get();
             }
