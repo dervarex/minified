@@ -29,6 +29,21 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
 dependencies {
-    implementation 'com.dervarex.minified.utils:minified-utils:1.0.0' // currently local only - todo: publish to maven central
+    //implementation 'com.dervarex.minified.utils:minified-utils:1.0.0' // currently local only - todo: publish to maven central
+    //implementation 'com.dervarex.minified.utils:minified-auth:1.0.0' // currently local only - todo: publish to maven central
+    implementation project(":minified-auth")
+    implementation project(":minified-utils")
+    implementation 'org.javassist:javassist:3.26.0-GA'
+    compileOnly 'org.projectlombok:lombok:1.18.42'
+    annotationProcessor 'org.projectlombok:lombok:1.18.42'
     compileOnly 'org.jetbrains:annotations:24.1.0'
 }
+
+test {
+    useJUnitPlatform()
+    // Some test sources in this module are integration-style (main methods)
+    // and may not be discovered by the test runner. Do not fail the build
+    // when no tests are discovered.
+    failOnNoDiscoveredTests = false
+}
+

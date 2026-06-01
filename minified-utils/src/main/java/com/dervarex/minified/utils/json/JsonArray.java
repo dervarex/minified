@@ -8,11 +8,19 @@ import java.util.Iterator;
 public final class JsonArray implements JsonValue, Iterable<JsonValue> {
     private final List<JsonValue> values;
 
+    public JsonArray() {
+        this.values = new ArrayList<>();
+    }
+
     public JsonArray(List<JsonValue> values) {
         this.values = new ArrayList<>(values == null ? List.of() : values);
     }
 
     public List<JsonValue> values() { return Collections.unmodifiableList(values); }
+
+    public void add(JsonValue value) {
+        this.values.add(value);
+    }
 
     public int size() { return values.size(); }
 

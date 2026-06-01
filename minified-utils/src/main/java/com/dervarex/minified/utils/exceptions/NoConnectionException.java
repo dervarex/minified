@@ -161,4 +161,3 @@ public class NoConnectionException extends Exception {
         }
     }
 }
-// todo move into minified-utils

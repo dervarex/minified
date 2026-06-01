@@ -131,5 +131,3 @@ public class HttpException extends Exception {
         public HttpException build() { return new HttpException(this); }
     }
 }
-
-// todo move into minified-utils

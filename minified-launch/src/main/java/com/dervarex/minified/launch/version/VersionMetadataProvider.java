@@ -1,11 +1,17 @@
 package com.dervarex.minified.launch.version;
 
 import com.dervarex.minified.utils.exceptions.HttpException;
+import com.dervarex.minified.utils.exceptions.NoConnectionException;
 import com.dervarex.minified.utils.http.HttpUtil;
 import com.dervarex.minified.utils.json.JsonFile;
 import com.dervarex.minified.utils.json.JsonValue;
+import com.dervarex.minified.utils.network.NetworkUtil;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 
 @SuppressWarnings("unused")
 public final class VersionMetadataProvider {
@@ -21,9 +27,30 @@ public final class VersionMetadataProvider {
     }
 
     public static int getMinimumJavaVersion(String version) throws HttpException, IOException {
-        String url = getVersionJsonUrl(version);
+        try {
+            NetworkUtil.ensureOnline("getMinimumJavaVersion");
+        } catch (NoConnectionException nce) {
+            return -1;
+        }
+                String url = getVersionJsonUrl(version);
         if (url == null) {
-            return -1; // todo replace with latest LTS java version, because Java has downward compatibility that should work
+            try {
+                int latestLTS = Integer.parseInt(
+                        HttpClient.newHttpClient()
+                                .send(
+                                        HttpRequest.newBuilder()
+                                                .uri(URI.create("https://api.adoptium.net/v3/info/available_releases"))
+                                                .build(),
+                                        HttpResponse.BodyHandlers.ofString()
+                                )
+                                .body()
+                                .split("\"most_recent_lts\":")[1]
+                                .split(",")[0]
+                                .trim()
+                );
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         JsonFile json = new JsonFile(HttpUtil.get(url));

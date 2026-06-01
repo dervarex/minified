@@ -19,6 +19,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+@SuppressWarnings("unused")
 public class AssetDownloader {
 
     private final ExecutorService pool;
@@ -35,13 +36,14 @@ public class AssetDownloader {
     /**
      * Downloads the assets
      * @param version the game version
-     * @param gameDir the directory the assets will be put in
+     * @param assetsDir the directory the assets should be downloaded to
      */
-    public void downloadAssets(String version, Path gameDir) {
+    public void downloadAssets(String version, Path assetsDir) {
 
         try {
 
             NetworkUtil.ensureOnline("downloading assets for version " + version);
+            assetsDir.toFile().mkdirs();
 
             JsonObject versionEntry = Objects.requireNonNull(VersionManifestClient
                             .getVersionEntry(version))
@@ -62,8 +64,6 @@ public class AssetDownloader {
             String assetIndexUrl = assetIndex
                     .get("url")
                     .asString();
-
-            Path assetsDir = gameDir.resolve("assets");
 
             Path indexesDir = assetsDir.resolve("indexes");
             Path objectsDir = assetsDir.resolve("objects");

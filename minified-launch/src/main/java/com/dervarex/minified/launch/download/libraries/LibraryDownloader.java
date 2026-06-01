@@ -20,6 +20,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+@SuppressWarnings("unused")
 public class LibraryDownloader {
 
     private final ExecutorService pool;
@@ -36,11 +37,12 @@ public class LibraryDownloader {
     /**
      * Downloads the Libraries
      * @param version the game version
-     * @param librariesPath the directory the libraries should be downloaded to
+     * @param librariesDir the directory the libraries should be downloaded to
      */
-    public void downloadLibraries(String version, String librariesPath) {
+    public void downloadLibraries(String version, Path librariesDir) {
         try {
             NetworkUtil.ensureOnline("downloading libraries for version " + version);
+            librariesDir.toFile().mkdirs();
 
             JsonObject versionEntry = Objects.requireNonNull(VersionManifestClient
                             .getVersionEntry(version))
@@ -81,7 +83,7 @@ public class LibraryDownloader {
                 String sha1 = artifact.get("sha1").asString();
 
                 Path path = Path.of(
-                        librariesPath,
+                        librariesDir.toAbsolutePath().toString(),
                         artifact.get("path").asString()
                 );
 

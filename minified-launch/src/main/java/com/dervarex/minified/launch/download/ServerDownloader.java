@@ -29,6 +29,7 @@ public class ServerDownloader {
             System.err.println("You do not have a working internet connection!");
             return false;
         }
+        path.getParent().toFile().mkdirs();
         String url = VersionMetadataProvider.getVersionJsonUrl(version);
         if (url == null) {
             System.out.println("ServerDownloader: Cannot find version!");

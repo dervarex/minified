@@ -115,5 +115,3 @@ public class StopException extends RuntimeException {
         public StopException build() { return new StopException(this); }
     }
 }
-
-// todo move into minified-utils
