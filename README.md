@@ -1,21 +1,57 @@
 # Minified
 
-## Modules
+Java API for Minecraft version management, asset downloading, library resolution and game launching.
 
-- `minified-auth` - authentication helpers
-- `minified-launch` - launch helpers
-- `minified-java` - Java download and installation manager
-- `minified-utils` - general utilities
+## Features
 
-## Publishing
+* Version management
+* Asset downloading
+* Library downloading
+* Native extraction
+* Minecraft launching
+* Microsoft account authentication
+* Session management
 
-Publish to Maven Local with:
+## Usage
 
-```bash
-./gradlew publishToMavenLocal
-```
+Maven/JitPack repository coming soon.
 
-todo:
-license stuff!
-maven public push
-modded support
+Until then, the project must be built manually from source.
+
+## Documentation
+
+Documentation is available in the Javadoc.
+
+## Testing
+
+The project currently contains mostly functional and integration tests.
+
+These tests are designed to verify that the API works correctly in real-world scenarios, including authentication, downloading game files, resolving libraries, extracting natives and launching Minecraft.
+
+The existing tests are not intended to serve as examples of best practices or recommended API usage. They are primarily used to validate functionality during development.
+
+One of the integration tests performs a complete launch workflow, including:
+
+* Microsoft device code authentication
+* Session restoration
+* User authentication
+* Asset downloading
+* Library downloading
+* Native extraction
+* Minecraft launching
+
+More unit tests and dedicated usage examples are planned in the future.
+
+## Roadmap
+
+* Official Maven/JitPack repository
+* Modding support
+* Additional unit tests
+* More usage examples
+* Improved platform-specific testing
+
+## License
+
+Licensed under the Apache License 2.0.
+
+See the LICENSE file for details.
