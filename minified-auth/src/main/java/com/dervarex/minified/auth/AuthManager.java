@@ -1,5 +1,6 @@
 package com.dervarex.minified.auth;
 
+import com.dervarex.minified.auth.encryption.Encryptor;
 import com.dervarex.minified.utils.exceptions.NoConnectionException;
 import com.dervarex.minified.utils.network.NetworkUtil;
 import com.google.gson.Gson;

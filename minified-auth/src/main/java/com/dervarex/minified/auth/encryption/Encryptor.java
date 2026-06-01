@@ -1,4 +1,4 @@
-package com.dervarex.minified.auth;
+package com.dervarex.minified.auth.encryption;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -7,7 +7,6 @@ import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.SecureRandom;
