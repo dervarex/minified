@@ -2,6 +2,8 @@ package com.dervarex.minified.launch;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -19,6 +21,7 @@ class LaunchConfiguratorTest {
         assertEquals("Launcher", config.getLauncherName());
         assertEquals("1.0.0", config.getLauncherVersion());
         assertFalse(config.isDemoUser());
+        assertTrue(config.getExtraJvmArgs().isEmpty());
     }
 
     @Test
@@ -29,6 +32,8 @@ class LaunchConfiguratorTest {
                 .launcherName("MinifiedLauncher")
                 .launcherVersion("2.0.1")
                 .isDemoUser(true)
+                .extraJvmArg("-XX:+UseG1GC")
+                .extraJvmArgs(List.of("-Dtest=true", "-Dlauncher.name=minified"))
                 .build();
 
         assertEquals(12, config.getDownloadThreads());
@@ -38,6 +43,10 @@ class LaunchConfiguratorTest {
         assertEquals("MinifiedLauncher", config.getLauncherName());
         assertEquals("2.0.1", config.getLauncherVersion());
         assertTrue(config.isDemoUser());
+        assertEquals(
+                List.of("-XX:+UseG1GC", "-Dtest=true", "-Dlauncher.name=minified"),
+                config.getExtraJvmArgs()
+        );
     }
 }
 

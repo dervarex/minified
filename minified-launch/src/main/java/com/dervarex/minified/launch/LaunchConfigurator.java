@@ -2,6 +2,9 @@ package com.dervarex.minified.launch;
 
 import lombok.Getter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Getter
 public class LaunchConfigurator {
 
@@ -16,6 +19,7 @@ public class LaunchConfigurator {
     private String launcherVersion = "1.0.0";
 
     private boolean demoUser = false;
+    private final List<String> extraJvmArgs = new ArrayList<>();
 
     private LaunchConfigurator() {
     }
@@ -56,6 +60,16 @@ public class LaunchConfigurator {
         }
         public Builder maxRam(int maxRam) {
             config.maxRam = maxRam;
+            return this;
+        }
+
+        public Builder extraJvmArg(String arg) {
+            config.extraJvmArgs.add(arg);
+            return this;
+        }
+
+        public Builder extraJvmArgs(List<String> args) {
+            config.extraJvmArgs.addAll(args);
             return this;
         }
 

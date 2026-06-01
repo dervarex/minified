@@ -9,15 +9,13 @@
 
 ## Publishing
 
-Each module applies `maven-publish`.
-
 Publish to Maven Local with:
 
 ```bash
 ./gradlew publishToMavenLocal
 ```
 
-Then consume with groupId `com.dervarex.minified` and the module artifactId.
-
 todo:
 license stuff!
+maven public push
+modded support

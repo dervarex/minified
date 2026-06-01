@@ -1,6 +1,8 @@
 package com.dervarex.minified.launch;
 
 import com.dervarex.minified.auth.User;
+import com.dervarex.minified.java.JavaInstallation;
+import com.dervarex.minified.java.JavaManager;
 import com.dervarex.minified.launch.arguments.GameArgumentsParser;
 import com.dervarex.minified.launch.arguments.JvmArgumentsParser;
 import com.dervarex.minified.launch.download.ClientDownloader;
@@ -19,12 +21,9 @@ import com.dervarex.minified.utils.json.JsonValue;
 import com.dervarex.minified.utils.network.NetworkUtil;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Objects;
 import java.util.List;
-import java.util.Map;
 
 public class Launcher {
     /**
@@ -45,6 +44,7 @@ public class Launcher {
      *     .downloadThreads(10)
      *     .launcherName("MinifiedLauncher")
      *     .launcherVersion("1.0.0")
+     *     .extraJvmArg("-XX:+UseG1GC")
      *     .build();
      * }</pre>
      */
@@ -64,6 +64,11 @@ public class Launcher {
                                     VersionMetadataProvider
                                             .getVersionJsonUrl(version)
                             )
+                    );
+
+            JavaInstallation javaInstallation =
+                    JavaManager.ensureJavaVersion(
+                            JavaManager.getRequiredJavaVersion(versionJson)
                     );
 
             // Downloads (will skip files if they already exist)
@@ -271,6 +276,8 @@ public class Launcher {
                             launchConfig.getMaxRam()
                     );
 
+            jvmArgs.addAll(launchConfig.getExtraJvmArgs());
+
             // Apply variable substitution to JVM arguments
             jvmArgs = X11Helper.substituteVariables(jvmArgs, options.getVariables());
 
@@ -288,7 +295,12 @@ public class Launcher {
             ArrayList<String> command =
                     new ArrayList<>();
 
-            command.add("java");
+            command.add(
+                    javaInstallation
+                            .executable()
+                            .toAbsolutePath()
+                            .toString()
+            );
 
             command.addAll(jvmArgs);
 
