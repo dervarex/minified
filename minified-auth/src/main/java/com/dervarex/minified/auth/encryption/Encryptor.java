@@ -21,7 +21,7 @@ public class Encryptor {
      * @return the SecretKey that will be used to encrypt and decrypt the refreshtoken
      * @throws Exception when something goes wrong with file access or key generation
      */
-    static SecretKey loadOrCreateMasterKey(Path KEY_FILE) throws Exception {
+    public static SecretKey loadOrCreateMasterKey(Path KEY_FILE) throws Exception {
         if (Files.exists(KEY_FILE)) {
             byte[] rawKey = Files.readAllBytes(KEY_FILE);
             System.out.println("Loaded existing master key");
@@ -46,7 +46,7 @@ public class Encryptor {
      * @throws Exception when encrypting or writing to the file fails
      */
 
-    static void saveEncryptedSession(JsonObject sessionJson, SecretKey masterKey, Path SESSION_FILE) throws Exception {
+    public static void saveEncryptedSession(JsonObject sessionJson, SecretKey masterKey, Path SESSION_FILE) throws Exception {
         Cipher cipher = Cipher.getInstance("AES");
         cipher.init(Cipher.ENCRYPT_MODE, masterKey);
         byte[] encrypted = cipher.doFinal(sessionJson.toString().getBytes());
@@ -62,7 +62,7 @@ public class Encryptor {
      * @throws Exception
      */
 
-    static JsonObject loadEncryptedSession(Path SESSION_FILE, SecretKey masterKey) throws Exception {
+    public static JsonObject loadEncryptedSession(Path SESSION_FILE, SecretKey masterKey) throws Exception {
         if (!Files.exists(SESSION_FILE)) {
             System.out.println("No saved session");
             return null;
