@@ -29,8 +29,6 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
 dependencies {
-    //implementation 'com.dervarex.minified.utils:minified-utils:1.0.0' // currently local only - todo: publish to maven central
-    //implementation 'com.dervarex.minified.utils:minified-auth:1.0.0' // currently local only - todo: publish to maven central
     implementation project(":minified-java")
     implementation project(":minified-auth")
     implementation project(":minified-utils")

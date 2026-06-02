@@ -14,9 +14,24 @@ Java API for Minecraft version management, asset downloading, library resolution
 
 ## Usage
 
-Maven/JitPack repository coming soon.
+### JitPack
 
-Until then, the project must be built manually from source.
+```gradle
+repositories {
+    maven { url 'https://jitpack.io' }
+}
+
+dependencies {
+    implementation 'com.github.dervarex.minified:minified-launch:v1.0.0'
+}
+```
+
+### Available modules
+
+- `minified-auth`
+- `minified-java`
+- `minified-launch`
+- `minified-utils`
 
 ## Documentation
 
@@ -44,7 +59,6 @@ More unit tests and dedicated usage examples are planned in the future.
 
 ## Roadmap
 
-* Official Maven/JitPack repository
 * Modding support
 * Additional unit tests
 * More usage examples
