@@ -51,7 +51,7 @@ class AuthTest {
     @Test
     @Tag("integration")
     void deviceCodeLoginThenReloadsFromSavedSession() throws Exception {
-        Assumptions.assumeTrue(System.getenv("MINIFIED_AUTH_IT") != null, "Set MINIFIED_AUTH_IT=1 to run this test");
+        //Assumptions.assumeTrue(System.getenv("MINIFIED_AUTH_IT") != null, "Set MINIFIED_AUTH_IT=1 to run this test");
 
         System.out.println("Starting device code login. Follow the printed URL/code in the console.");
         AuthManager.startDeviceCodeLoginAsync();
@@ -79,6 +79,10 @@ class AuthTest {
         assertNotNull(reloaded);
         assertNotNull(reloaded.getUuid());
         assertNotNull(reloaded.getUsername());
+        System.out.println("Serialized Session:");
+        System.out.println();
+        System.out.println(reloaded.getSerializedSession());
+        System.out.println();
         System.out.println("Reloaded session for " + reloaded.getUsername() + " (" + reloaded.getUuid() + ")");
     }
 }

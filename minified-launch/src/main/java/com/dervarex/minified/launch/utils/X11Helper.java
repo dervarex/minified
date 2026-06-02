@@ -17,6 +17,11 @@ public class X11Helper {
     public static void configureGraphicsEnvironment(
             ProcessBuilder processBuilder
     ) {
+        if (!System.getProperty("os.name")
+                .toLowerCase()
+                .contains("linux")) {
+            return;
+        }
         configureGraphicsEnvironment(
                 processBuilder,
                 Path.of("/tmp/.X11-unix")
@@ -33,6 +38,11 @@ public class X11Helper {
             ProcessBuilder processBuilder,
             Path x11SocketDirectory
     ) {
+        if (!System.getProperty("os.name")
+                .toLowerCase()
+                .contains("linux")) {
+            return;
+        }
         Map<String, String> environment =
                 processBuilder.environment();
 

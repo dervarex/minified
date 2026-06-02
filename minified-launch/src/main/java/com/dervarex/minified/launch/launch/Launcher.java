@@ -30,29 +30,25 @@ public class Launcher {
      * Downloads required files and launches Minecraft.
      *
      * @param version the Minecraft version to launch
-     * @param jarFile the full path to the client JAR file
-     *                (for example: /path/to/client.jar)
-     * @param librariesDirectory the directory containing libraries
-     * @param assetsDirectory the directory containing assets
+     * @param user    the logged-in user to launch with, or null to launch in offline mode(you won't be able to join online servers or use any online features in offline mode)
      * @param launchConfig configuration used by the launcher when starting the game,
      *                     such as the number of download threads, launcher name,
      *                     and launcher version
      *<p>
      *                     Example:
      *                     <pre>{@code
-     * LaunchConfigurator config = new LaunchConfigurator.Builder()
-     *     .downloadThreads(10)
-     *     .launcherName("MinifiedLauncher")
-     *     .launcherVersion("1.0.0")
-     *     .extraJvmArg("-XX:+UseG1GC")
-     *     .build();
+     *                  LaunchConfigurator config = new LaunchConfigurator.Builder()
+     *                 .downloadThreads(10)
+     *                 .launcherName("MinifiedLauncher")
+     *                 .launcherVersion("1.0.0")
+     *                 .assetsDirectory(Path.of("path to assets directory"))
+     *                 .librariesDirectory(Path.of("path to library directory"))
+     *                 .jarFile(Path.of("path to client.jar"))
+     *                 .build();
      * }</pre>
      */
     public static void launchMinecraft(
             String version,
-            Path jarFile,
-            Path librariesDirectory,
-            Path assetsDirectory,
             User user,
             LaunchConfigurator launchConfig) {
         try {
@@ -76,9 +72,9 @@ public class Launcher {
             AssetDownloader assetDownloader = new AssetDownloader(launchConfig.getDownloadThreads());
             ClientDownloader clientDownloader = new ClientDownloader();
 
-            libDownloader.downloadLibraries(version, librariesDirectory);
-            assetDownloader.downloadAssets(version, assetsDirectory);
-            clientDownloader.downloadClient(version, jarFile);
+            libDownloader.downloadLibraries(version, launchConfig.getLibrariesDirectory());
+            assetDownloader.downloadAssets(version, launchConfig.getAssetsDirectory());
+            clientDownloader.downloadClient(version, launchConfig.getJarFile());
 
             String separator =
                     System.getProperty("os.name")
@@ -89,6 +85,12 @@ public class Launcher {
 
             ArrayList<String> classpath =
                     new ArrayList<>();
+
+            classpath.add(
+                    launchConfig.getJarFile()
+                            .toAbsolutePath()
+                            .toString()
+            );
 
             JsonArray libraries =
                     versionJson
@@ -126,18 +128,18 @@ public class Launcher {
                                 .asString();
 
                 classpath.add(
-                        librariesDirectory
+                        launchConfig.getLibrariesDirectory()
                                 .resolve(path)
                                 .toAbsolutePath()
                                 .toString()
                 );
             }
 
-            classpath.add(
-                    jarFile
-                            .toAbsolutePath()
-                            .toString()
-            );
+//            classpath.add(
+//                    launchConfig.getAssetsDirectory()
+//                            .toAbsolutePath()
+//                            .toString()
+//            ); // why did I even put that in here??
 
             String classpathString =
                     String.join(
@@ -150,7 +152,7 @@ public class Launcher {
 
                             .setVariable(
                                     "auth_player_name",
-                                    user.getUsername()
+                                    user == null ? "offlineuser" : user.getUsername()
                             )
 
                             .setVariable(
@@ -160,14 +162,14 @@ public class Launcher {
 
                             .setVariable(
                                     "game_directory",
-                                    jarFile.getParent()
+                                    launchConfig.getJarFile().getParent()
                                             .toAbsolutePath()
                                             .toString()
                             )
 
                             .setVariable(
                                     "assets_root",
-                                    assetsDirectory
+                                    launchConfig.getAssetsDirectory()
                                             .toAbsolutePath()
                                             .toString()
                             )
@@ -181,18 +183,13 @@ public class Launcher {
 
                             .setVariable(
                                     "auth_uuid",
-                                    user.getUuid()
+                                    user == null ? "12345678901234567890" : user.getUuid()
                             )
 
                             .setVariable(
                                     "auth_access_token",
-                                    user.getAccessToken()
+                                    user == null ? "some-access-token" : user.getAccessToken()
                             )
-
-                            /*.setVariable(
-                                    "clientid",
-                                    "" // todo find out what this is
-                            )*/
 
                             .setVariable(
                                     "auth_xuid",
@@ -231,7 +228,7 @@ public class Launcher {
 
                             .setVariable(
                                     "natives_directory",
-                                    jarFile.getParent()
+                                    launchConfig.getJarFile().getParent() //todo custom natives directory
                                             .resolve("natives")
                                             .toAbsolutePath()
                                             .toString()
@@ -339,8 +336,5 @@ public class Launcher {
             System.err.println("You do not have a internet connection");
         }
     }
-
-
 }
-// todo: launch in offline(cracked) mode
-// todo: clean up + overloading
+// todo: clean up

@@ -26,12 +26,12 @@ public class LauncherTest {
         System.out.println("XDG_CURRENT_DESKTOP = " + System.getenv("XDG_CURRENT_DESKTOP"));
         System.out.println("GDK_BACKEND = " + System.getenv("GDK_BACKEND"));
         System.out.println("LIBGL_ALWAYS_SOFTWARE = " + System.getenv("LIBGL_ALWAYS_SOFTWARE"));
-        printRunningProcessDiagnostics("xwayland-satellite");
+        printRunningProcessDiagnostics();
         System.out.println("java.library.path = " + System.getProperty("java.library.path"));
         System.out.println("--------------------------");
     }
 
-    private static void printRunningProcessDiagnostics(String needle) {
+    private static void printRunningProcessDiagnostics() {
         boolean found = false;
 
         for (ProcessHandle process : ProcessHandle.allProcesses().toArray(ProcessHandle[]::new)) {
@@ -39,12 +39,12 @@ public class LauncherTest {
             String commandLine = info.commandLine().orElse("");
             String command = info.command().orElse("");
 
-            if (!commandLine.contains(needle) && !command.contains(needle)) {
+            if (!commandLine.contains("xwayland-satellite") && !command.contains("xwayland-satellite")) {
                 continue;
             }
 
             found = true;
-            System.out.println("Detected process matching '" + needle + "': pid=" + process.pid());
+            System.out.println("Detected process matching '" + "xwayland-satellite" + "': pid=" + process.pid());
             if (!commandLine.isBlank()) {
                 System.out.println("  commandLine = " + commandLine);
             } else if (!command.isBlank()) {
@@ -53,7 +53,7 @@ public class LauncherTest {
         }
 
         if (!found) {
-            System.out.println("No running process matched '" + needle + "'.");
+            System.out.println("No running process matched '" + "xwayland-satellite" + "'.");
         }
     }
 
@@ -65,7 +65,7 @@ public class LauncherTest {
 
         User user = null;
 
-        // try to login with saved session
+        // try to log in with saved session
         if (AuthManager.hasSessionSaved()) {
             try {
                 user = AuthManager.loginWithSavedSession();
@@ -81,7 +81,7 @@ public class LauncherTest {
             }
         }
 
-        // if theres no session saved, login with microsoft instead
+        // if there's no session saved, login with Microsoft instead
         if (user == null) {
 
             System.out.println("Starting Microsoft login...");
@@ -132,13 +132,15 @@ public class LauncherTest {
                 .downloadThreads(10)
                 .launcherName("MinifiedLauncher")
                 .launcherVersion("1.0.0")
+                .assetsDirectory(Path.of("/home/dervarex/Development/tmp/assets/"))
+                .librariesDirectory(Path.of("/home/dervarex/Development/tmp/libs/"))
+                .jarFile(Path.of("/home/dervarex/Development/tmp/jar/client.jar"))
+                .isDemoUser(true)
                 .build();
+
 
         Launcher.launchMinecraft(
                 "1.21.11",
-                Path.of("/home/dervarex/Development/tmp/jar/client.jar"),
-                Path.of("/home/dervarex/Development/tmp/libs/"),
-                Path.of("/home/dervarex/Development/tmp/assets/"),
                 user,
                 config
         );

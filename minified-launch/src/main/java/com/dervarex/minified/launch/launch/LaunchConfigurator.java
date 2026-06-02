@@ -2,23 +2,33 @@ package com.dervarex.minified.launch.launch;
 
 import lombok.Getter;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Getter
 public class LaunchConfigurator {
 
-    private int downloadThreads = 5;
-    private int resolutionWidth = 1920;
-    private int resolutionHeight = 1080;
-    private boolean customResolution = false;
     private int minRam;
     private int maxRam;
+
+    private int downloadThreads = 5;
+
+    private int resolutionWidth = 1920;
+    private int resolutionHeight = 1080;
 
     private String launcherName = "Launcher";
     private String launcherVersion = "1.0.0";
 
     private boolean demoUser = false;
+    private boolean customResolution = false;
+
+    private Path jarFile;            // required
+    private Path librariesDirectory; // required
+    private Path assetsDirectory;    // required
+    //private Path nativesDirectory;
+
     private final List<String> extraJvmArgs = new ArrayList<>();
 
     private LaunchConfigurator() {
@@ -28,6 +38,14 @@ public class LaunchConfigurator {
 
         private final LaunchConfigurator config = new LaunchConfigurator();
 
+        public Builder minRam(int minRam) {
+            config.minRam = minRam;
+            return this;
+        }
+        public Builder maxRam(int maxRam) {
+            config.maxRam = maxRam;
+            return this;
+        }
         public Builder downloadThreads(int threads) {
             config.downloadThreads = threads;
             return this;
@@ -54,15 +72,19 @@ public class LaunchConfigurator {
             config.demoUser = demo;
             return this;
         }
-        public Builder minRam(int minRam) {
-            config.minRam = minRam;
-            return this;
-        }
-        public Builder maxRam(int maxRam) {
-            config.maxRam = maxRam;
-            return this;
-        }
 
+        public Builder jarFile(Path jarFile) {
+            config.jarFile = jarFile;
+            return this;
+        }
+        public Builder librariesDirectory(Path librariesDirectory) {
+            config.librariesDirectory = librariesDirectory;
+            return this;
+        }
+        public Builder assetsDirectory(Path assetsDirectory) {
+            config.assetsDirectory = assetsDirectory;
+            return this;
+        }
         public Builder extraJvmArg(String arg) {
             config.extraJvmArgs.add(arg);
             return this;
@@ -73,7 +95,12 @@ public class LaunchConfigurator {
             return this;
         }
 
+
         public LaunchConfigurator build() {
+            Objects.requireNonNull(config.jarFile, "jarFile is required");
+            Objects.requireNonNull(config.librariesDirectory, "librariesDirectory is required");
+            Objects.requireNonNull(config.assetsDirectory, "assetsDirectory is required");
+
             return config;
         }
     }
