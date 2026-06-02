@@ -59,7 +59,7 @@ public class LauncherTest {
 
     public static void main(String[] args) throws Exception {
 
-        printLaunchDiagnostics();
+        //printLaunchDiagnostics();
 
         AuthManager.init(Path.of("/home/dervarex/Development/tmp/login/"));
 

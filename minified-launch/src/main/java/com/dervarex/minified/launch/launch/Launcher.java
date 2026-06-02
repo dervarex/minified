@@ -21,7 +21,6 @@ import com.dervarex.minified.utils.json.JsonValue;
 import com.dervarex.minified.utils.network.NetworkUtil;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -135,12 +134,6 @@ public class Launcher {
                 );
             }
 
-//            classpath.add(
-//                    launchConfig.getAssetsDirectory()
-//                            .toAbsolutePath()
-//                            .toString()
-//            ); // why did I even put that in here??
-
             String classpathString =
                     String.join(
                             separator,
@@ -228,7 +221,9 @@ public class Launcher {
 
                             .setVariable(
                                     "natives_directory",
-                                    launchConfig.getJarFile().getParent() //todo custom natives directory
+                                    launchConfig.getNativesDirectory() != null ?
+                                            launchConfig.getNativesDirectory().toAbsolutePath().toString() :
+                                    launchConfig.getJarFile().getParent()
                                             .resolve("natives")
                                             .toAbsolutePath()
                                             .toString()
@@ -337,4 +332,3 @@ public class Launcher {
         }
     }
 }
-// todo: clean up

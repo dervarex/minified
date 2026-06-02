@@ -2,6 +2,7 @@
   <dictionary name="project">
     <words>
       <w>xauthority</w>
+      <w>xuid</w>
       <w>xwayland</w>
     </words>
   </dictionary>

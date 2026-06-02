@@ -27,7 +27,7 @@ public class LaunchConfigurator {
     private Path jarFile;            // required
     private Path librariesDirectory; // required
     private Path assetsDirectory;    // required
-    //private Path nativesDirectory;
+    private Path nativesDirectory;   // optional, defaults to <jarFile's parent directory>/natives
 
     private final List<String> extraJvmArgs = new ArrayList<>();
 
@@ -83,6 +83,10 @@ public class LaunchConfigurator {
         }
         public Builder assetsDirectory(Path assetsDirectory) {
             config.assetsDirectory = assetsDirectory;
+            return this;
+        }
+        public Builder nativesDirectory(Path nativesDirectory) {
+            config.nativesDirectory = nativesDirectory;
             return this;
         }
         public Builder extraJvmArg(String arg) {
