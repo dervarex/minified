@@ -1,5 +1,6 @@
 package com.dervarex.minified.launch.launch;
 
+import com.dervarex.minified.launch.launch.modding.Loader;
 import lombok.Getter;
 
 import java.nio.file.Path;
@@ -10,8 +11,8 @@ import java.util.Objects;
 @Getter
 public class LaunchConfigurator {
 
-    private int minRam;
-    private int maxRam;
+    private int minRam = 2048;
+    private int maxRam = 4096;
 
     private int downloadThreads = 5;
 
@@ -30,6 +31,7 @@ public class LaunchConfigurator {
     private Path nativesDirectory;   // optional, defaults to <jarFile's parent directory>/natives
 
     private final List<String> extraJvmArgs = new ArrayList<>();
+    private Loader loader = Loader.Vanilla;
 
     private LaunchConfigurator() {
     }
@@ -96,6 +98,10 @@ public class LaunchConfigurator {
 
         public Builder extraJvmArgs(List<String> args) {
             config.extraJvmArgs.addAll(args);
+            return this;
+        }
+        public Builder loader(Loader loader) {
+            config.loader = loader;
             return this;
         }
 

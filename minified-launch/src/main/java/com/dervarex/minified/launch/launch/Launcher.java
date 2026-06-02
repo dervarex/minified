@@ -184,10 +184,10 @@ public class Launcher {
                                     user == null ? "some-access-token" : user.getAccessToken()
                             )
 
-                            .setVariable(
-                                    "auth_xuid",
-                                    "" // todo find out what this is
-                            )
+//                            .setVariable(
+//                                    "auth_xuid",
+//                                    "" // tod o find out what this is
+//                            )
 
                             .setVariable(
                                     "version_type",
