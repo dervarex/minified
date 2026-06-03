@@ -1,5 +1,8 @@
 package com.dervarex.minified.launch.download.libraries;
 
+import com.dervarex.minified.launch.launch.modding.Loader;
+import com.dervarex.minified.launch.launch.modding.fabric.FabricLoaderFetcher;
+import com.dervarex.minified.launch.launch.modding.quilt.QuiltLoaderFetcher;
 import com.dervarex.minified.launch.utils.DownloadHelper;
 import com.dervarex.minified.launch.version.VersionManifestClient;
 import com.dervarex.minified.utils.http.HttpUtil;
@@ -9,8 +12,14 @@ import com.dervarex.minified.utils.json.JsonObject;
 import com.dervarex.minified.utils.json.JsonValue;
 import com.dervarex.minified.utils.network.NetworkUtil;
 
+import java.io.InputStream;
+import java.net.URI;
 import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,14 +48,14 @@ public class LibraryDownloader {
      * @param version the game version
      * @param librariesDir the directory the libraries should be downloaded to
      */
-    public void downloadLibraries(String version, Path librariesDir) {
+    public void downloadLibraries(String version, Loader loader, Path librariesDir) {
         try {
             NetworkUtil.ensureOnline("downloading libraries for version " + version);
             librariesDir.toFile().mkdirs();
 
             JsonObject versionEntry = Objects.requireNonNull
-                                      (VersionManifestClient.getVersionEntry(version))
-                                      .asObject();
+                            (VersionManifestClient.getVersionEntry(version))
+                    .asObject();
 
             JsonFile versionJson = new JsonFile(
                     HttpUtil.get(versionEntry.get("url").asString())
@@ -61,7 +70,7 @@ public class LibraryDownloader {
                 JsonObject library = libraryValue.asObject();
 
 
-                 // Skip unsupported OS rules
+                // Skip unsupported OS rules
                 if (!isAllowed(library)) {
                     continue;
                 }
@@ -69,7 +78,7 @@ public class LibraryDownloader {
                 JsonObject downloads = library.get("downloads").asObject();
 
 
-                 // Some libraries only contain classifiers
+                // Some libraries only contain classifiers
                 if (!downloads.has("artifact")) {
                     continue;
                 }
@@ -88,6 +97,131 @@ public class LibraryDownloader {
                 );
 
                 futures.add(DownloadHelper.download(url, path, sha1, pool, client));
+            }
+            switch (loader) {
+                case Vanilla:
+                    // Nothing additional to download for vanilla
+                    break;
+                case Fabric:
+                    JsonObject fabricProfileJson = FabricLoaderFetcher.getLatestProfile(version);
+                    JsonArray fabricLibraries = fabricProfileJson.get("libraries").asArray();
+
+                    for (JsonValue libraryValue : fabricLibraries) {
+
+                        JsonObject library = libraryValue.asObject();
+
+
+                        // Skip unsupported OS rules
+                        if (!isAllowed(library)) {
+                            continue;
+                        }
+
+                        JsonValue nameValue = library.get("name");
+                        JsonValue urlValue = library.get("url");
+
+                        if (nameValue == null || urlValue == null) {
+                            continue;
+                        }
+
+                        String[] parts = nameValue.asString().split(":");
+
+                        if (parts.length != 3) {
+                            continue;
+                        }
+
+                        String groupId = parts[0];
+                        String artifactId = parts[1];
+                        String artifactVersion = parts[2];
+
+                        String baseUrl = urlValue.asString();
+                        if (!baseUrl.endsWith("/")) {
+                            baseUrl += "/";
+                        }
+
+                        String artifactPath =
+                                groupId.replace('.', '/')
+                                        + "/"
+                                        + artifactId
+                                        + "/"
+                                        + artifactVersion
+                                        + "/"
+                                        + artifactId
+                                        + "-"
+                                        + artifactVersion
+                                        + ".jar";
+
+                        String url = baseUrl + artifactPath;
+
+                        Path path = librariesDir.resolve(artifactPath);
+
+                        futures.add(
+                                pool.submit(() -> {
+                                    downloadWithoutSha1(url, path);
+                                    return null;
+                                })
+                        );
+                    }
+                    break;
+                case Quilt:
+                    JsonObject quiltProfileJson = QuiltLoaderFetcher.getLatestProfile(version);
+                    JsonArray quiltLibraries = quiltProfileJson.get("libraries").asArray();
+
+                    for (JsonValue libraryValue : quiltLibraries) {
+
+                        JsonObject library = libraryValue.asObject();
+
+
+                        // Skip unsupported OS rules
+                        if (!isAllowed(library)) {
+                            continue;
+                        }
+
+                        JsonValue nameValue = library.get("name");
+                        JsonValue urlValue = library.get("url");
+
+                        if (nameValue == null || urlValue == null) {
+                            continue;
+                        }
+
+                        String[] parts = nameValue.asString().split(":");
+
+                        if (parts.length != 3) {
+                            continue;
+                        }
+
+                        String groupId = parts[0];
+                        String artifactId = parts[1];
+                        String artifactVersion = parts[2];
+
+                        String baseUrl = urlValue.asString();
+                        if (!baseUrl.endsWith("/")) {
+                            baseUrl += "/";
+                        }
+
+                        String artifactPath =
+                                groupId.replace('.', '/')
+                                        + "/"
+                                        + artifactId
+                                        + "/"
+                                        + artifactVersion
+                                        + "/"
+                                        + artifactId
+                                        + "-"
+                                        + artifactVersion
+                                        + ".jar";
+
+                        String url = baseUrl + artifactPath;
+
+                        Path path = librariesDir.resolve(artifactPath);
+
+                        futures.add(
+                                pool.submit(() -> {
+                                    downloadWithoutSha1(url, path);
+                                    return null;
+                                })
+                        );
+                    }
+                    break;
             }
 
             // Wait for all downloads
@@ -108,8 +242,43 @@ public class LibraryDownloader {
         }
     }
 
+    private void downloadWithoutSha1(String url, Path path) {
+        try {
+            if (Files.exists(path) && Files.size(path) > 0) {
+                return;
+            }
+
+            Files.createDirectories(path.getParent());
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .timeout(Duration.ofSeconds(30))
+                    .GET()
+                    .build();
+
+            HttpResponse<InputStream> response =
+                    client.send(request, HttpResponse.BodyHandlers.ofInputStream());
+
+            if (response.statusCode() != 200) {
+                throw new RuntimeException(
+                        "Failed to download " + url + " (HTTP " + response.statusCode() + ")"
+                );
+            }
+
+            try (InputStream in = response.body()) {
+                Files.copy(
+                        in,
+                        path,
+                        java.nio.file.StandardCopyOption.REPLACE_EXISTING
+                );
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to download Fabric library from " + url, e);
+        }
+    }
+
     private boolean isAllowed(JsonObject library) {
-         // No rules = allowed
+        // No rules = allowed
 
         if (!library.has("rules")) {
             return true;

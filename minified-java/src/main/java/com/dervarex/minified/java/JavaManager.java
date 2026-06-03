@@ -121,7 +121,7 @@ public final class JavaManager {
      * Ensures that a suitable Java runtime is available for a Minecraft version.
      *
      * @param minecraftVersion the Minecraft version id, such as {@code 1.21.4}
-     * @return the current JVM if it is new enough, otherwise a managed Java installation
+     * @return the current JVM if it matches the required feature version, otherwise a managed Java installation
      * @throws HttpException if a manifest request fails
      * @throws IOException if a runtime download or extraction fails
      */
@@ -134,13 +134,13 @@ public final class JavaManager {
      * Ensures that a suitable Java runtime is available for the given feature version.
      *
      * @param requiredMajorVersion the required Java feature version
-     * @return the current JVM if it is new enough, otherwise a managed Java installation
+     * @return the current JVM if it matches the required feature version, otherwise a managed Java installation
      * @throws HttpException if the runtime manifest request fails
      * @throws IOException if a runtime download or extraction fails
      */
     public static JavaInstallation ensureJavaVersion(int requiredMajorVersion) throws HttpException, IOException {
         JavaInstallation current = currentRuntime();
-        if (requiredMajorVersion <= 0 || current.majorVersion() >= requiredMajorVersion) {
+        if (requiredMajorVersion <= 0 || current.majorVersion() == requiredMajorVersion) {
             return current;
         }
 

@@ -4,6 +4,7 @@ import com.dervarex.minified.launch.download.ClientDownloader;
 import com.dervarex.minified.launch.download.ServerDownloader;
 import com.dervarex.minified.launch.download.assets.AssetDownloader;
 import com.dervarex.minified.launch.download.libraries.LibraryDownloader;
+import com.dervarex.minified.launch.launch.modding.Loader;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -46,7 +47,7 @@ class DownloaderTest {
         Path libsDir = tempDir.resolve("libs");
 
         LibraryDownloader downloader = new LibraryDownloader(10);
-        downloader.downloadLibraries("1.21.11", libsDir);
+        downloader.downloadLibraries("1.21.11", Loader.Vanilla, libsDir);
 
         assertTrue(Files.exists(libsDir), "Libraries directory should exist");
 

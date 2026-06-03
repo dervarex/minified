@@ -1,5 +1,7 @@
 package com.dervarex.minified.launch.launch;
 
+import com.dervarex.minified.auth.User;
+import com.dervarex.minified.utils.json.JsonFile;
 import lombok.Getter;
 
 import java.util.HashMap;
@@ -36,5 +38,106 @@ final class LaunchOptions {
 
     static LaunchOptions create() {
         return new LaunchOptions();
+    }
+
+    static LaunchOptions buildLaunchOptions(User user, String version, LaunchConfigurator launchConfig, JsonFile versionJson, String classpathString) {
+        return
+                LaunchOptions.create()
+
+                        .setVariable(
+                                "auth_player_name",
+                                user == null ? "offlineuser" : user.getUsername()
+                        )
+
+                        .setVariable(
+                                "version_name",
+                                version
+                        )
+
+                        .setVariable(
+                                "game_directory",
+                                launchConfig.getJarFile().getParent()
+                                        .toAbsolutePath()
+                                        .toString()
+                        )
+
+                        .setVariable(
+                                "assets_root",
+                                launchConfig.getAssetsDirectory()
+                                        .toAbsolutePath()
+                                        .toString()
+                        )
+
+                        .setVariable(
+                                "assets_index_name",
+                                versionJson.get("assetIndex") != null && versionJson.get("assetIndex").asObject().get("id") != null
+                                        ? versionJson.get("assetIndex").asObject().get("id").asString()
+                                        : ""
+                        )
+
+                        .setVariable(
+                                "auth_uuid",
+                                user == null ? "12345678901234567890" : user.getUuid()
+                        )
+
+                        .setVariable(
+                                "auth_access_token",
+                                user == null ? "some-access-token" : user.getAccessToken()
+                        )
+
+//                            .setVariable(
+//                                    "auth_xuid",
+//                                    "" // tod o find out what this is
+//                            )
+
+                        .setVariable(
+                                "version_type",
+                                versionJson.get("type") != null ? versionJson.get("type").asString() : "release"
+                        )
+
+                        .setVariable(
+                                "resolution_width",
+                                String.valueOf(launchConfig.getResolutionWidth())
+                        )
+
+                        .setVariable(
+                                "resolution_height",
+                                String.valueOf(launchConfig.getResolutionHeight())
+                        )
+
+                        .setVariable(
+                                "launcher_name",
+                                String.valueOf(launchConfig.getLauncherName())
+                        )
+
+                        .setVariable(
+                                "launcher_version",
+                                String.valueOf(launchConfig.getLauncherVersion())
+                        )
+
+                        .setVariable(
+                                "classpath",
+                                classpathString
+                        )
+
+                        .setVariable(
+                                "natives_directory",
+                                launchConfig.getNativesDirectory() != null ?
+                                        launchConfig.getNativesDirectory().toAbsolutePath().toString() :
+                                        launchConfig.getJarFile().getParent()
+                                        .resolve("natives")
+                                        .toAbsolutePath()
+                                        .toString()
+                        )
+
+                        .setFeature(
+                                "has_custom_resolution",
+                                launchConfig.isCustomResolution()
+                        )
+
+                        .setFeature(
+                                "is_demo_user",
+                                launchConfig.isDemoUser()
+                        );
     }
 }

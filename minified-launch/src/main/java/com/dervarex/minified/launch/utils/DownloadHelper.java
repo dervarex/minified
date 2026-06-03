@@ -23,7 +23,7 @@ import java.util.concurrent.Future;
 
 /**
  * Internal helper for downloading files and verifying SHA-1 checksums.
- *
+ * <p>Not intended to be used by launcher developers.</p>
  * @hidden
  */
 @ApiStatus.Internal
@@ -40,96 +40,116 @@ public class DownloadHelper {
      * @return a Future representing the download task
      */
     public static Future<?> download(String url, Path path, String expectedSha1, ExecutorService pool, HttpClient client) {
+        return pool.submit(() -> download(url, path, expectedSha1, client));
+    }
 
-        return pool.submit(() -> {
+    /**
+     * Downloads a single file and checks if the sha1 values match
+     *
+     * @param url the url to download from
+     * @param path the path to save the file to
+     * @param expectedSha1 the expected sha1 value of the file
+     * @return true if the file was downloaded or already exists with the correct sha1, false if the file has a wrong sha1 value after downloading
+     */
+    public static boolean download(String url, Path path, String expectedSha1) {
+        return download(
+                url,
+                path,
+                expectedSha1,
+                HttpClient.newHttpClient()
+        );
+    }
 
-            Path tempFile = Path.of(path + ".tmp");
-            try {
+    private static boolean download(String url, Path path, String expectedSha1, HttpClient client) {
 
-                if (Files.exists(path)) {
+        Path tempFile = Path.of(path + ".tmp");
 
-                    String existingSha1 = Hasher.sha1(path);
+        try {
 
-                    if (existingSha1.equalsIgnoreCase(expectedSha1)) {
-                        //System.out.println("Already exists: " + path);
-                        return;
-                    }
+            if (Files.exists(path)) {
 
-                    Files.delete(path);
+                String existingSha1 = Hasher.sha1(path);
+
+                if (existingSha1.equalsIgnoreCase(expectedSha1)) {
+                    return true; // already exists and has correct sha1 value
                 }
 
-                Files.createDirectories(path.getParent());
+                Files.delete(path); // delete file and redownload if the sha1 value is incorrect
+            }
 
-                MessageDigest digest = MessageDigest.getInstance("SHA-1");
+            Path parent = path.getParent();
 
-                HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create(url))
-                        .timeout(Duration.ofSeconds(30))
-                        .GET()
-                        .build();
+            if (parent != null) {
+                Files.createDirectories(parent);
+            }
 
-                HttpResponse<InputStream> response = client.send(
-                        request,
-                        HttpResponse.BodyHandlers.ofInputStream()
-                );
+            MessageDigest digest = MessageDigest.getInstance("SHA-1");
 
-                if (response.statusCode() != 200) {
-                    throw new RuntimeException(
-                            "HTTP " + response.statusCode() + " for " + url
-                    );
-                }
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .timeout(Duration.ofSeconds(30))
+                    .GET()
+                    .build();
 
-                try (
-                        InputStream in = response.body();
-                        var out = Files.newOutputStream(tempFile)
-                ) {
+            HttpResponse<InputStream> response = client.send(
+                    request,
+                    HttpResponse.BodyHandlers.ofInputStream()
+            );
 
-                    byte[] buffer = new byte[8192];
-
-                    int read;
-
-                    while ((read = in.read(buffer)) != -1) {
-
-                        out.write(buffer, 0, read);
-
-                        digest.update(buffer, 0, read);
-                    }
-                }
-
-                String actualSha1 = Hasher.bytesToHex(digest.digest());
-
-                if (!actualSha1.equalsIgnoreCase(expectedSha1)) {
-
-                    Files.deleteIfExists(tempFile);
-
-                    throw new RuntimeException(
-                            "\nSHA1 mismatch for " + path +
-                                    "\nExpected: " + expectedSha1 +
-                                    "\nActual:   " + actualSha1
-                    );
-                }
-
-                Files.move(
-                        tempFile,
-                        path,
-                        StandardCopyOption.REPLACE_EXISTING
-                );
-
-                //System.out.println("Downloaded: " + path);
-
-            } catch (Exception e) {
-
-                try {
-                    Files.deleteIfExists(tempFile);
-                } catch (Exception ignored) {
-                }
-
+            if (response.statusCode() != 200) {
                 throw new RuntimeException(
-                        "Failed to download " + path,
-                        e
+                        "HTTP " + response.statusCode() + " for " + url
                 );
             }
-        });
+
+            try (
+                    InputStream in = response.body();
+                    var out = Files.newOutputStream(tempFile)
+            ) {
+
+                byte[] buffer = new byte[8192];
+
+                int read;
+
+                while ((read = in.read(buffer)) != -1) {
+
+                    out.write(buffer, 0, read);
+
+                    digest.update(buffer, 0, read);
+                }
+            }
+
+            String actualSha1 = Hasher.bytesToHex(digest.digest());
+
+            if (!actualSha1.equalsIgnoreCase(expectedSha1)) {
+
+                Files.deleteIfExists(tempFile);
+
+                return false; // hashes were not the same after download
+            }
+
+            Files.move(
+                    tempFile,
+                    path,
+                    StandardCopyOption.REPLACE_EXISTING
+            );
+
+            //System.out.println("Downloaded: " + path);
+
+            return true;
+
+        } catch (Exception e) {
+
+            try {
+                Files.deleteIfExists(tempFile);
+            } catch (Exception ignored) {
+            }
+
+            throw new RuntimeException(
+                    "Failed to download " + path,
+                    e
+            );
+        }
     }
     /**
      * Creates a download request from a version manifest.
