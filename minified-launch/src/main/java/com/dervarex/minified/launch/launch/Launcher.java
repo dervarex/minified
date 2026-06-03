@@ -222,17 +222,7 @@ public class Launcher {
                     throw new RuntimeException("Failed to fetch Fabric loader profile", e);
                 }
                 break;
-//            case Quilt: // quilt currently doesn't seem to require additional jvm arguments, but we'll keep this here in case they add some in the future
-//                try {
-//                    JsonObject quiltProfileJson = QuiltLoaderFetcher.getLatestProfile(version);
-//                    JsonValue quiltArguments = quiltProfileJson.asObject().get("arguments");
-//
-//                    for (JsonValue e : quiltArguments.asObject().get("jvm").asArray()) {
-//                        jvmArgs.add(e.asString());
-//                    }
-//                } catch (Exception e) {
-//                    throw new RuntimeException("Failed to fetch Quilt loader profile", e);
-//                }
+//            case Quilt:   -    quilt currently doesn't seem to require additional jvm arguments
         }
 
         return X11Helper.substituteVariables(

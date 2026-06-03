@@ -19,7 +19,6 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,8 +43,10 @@ public class LibraryDownloader {
     }
 
     /**
-     * Downloads the Libraries
+     * Downloads the libraries.
+     *
      * @param version the game version
+     * @param loader the loader to use
      * @param librariesDir the directory the libraries should be downloaded to
      */
     public void downloadLibraries(String version, Loader loader, Path librariesDir) {
@@ -53,9 +54,9 @@ public class LibraryDownloader {
             NetworkUtil.ensureOnline("downloading libraries for version " + version);
             librariesDir.toFile().mkdirs();
 
-            JsonObject versionEntry = Objects.requireNonNull
-                            (VersionManifestClient.getVersionEntry(version))
-                    .asObject();
+            JsonObject versionEntry = Objects.requireNonNull(
+                    VersionManifestClient.getVersionEntry(version)
+            ).asObject();
 
             JsonFile versionJson = new JsonFile(
                     HttpUtil.get(versionEntry.get("url").asString())
@@ -66,9 +67,7 @@ public class LibraryDownloader {
             JsonArray libraries = versionJson.get("libraries").asArray();
 
             for (JsonValue libraryValue : libraries) {
-
                 JsonObject library = libraryValue.asObject();
-
 
                 // Skip unsupported OS rules
                 if (!isAllowed(library)) {
@@ -77,18 +76,14 @@ public class LibraryDownloader {
 
                 JsonObject downloads = library.get("downloads").asObject();
 
-
                 // Some libraries only contain classifiers
                 if (!downloads.has("artifact")) {
                     continue;
                 }
 
-                JsonObject artifact = downloads
-                        .get("artifact")
-                        .asObject();
+                JsonObject artifact = downloads.get("artifact").asObject();
 
                 String url = artifact.get("url").asString();
-
                 String sha1 = artifact.get("sha1").asString();
 
                 Path path = Path.of(
@@ -98,129 +93,26 @@ public class LibraryDownloader {
 
                 futures.add(DownloadHelper.download(url, path, sha1, pool, client));
             }
+
             switch (loader) {
                 case Vanilla:
                     // Nothing additional to download for vanilla
                     break;
+
                 case Fabric:
-                    JsonObject fabricProfileJson = FabricLoaderFetcher.getLatestProfile(version);
-                    JsonArray fabricLibraries = fabricProfileJson.get("libraries").asArray();
-
-                    for (JsonValue libraryValue : fabricLibraries) {
-
-                        JsonObject library = libraryValue.asObject();
-
-
-                        // Skip unsupported OS rules
-                        if (!isAllowed(library)) {
-                            continue;
-                        }
-
-                        JsonValue nameValue = library.get("name");
-                        JsonValue urlValue = library.get("url");
-
-                        if (nameValue == null || urlValue == null) {
-                            continue;
-                        }
-
-                        String[] parts = nameValue.asString().split(":");
-
-                        if (parts.length != 3) {
-                            continue;
-                        }
-
-                        String groupId = parts[0];
-                        String artifactId = parts[1];
-                        String artifactVersion = parts[2];
-
-                        String baseUrl = urlValue.asString();
-                        if (!baseUrl.endsWith("/")) {
-                            baseUrl += "/";
-                        }
-
-                        String artifactPath =
-                                groupId.replace('.', '/')
-                                        + "/"
-                                        + artifactId
-                                        + "/"
-                                        + artifactVersion
-                                        + "/"
-                                        + artifactId
-                                        + "-"
-                                        + artifactVersion
-                                        + ".jar";
-
-                        String url = baseUrl + artifactPath;
-
-                        Path path = librariesDir.resolve(artifactPath);
-
-                        futures.add(
-                                pool.submit(() -> {
-                                    downloadWithoutSha1(url, path);
-                                    return null;
-                                })
-                        );
-                    }
+                    downloadModLoaderLibraries(
+                            FabricLoaderFetcher.getLatestProfile(version).get("libraries").asArray(),
+                            librariesDir,
+                            futures
+                    );
                     break;
+
                 case Quilt:
-                    JsonObject quiltProfileJson = QuiltLoaderFetcher.getLatestProfile(version);
-                    JsonArray quiltLibraries = quiltProfileJson.get("libraries").asArray();
-
-                    for (JsonValue libraryValue : quiltLibraries) {
-
-                        JsonObject library = libraryValue.asObject();
-
-
-                        // Skip unsupported OS rules
-                        if (!isAllowed(library)) {
-                            continue;
-                        }
-
-                        JsonValue nameValue = library.get("name");
-                        JsonValue urlValue = library.get("url");
-
-                        if (nameValue == null || urlValue == null) {
-                            continue;
-                        }
-
-                        String[] parts = nameValue.asString().split(":");
-
-                        if (parts.length != 3) {
-                            continue;
-                        }
-
-                        String groupId = parts[0];
-                        String artifactId = parts[1];
-                        String artifactVersion = parts[2];
-
-                        String baseUrl = urlValue.asString();
-                        if (!baseUrl.endsWith("/")) {
-                            baseUrl += "/";
-                        }
-
-                        String artifactPath =
-                                groupId.replace('.', '/')
-                                        + "/"
-                                        + artifactId
-                                        + "/"
-                                        + artifactVersion
-                                        + "/"
-                                        + artifactId
-                                        + "-"
-                                        + artifactVersion
-                                        + ".jar";
-
-                        String url = baseUrl + artifactPath;
-
-                        Path path = librariesDir.resolve(artifactPath);
-
-                        futures.add(
-                                pool.submit(() -> {
-                                    downloadWithoutSha1(url, path);
-                                    return null;
-                                })
-                        );
-                    }
+                    downloadModLoaderLibraries(
+                            QuiltLoaderFetcher.getLatestProfile(version).get("libraries").asArray(),
+                            librariesDir,
+                            futures
+                    );
                     break;
             }
 
@@ -240,6 +132,68 @@ public class LibraryDownloader {
         } catch (Exception e) {
             throw new RuntimeException("Failed to download libraries", e);
         }
+    }
+
+    private void downloadModLoaderLibraries(
+            JsonArray libraries,
+            Path librariesDir,
+            List<Future<?>> futures
+    ) {
+        for (JsonValue libraryValue : libraries) {
+            JsonObject library = libraryValue.asObject();
+
+            // Skip unsupported OS rules
+            if (!isAllowed(library)) {
+                continue;
+            }
+
+            JsonValue nameValue = library.get("name");
+            JsonValue urlValue = library.get("url");
+
+            if (nameValue == null || urlValue == null) {
+                continue;
+            }
+
+            String[] parts = nameValue.asString().split(":");
+
+            if (parts.length != 3) {
+                continue;
+            }
+
+            String artifactPath = getArtifactPath(parts);
+
+            String baseUrl = urlValue.asString();
+            if (!baseUrl.endsWith("/")) {
+                baseUrl += "/";
+            }
+
+            String url = baseUrl + artifactPath;
+            Path path = librariesDir.resolve(artifactPath);
+
+            futures.add(
+                    pool.submit(() -> {
+                        downloadWithoutSha1(url, path);
+                        return null;
+                    })
+            );
+        }
+    }
+
+    private static String getArtifactPath(String[] parts) {
+        String groupId = parts[0];
+        String artifactId = parts[1];
+        String version = parts[2];
+
+        return groupId.replace('.', '/')
+                + "/"
+                + artifactId
+                + "/"
+                + version
+                + "/"
+                + artifactId
+                + "-"
+                + version
+                + ".jar";
     }
 
     private void downloadWithoutSha1(String url, Path path) {
@@ -279,34 +233,26 @@ public class LibraryDownloader {
 
     private boolean isAllowed(JsonObject library) {
         // No rules = allowed
-
         if (!library.has("rules")) {
             return true;
         }
 
         JsonArray rules = library.get("rules").asArray();
-
         String os = getMinecraftOs();
 
         boolean allowed = false;
 
         for (JsonValue ruleValue : rules) {
-
             JsonObject rule = ruleValue.asObject();
-
             String action = rule.get("action").asString();
-
 
             // Rule without OS
             if (!rule.has("os")) {
-
                 allowed = action.equals("allow");
-
                 continue;
             }
 
             JsonObject osObject = rule.get("os").asObject();
-
             String ruleOs = osObject.get("name").asString();
 
             if (ruleOs.equals(os)) {
@@ -316,8 +262,6 @@ public class LibraryDownloader {
 
         return allowed;
     }
-
-
 
     private String getMinecraftOs() {
         String os = System.getProperty("os.name").toLowerCase();
@@ -331,12 +275,11 @@ public class LibraryDownloader {
         }
 
         if (os.contains("linux")
-                //|| os.contains("bsd")
+                // || os.contains("bsd")
                 || os.contains("unix")) {
             return "linux";
         }
 
         return "unknown";
     }
-
 }

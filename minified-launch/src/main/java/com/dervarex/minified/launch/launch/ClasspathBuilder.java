@@ -1,16 +1,17 @@
 package com.dervarex.minified.launch.launch;
 
-import com.dervarex.minified.launch.launch.modding.Loader;
 import com.dervarex.minified.launch.launch.modding.fabric.FabricLoaderFetcher;
 import com.dervarex.minified.launch.launch.modding.quilt.QuiltLoaderFetcher;
 import com.dervarex.minified.utils.json.JsonArray;
 import com.dervarex.minified.utils.json.JsonFile;
 import com.dervarex.minified.utils.json.JsonObject;
 import com.dervarex.minified.utils.json.JsonValue;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 
 public class ClasspathBuilder {
+
     static String buildClasspath(
             JsonFile versionJson,
             LaunchConfigurator config
@@ -73,10 +74,11 @@ public class ClasspathBuilder {
                             .toString()
             );
         }
+
         switch (config.getLoader()) {
             case Vanilla:
-                // Nothing additional required
                 break;
+
             case Fabric:
                 try {
                     JsonObject fabricProfile =
@@ -84,53 +86,11 @@ public class ClasspathBuilder {
                                     versionJson.get("id").asString()
                             );
 
-                    JsonArray fabricLibraries =
-                            fabricProfile
-                                    .get("libraries")
-                                    .asArray();
-
-                    for (JsonValue value : fabricLibraries) {
-
-                        JsonObject library =
-                                value.asObject();
-
-                        String[] parts =
-                                library.get("name")
-                                        .asString()
-                                        .split(":");
-
-                        if (parts.length != 3) {
-                            continue;
-                        }
-
-                        String groupId =
-                                parts[0];
-
-                        String artifactId =
-                                parts[1];
-
-                        String version =
-                                parts[2];
-
-                        String path =
-                                groupId.replace('.', '/')
-                                        + "/"
-                                        + artifactId
-                                        + "/"
-                                        + version
-                                        + "/"
-                                        + artifactId
-                                        + "-"
-                                        + version
-                                        + ".jar";
-
-                        classpath.add(
-                                config.getLibrariesDirectory()
-                                        .resolve(path)
-                                        .toAbsolutePath()
-                                        .toString()
-                        );
-                    }
+                    addModLoaderLibraries(
+                            fabricProfile.get("libraries").asArray(),
+                            classpath,
+                            config
+                    );
 
                 } catch (Exception e) {
                     throw new RuntimeException(
@@ -139,6 +99,7 @@ public class ClasspathBuilder {
                     );
                 }
                 break;
+
             case Quilt:
                 try {
                     JsonObject quiltProfile =
@@ -146,53 +107,11 @@ public class ClasspathBuilder {
                                     versionJson.get("id").asString()
                             );
 
-                    JsonArray quiltLibraries =
-                            quiltProfile
-                                    .get("libraries")
-                                    .asArray();
-
-                    for (JsonValue value : quiltLibraries) {
-
-                        JsonObject library =
-                                value.asObject();
-
-                        String[] parts =
-                                library.get("name")
-                                        .asString()
-                                        .split(":");
-
-                        if (parts.length != 3) {
-                            continue;
-                        }
-
-                        String groupId =
-                                parts[0];
-
-                        String artifactId =
-                                parts[1];
-
-                        String version =
-                                parts[2];
-
-                        String path =
-                                groupId.replace('.', '/')
-                                        + "/"
-                                        + artifactId
-                                        + "/"
-                                        + version
-                                        + "/"
-                                        + artifactId
-                                        + "-"
-                                        + version
-                                        + ".jar";
-
-                        classpath.add(
-                                config.getLibrariesDirectory()
-                                        .resolve(path)
-                                        .toAbsolutePath()
-                                        .toString()
-                        );
-                    }
+                    addModLoaderLibraries(
+                            quiltProfile.get("libraries").asArray(),
+                            classpath,
+                            config
+                    );
 
                 } catch (Exception e) {
                     throw new RuntimeException(
@@ -200,13 +119,64 @@ public class ClasspathBuilder {
                             e
                     );
                 }
-
+                break;
         }
 
-        return
-                String.join(
-                        separator,
-                        classpath
-                );
+        return String.join(
+                separator,
+                classpath
+        );
+    }
+
+    private static void addModLoaderLibraries(
+            JsonArray libraries,
+            ArrayList<String> classpath,
+            LaunchConfigurator config
+    ) {
+        for (JsonValue value : libraries) {
+
+            JsonObject library =
+                    value.asObject();
+
+            String[] parts =
+                    library.get("name")
+                            .asString()
+                            .split(":");
+
+            if (parts.length != 3) {
+                continue;
+            }
+
+            String path = getPathForLibrary(parts);
+
+            classpath.add(
+                    config.getLibrariesDirectory()
+                            .resolve(path)
+                            .toAbsolutePath()
+                            .toString()
+            );
+        }
+    }
+
+    private static @NotNull String getPathForLibrary(String[] parts) {
+        String groupId =
+                parts[0];
+
+        String artifactId =
+                parts[1];
+
+        String version =
+                parts[2];
+
+        return groupId.replace('.', '/')
+                + "/"
+                + artifactId
+                + "/"
+                + version
+                + "/"
+                + artifactId
+                + "-"
+                + version
+                + ".jar";
     }
 }
