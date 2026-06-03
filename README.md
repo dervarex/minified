@@ -22,7 +22,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.dervarex.minified:minified-launch:v1.1.0'
+    implementation 'com.github.dervarex.minified:minified-launch:v1.2.0'
 }
 ```
 
@@ -59,7 +59,7 @@ More unit tests and dedicated usage examples are planned in the future.
 
 ## Roadmap
 
-* Modding support
+* add support for neoforged
 * Additional unit tests
 * More usage examples
 * Improved platform-specific testing
