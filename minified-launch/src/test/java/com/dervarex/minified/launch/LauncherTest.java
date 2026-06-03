@@ -137,7 +137,7 @@ public class LauncherTest {
                 .librariesDirectory(Path.of("/home/dervarex/Development/tmp/libs/"))
                 .jarFile(Path.of("/home/dervarex/Development/tmp/jar/client.jar"))
                 .isDemoUser(false)
-                .loader(Loader.Quilt)
+                .loader(Loader.Forge)
                 .build();
 
 

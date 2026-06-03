@@ -32,7 +32,7 @@ dependencies {
     implementation project(":minified-java")
     implementation project(":minified-auth")
     implementation project(":minified-utils")
-    implementation 'org.javassist:javassist:3.26.0-GA'
+    implementation 'org.jsoup:jsoup:1.21.1'
     compileOnly 'org.projectlombok:lombok:1.18.42'
     annotationProcessor 'org.projectlombok:lombok:1.18.42'
     compileOnly 'org.jetbrains:annotations:24.1.0'

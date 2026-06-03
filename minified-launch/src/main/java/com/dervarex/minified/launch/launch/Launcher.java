@@ -10,6 +10,9 @@ import com.dervarex.minified.launch.download.assets.AssetDownloader;
 import com.dervarex.minified.launch.download.libraries.LibraryDownloader;
 import com.dervarex.minified.launch.launch.modding.Loader;
 import com.dervarex.minified.launch.launch.modding.fabric.FabricLoaderFetcher;
+import com.dervarex.minified.launch.launch.modding.forge.api.ForgeVersionFetcher;
+import com.dervarex.minified.launch.launch.modding.forge.api.ForgeVersionJson;
+import com.dervarex.minified.launch.launch.modding.forge.installer.InstallerInjector;
 import com.dervarex.minified.launch.launch.modding.quilt.QuiltLoaderFetcher;
 import com.dervarex.minified.launch.utils.X11Helper;
 import com.dervarex.minified.launch.version.VersionMetadataProvider;
@@ -58,6 +61,10 @@ public class Launcher {
             NetworkUtil.ensureOnline("launch minecraft");
 
             Loader loader = launchConfig.getLoader();
+            if(loader.equals(Loader.Forge)) {
+                InstallerInjector installerInjector = new InstallerInjector();
+                installerInjector.install(launchConfig, version);
+            }
 
             JsonFile versionJson =
                     new JsonFile(
@@ -111,7 +118,8 @@ public class Launcher {
                             arguments,
                             options,
                             loader,
-                            version
+                            version,
+                            launchConfig
                     );
 
             ArrayList<String> command =
@@ -123,10 +131,10 @@ public class Launcher {
                               .toAbsolutePath()
                               .toString()
 
-            );                                                     // java
-            command.addAll(jvmArgs);                               // jvmargs
-            command.add(getMainClass(versionJson,loader,version)); // mainclass
-            command.addAll(gameArgs);                              // gameargs
+            );                                                                   // java
+            command.addAll(jvmArgs);                                             // jvmargs
+            command.add(getMainClass(versionJson,loader,version, launchConfig)); // mainclass
+            command.addAll(gameArgs);                                            // gameargs
 
             launchProcess(command);
 
@@ -223,6 +231,24 @@ public class Launcher {
                 }
                 break;
 //            case Quilt:   -    quilt currently doesn't seem to require additional jvm arguments
+            case Forge:
+                JsonFile versionJson;
+                try {
+                    versionJson = ForgeVersionJson.getVersionJson(launchConfig.getJarFile().getParent().toAbsolutePath(), new ForgeVersionFetcher().getLatest(version));
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                try {
+                    JsonValue forgeArguments = versionJson.asObject().get("arguments");
+
+                    for (JsonValue e : forgeArguments.asObject().get("jvm").asArray()) {
+                        jvmArgs.add(e.asString());
+                    }
+                } catch (Exception e) {
+                    throw new RuntimeException("Failed to fetch Forge loader profile", e);
+                }
+                break;
+
         }
 
         return X11Helper.substituteVariables(
@@ -235,7 +261,8 @@ public class Launcher {
             JsonObject arguments,
             LaunchOptions options,
             Loader loader,
-            String version
+            String version,
+            LaunchConfigurator launchConfig
     ) {
 
         JsonValue gameValue = arguments.get("game");
@@ -287,6 +314,23 @@ public class Launcher {
                     throw new RuntimeException("Failed to fetch Quilt loader profile", e);
                 }
                 break;
+            case Forge:
+                JsonFile versionJson;
+                try {
+                    versionJson = ForgeVersionJson.getVersionJson(launchConfig.getJarFile().getParent().toAbsolutePath(), new ForgeVersionFetcher().getLatest(version));
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                try {
+                    JsonValue forgeArguments = versionJson.asObject().get("arguments");
+
+                    for (JsonValue a : forgeArguments.asObject().get("game").asArray()) {
+                        gameArray.add(a);
+                    }
+                } catch (Exception e) {
+                    throw new RuntimeException("Failed to fetch Forge loader profile", e);
+                }
+                break;
         }
 
         return GameArgumentsParser.parse(
@@ -299,7 +343,8 @@ public class Launcher {
     private static String getMainClass(
             JsonFile versionJson,
             Loader loader,
-            String version
+            String version,
+            LaunchConfigurator launchConfig
     ) {
         JsonValue mainClassValue;
         switch (loader) {
@@ -321,6 +366,14 @@ public class Launcher {
                     mainClassValue = quiltProfileJson.get("mainClass");
                 } catch (Exception e) {
                     throw new RuntimeException("Failed to fetch Quilt loader profile", e);
+                }
+                break;
+            case Forge:
+                try {
+                    JsonObject forgeVersionJson = ForgeVersionJson.getVersionJson(launchConfig.getJarFile().getParent().toAbsolutePath(), new ForgeVersionFetcher().getLatest(version)).asObject();
+                    mainClassValue = forgeVersionJson.get("mainClass");
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
                 }
                 break;
             default:
@@ -366,16 +419,5 @@ public class Launcher {
                     "Minecraft exited with code " + exitCode
             );
         }
-    }
-
-    public static void main(String[] args) throws HttpException, IOException {
-        JsonFile versionJson =
-                new JsonFile(
-                        HttpUtil.get(
-                                VersionMetadataProvider
-                                        .getVersionJsonUrl("1.21.11")
-                        )
-                );
-        System.out.println(versionJson.getRoot());
     }
 }

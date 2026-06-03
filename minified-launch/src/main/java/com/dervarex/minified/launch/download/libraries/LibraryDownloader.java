@@ -114,6 +114,9 @@ public class LibraryDownloader {
                             futures
                     );
                     break;
+                case Forge:
+                    // Nothing additional to download for forge, as the installer will handle it for us :)
+                    break;
             }
 
             // Wait for all downloads

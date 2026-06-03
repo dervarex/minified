@@ -13,6 +13,7 @@ public final class JsonObject implements JsonValue {
     }
 
     public Set<String> keys() { return Collections.unmodifiableSet(values.keySet()); }
+    public boolean containsKey(String key) { return values.containsKey(key); }
 
     public Map<String, JsonValue> entries() { return Collections.unmodifiableMap(values); }
 
