@@ -1,5 +1,6 @@
 package com.dervarex.minified.launch.launch.modding.quilt;
 
+import com.dervarex.minified.launch.ApiEndpoints;
 import com.dervarex.minified.utils.http.HttpUtil;
 import com.dervarex.minified.utils.json.JsonArray;
 import com.dervarex.minified.utils.json.JsonObject;
@@ -7,16 +8,13 @@ import com.dervarex.minified.utils.json.JsonParser;
 
 public class QuiltLoaderFetcher {
 
-    private static final String LOADERS_URL =
-            "https://meta.quiltmc.org/v3/versions/loader";
-
     public static String getLatestLoaderVersion(
             String minecraftVersion
     ) throws Exception {
 
         JsonArray loaders = JsonParser
                 .parse(HttpUtil.get(
-                        LOADERS_URL + "/" + minecraftVersion
+                        ApiEndpoints.QuiltLoaderMetaUrl + "/" + minecraftVersion
                 ))
                 .asArray();
 
@@ -50,7 +48,7 @@ public class QuiltLoaderFetcher {
     ) throws Exception {
 
         String url =
-                LOADERS_URL
+                ApiEndpoints.QuiltLoaderMetaUrl
                         + "/"
                         + minecraftVersion
                         + "/"

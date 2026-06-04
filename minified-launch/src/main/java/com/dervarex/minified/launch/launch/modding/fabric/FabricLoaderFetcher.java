@@ -1,5 +1,6 @@
 package com.dervarex.minified.launch.launch.modding.fabric;
 
+import com.dervarex.minified.launch.ApiEndpoints;
 import com.dervarex.minified.utils.http.HttpUtil;
 import com.dervarex.minified.utils.json.JsonArray;
 import com.dervarex.minified.utils.json.JsonObject;
@@ -7,13 +8,13 @@ import com.dervarex.minified.utils.json.JsonParser;
 
 public class FabricLoaderFetcher {
 
-    private static final String LOADERS_URL =
-            "https://meta.fabricmc.net/v2/versions/loader";
+//    private static final String LOADERS_URL =
+//            "https://meta.fabricmc.net/v2/versions/loader";
 
     public static String getLatestLoaderVersion() throws Exception {
 
         JsonArray loaders = JsonParser
-                .parse(HttpUtil.get(LOADERS_URL))
+                .parse(HttpUtil.get(ApiEndpoints.FabricLoaderMetaUrl))
                 .asArray();
 
         if (loaders.size() == 0) {
@@ -33,7 +34,7 @@ public class FabricLoaderFetcher {
     ) throws Exception {
 
         String url =
-                LOADERS_URL
+                ApiEndpoints.FabricLoaderMetaUrl
                         + "/"
                         + minecraftVersion
                         + "/"

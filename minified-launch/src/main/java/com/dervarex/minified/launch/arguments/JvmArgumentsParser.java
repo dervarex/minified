@@ -8,12 +8,19 @@ import java.util.ArrayList;
 
 @SuppressWarnings("unused")
 public final class JvmArgumentsParser {
-    private static final String OS_NAME = getOsName();
+    private static final String OS_NAME = getMinecraftOsName();
     private static final String OS_VERSION = System.getProperty("os.version");
 
     private JvmArgumentsParser() {
     }
 
+    /**
+     * Parses the JVM Arguments from the given JSON object, applying rules and replacing RAM placeholders with the provided values.
+     * @param arguments the JSON object containing the JVM arguments, typically from the "default-user-jvm" field of a Minecraft version JSON
+     * @param minRamMb minimum ram in megabytes
+     * @param maxRamMb maximum ram in megabytes
+     * @return an arraylist of jvm args to apply when starting the game
+     */
     public static ArrayList<String> parse(
             JsonObject arguments,
             int minRamMb,
@@ -56,6 +63,13 @@ public final class JvmArgumentsParser {
 
         return jvmArgs;
     }
+    /**
+     * Parses the JVM Arguments from the given JSON object, applying rules and replacing RAM placeholders with the provided values.
+     * @param jvmArray the JSON array containing the JVM arguments, typically from the "jvm" field of a Minecraft version JSON
+     * @param minRamMb minimum ram in megabytes
+     * @param maxRamMb maximum ram in megabytes
+     * @return an arraylist of jvm args to apply when starting the game
+     */
 
     public static ArrayList<String> parse(
             JsonArray jvmArray,
@@ -117,7 +131,11 @@ public final class JvmArgumentsParser {
 
         return jvmArgs;
     }
-
+    /**
+     * Determines if the library is allowed on the users operating system
+     * @param object the JsonObject of the library
+     * @return true if the library is allowed to be downloaded on the users operating system, false otherwise
+     */
     private static boolean isAllowed(JsonObject object) {
         JsonValue rulesValue = object.get("rules");
 
@@ -207,7 +225,10 @@ public final class JvmArgumentsParser {
         args.add(arg);
     }
 
-    private static String getOsName() {
+    /**
+     * @return the operating system of the user, in the format that Minecraft uses for library rules
+     */
+    private static String getMinecraftOsName() {
         String os = System.getProperty("os.name").toLowerCase();
 
         if (os.contains("win")) {

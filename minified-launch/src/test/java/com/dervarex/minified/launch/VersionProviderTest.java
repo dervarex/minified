@@ -1,6 +1,5 @@
 package com.dervarex.minified.launch;
 
-import com.dervarex.minified.launch.version.ApiEndpoints;
 import com.dervarex.minified.launch.version.VersionMetadataProvider;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -13,8 +12,8 @@ class VersionProviderTest {
 
     @Test
     void versionManifestEndpointLooksValid() {
-        assertTrue(ApiEndpoints.VersionManifest.startsWith("https://"));
-        assertTrue(ApiEndpoints.VersionManifest.contains("version_manifest"));
+        assertTrue(ApiEndpoints.VersionManifestUrl.startsWith("https://"));
+        assertTrue(ApiEndpoints.VersionManifestUrl.contains("version_manifest"));
     }
 
     @Tag("integration")

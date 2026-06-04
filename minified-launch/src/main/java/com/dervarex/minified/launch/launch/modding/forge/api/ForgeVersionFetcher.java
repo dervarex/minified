@@ -1,5 +1,6 @@
 package com.dervarex.minified.launch.launch.modding.forge.api;
 
+import com.dervarex.minified.launch.ApiEndpoints;
 import com.dervarex.minified.utils.json.JsonObject;
 import com.dervarex.minified.utils.json.JsonParser;
 import org.jsoup.Jsoup;
@@ -15,11 +16,11 @@ import java.util.List;
 
 public class ForgeVersionFetcher {
 
-    private static final String MAVEN_METADATA =
-            "https://maven.minecraftforge.net/net/minecraftforge/forge/maven-metadata.xml";
-
-    private static final String PROMOTIONS =
-            "https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json";
+//    private static final String MAVEN_METADATA =
+//            "https://maven.minecraftforge.net/net/minecraftforge/forge/maven-metadata.xml";
+//
+//    private static final String PROMOTIONS =
+//            "https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json";
 
     private final HttpClient client = HttpClient.newHttpClient();
 
@@ -33,7 +34,7 @@ public class ForgeVersionFetcher {
 
         try {
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(MAVEN_METADATA))
+                    .uri(URI.create(ApiEndpoints.ForgeMavenMetadataUrl))
                     .build();
 
             HttpResponse<String> response = client.send(
@@ -91,7 +92,7 @@ public class ForgeVersionFetcher {
 
         try {
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(PROMOTIONS))
+                    .uri(URI.create(ApiEndpoints.ForgePromotionsUrl))
                     .build();
 
             HttpResponse<String> response = client.send(

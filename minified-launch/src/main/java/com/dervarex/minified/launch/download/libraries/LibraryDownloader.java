@@ -137,6 +137,12 @@ public class LibraryDownloader {
         }
     }
 
+    /**
+     * Download the Libraries for the selected modloader
+     * @param libraries the libraries array, which can be obtained from the modloader's version json under the "libraries" key
+     * @param librariesDir the directory the libraries should be downloaded to
+     * @param futures The futures list to add the download tasks to, so they can be waited on later. This is used to run the modloader library downloads in parallel with the normal library downloads.
+     */
     private void downloadModLoaderLibraries(
             JsonArray libraries,
             Path librariesDir,
@@ -182,6 +188,10 @@ public class LibraryDownloader {
         }
     }
 
+    /**
+     * @param parts the parts of the library name, split by ":", e.g. ["net.fabricmc", "fabric-loader", "0.14.19"]
+     * @return the path to the specified artifact, e.g. "net/fabricmc/fabric-loader/0.14.19/fabric-loader-0.14.19.jar"
+     */
     private static String getArtifactPath(String[] parts) {
         String groupId = parts[0];
         String artifactId = parts[1];
@@ -234,6 +244,11 @@ public class LibraryDownloader {
         }
     }
 
+    /**
+     * Determines if the library is allowed on the users operating system
+     * @param library the JsonObject of the library
+     * @return true if the library is allowed to be downloaded on the users operating system, false otherwise
+     */
     private boolean isAllowed(JsonObject library) {
         // No rules = allowed
         if (!library.has("rules")) {
@@ -266,6 +281,9 @@ public class LibraryDownloader {
         return allowed;
     }
 
+    /**
+     * @return the operating system of the user, in the format that Minecraft uses for library rules
+     */
     private String getMinecraftOs() {
         String os = System.getProperty("os.name").toLowerCase();
 

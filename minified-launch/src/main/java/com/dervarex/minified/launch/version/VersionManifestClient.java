@@ -1,5 +1,6 @@
 package com.dervarex.minified.launch.version;
 
+import com.dervarex.minified.launch.ApiEndpoints;
 import com.dervarex.minified.utils.exceptions.HttpException;
 import com.dervarex.minified.utils.http.HttpUtil;
 import com.dervarex.minified.utils.json.JsonFile;
@@ -18,7 +19,7 @@ public final class VersionManifestClient {
      * @throws IOException if there is an error reading the response
      */
     public static JsonFile getManifest() throws HttpException, IOException {
-        return new JsonFile(HttpUtil.get(ApiEndpoints.VersionManifest));
+        return new JsonFile(HttpUtil.get(ApiEndpoints.VersionManifestUrl));
     }
 
     /**

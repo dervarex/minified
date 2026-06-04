@@ -10,7 +10,7 @@ import java.util.Map;
 
 @SuppressWarnings("unused")
 public final class GameArgumentsParser {
-    private static final String OS_NAME = getOsName();
+    private static final String OS_NAME = getMinecraftOsName();
 
     private GameArgumentsParser() {
     }
@@ -69,7 +69,12 @@ public final class GameArgumentsParser {
 
         return output;
     }
-
+    /**
+     * Determines if the library is allowed on the users operating system
+     * @param object the JsonObject of the library
+     * @param features the features map to check for feature rules
+     * @return true if the library is allowed to be downloaded on the users operating system, false otherwise
+     */
     private static boolean isAllowed(
             JsonObject object,
             Map<String, Boolean> features
@@ -154,6 +159,11 @@ public final class GameArgumentsParser {
         return allowed;
     }
 
+    /**
+     * @param input the input with the variable placeholders
+     * @param variables variables to replace in the input, where the key is the variable name and the value is the variable value
+     * @return the input with the variable placeholders replaced with their corresponding values from the variables map
+     */
     private static String replaceVariables(
             String input,
             Map<String, String> variables
@@ -178,7 +188,11 @@ public final class GameArgumentsParser {
         return result;
     }
 
-    private static String getOsName() {
+
+    /**
+     * @return the operating system of the user, in the format that Minecraft uses for library rules
+     */
+    private static String getMinecraftOsName() {
         String os =
                 System.getProperty("os.name")
                         .toLowerCase();
