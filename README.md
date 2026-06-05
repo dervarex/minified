@@ -1,10 +1,10 @@
-Minified
+# Minified
 
 A lightweight Java library for downloading, managing and launching Minecraft.
 
 Minified provides a high-level API for authentication, version management, asset downloading, library resolution and game launching without requiring developers to reimplement Mojang's launcher logic.
 
-Features
+## Features
 
 * Version management
 * Asset downloading
@@ -15,10 +15,11 @@ Features
 * Session management
 * Forge installation support
 
-Quick Start
+## Quick Start
 
-JitPack
+### JitPack
 
+```gradle
 repositories {
     maven { url 'https://jitpack.io' }
 }
@@ -26,9 +27,11 @@ repositories {
 dependencies {
     implementation 'com.github.dervarex.minified:minified-launch:v1.2.0'
 }
+```
 
-Launch Minecraft
+### Launch Minecraft
 
+```java
 LaunchConfigurator config = new LaunchConfigurator.Builder()
         .launcherName("MyLauncher")
         .launcherVersion("1.0.0")
@@ -43,22 +46,23 @@ Launcher.launchMinecraft(
         user,
         config
 );
+```
 
-Passing "null" as the user launches Minecraft in offline mode.
+Passing `null` as the user launches Minecraft in offline mode.
 
-Available Modules
+## Available Modules
 
-- "minified-auth"
-- "minified-java"
-- "minified-launch"
-- "minified-utils"
-- "Launchified"
+- `minified-auth`
+- `minified-java`
+- `minified-launch`
+- `minified-utils`
+- `Launchified`
 
-Documentation
+## Documentation
 
 Documentation is available in the Javadoc.
 
-Testing
+## Testing
 
 The project currently contains mostly functional and integration tests.
 
@@ -78,19 +82,19 @@ The existing tests are intended to validate functionality and are not necessaril
 
 More unit tests and dedicated usage examples are planned in the future.
 
-Roadmap
+## Roadmap
 
 * NeoForged support
 * Additional unit tests
 * More usage examples
 * Improved platform-specific testing
 
-License
+## License
 
 Licensed under the Apache License 2.0.
 
 See the LICENSE file for details.
 
-Credits
+## Credits
 
-Big thanks to "etkmlm" (https://github.com/etkmlm) for explaining me important details about the Launch Process and the Forge installer, without him, I wouldn't have been able to implement the Forge installer.
+Big thanks to [etkmlm](https://github.com/etkmlm) for explaining me important details about the Launch Process and the Forge installer, without him, I wouldn't have been able to implement the Forge installer.
