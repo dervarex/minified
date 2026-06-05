@@ -15,7 +15,9 @@ Minified provides a high-level API for authentication, version management, asset
 * Minecraft launching
 * Microsoft account authentication
 * Session management
-* Forge installation support
+* Forge support
+* Fabric support
+* Quilt support
 
 ## Quick Start
 
@@ -87,9 +89,9 @@ More unit tests and dedicated usage examples are planned in the future.
 ## Roadmap
 
 * NeoForged support
-* Additional unit tests
+* Clean up tests
 * More usage examples
-* Improved platform-specific testing
+* Modrinth API Integration
 
 ## License
 
