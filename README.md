@@ -1,6 +1,8 @@
 # Minified
 
-Java API for Minecraft version management, asset downloading, library resolution and game launching.
+A lightweight Java library for downloading, managing and launching Minecraft.
+
+Minified provides a high-level API for authentication, version management, asset downloading, library resolution and game launching without requiring developers to reimplement Mojang's launcher logic.
 
 ## Features
 
