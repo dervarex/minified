@@ -42,11 +42,11 @@ LaunchConfigurator config = new LaunchConfigurator.Builder()
         .assetsDirectory(Path.of("assets"))
         .librariesDirectory(Path.of("libraries"))
         .jarFile(Path.of("client.jar"))
-        .loader(Loader.Forge)
+        .loader(Loader.Vanilla)
         .build();
 
 Launcher.launchMinecraft(
-        "1.21.1",
+        "1.21.11",
         user,
         config
 );
