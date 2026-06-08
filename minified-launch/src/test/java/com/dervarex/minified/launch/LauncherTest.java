@@ -137,12 +137,12 @@ public class LauncherTest {
                 .librariesDirectory(Path.of("/home/dervarex/Development/tmp/libs/"))
                 .jarFile(Path.of("/home/dervarex/Development/tmp/jar/client.jar"))
                 .isDemoUser(false)
-                .loader(Loader.Forge)
+                .loader(Loader.Vanilla)
                 .build();
 
 
         Launcher.launchMinecraft(
-                "1.21.11",
+                "1.14.1",
                 //user,
                 null,
                 config

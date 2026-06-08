@@ -223,23 +223,48 @@ public final class JavaManager {
         return null;
     }
 
-    private static RuntimeAsset resolveRuntimeAsset(int requiredMajorVersion) throws HttpException, IOException {
-        for (String imageType : new String[]{"jre", "jdk"}) {
-            String url = adoptiumAssetUrl(requiredMajorVersion, imageType);
-            JsonArray assets = new JsonFile(HttpUtil.get(url)).asArray();
-            if (assets == null || assets.size() == 0) {
-                continue;
-            }
+    private static RuntimeAsset resolveRuntimeAsset(int requiredMajorVersion)
+            throws IOException {
 
-            for (JsonValue assetValue : assets) {
-                RuntimeAsset asset = parseRuntimeAsset(assetValue, requiredMajorVersion, imageType);
-                if (asset != null) {
-                    return asset;
+        for (String imageType : new String[]{"jre", "jdk"}) {
+            try {
+                String url = adoptiumAssetUrl(requiredMajorVersion, imageType);
+
+                JsonArray assets = new JsonFile(HttpUtil.get(url)).asArray();
+
+                if (assets == null || assets.size() == 0) {
+                    continue;
+                }
+
+                for (JsonValue assetValue : assets) {
+                    RuntimeAsset asset =
+                            parseRuntimeAsset(assetValue,
+                                    requiredMajorVersion,
+                                    imageType);
+
+                    if (asset != null) {
+                        return asset;
+                    }
+                }
+
+            } catch (HttpException e) {
+                if (e.getStatusCode() == 404) {
+                    continue;
+                }
+                try {
+                    throw e;
+                } catch (HttpException ex) {
+                    throw new RuntimeException(ex);
                 }
             }
         }
 
-        throw new IOException("No supported Java runtime asset found for version " + requiredMajorVersion + " on " + platformId());
+        throw new IOException(
+                "No supported Java runtime asset found for version "
+                        + requiredMajorVersion
+                        + " on "
+                        + platformId()
+        );
     }
 
     private static RuntimeAsset parseRuntimeAsset(JsonValue assetValue, int requiredMajorVersion, String expectedImageType) {

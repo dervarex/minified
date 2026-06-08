@@ -12,6 +12,7 @@ import com.dervarex.minified.utils.json.JsonObject;
 import com.dervarex.minified.utils.json.JsonValue;
 import com.dervarex.minified.utils.network.NetworkUtil;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -19,6 +20,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +29,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 @SuppressWarnings("unused")
 public class LibraryDownloader {
@@ -54,6 +58,12 @@ public class LibraryDownloader {
             NetworkUtil.ensureOnline("downloading libraries for version " + version);
             librariesDir.toFile().mkdirs();
 
+            Path nativesDir = resolveNativesDirectory(librariesDir);
+            Files.createDirectories(nativesDir);
+
+            Path nativeDownloadDir = nativesDir.resolve(".downloads");
+            Files.createDirectories(nativeDownloadDir);
+
             JsonObject versionEntry = Objects.requireNonNull(
                     VersionManifestClient.getVersionEntry(version)
             ).asObject();
@@ -63,6 +73,7 @@ public class LibraryDownloader {
             );
 
             List<Future<?>> futures = new ArrayList<>();
+            List<NativeArchive> nativeArchives = new ArrayList<>();
 
             JsonArray libraries = versionJson.get("libraries").asArray();
 
@@ -74,24 +85,40 @@ public class LibraryDownloader {
                     continue;
                 }
 
-                JsonObject downloads = library.get("downloads").asObject();
-
-                // Some libraries only contain classifiers
-                if (!downloads.has("artifact")) {
+                JsonValue downloadsValue = library.get("downloads");
+                if (downloadsValue == null) {
                     continue;
                 }
 
-                JsonObject artifact = downloads.get("artifact").asObject();
+                JsonObject downloads = downloadsValue.asObject();
 
-                String url = artifact.get("url").asString();
-                String sha1 = artifact.get("sha1").asString();
+                JsonValue artifactValue = downloads.get("artifact");
+                if (artifactValue != null) {
+                    JsonObject artifact = artifactValue.asObject();
 
-                Path path = Path.of(
-                        librariesDir.toAbsolutePath().toString(),
-                        artifact.get("path").asString()
-                );
+                    String url = artifact.get("url").asString();
+                    String sha1 = artifact.get("sha1").asString();
 
-                futures.add(DownloadHelper.download(url, path, sha1, pool, client));
+                    Path path = Path.of(
+                            librariesDir.toAbsolutePath().toString(),
+                            artifact.get("path").asString()
+                    );
+
+                    futures.add(DownloadHelper.download(url, path, sha1, pool, client));
+                }
+
+                NativeDownload nativeDownload = resolveNativeDownload(library, downloads);
+                if (nativeDownload != null) {
+                    Path archivePath = nativeDownloadDir.resolve(nativeDownload.relativePath());
+                    futures.add(DownloadHelper.download(
+                            nativeDownload.url(),
+                            archivePath,
+                            nativeDownload.sha1(),
+                            pool,
+                            client
+                    ));
+                    nativeArchives.add(new NativeArchive(archivePath, library));
+                }
             }
 
             switch (loader) {
@@ -123,6 +150,8 @@ public class LibraryDownloader {
             for (Future<?> future : futures) {
                 future.get();
             }
+
+            extractNativeArchives(nativeArchives, nativesDir);
 
             pool.shutdown();
 
@@ -236,12 +265,123 @@ public class LibraryDownloader {
                 Files.copy(
                         in,
                         path,
-                        java.nio.file.StandardCopyOption.REPLACE_EXISTING
+                        StandardCopyOption.REPLACE_EXISTING
                 );
             }
         } catch (Exception e) {
             throw new RuntimeException("Failed to download Fabric library from " + url, e);
         }
+    }
+
+    private void extractNativeArchives(List<NativeArchive> nativeArchives, Path nativesDir) {
+        for (NativeArchive nativeArchive : nativeArchives) {
+            extractNativeArchive(nativeArchive.archive(), nativesDir, nativeArchive.library());
+        }
+    }
+
+    private void extractNativeArchive(Path archive, Path nativesDir, JsonObject library) {
+        try {
+            JsonArray excludes = null;
+            JsonValue extractValue = library.get("extract");
+            if (extractValue != null) {
+                JsonObject extractObject = extractValue.asObject();
+                JsonValue excludeValue = extractObject.get("exclude");
+                if (excludeValue != null) {
+                    excludes = excludeValue.asArray();
+                }
+            }
+
+            try (ZipInputStream zipInputStream = new ZipInputStream(Files.newInputStream(archive))) {
+                ZipEntry entry;
+                while ((entry = zipInputStream.getNextEntry()) != null) {
+                    if (entry.isDirectory()) {
+                        zipInputStream.closeEntry();
+                        continue;
+                    }
+
+                    String entryName = entry.getName();
+                    if (isExcluded(entryName, excludes)) {
+                        zipInputStream.closeEntry();
+                        continue;
+                    }
+
+                    Path target = resolveExtractionTarget(nativesDir, entryName);
+                    Files.createDirectories(target.getParent());
+                    Files.copy(zipInputStream, target, StandardCopyOption.REPLACE_EXISTING);
+                    zipInputStream.closeEntry();
+                }
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to extract native archive " + archive, e);
+        } finally {
+            try {
+                Files.deleteIfExists(archive);
+            } catch (IOException ignored) {
+            }
+        }
+    }
+
+    private boolean isExcluded(String entryName, JsonArray excludes) {
+        if (excludes == null) {
+            return false;
+        }
+
+        for (JsonValue excludeValue : excludes) {
+            String exclude = excludeValue.asString();
+            if (entryName.startsWith(exclude)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private Path resolveExtractionTarget(Path destination, String entryName) throws IOException {
+        Path target = destination.resolve(entryName).normalize();
+        if (!target.startsWith(destination.normalize())) {
+            throw new IOException("Blocked path traversal entry in archive: " + entryName);
+        }
+        return target;
+    }
+
+    private NativeDownload resolveNativeDownload(JsonObject library, JsonObject downloads) {
+        JsonValue nativesValue = library.get("natives");
+        JsonValue classifiersValue = downloads.get("classifiers");
+
+        if (nativesValue == null || classifiersValue == null) {
+            return null;
+        }
+
+        JsonObject natives = nativesValue.asObject();
+        String os = getMinecraftOs();
+        JsonValue classifierNameValue = natives.get(os);
+
+        if (classifierNameValue == null) {
+            return null;
+        }
+
+        String classifierName = classifierNameValue.asString();
+        JsonObject classifiers = classifiersValue.asObject();
+        JsonValue classifierValue = classifiers.get(classifierName);
+
+        if (classifierValue == null) {
+            return null;
+        }
+
+        JsonObject classifier = classifierValue.asObject();
+        JsonValue pathValue = classifier.get("path");
+        JsonValue urlValue = classifier.get("url");
+        JsonValue sha1Value = classifier.get("sha1");
+
+        if (pathValue == null || urlValue == null || sha1Value == null) {
+            return null;
+        }
+
+        return new NativeDownload(
+                pathValue.asString(),
+                urlValue.asString(),
+                sha1Value.asString()
+        );
     }
 
     /**
@@ -302,5 +442,19 @@ public class LibraryDownloader {
         }
 
         return "unknown";
+    }
+
+    private Path resolveNativesDirectory(Path librariesDir) {
+        Path parent = librariesDir.toAbsolutePath().getParent();
+        if (parent == null) {
+            return librariesDir.toAbsolutePath().resolve("natives");
+        }
+        return parent.resolve("jar").resolve("natives").toAbsolutePath();
+    }
+
+    private record NativeDownload(String relativePath, String url, String sha1) {
+    }
+
+    private record NativeArchive(Path archive, JsonObject library) {
     }
 }

@@ -74,10 +74,10 @@ public class Launcher {
                             )
                     );
 
-            JavaInstallation javaInstallation =
-                    JavaManager.ensureJavaVersion(
-                            JavaManager.getRequiredJavaVersion(versionJson)
-                    );
+//            JavaInstallation javaInstallation =
+//                    JavaManager.ensureJavaVersion(
+//                            JavaManager.getRequiredJavaVersion(versionJson)
+//                    );
 
             downloadFiles(
                     version,
@@ -126,10 +126,11 @@ public class Launcher {
                     new ArrayList<>();
 
             command.add(
-                      javaInstallation
-                              .executable()
-                              .toAbsolutePath()
-                              .toString()
+//                      javaInstallation
+//                              .executable()
+//                              .toAbsolutePath()
+//                              .toString()
+                    "java"
 
             );                                                                   // java
             command.addAll(jvmArgs);                                             // jvmargs
@@ -402,9 +403,11 @@ public class Launcher {
                 processBuilder
         );
 
-        System.out.println(
-                String.join(" ", command)
-        );
+        if (true) { // true to enable debug mode
+            System.out.println(
+                    String.join(" ", command)
+            );
+        }
 
         processBuilder.inheritIO();
 
