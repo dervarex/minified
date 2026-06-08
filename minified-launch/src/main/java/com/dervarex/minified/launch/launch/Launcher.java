@@ -5,6 +5,7 @@ import com.dervarex.minified.java.JavaInstallation;
 import com.dervarex.minified.java.JavaManager;
 import com.dervarex.minified.launch.arguments.GameArgumentsParser;
 import com.dervarex.minified.launch.arguments.JvmArgumentsParser;
+import com.dervarex.minified.launch.arguments.LegacyMinecraftArgumentsParser;
 import com.dervarex.minified.launch.download.ClientDownloader;
 import com.dervarex.minified.launch.download.assets.AssetDownloader;
 import com.dervarex.minified.launch.download.libraries.LibraryDownloader;
@@ -26,6 +27,7 @@ import com.dervarex.minified.utils.json.JsonValue;
 import com.dervarex.minified.utils.network.NetworkUtil;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -103,23 +105,32 @@ public class Launcher {
                             classpath
                     );
 
-            JsonObject arguments =
-                    versionJson
-                            .get("arguments")
-                            .asObject();
-
             List<String> jvmArgs =
                     buildJvmArguments(
-                            arguments,
+                            versionJson,
                             launchConfig,
                             options,
                             loader,
                             version
                     );
+            Path nativesDir =
+                    launchConfig.getLibrariesDirectory()
+                            .toAbsolutePath()
+                            .getParent()
+                            .resolve("jar")
+                            .resolve("natives");
+
+            jvmArgs.add(
+                    "-Djava.library.path=" + nativesDir
+            );
+
+            jvmArgs.add(
+                    "-Dorg.lwjgl.librarypath=" + nativesDir
+            );
 
             List<String> gameArgs =
                     buildGameArguments(
-                            arguments,
+                            versionJson,
                             options,
                             loader,
                             version,
@@ -130,18 +141,26 @@ public class Launcher {
                     new ArrayList<>();
 
             command.add(
-                    javaInstallation != null ?
+                    javaInstallation != null
+                            ? javaInstallation.executable().toAbsolutePath().toString()
+                            : launchConfig.getCustomJavaExecutable().toAbsolutePath().toString()
+            );
 
-                      javaInstallation
-                              .executable()
-                              .toAbsolutePath()
-                              .toString()
-                            :
-                            launchConfig.getCustomJavaExecutable().toAbsolutePath().toString()
-            );                                                                   // java
-            command.addAll(jvmArgs);                                             // jvmargs
-            command.add(getMainClass(versionJson,loader,version, launchConfig)); // mainclass
-            command.addAll(gameArgs);                                            // gameargs
+            command.addAll(jvmArgs);
+
+            command.add("-cp");
+            command.add(classpath);
+
+            command.add(
+                    getMainClass(
+                            versionJson,
+                            loader,
+                            version,
+                            launchConfig
+                    )
+            );
+
+            command.addAll(gameArgs);                                   // gameargs
 
             launchProcess(command);
 
@@ -183,53 +202,48 @@ public class Launcher {
     }
 
     private static List<String> buildJvmArguments(
-            JsonObject arguments,
+            JsonFile versionJson,
             LaunchConfigurator launchConfig,
             LaunchOptions options,
             Loader loader,
             String version
     ) {
+        JsonArray mergedJvm = new JsonArray();
 
-        JsonArray mergedJvm =
-                new JsonArray();
+        JsonValue argumentsValue = versionJson.get("arguments");
+        if (argumentsValue != null) {
+            JsonObject arguments = argumentsValue.asObject();
 
-        JsonValue defaultUserJvmValue =
-                arguments.get("default-user-jvm");
+            JsonValue defaultUserJvmValue = arguments.get("default-user-jvm");
+            if (defaultUserJvmValue != null) {
+                for (JsonValue value : defaultUserJvmValue.asArray()) {
+                    mergedJvm.add(value);
+                }
+            }
 
-        if (defaultUserJvmValue != null) {
-            for (JsonValue value : defaultUserJvmValue.asArray()) {
-                mergedJvm.add(value);
+            JsonValue jvmValue = arguments.get("jvm");
+            if (jvmValue != null) {
+                for (JsonValue value : jvmValue.asArray()) {
+                    mergedJvm.add(value);
+                }
             }
         }
 
-        JsonValue jvmValue =
-                arguments.get("jvm");
-
-        if (jvmValue != null) {
-            for (JsonValue value : jvmValue.asArray()) {
-                mergedJvm.add(value);
-            }
-        }
-
-        List<String> jvmArgs =
-                JvmArgumentsParser.parse(
-                        mergedJvm,
-                        launchConfig.getMinRam(),
-                        launchConfig.getMaxRam()
-                );
-
-        jvmArgs.addAll(
-                launchConfig.getExtraJvmArgs()
+        List<String> jvmArgs = JvmArgumentsParser.parse(
+                mergedJvm,
+                launchConfig.getMinRam(),
+                launchConfig.getMaxRam()
         );
+
+        jvmArgs.addAll(launchConfig.getExtraJvmArgs());
+
         switch (loader) {
             case Vanilla:
-                // Nothing additional required here
                 break;
             case Fabric:
                 try {
                     JsonObject fabricProfileJson = FabricLoaderFetcher.getLatestProfile(version);
                     JsonValue fabricArguments = fabricProfileJson.asObject().get("arguments");
-
                     for (JsonValue e : fabricArguments.asObject().get("jvm").asArray()) {
                         jvmArgs.add(e.asString());
                     }
@@ -237,17 +251,13 @@ public class Launcher {
                     throw new RuntimeException("Failed to fetch Fabric loader profile", e);
                 }
                 break;
-//            case Quilt:   -    quilt currently doesn't seem to require additional jvm arguments
             case Forge:
-                JsonFile versionJson;
                 try {
-                    versionJson = ForgeVersionJson.getVersionJson(launchConfig.getJarFile().getParent().toAbsolutePath(), new ForgeVersionFetcher().getLatest(version));
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-                try {
-                    JsonValue forgeArguments = versionJson.asObject().get("arguments");
-
+                    JsonFile forgeVersionJson = ForgeVersionJson.getVersionJson(
+                            launchConfig.getJarFile().getParent().toAbsolutePath(),
+                            new ForgeVersionFetcher().getLatest(version)
+                    );
+                    JsonValue forgeArguments = forgeVersionJson.asObject().get("arguments");
                     for (JsonValue e : forgeArguments.asObject().get("jvm").asArray()) {
                         jvmArgs.add(e.asString());
                     }
@@ -255,33 +265,39 @@ public class Launcher {
                     throw new RuntimeException("Failed to fetch Forge loader profile", e);
                 }
                 break;
-
         }
 
-        return X11Helper.substituteVariables(
-                jvmArgs,
-                options.getVariables()
-        );
+        return X11Helper.substituteVariables(jvmArgs, options.getVariables());
     }
 
     private static List<String> buildGameArguments(
-            JsonObject arguments,
+            JsonFile versionJson,
             LaunchOptions options,
             Loader loader,
             String version,
             LaunchConfigurator launchConfig
     ) {
+        JsonValue argumentsValue = versionJson.get("arguments");
+
+        if (argumentsValue == null) {
+            JsonValue minecraftArguments = versionJson.get("minecraftArguments");
+            if (minecraftArguments == null) {
+                throw new RuntimeException("No arguments or minecraftArguments found in version JSON");
+            }
+
+            return X11Helper.substituteVariables(
+                    LegacyMinecraftArgumentsParser.parse(minecraftArguments.asString()),
+                    options.getVariables()
+            );
+        }
+
+        JsonObject arguments = argumentsValue.asObject();
 
         JsonValue gameValue = arguments.get("game");
-
-        JsonArray gameArray =
-                gameValue != null
-                        ? gameValue.asArray()
-                        : new JsonArray();
+        JsonArray gameArray = gameValue != null ? gameValue.asArray() : new JsonArray();
 
         switch (loader) {
             case Vanilla:
-                // nothing additional required here
                 break;
             case Fabric:
                 try {
@@ -289,11 +305,7 @@ public class Launcher {
                     JsonValue fabricArguments = fabricProfileJson.get("arguments");
 
                     if (fabricArguments != null) {
-                        JsonArray fabricGameArgs =
-                                fabricArguments.asObject()
-                                        .get("game")
-                                        .asArray();
-
+                        JsonArray fabricGameArgs = fabricArguments.asObject().get("game").asArray();
                         for (JsonValue arg : fabricGameArgs) {
                             gameArray.add(arg);
                         }
@@ -302,17 +314,13 @@ public class Launcher {
                     throw new RuntimeException("Failed to fetch Fabric loader profile", e);
                 }
                 break;
-            case Quilt: // quilt currently doesn't have any game args(empty array), but in case they add arguments, this should work
+            case Quilt:
                 try {
                     JsonObject quiltProfileJson = QuiltLoaderFetcher.getLatestProfile(version);
                     JsonValue quiltArguments = quiltProfileJson.get("arguments");
 
                     if (quiltArguments != null) {
-                        JsonArray quiltGameArgs =
-                                quiltArguments.asObject()
-                                        .get("game")
-                                        .asArray();
-
+                        JsonArray quiltGameArgs = quiltArguments.asObject().get("game").asArray();
                         for (JsonValue arg : quiltGameArgs) {
                             gameArray.add(arg);
                         }
@@ -322,15 +330,12 @@ public class Launcher {
                 }
                 break;
             case Forge:
-                JsonFile versionJson;
                 try {
-                    versionJson = ForgeVersionJson.getVersionJson(launchConfig.getJarFile().getParent().toAbsolutePath(), new ForgeVersionFetcher().getLatest(version));
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-                try {
-                    JsonValue forgeArguments = versionJson.asObject().get("arguments");
-
+                    JsonFile forgeVersionJson = ForgeVersionJson.getVersionJson(
+                            launchConfig.getJarFile().getParent().toAbsolutePath(),
+                            new ForgeVersionFetcher().getLatest(version)
+                    );
+                    JsonValue forgeArguments = forgeVersionJson.asObject().get("arguments");
                     for (JsonValue a : forgeArguments.asObject().get("game").asArray()) {
                         gameArray.add(a);
                     }

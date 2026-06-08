@@ -143,7 +143,7 @@ public class LauncherTest {
 
 
         Launcher.launchMinecraft(
-                "1.14.1",
+                "1.6",
                 //user,
                 null,
                 config

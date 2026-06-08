@@ -84,6 +84,21 @@ final class LaunchOptions {
                                 "auth_access_token",
                                 user == null ? "some-access-token" : user.getAccessToken()
                         )
+                        .setVariable(
+                                "user_properties",
+                                "{}"
+                        )
+
+                        .setVariable(
+                                "user_type",
+                                user == null ? "legacy" : "msa"
+                        )
+                        .setVariable(
+                                "game_assets",
+                                launchConfig.getAssetsDirectory()
+                                        .toAbsolutePath()
+                                        .toString()
+                        )
 
 //                            .setVariable(
 //                                    "auth_xuid",

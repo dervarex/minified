@@ -15,6 +15,8 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -46,8 +48,8 @@ public class AssetDownloader {
             assetsDir.toFile().mkdirs();
 
             JsonObject versionEntry = Objects.requireNonNull
-                                      (VersionManifestClient.getVersionEntry(version))
-                                      .asObject();
+                            (VersionManifestClient.getVersionEntry(version))
+                    .asObject();
 
             JsonFile versionJson = new JsonFile(
                     HttpUtil.get(versionEntry.get("url").asString())
@@ -82,6 +84,7 @@ public class AssetDownloader {
                     .asObject();
 
             List<Future<?>> futures = new ArrayList<>();
+            Set<String> seenHashes = ConcurrentHashMap.newKeySet();
 
             for (String key : objects.keys()) {
 
@@ -92,6 +95,10 @@ public class AssetDownloader {
                 String hash = asset
                         .get("hash")
                         .asString();
+
+                if (!seenHashes.add(hash)) {
+                    continue;
+                }
 
                 String subDir = hash.substring(0, 2);
 
@@ -105,7 +112,15 @@ public class AssetDownloader {
                         .resolve(subDir)
                         .resolve(hash);
 
-                futures.add(DownloadHelper.download(url, output, hash, pool, client));
+                futures.add(
+                        DownloadHelper.download(
+                                url,
+                                output,
+                                hash,
+                                pool,
+                                client
+                        )
+                );
             }
 
             // wait for all libraries
@@ -121,6 +136,4 @@ public class AssetDownloader {
             pool.shutdown();
         }
     }
-
-
 }
