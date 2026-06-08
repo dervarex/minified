@@ -29,6 +29,7 @@ public class LaunchConfigurator {
     private Path librariesDirectory; // required
     private Path assetsDirectory;    // required
     private Path nativesDirectory;   // optional, defaults to <jarFile's parent directory>/natives
+    private Path customJavaExecutable;
 
     private final List<String> extraJvmArgs = new ArrayList<>();
     private Loader loader = Loader.Vanilla;
@@ -102,6 +103,10 @@ public class LaunchConfigurator {
         }
         public Builder loader(Loader loader) {
             config.loader = loader;
+            return this;
+        }
+        public Builder  customJavaExecutable(Path customJavaExecutable) {
+            config.customJavaExecutable = customJavaExecutable;
             return this;
         }
 

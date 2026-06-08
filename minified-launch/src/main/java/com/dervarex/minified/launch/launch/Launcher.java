@@ -73,11 +73,15 @@ public class Launcher {
                                             .getVersionJsonUrl(version)
                             )
                     );
-
-//            JavaInstallation javaInstallation =
-//                    JavaManager.ensureJavaVersion(
-//                            JavaManager.getRequiredJavaVersion(versionJson)
-//                    );
+            JavaInstallation javaInstallation;
+            if(launchConfig.getCustomJavaExecutable() == null) {
+                javaInstallation =
+                        JavaManager.ensureJavaVersion(
+                                JavaManager.getRequiredJavaVersion(versionJson)
+                        );
+            } else {
+                javaInstallation = null;
+            }
 
             downloadFiles(
                     version,
@@ -126,12 +130,14 @@ public class Launcher {
                     new ArrayList<>();
 
             command.add(
-//                      javaInstallation
-//                              .executable()
-//                              .toAbsolutePath()
-//                              .toString()
-                    "java"
+                    javaInstallation != null ?
 
+                      javaInstallation
+                              .executable()
+                              .toAbsolutePath()
+                              .toString()
+                            :
+                            launchConfig.getCustomJavaExecutable().toAbsolutePath().toString()
             );                                                                   // java
             command.addAll(jvmArgs);                                             // jvmargs
             command.add(getMainClass(versionJson,loader,version, launchConfig)); // mainclass
@@ -403,11 +409,9 @@ public class Launcher {
                 processBuilder
         );
 
-        if (true) { // true to enable debug mode
-            System.out.println(
-                    String.join(" ", command)
-            );
-        }
+        System.out.println(
+                String.join(" ", command)
+        );
 
         processBuilder.inheritIO();
 

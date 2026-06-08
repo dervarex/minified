@@ -82,6 +82,38 @@ public final class VersionMetadataProvider {
         JsonFile json = new JsonFile(HttpUtil.get(url));
         return json.get("releaseTime").asString();
     }
+    public static String getClientSha1(String version) throws HttpException, IOException {
+        String url = getVersionJsonUrl(version);
+        if (url == null) {
+            return null;
+        }
+
+        JsonFile json = new JsonFile(HttpUtil.get(url));
+
+        return json.get("downloads")
+                .asObject()
+                .get("client")
+                .asObject()
+                .get("sha1")
+                .asString();
+    }
+    public static String getClientUrl(String version)
+            throws HttpException, IOException {
+
+        String url = getVersionJsonUrl(version);
+        if (url == null) {
+            return null;
+        }
+
+        JsonFile json = new JsonFile(HttpUtil.get(url));
+
+        return json.get("downloads")
+                .asObject()
+                .get("client")
+                .asObject()
+                .get("url")
+                .asString();
+    }
 
 }
 

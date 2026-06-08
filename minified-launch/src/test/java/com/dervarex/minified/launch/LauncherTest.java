@@ -138,6 +138,7 @@ public class LauncherTest {
                 .jarFile(Path.of("/home/dervarex/Development/tmp/jar/client.jar"))
                 .isDemoUser(false)
                 .loader(Loader.Vanilla)
+                .customJavaExecutable(Path.of("/usr/bin/java"))
                 .build();
 
 
