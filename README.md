@@ -101,4 +101,4 @@ See the LICENSE file for details.
 
 ## Credits
 
-Big thanks to [etkmlm](https://github.com/etkmlm) for explaining me important details about the Launch Process and the Forge installer, without him, I wouldn't have been able to implement the Forge installer.
+Big thanks to [etkmlm](https://github.com/etkmlm) for explaining me important details about the Launch Process and the Forge installer, without him, I wouldn't have been able to implement Forge support.
