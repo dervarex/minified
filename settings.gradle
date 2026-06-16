@@ -4,6 +4,3 @@ include 'minified-auth'
 include 'minified-launch'
 include 'minified-java'
 include 'minified-utils'
-
-
-include 'Launchified'

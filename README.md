@@ -29,7 +29,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.dervarex.minified:minified-launch:v1.2.0'
+    implementation 'com.github.dervarex.minified:minified-launch:v1.2.1'
 }
 ```
 
@@ -60,7 +60,6 @@ Passing `null` as the user launches Minecraft in offline mode.
 - `minified-java`
 - `minified-launch`
 - `minified-utils`
-- `Launchified`
 
 ## Documentation
 
@@ -88,6 +87,7 @@ More unit tests and dedicated usage examples are planned in the future.
 
 ## Roadmap
 
+* Own Launcher to test the library in a real world scenario
 * NeoForged support
 * Clean up tests
 * More usage examples

@@ -9,7 +9,6 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/Launchified" />
             <option value="$PROJECT_DIR$/minified-auth" />
             <option value="$PROJECT_DIR$/minified-java" />
             <option value="$PROJECT_DIR$/minified-launch" />
