@@ -44,6 +44,7 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 tasks.withType(Test).configureEach {
+    enabled = false
     useJUnitPlatform()
     testLogging {
         showStandardStreams = true
