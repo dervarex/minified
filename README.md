@@ -87,11 +87,18 @@ More unit tests and dedicated usage examples are planned in the future.
 
 ## Roadmap
 
-* Own Launcher to test the library in a real world scenario
 * NeoForged support
 * Clean up tests
 * More usage examples
 * Modrinth API Integration
+
+### Abandoned Features
+
+* Own launcher to test the library in a real-world scenario
+
+    * The launcher was supposed to be built using Compose Desktop. 
+      
+      Unfortunately, Compose Desktop and I had creative differences regarding the definition of a "working build". The feature was therefore sacrificed in favor of preserving my remaining motivation.
 
 ## License
 
