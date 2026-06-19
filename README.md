@@ -2,7 +2,7 @@
 
 A lightweight Java library for downloading, managing and launching Minecraft.
 
-Supports Vanilla, Forge, Fabric and Quilt.
+Supports Vanilla, Forge, Neoforge Fabric and Quilt.
 
 Minified provides a high-level API for authentication, version management, asset downloading, library resolution and game launching without requiring developers to reimplement Mojang's launcher logic.
 
