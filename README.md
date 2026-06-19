@@ -16,6 +16,7 @@ Minified provides a high-level API for authentication, version management, asset
 * Microsoft account authentication
 * Session management
 * Forge support
+* Neoforge support
 * Fabric support
 * Quilt support
 
@@ -87,7 +88,6 @@ More unit tests and dedicated usage examples are planned in the future.
 
 ## Roadmap
 
-* NeoForged support
 * Only use os-specific natives instead of downloading and extracting all natives
 * Fix Java Manager
 * Custom Modloader versions
