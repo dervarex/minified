@@ -13,7 +13,10 @@ import com.dervarex.minified.launch.launch.modding.Loader;
 import com.dervarex.minified.launch.launch.modding.fabric.FabricLoaderFetcher;
 import com.dervarex.minified.launch.launch.modding.forge.api.ForgeVersionFetcher;
 import com.dervarex.minified.launch.launch.modding.forge.api.ForgeVersionJson;
-import com.dervarex.minified.launch.launch.modding.forge.installer.InstallerInjector;
+import com.dervarex.minified.launch.launch.modding.forge.installer.ForgeInstallerInjector;
+import com.dervarex.minified.launch.launch.modding.neoforge.api.NeoVersionFetcher;
+import com.dervarex.minified.launch.launch.modding.neoforge.api.NeoVersionJson;
+import com.dervarex.minified.launch.launch.modding.neoforge.installer.NeoInstallerInjector;
 import com.dervarex.minified.launch.launch.modding.quilt.QuiltLoaderFetcher;
 import com.dervarex.minified.launch.utils.X11Helper;
 import com.dervarex.minified.launch.version.VersionMetadataProvider;
@@ -27,6 +30,7 @@ import com.dervarex.minified.utils.json.JsonValue;
 import com.dervarex.minified.utils.network.NetworkUtil;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -64,8 +68,14 @@ public class Launcher {
 
             Loader loader = launchConfig.getLoader();
             if(loader.equals(Loader.Forge)) {
-                InstallerInjector installerInjector = new InstallerInjector();
-                installerInjector.install(launchConfig, version);
+                ForgeInstallerInjector forgeInstallerInjector = new ForgeInstallerInjector();
+                forgeInstallerInjector.install(launchConfig, version);
+            } else if (loader.equals(Loader.NeoForge)) {
+                NeoInstallerInjector neoInstallerInjector = new NeoInstallerInjector();
+                neoInstallerInjector.install(launchConfig, version);
+
+//                String neoForgeVersion = new NeoVersionFetcher().getLatest(version);
+//                ensureNeoForgeCommonJar(launchConfig, version, neoForgeVersion);
             }
 
             JsonFile versionJson =
@@ -117,7 +127,6 @@ public class Launcher {
                     launchConfig.getLibrariesDirectory()
                             .toAbsolutePath()
                             .getParent()
-                            .resolve("jar")
                             .resolve("natives");
 
             jvmArgs.add(
@@ -148,8 +157,8 @@ public class Launcher {
 
             command.addAll(jvmArgs);
 
-            command.add("-cp");
-            command.add(classpath);
+//            command.add("-cp");
+//            command.add(classpath);
 
             command.add(
                     getMainClass(
@@ -236,6 +245,9 @@ public class Launcher {
         );
 
         jvmArgs.addAll(launchConfig.getExtraJvmArgs());
+        jvmArgs.removeIf(arg -> arg.equals("-XX:+UseCompactObjectHeaders")); //to do is this correct? - seems like it works or smth
+        jvmArgs.removeIf(arg ->
+                arg.equals("--sun-misc-unsafe-memory-access=allow"));
 
         switch (loader) {
             case Vanilla:
@@ -263,6 +275,24 @@ public class Launcher {
                     }
                 } catch (Exception e) {
                     throw new RuntimeException("Failed to fetch Forge loader profile", e);
+                }
+                break;
+            case NeoForge:
+                try {
+                    JsonFile neoVersionJson =
+                            NeoVersionJson.getVersionJson(
+                                    launchConfig.getJarFile().getParent().toAbsolutePath(),
+                                    new NeoVersionFetcher().getLatest(version)
+                            );
+
+                    JsonValue neoArguments =
+                            neoVersionJson.asObject().get("arguments");
+
+                    for (JsonValue e : neoArguments.asObject().get("jvm").asArray()) {
+                        jvmArgs.add(e.asString());
+                    }
+                } catch (Exception e) {
+                    throw new RuntimeException("Failed to fetch NeoForge loader profile", e);
                 }
                 break;
         }
@@ -343,6 +373,24 @@ public class Launcher {
                     throw new RuntimeException("Failed to fetch Forge loader profile", e);
                 }
                 break;
+            case NeoForge:
+                try {
+                    JsonFile neoVersionJson =
+                            NeoVersionJson.getVersionJson(
+                                    launchConfig.getJarFile().getParent().toAbsolutePath(),
+                                    new NeoVersionFetcher().getLatest(version)
+                            );
+
+                    JsonValue neoArguments =
+                            neoVersionJson.asObject().get("arguments");
+
+                    for (JsonValue a : neoArguments.asObject().get("game").asArray()) {
+                        gameArray.add(a);
+                    }
+                } catch (Exception e) {
+                    throw new RuntimeException("Failed to fetch NeoForge loader profile", e);
+                }
+                break;
         }
 
         return GameArgumentsParser.parse(
@@ -384,6 +432,19 @@ public class Launcher {
                 try {
                     JsonObject forgeVersionJson = ForgeVersionJson.getVersionJson(launchConfig.getJarFile().getParent().toAbsolutePath(), new ForgeVersionFetcher().getLatest(version)).asObject();
                     mainClassValue = forgeVersionJson.get("mainClass");
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                break;
+            case NeoForge:
+                try {
+                    JsonObject neoVersionJson =
+                            NeoVersionJson.getVersionJson(
+                                    launchConfig.getJarFile().getParent().toAbsolutePath(),
+                                    new NeoVersionFetcher().getLatest(version)
+                            ).asObject();
+
+                    mainClassValue = neoVersionJson.get("mainClass");
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -432,4 +493,56 @@ public class Launcher {
             );
         }
     }
+//    static void ensureNeoForgeCommonJar(
+//            LaunchConfigurator config,
+//            String minecraftVersion,
+//            String neoForgeVersion
+//    ) throws IOException {
+//        Path base = config.getLibrariesDirectory();
+//
+//        Path patchedJar = base.resolve("net/neoforged/minecraft-client-patched")
+//                .resolve(neoForgeVersion)
+//                .resolve("minecraft-client-patched-" + neoForgeVersion + ".jar");
+//
+//        Path targetJar = base.resolve("net/minecraft/client")
+//                .resolve(minecraftVersion + "-1")
+//                .resolve("client-" + minecraftVersion + "-1-srg.jar");
+//
+//        if (Files.exists(targetJar)) {
+//            return;
+//        }
+//
+//        Files.createDirectories(targetJar.getParent());
+//
+//        try (java.util.jar.JarFile source = new java.util.jar.JarFile(patchedJar.toFile())) {
+//            java.util.jar.Manifest manifest = source.getManifest();
+//            if (manifest == null) {
+//                manifest = new java.util.jar.Manifest();
+//            }
+//
+//            java.util.jar.Attributes attrs = manifest.getMainAttributes();
+//            if (attrs.getValue(java.util.jar.Attributes.Name.MANIFEST_VERSION) == null) {
+//                attrs.put(java.util.jar.Attributes.Name.MANIFEST_VERSION, "1.0");
+//            }
+//
+//            attrs.putValue("Minecraft-Dists", "CLIENT"); // we have to put it in there for neoforge to work  to do: did it?  -  um no it did not  -  maybe if we skip some shit?
+//
+//            try (java.util.jar.JarOutputStream out =
+//                         new java.util.jar.JarOutputStream(Files.newOutputStream(targetJar), manifest)) {
+//                var entries = source.entries();
+//                while (entries.hasMoreElements()) {
+//                    var entry = entries.nextElement();
+//                    if ("META-INF/MANIFEST.MF".equals(entry.getName())) {
+//                        continue;
+//                    }
+//
+//                    out.putNextEntry(new java.util.jar.JarEntry(entry.getName()));
+//                    try (var in = source.getInputStream(entry)) {
+//                        in.transferTo(out);
+//                    }
+//                    out.closeEntry();
+//                }
+//            }
+//        }
+//    }
 }

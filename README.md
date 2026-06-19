@@ -88,9 +88,17 @@ More unit tests and dedicated usage examples are planned in the future.
 ## Roadmap
 
 * NeoForged support
-* Clean up tests
-* More usage examples
+* Only use os-specific natives instead of downloading and extracting all natives
+* Fix Java Manager
+* Custom Modloader versions
 * Modrinth API Integration
+* Custom offline username support
+* Clean up tests
+* More unit tests
+* More integration tests
+* More documentation(mostly cleanup of existing documentation)
+* More usage examples
+
 
 ### Abandoned Features
 

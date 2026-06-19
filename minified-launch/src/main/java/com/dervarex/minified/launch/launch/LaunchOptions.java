@@ -102,7 +102,7 @@ final class LaunchOptions {
 
 //                            .setVariable(
 //                                    "auth_xuid",
-//                                    "" // tod o find out what this is
+//                                    "" // minecraft doesn't seem to need this
 //                            )
 
                         .setVariable(
@@ -118,6 +118,12 @@ final class LaunchOptions {
                         .setVariable(
                                 "resolution_height",
                                 String.valueOf(launchConfig.getResolutionHeight())
+                        )
+                        .setVariable(
+                                "library_directory",
+                                launchConfig.getLibrariesDirectory()
+                                        .toAbsolutePath()
+                                        .toString()
                         )
 
                         .setVariable(

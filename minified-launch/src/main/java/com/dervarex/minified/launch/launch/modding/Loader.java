@@ -4,5 +4,6 @@ public enum Loader {
     Vanilla,
     Fabric,
     Quilt,
-    Forge;
+    Forge,
+    NeoForge;
 }

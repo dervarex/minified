@@ -1,7 +1,6 @@
 package com.dervarex.minified.launch.launch.modding.forge.installer;
 
 import com.dervarex.minified.launch.launch.LaunchConfigurator;
-import com.dervarex.minified.launch.launch.modding.Loader;
 import com.dervarex.minified.launch.launch.modding.forge.api.ForgeInstallerFetcher;
 import com.dervarex.minified.launch.launch.modding.forge.api.ForgeVersionFetcher;
 import com.dervarex.minified.launch.utils.DownloadHelper;
@@ -22,7 +21,7 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.function.Consumer;
 
-public class InstallerInjector {
+public class ForgeInstallerInjector {
     private static void prepare(LaunchConfigurator configurator) {
         Path gameDir = configurator.getJarFile().getParent();
         try {

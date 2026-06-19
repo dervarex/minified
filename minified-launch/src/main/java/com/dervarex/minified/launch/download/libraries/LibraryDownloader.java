@@ -142,7 +142,8 @@ public class LibraryDownloader {
                     );
                     break;
                 case Forge:
-                    // Nothing additional to download for forge, as the installer will handle it for us :)
+                case NeoForge:
+                    // Nothing additional to download for forge and neoforge, as the installer will handle it for us :)
                     break;
             }
 

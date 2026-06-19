@@ -12,5 +12,13 @@ public class ApiEndpoints {
     public static final String ForgeInstallerBaseUrl  ="https://maven.minecraftforge.net/net/minecraftforge/forge/";
     public static final String ForgeMavenMetadataUrl  ="https://maven.minecraftforge.net/net/minecraftforge/forge/maven-metadata.xml";
     public static final String ForgePromotionsUrl     ="https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json";
+    // Neoforge
+    public static final String NeoForgeInstallerBaseUrl =
+            "https://maven.neoforged.net/releases/net/neoforged/neoforge/";
 
+    public static final String NeoForgeMavenMetadataUrl =
+            "https://maven.neoforged.net/releases/net/neoforged/neoforge/maven-metadata.xml";
 }
+//https://maven.neoforged.net/releases/net/neoforged/neoforge/26.2.0.1-beta/neoforge-26.2.0.1-beta-installer.jar
+//https://maven.neoforged.net/releases/net/neoforged/neoforge/
+//

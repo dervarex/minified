@@ -6,6 +6,9 @@ import com.dervarex.minified.auth.User;
 import com.dervarex.minified.launch.launch.LaunchConfigurator;
 import com.dervarex.minified.launch.launch.Launcher;
 import com.dervarex.minified.launch.launch.modding.Loader;
+import com.dervarex.minified.launch.launch.modding.neoforge.api.NeoInstallerFetcher;
+import com.dervarex.minified.launch.launch.modding.neoforge.api.NeoVersionFetcher;
+import com.dervarex.minified.launch.launch.modding.neoforge.api.NeoVersionJson;
 
 import java.nio.file.Path;
 
@@ -59,6 +62,7 @@ public class LauncherTest {
     }
 
     public static void main(String[] args) throws Exception {
+        System.out.println(new NeoVersionFetcher().getLatest("26.1.2"));
 
         //printLaunchDiagnostics();
 
@@ -134,16 +138,18 @@ public class LauncherTest {
                 .launcherName("MinifiedLauncher")
                 .launcherVersion("1.0.0")
                 .assetsDirectory(Path.of("/home/dervarex/Development/tmp/assets/"))
-                .librariesDirectory(Path.of("/home/dervarex/Development/tmp/libs/"))
+                .librariesDirectory(
+                        Path.of("/home/dervarex/Development/tmp/jar/libraries/")
+                )
                 .jarFile(Path.of("/home/dervarex/Development/tmp/jar/client.jar"))
                 .isDemoUser(false)
-                .loader(Loader.Forge)
-                .customJavaExecutable(Path.of("/usr/bin/java"))
+                .loader(Loader.NeoForge)
+                .customJavaExecutable(Path.of("/lib/jvm/java-25-openjdk/bin/java"))
                 .build();
 
 
         Launcher.launchMinecraft(
-                "1.20.1",
+                "26.1.2",
                 //user,
                 null,
                 config

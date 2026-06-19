@@ -2,11 +2,14 @@
   <dictionary name="project">
     <words>
       <w>Launchified</w>
+      <w>Modloader</w>
+      <w>Neoforge</w>
       <w>auth_xuid</w>
       <w>etkmlm</w>
       <w>gameargs</w>
       <w>jvmargs</w>
       <w>mainclass</w>
+      <w>neoforge</w>
       <w>neoforged</w>
       <w>xauthority</w>
       <w>xuid</w>
