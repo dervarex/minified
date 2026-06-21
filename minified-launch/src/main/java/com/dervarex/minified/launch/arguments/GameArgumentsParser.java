@@ -218,6 +218,10 @@ public final class GameArgumentsParser {
             skipNext[0] = true;
             return;
         }
+        if ("--xuid".equals(arg)) {
+            skipNext[0] = true;
+            return;
+        }
 
         output.add(arg);
     }

@@ -44,8 +44,8 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 tasks.withType(Test).configureEach {
-    enabled = false
     useJUnitPlatform()
+    enabled = true
     testLogging {
         showStandardStreams = true
         events "passed", "failed", "skipped", "standardOut", "standardError"

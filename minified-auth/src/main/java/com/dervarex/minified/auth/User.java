@@ -26,5 +26,5 @@ public class User {
     public String getUsername() { return username; }
     public String getAccessToken() { return accessToken; }
     public JsonObject getSerializedSession() { return serializedSession; }
-    public String getXuid() { return serializedSession.get("xuid").getAsString(); }
+//    public String getXuid() { return serializedSession.get("xuid").getAsString(); }
 }
