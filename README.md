@@ -66,35 +66,11 @@ Passing `null` as the user launches Minecraft in offline mode.
 
 Documentation is available in the Javadoc.
 
-## Testing
-
-The project currently contains mostly functional and integration tests.
-
-These tests verify real-world workflows such as authentication, asset downloading, library resolution, native extraction and Minecraft launching.
-
-One of the integration tests performs a complete launch workflow, including:
-
-* Microsoft device code authentication
-* Session restoration
-* User authentication
-* Asset downloading
-* Library downloading
-* Native extraction
-* Minecraft launching
-
-The existing tests are intended to validate functionality and are not necessarily examples of recommended API usage.
-
-More unit tests and dedicated usage examples are planned in the future.
-
 ## Roadmap
 
-* Only use os-specific natives instead of downloading and extracting all natives
 * Custom Modloader versions
 * Modrinth API Integration
 * Custom offline username support
-* Clean up tests
-* More unit tests
-* More integration tests
 * More documentation(mostly cleanup of existing documentation)
 * More usage examples
 
