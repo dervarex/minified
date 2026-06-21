@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.net.*;
 
 public class NetworkUtil {
+    public static boolean fakeOffline = true;
     /**
      * Ensures that the user has a working internet connection
      * <p>
@@ -60,7 +61,7 @@ public class NetworkUtil {
             builder.addProbe("http:api.mojang.com", new NoConnectionException.ProbeResult(NoConnectionException.ProbeResult.Type.HTTP, false, -1, "https://api.mojang.com", e.getClass().getSimpleName()));
         }
         builder.dnsResolved(dnsOk).tcpAny(tcpOk).httpAny(httpOk);
-        if (!(dnsOk || tcpOk || httpOk)) {
+        if (!(dnsOk || tcpOk || httpOk) || fakeOffline) {
             System.out.println("No connectivity for " + action);
             throw builder.build();
         }

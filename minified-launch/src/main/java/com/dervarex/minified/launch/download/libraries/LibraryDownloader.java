@@ -5,6 +5,7 @@ import com.dervarex.minified.launch.launch.modding.fabric.FabricLoaderFetcher;
 import com.dervarex.minified.launch.launch.modding.quilt.QuiltLoaderFetcher;
 import com.dervarex.minified.launch.utils.DownloadHelper;
 import com.dervarex.minified.launch.version.VersionManifestClient;
+import com.dervarex.minified.utils.exceptions.NoConnectionException;
 import com.dervarex.minified.utils.http.HttpUtil;
 import com.dervarex.minified.utils.json.JsonArray;
 import com.dervarex.minified.utils.json.JsonFile;
@@ -54,8 +55,18 @@ public class LibraryDownloader {
      * @param librariesDir the directory the libraries should be downloaded to
      */
     public void downloadLibraries(String version, Loader loader, Path librariesDir) {
+        boolean online = true;
         try {
             NetworkUtil.ensureOnline("downloading libraries for version " + version);
+        } catch (RuntimeException | NoConnectionException e) {
+            online = false;
+        }
+
+        if (!online) {
+            OfflineLibraryValidator.validate(version, loader, librariesDir);
+            return;
+        }
+        try {
             librariesDir.toFile().mkdirs();
 
             Path nativesDir = resolveNativesDirectory(librariesDir);
@@ -68,9 +79,14 @@ public class LibraryDownloader {
                     VersionManifestClient.getVersionEntry(version)
             ).asObject();
 
-            JsonFile versionJson = new JsonFile(
-                    HttpUtil.get(versionEntry.get("url").asString())
-            );
+            String versionJsonRaw = HttpUtil.get(versionEntry.get("url").asString());
+
+            Path cacheRoot = resolveCacheRoot(librariesDir);
+            Path versionCachePath = cacheRoot.resolve("versions").resolve(version + ".json");
+            Files.createDirectories(versionCachePath.getParent());
+            Files.writeString(versionCachePath, versionJsonRaw);
+
+            JsonFile versionJson = new JsonFile(versionJsonRaw);
 
             List<Future<?>> futures = new ArrayList<>();
             List<NativeArchive> nativeArchives = new ArrayList<>();
@@ -127,16 +143,36 @@ public class LibraryDownloader {
                     break;
 
                 case Fabric:
+                    JsonObject fabricProfile = FabricLoaderFetcher.getLatestProfile(version);
+
+                    Path fabricCachePath = resolveCacheRoot(librariesDir)
+                            .resolve("profiles")
+                            .resolve("fabric")
+                            .resolve(version + ".json");
+
+                    Files.createDirectories(fabricCachePath.getParent());
+                    Files.writeString(fabricCachePath, fabricProfile.toString());
+
                     downloadModLoaderLibraries(
-                            FabricLoaderFetcher.getLatestProfile(version).get("libraries").asArray(),
+                            fabricProfile.get("libraries").asArray(),
                             librariesDir,
                             futures
                     );
                     break;
 
                 case Quilt:
+                    JsonObject quiltProfile = QuiltLoaderFetcher.getLatestProfile(version);
+
+                    Path quiltCachePath = resolveCacheRoot(librariesDir)
+                            .resolve("profiles")
+                            .resolve("quilt")
+                            .resolve(version + ".json");
+
+                    Files.createDirectories(quiltCachePath.getParent());
+                    Files.writeString(quiltCachePath, quiltProfile.toString());
+
                     downloadModLoaderLibraries(
-                            QuiltLoaderFetcher.getLatestProfile(version).get("libraries").asArray(),
+                            quiltProfile.get("libraries").asArray(),
                             librariesDir,
                             futures
                     );
@@ -169,7 +205,7 @@ public class LibraryDownloader {
 
     /**
      * Download the Libraries for the selected modloader
-     * @param libraries the libraries array, which can be obtained from the modloader's version json under the "libraries" key
+     * @param libraries the libraries array, which can be obtained from the modloader's version Json under the "libraries" key
      * @param librariesDir the directory the libraries should be downloaded to
      * @param futures The futures list to add the download tasks to, so they can be waited on later. This is used to run the modloader library downloads in parallel with the normal library downloads.
      */
@@ -314,11 +350,6 @@ public class LibraryDownloader {
             }
         } catch (Exception e) {
             throw new RuntimeException("Failed to extract native archive " + archive, e);
-        } finally {
-            try {
-                Files.deleteIfExists(archive);
-            } catch (IOException ignored) {
-            }
         }
     }
 
@@ -457,5 +488,12 @@ public class LibraryDownloader {
     }
 
     private record NativeArchive(Path archive, JsonObject library) {
+    }
+    private Path resolveCacheRoot(Path librariesDir) {
+        Path parent = librariesDir.toAbsolutePath().getParent();
+        if (parent == null) {
+            return librariesDir.toAbsolutePath().resolve("cache");
+        }
+        return parent.resolve("cache");
     }
 }

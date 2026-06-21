@@ -111,11 +111,55 @@ public final class JavaManager {
      * @throws IOException if the version JSON cannot be read
      */
     public static int getRequiredJavaVersion(String minecraftVersion) throws HttpException, IOException {
+        Path cachedPath = cachedVersionJsonPath(minecraftVersion);
+
+        if (Files.exists(cachedPath)) {
+            try {
+                return getRequiredJavaVersion(new JsonFile(Files.readString(cachedPath)));
+            } catch (Exception ignored) {
+                // broken cache, fall through to network
+            }
+        }
+
         String versionJsonUrl = getVersionJsonUrl(minecraftVersion);
         if (versionJsonUrl == null) {
             return -1;
         }
-        return getRequiredJavaVersion(new JsonFile(HttpUtil.get(versionJsonUrl)));
+
+        try {
+            String raw = HttpUtil.get(versionJsonUrl);
+            writeCache(cachedPath, raw);
+            return getRequiredJavaVersion(new JsonFile(raw));
+        } catch (Exception e) {
+            if (Files.exists(cachedPath)) {
+                try {
+                    return getRequiredJavaVersion(new JsonFile(Files.readString(cachedPath)));
+                } catch (Exception ignored) {
+                    // continue to error below
+                }
+            }
+            throw new com.dervarex.minified.utils.exceptions.OfflineModeNeedsNetworkException(
+                    "Version metadata missing for Minecraft " + minecraftVersion
+            );
+        }
+    }
+
+    /**
+     * Resolves the required Java version for the given Minecraft version id from a local cache file.
+     *
+     * @param versionJsonPath the cached Minecraft version JSON path
+     * @return the required Java major version, or {@code -1} if it could not be resolved
+     * @throws IOException if the file cannot be read
+     */
+    public static int getRequiredJavaVersion(Path versionJsonPath) throws IOException {
+        if (versionJsonPath == null || !Files.exists(versionJsonPath)) {
+            return -1;
+        }
+        try {
+            return getRequiredJavaVersion(new JsonFile(Files.readString(versionJsonPath)));
+        } catch (Exception e) {
+            throw new IOException("Failed to read cached version JSON: " + versionJsonPath, e);
+        }
     }
 
     /**
@@ -145,11 +189,25 @@ public final class JavaManager {
             return current;
         }
 
+        Path runtimeRoot = runtimeInstallRoot()
+                .resolve(platformId())
+                .resolve(String.valueOf(requiredMajorVersion));
+
+        Path existingExecutable = locateExecutable(runtimeRoot);
+        if (Files.exists(existingExecutable)) {
+            ensureExecutableBit(existingExecutable);
+            return new JavaInstallation(
+                    requiredMajorVersion,
+                    inferHome(existingExecutable),
+                    existingExecutable,
+                    true,
+                    inferReleaseName(existingExecutable)
+            );
+        }
+
         RuntimeAsset asset = resolveRuntimeAsset(requiredMajorVersion);
 
-        Path installRoot = runtimeInstallRoot()
-                .resolve(asset.platformId())
-                .resolve(String.valueOf(requiredMajorVersion))
+        Path installRoot = runtimeRoot
                 .resolve(sanitizeSegment(asset.releaseName()));
 
         Path executable = locateExecutable(installRoot);
@@ -268,34 +326,21 @@ public final class JavaManager {
             throws IOException {
 
         for (String imageType : new String[]{"jre", "jdk"}) {
-            try {
-                String url = adoptiumAssetUrl(requiredMajorVersion, imageType);
+            JsonArray assets = loadAdoptiumAssets(requiredMajorVersion, imageType);
 
-                JsonArray assets = new JsonFile(HttpUtil.get(url)).asArray();
+            if (assets == null || assets.size() == 0) {
+                continue;
+            }
 
-                if (assets == null || assets.size() == 0) {
-                    continue;
-                }
+            for (JsonValue assetValue : assets) {
+                RuntimeAsset asset = parseRuntimeAsset(
+                        assetValue,
+                        requiredMajorVersion,
+                        imageType
+                );
 
-                for (JsonValue assetValue : assets) {
-                    RuntimeAsset asset =
-                            parseRuntimeAsset(assetValue,
-                                    requiredMajorVersion,
-                                    imageType);
-
-                    if (asset != null) {
-                        return asset;
-                    }
-                }
-
-            } catch (HttpException e) {
-                if (e.getStatusCode() == 404) {
-                    continue;
-                }
-                try {
-                    throw e;
-                } catch (HttpException ex) {
-                    throw new RuntimeException(ex);
+                if (asset != null) {
+                    return asset;
                 }
             }
         }
@@ -306,6 +351,71 @@ public final class JavaManager {
                         + " on "
                         + platformId()
         );
+    }
+
+    private static JsonArray loadAdoptiumAssets(int majorVersion, String imageType) throws IOException {
+        Path cachePath = cachedAdoptiumAssetsPath(majorVersion, imageType);
+
+        if (Files.exists(cachePath)) {
+            try {
+                JsonArray cached = new JsonFile(Files.readString(cachePath)).asArray();
+                if (cached != null && cached.size() > 0) {
+                    return cached;
+                }
+            } catch (Exception ignored) {
+                // broken cache, fall through to network
+            }
+        }
+
+        String url = adoptiumAssetUrl(majorVersion, imageType);
+
+        try {
+            String raw = HttpUtil.get(url);
+            writeCache(cachePath, raw);
+
+            JsonArray assets = new JsonFile(raw).asArray();
+            if (assets != null && assets.size() > 0) {
+                return assets;
+            }
+
+            return assets;
+        } catch (HttpException e) {
+            if (Files.exists(cachePath)) {
+                try {
+                    return new JsonFile(Files.readString(cachePath)).asArray();
+                } catch (Exception ignored) {
+                    // continue below
+                }
+            }
+
+            if (e.getStatusCode() == 404) {
+                return null;
+            }
+
+            throw new com.dervarex.minified.utils.exceptions.OfflineModeNeedsNetworkException(
+                    "Java runtime metadata missing for Java "
+                            + majorVersion
+                            + " ("
+                            + imageType
+                            + ")"
+            );
+        } catch (IOException e) {
+            if (Files.exists(cachePath)) {
+                try {
+                    return new JsonFile(Files.readString(cachePath)).asArray();
+                } catch (Exception ignored) {
+                    // continue below
+                }
+            }
+
+            throw new com.dervarex.minified.utils.exceptions.OfflineModeNeedsNetworkException(
+                    "Java runtime metadata missing for Java "
+                            + majorVersion
+                            + " ("
+                            + imageType
+                            + ")"
+            );
+        }
     }
 
     private static RuntimeAsset parseRuntimeAsset(
@@ -320,7 +430,7 @@ public final class JavaManager {
         JsonObject assetObject = assetValue.asObject();
 
         JsonArray binaries = assetObject.getArray("binaries");
-        if (binaries == null || binaries.isNull()) {
+        if (binaries == null || binaries.size() == 0) {
             return null;
         }
 
@@ -534,6 +644,17 @@ public final class JavaManager {
         return executable.getParent() == null ? executable.toAbsolutePath() : executable.getParent().toAbsolutePath();
     }
 
+    private static String inferReleaseName(Path executable) {
+        Path parent = executable.getParent();
+        if (parent != null) {
+            Path home = parent.getParent();
+            if (home != null && home.getFileName() != null) {
+                return home.getFileName().toString();
+            }
+        }
+        return "cached";
+    }
+
     private static Path resolveExecutable(Path home) {
         String executableName = isWindows() ? "java.exe" : "java";
         return home.resolve("bin").resolve(executableName).toAbsolutePath();
@@ -541,6 +662,29 @@ public final class JavaManager {
 
     private static Path runtimeInstallRoot() {
         return getBaseDir().resolve("runtimes");
+    }
+
+    private static Path cacheRoot() {
+        return getBaseDir().resolve("cache");
+    }
+
+    private static Path cachedVersionJsonPath(String minecraftVersion) {
+        return cacheRoot()
+                .resolve("versions")
+                .resolve(minecraftVersion + ".json");
+    }
+
+    private static Path cachedAdoptiumAssetsPath(int majorVersion, String imageType) {
+        return cacheRoot()
+                .resolve("java")
+                .resolve("adoptium")
+                .resolve(String.valueOf(majorVersion))
+                .resolve(imageType + ".json");
+    }
+
+    private static void writeCache(Path path, String content) throws IOException {
+        Files.createDirectories(path.getParent());
+        Files.writeString(path, content);
     }
 
     private static String platformId() {
@@ -573,15 +717,16 @@ public final class JavaManager {
 //        return "https://api.adoptium.net/v3/assets/latest/%d/ga?architecture=%s&heap_size=normal&image_type=%s&jvm_impl=hotspot&os=%s&vendor=eclipse"
 //                .formatted(majorVersion, platformArchitecture(), imageType, platformOs());
 //    }
-private static String adoptiumAssetUrl(int majorVersion, String imageType) {
-    return "https://api.adoptium.net/v3/assets/feature_releases/%d/ga?architecture=%s&heap_size=normal&image_type=%s&jvm_impl=hotspot&os=%s&vendor=eclipse"
-            .formatted(
-                    majorVersion,
-                    platformArchitecture(),
-                    imageType,
-                    platformOs()
-            );
-}
+
+    private static String adoptiumAssetUrl(int majorVersion, String imageType) {
+        return "https://api.adoptium.net/v3/assets/feature_releases/%d/ga?architecture=%s&heap_size=normal&image_type=%s&jvm_impl=hotspot&os=%s&vendor=eclipse"
+                .formatted(
+                        majorVersion,
+                        platformArchitecture(),
+                        imageType,
+                        platformOs()
+                );
+    }
 
     private static Path defaultBaseDir() {
         String os = System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
@@ -722,4 +867,3 @@ private static String adoptiumAssetUrl(int majorVersion, String imageType) {
     private record RuntimeAsset(int majorVersion, String releaseName, String downloadUrl, String checksum, String packageName, String platformId) {
     }
 }
-

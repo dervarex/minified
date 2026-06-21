@@ -22,6 +22,7 @@ import com.dervarex.minified.launch.utils.X11Helper;
 import com.dervarex.minified.launch.version.VersionMetadataProvider;
 import com.dervarex.minified.utils.exceptions.HttpException;
 import com.dervarex.minified.utils.exceptions.NoConnectionException;
+import com.dervarex.minified.utils.exceptions.OfflineModeNeedsNetworkException;
 import com.dervarex.minified.utils.http.HttpUtil;
 import com.dervarex.minified.utils.json.JsonArray;
 import com.dervarex.minified.utils.json.JsonFile;
@@ -38,6 +39,7 @@ import java.util.List;
 public class Launcher {
     /**
      * Downloads required files and launches Minecraft.
+     * Can be used in offline mode, will throw {@code OfflineModeNeedsNetworkException} if any assets or libraries are not downloaded but are needed
      *
      * @param version the Minecraft version to launch
      * @param user    the logged-in user to launch with, or null to launch in offline mode(you won't be able to join online servers or use any online features in offline mode)
@@ -63,30 +65,28 @@ public class Launcher {
             LaunchConfigurator launchConfig) {
 
         try {
-
-            NetworkUtil.ensureOnline("launch minecraft");
-
-            Loader loader = launchConfig.getLoader();
-            if(loader.equals(Loader.Forge)) {
-                ForgeInstallerInjector forgeInstallerInjector = new ForgeInstallerInjector();
-                forgeInstallerInjector.install(launchConfig, version);
-            } else if (loader.equals(Loader.NeoForge)) {
-                NeoInstallerInjector neoInstallerInjector = new NeoInstallerInjector();
-                neoInstallerInjector.install(launchConfig, version);
-
-//                String neoForgeVersion = new NeoVersionFetcher().getLatest(version);
-//                ensureNeoForgeCommonJar(launchConfig, version, neoForgeVersion);
+            boolean online = true;
+            try {
+                NetworkUtil.ensureOnline("launch minecraft");
+            } catch (NoConnectionException e) {
+                online = false;
             }
 
-            JsonFile versionJson =
-                    new JsonFile(
-                            HttpUtil.get(
-                                    VersionMetadataProvider
-                                            .getVersionJsonUrl(version)
-                            )
-                    );
+            Loader loader = launchConfig.getLoader();
+            if (online) {
+                if (loader.equals(Loader.Forge)) {
+                    ForgeInstallerInjector forgeInstallerInjector = new ForgeInstallerInjector();
+                    forgeInstallerInjector.install(launchConfig, version);
+                } else if (loader.equals(Loader.NeoForge)) {
+                    NeoInstallerInjector neoInstallerInjector = new NeoInstallerInjector();
+                    neoInstallerInjector.install(launchConfig, version);
+                }
+            }
+
+            JsonFile versionJson = loadVersionJson(version, online);
+
             JavaInstallation javaInstallation;
-            if(launchConfig.getCustomJavaExecutable() == null) {
+            if (launchConfig.getCustomJavaExecutable() == null) {
                 javaInstallation =
                         JavaManager.ensureJavaVersion(
                                 JavaManager.getRequiredJavaVersion(versionJson)
@@ -97,7 +97,8 @@ public class Launcher {
 
             downloadFiles(
                     version,
-                    launchConfig
+                    launchConfig,
+                    online
             );
 
             String classpath =
@@ -121,8 +122,9 @@ public class Launcher {
                             launchConfig,
                             options,
                             loader,
-                            version
-                    );
+                            version,
+                            online
+                    ); // includes the classpath
             Path nativesDir =
                     launchConfig.getLibrariesDirectory()
                             .toAbsolutePath()
@@ -143,33 +145,22 @@ public class Launcher {
                             options,
                             loader,
                             version,
-                            launchConfig
+                            launchConfig,
+                            online
                     );
 
             ArrayList<String> command =
                     new ArrayList<>();
 
             command.add(
-                    javaInstallation != null
-                            ? javaInstallation.executable().toAbsolutePath().toString()
-                            : launchConfig.getCustomJavaExecutable().toAbsolutePath().toString()
-            );
-
-            command.addAll(jvmArgs);
-
-//            command.add("-cp");
-//            command.add(classpath);
-
-            command.add(
-                    getMainClass(
-                            versionJson,
-                            loader,
-                            version,
-                            launchConfig
-                    )
-            );
-
-            command.addAll(gameArgs);                                   // gameargs
+                    javaInstallation != null ?
+                            javaInstallation.executable()
+                            .toAbsolutePath().toString() :
+                            launchConfig.getCustomJavaExecutable()
+                            .toAbsolutePath().toString());                                   // java
+            command.addAll(jvmArgs);                                                         // -Dsomearg -cp ...
+            command.add   (getMainClass(versionJson, loader, version, launchConfig, online));// net.minecraft.client.main.Main
+            command.addAll(gameArgs);                                                        // --username ... --accessToken ...
 
             launchProcess(command);
 
@@ -178,14 +169,13 @@ public class Launcher {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException(e);
-        } catch (NoConnectionException e) {
-            System.err.println("You do not have a internet connection");
         }
     }
 
     private static void downloadFiles(
             String version,
-            LaunchConfigurator launchConfig
+            LaunchConfigurator launchConfig,
+            boolean online
     ) throws HttpException, IOException {
 
         // Downloads (will skip files if they already exist)
@@ -204,10 +194,16 @@ public class Launcher {
                 launchConfig.getAssetsDirectory()
         );
 
-        clientDownloader.downloadClient(
-                version,
-                launchConfig.getJarFile()
-        );
+        if (online) {
+            clientDownloader.downloadClient(
+                    version,
+                    launchConfig.getJarFile()
+            );
+        } else if (!Files.exists(launchConfig.getJarFile())) {
+            throw new OfflineModeNeedsNetworkException(
+                    "Missing cached client jar: " + launchConfig.getJarFile()
+            );
+        }
     }
 
     private static List<String> buildJvmArguments(
@@ -215,7 +211,8 @@ public class Launcher {
             LaunchConfigurator launchConfig,
             LaunchOptions options,
             Loader loader,
-            String version
+            String version,
+            boolean online
     ) {
         JsonArray mergedJvm = new JsonArray();
 
@@ -245,56 +242,36 @@ public class Launcher {
         );
 
         jvmArgs.addAll(launchConfig.getExtraJvmArgs());
-        jvmArgs.removeIf(arg -> arg.equals("-XX:+UseCompactObjectHeaders")); //to do is this correct? - seems like it works or smth
+        jvmArgs.removeIf(arg -> arg.equals("-XX:+UseCompactObjectHeaders")); // I don't know if we should do it like that, but it seems to work fine
         jvmArgs.removeIf(arg ->
                 arg.equals("--sun-misc-unsafe-memory-access=allow"));
+
+        JsonObject loaderProfileJson = null;
 
         switch (loader) {
             case Vanilla:
                 break;
             case Fabric:
-                try {
-                    JsonObject fabricProfileJson = FabricLoaderFetcher.getLatestProfile(version);
-                    JsonValue fabricArguments = fabricProfileJson.asObject().get("arguments");
-                    for (JsonValue e : fabricArguments.asObject().get("jvm").asArray()) {
-                        jvmArgs.add(e.asString());
-                    }
-                } catch (Exception e) {
-                    throw new RuntimeException("Failed to fetch Fabric loader profile", e);
-                }
+                loaderProfileJson = loadFabricProfileJson(version, online);
                 break;
             case Forge:
-                try {
-                    JsonFile forgeVersionJson = ForgeVersionJson.getVersionJson(
-                            launchConfig.getJarFile().getParent().toAbsolutePath(),
-                            new ForgeVersionFetcher().getLatest(version)
-                    );
-                    JsonValue forgeArguments = forgeVersionJson.asObject().get("arguments");
-                    for (JsonValue e : forgeArguments.asObject().get("jvm").asArray()) {
-                        jvmArgs.add(e.asString());
-                    }
-                } catch (Exception e) {
-                    throw new RuntimeException("Failed to fetch Forge loader profile", e);
-                }
+                loaderProfileJson = loadForgeProfileJson(version, launchConfig, online);
                 break;
             case NeoForge:
-                try {
-                    JsonFile neoVersionJson =
-                            NeoVersionJson.getVersionJson(
-                                    launchConfig.getJarFile().getParent().toAbsolutePath(),
-                                    new NeoVersionFetcher().getLatest(version)
-                            );
-
-                    JsonValue neoArguments =
-                            neoVersionJson.asObject().get("arguments");
-
-                    for (JsonValue e : neoArguments.asObject().get("jvm").asArray()) {
-                        jvmArgs.add(e.asString());
-                    }
-                } catch (Exception e) {
-                    throw new RuntimeException("Failed to fetch NeoForge loader profile", e);
-                }
+                loaderProfileJson = loadNeoForgeProfileJson(version, launchConfig, online);
                 break;
+            case Quilt:
+                loaderProfileJson = loadQuiltProfileJson(version, online);
+                break;
+        }
+
+        if (loaderProfileJson != null) {
+            JsonValue fabricArguments = loaderProfileJson.get("arguments");
+            if (fabricArguments != null && fabricArguments.asObject().get("jvm") != null) {
+                for (JsonValue e : fabricArguments.asObject().get("jvm").asArray()) {
+                    jvmArgs.add(e.asString());
+                }
+            }
         }
 
         return X11Helper.substituteVariables(jvmArgs, options.getVariables());
@@ -305,7 +282,8 @@ public class Launcher {
             LaunchOptions options,
             Loader loader,
             String version,
-            LaunchConfigurator launchConfig
+            LaunchConfigurator launchConfig,
+            boolean online
     ) {
         JsonValue argumentsValue = versionJson.get("arguments");
 
@@ -326,71 +304,35 @@ public class Launcher {
         JsonValue gameValue = arguments.get("game");
         JsonArray gameArray = gameValue != null ? gameValue.asArray() : new JsonArray();
 
+        JsonObject loaderProfileJson = null;
+
         switch (loader) {
             case Vanilla:
                 break;
             case Fabric:
-                try {
-                    JsonObject fabricProfileJson = FabricLoaderFetcher.getLatestProfile(version);
-                    JsonValue fabricArguments = fabricProfileJson.get("arguments");
-
-                    if (fabricArguments != null) {
-                        JsonArray fabricGameArgs = fabricArguments.asObject().get("game").asArray();
-                        for (JsonValue arg : fabricGameArgs) {
-                            gameArray.add(arg);
-                        }
-                    }
-                } catch (Exception e) {
-                    throw new RuntimeException("Failed to fetch Fabric loader profile", e);
-                }
+                loaderProfileJson = loadFabricProfileJson(version, online);
                 break;
             case Quilt:
-                try {
-                    JsonObject quiltProfileJson = QuiltLoaderFetcher.getLatestProfile(version);
-                    JsonValue quiltArguments = quiltProfileJson.get("arguments");
-
-                    if (quiltArguments != null) {
-                        JsonArray quiltGameArgs = quiltArguments.asObject().get("game").asArray();
-                        for (JsonValue arg : quiltGameArgs) {
-                            gameArray.add(arg);
-                        }
-                    }
-                } catch (Exception e) {
-                    throw new RuntimeException("Failed to fetch Quilt loader profile", e);
-                }
+                loaderProfileJson = loadQuiltProfileJson(version, online);
                 break;
             case Forge:
-                try {
-                    JsonFile forgeVersionJson = ForgeVersionJson.getVersionJson(
-                            launchConfig.getJarFile().getParent().toAbsolutePath(),
-                            new ForgeVersionFetcher().getLatest(version)
-                    );
-                    JsonValue forgeArguments = forgeVersionJson.asObject().get("arguments");
-                    for (JsonValue a : forgeArguments.asObject().get("game").asArray()) {
-                        gameArray.add(a);
-                    }
-                } catch (Exception e) {
-                    throw new RuntimeException("Failed to fetch Forge loader profile", e);
-                }
+                loaderProfileJson = loadForgeProfileJson(version, launchConfig, online);
                 break;
             case NeoForge:
-                try {
-                    JsonFile neoVersionJson =
-                            NeoVersionJson.getVersionJson(
-                                    launchConfig.getJarFile().getParent().toAbsolutePath(),
-                                    new NeoVersionFetcher().getLatest(version)
-                            );
-
-                    JsonValue neoArguments =
-                            neoVersionJson.asObject().get("arguments");
-
-                    for (JsonValue a : neoArguments.asObject().get("game").asArray()) {
-                        gameArray.add(a);
-                    }
-                } catch (Exception e) {
-                    throw new RuntimeException("Failed to fetch NeoForge loader profile", e);
-                }
+                loaderProfileJson = loadNeoForgeProfileJson(version, launchConfig, online);
                 break;
+        }
+
+        if (loaderProfileJson != null) {
+            JsonValue loaderArguments = loaderProfileJson.get("arguments");
+            if (loaderArguments != null) {
+                JsonValue loaderGame = loaderArguments.asObject().get("game");
+                if (loaderGame != null) {
+                    for (JsonValue arg : loaderGame.asArray()) {
+                        gameArray.add(arg);
+                    }
+                }
+            }
         }
 
         return GameArgumentsParser.parse(
@@ -404,56 +346,16 @@ public class Launcher {
             JsonFile versionJson,
             Loader loader,
             String version,
-            LaunchConfigurator launchConfig
+            LaunchConfigurator launchConfig,
+            boolean online
     ) {
-        JsonValue mainClassValue;
-        switch (loader) {
-            case Vanilla:
-                mainClassValue =
-                        versionJson.get("mainClass");
-                break;
-            case Fabric:
-                try {
-                    JsonObject fabricProfileJson = FabricLoaderFetcher.getLatestProfile(version);
-                    mainClassValue = fabricProfileJson.get("mainClass");
-                } catch (Exception e) {
-                    throw new RuntimeException("Failed to fetch Fabric loader profile", e);
-                }
-                break;
-            case Quilt:
-                try {
-                    JsonObject quiltProfileJson = QuiltLoaderFetcher.getLatestProfile(version);
-                    mainClassValue = quiltProfileJson.get("mainClass");
-                } catch (Exception e) {
-                    throw new RuntimeException("Failed to fetch Quilt loader profile", e);
-                }
-                break;
-            case Forge:
-                try {
-                    JsonObject forgeVersionJson = ForgeVersionJson.getVersionJson(launchConfig.getJarFile().getParent().toAbsolutePath(), new ForgeVersionFetcher().getLatest(version)).asObject();
-                    mainClassValue = forgeVersionJson.get("mainClass");
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-                break;
-            case NeoForge:
-                try {
-                    JsonObject neoVersionJson =
-                            NeoVersionJson.getVersionJson(
-                                    launchConfig.getJarFile().getParent().toAbsolutePath(),
-                                    new NeoVersionFetcher().getLatest(version)
-                            ).asObject();
-
-                    mainClassValue = neoVersionJson.get("mainClass");
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-                break;
-            default:
-                throw new RuntimeException("Unknown loader " + loader);
-        }
-
-
+        JsonValue mainClassValue = switch (loader) {
+            case Vanilla -> versionJson.get("mainClass");
+            case Fabric -> loadFabricProfileJson(version, online).get("mainClass");
+            case Quilt -> loadQuiltProfileJson(version, online).get("mainClass");
+            case Forge -> loadForgeProfileJson(version, launchConfig, online).get("mainClass");
+            case NeoForge -> loadNeoForgeProfileJson(version, launchConfig, online).get("mainClass");
+        };
 
         if (mainClassValue == null) {
             throw new RuntimeException(
@@ -462,6 +364,167 @@ public class Launcher {
         }
 
         return mainClassValue.asString();
+    }
+
+    private static JsonFile loadVersionJson(String version, boolean online) throws IOException {
+        Path cachePath = cachedVersionJsonPath(version);
+
+        if (Files.exists(cachePath)) {
+            try {
+                return new JsonFile(Files.readString(cachePath));
+            } catch (Exception ignored) {
+                // broken cache, fall through to network if possible
+            }
+        }
+
+        if (!online) {
+            throw new OfflineModeNeedsNetworkException(
+                    "Missing cached version JSON: " + cachePath
+            );
+        }
+
+        String versionJsonUrl;
+        String raw;
+        try {
+            versionJsonUrl = VersionMetadataProvider.getVersionJsonUrl(version);
+
+        raw = HttpUtil.get(versionJsonUrl);
+        } catch (HttpException e) {
+            throw new RuntimeException(e);
+        }
+        writeCache(cachePath, raw);
+        return new JsonFile(raw);
+    }
+
+    private static JsonObject loadFabricProfileJson(String version, boolean online) {
+        return loadProfileJson(
+                version,
+                "fabric",
+                online,
+                () -> {
+                    try {
+                        return FabricLoaderFetcher.getLatestProfile(version);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+        );
+    }
+
+    private static JsonObject loadQuiltProfileJson(String version, boolean online) {
+        return loadProfileJson(
+                version,
+                "quilt",
+                online,
+                () -> {
+                    try {
+                        return QuiltLoaderFetcher.getLatestProfile(version);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+        );
+    }
+
+    private static JsonObject loadForgeProfileJson(
+            String version,
+            LaunchConfigurator launchConfig,
+            boolean online
+    ) {
+        return loadProfileJson(
+                version,
+                "forge",
+                online,
+                () -> {
+                    try {
+                        Path parent = launchConfig.getJarFile().getParent().toAbsolutePath();
+                        String latest = new ForgeVersionFetcher().getLatest(version);
+                        JsonFile forgeVersionJson = ForgeVersionJson.getVersionJson(parent, latest);
+                        return forgeVersionJson.asObject();
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+        );
+    }
+
+    private static JsonObject loadNeoForgeProfileJson(
+            String version,
+            LaunchConfigurator launchConfig,
+            boolean online
+    ) {
+        return loadProfileJson(
+                version,
+                "neoforge",
+                online,
+                () -> {
+                    try {
+                        Path parent = launchConfig.getJarFile().getParent().toAbsolutePath();
+                        String latest = new NeoVersionFetcher().getLatest(version);
+                        JsonFile neoVersionJson = NeoVersionJson.getVersionJson(parent, latest);
+                        return neoVersionJson.asObject();
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+        );
+    }
+
+    private static JsonObject loadProfileJson(
+            String version,
+            String loaderName,
+            boolean online,
+            ProfileSupplier supplier
+    ) {
+        Path cachePath = cachedProfileJsonPath(loaderName, version);
+
+        if (Files.exists(cachePath)) {
+            try {
+                return new JsonFile(Files.readString(cachePath)).asObject();
+            } catch (Exception ignored) {
+                // broken cache, fall through
+            }
+        }
+
+        if (!online) {
+            throw new OfflineModeNeedsNetworkException(
+                    "Missing cached " + loaderName + " profile: " + cachePath
+            );
+        }
+
+        JsonObject profile = supplier.get();
+        try {
+            writeCache(cachePath, profile.toString());
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to cache " + loaderName + " profile", e);
+        }
+        return profile;
+    }
+
+    private static Path cachedProfileJsonPath(String loaderName, String version) {
+        return cacheRoot()
+                .resolve("profiles")
+                .resolve(loaderName)
+                .resolve(version + ".json");
+    }
+
+    private static Path cachedVersionJsonPath(String version) {
+        return cacheRoot()
+                .resolve("versions")
+                .resolve(version + ".json");
+    }
+
+    private static Path cacheRoot() {
+        return JavaManager.getBaseDir().resolve("cache");
+    }
+
+    private static void writeCache(Path path, String content) throws IOException {
+        Files.createDirectories(path.getParent());
+        Files.writeString(path, content);
+    }
+
+    private interface ProfileSupplier {
+        JsonObject get();
     }
 
     private static void launchProcess(
@@ -493,56 +556,4 @@ public class Launcher {
             );
         }
     }
-//    static void ensureNeoForgeCommonJar(
-//            LaunchConfigurator config,
-//            String minecraftVersion,
-//            String neoForgeVersion
-//    ) throws IOException {
-//        Path base = config.getLibrariesDirectory();
-//
-//        Path patchedJar = base.resolve("net/neoforged/minecraft-client-patched")
-//                .resolve(neoForgeVersion)
-//                .resolve("minecraft-client-patched-" + neoForgeVersion + ".jar");
-//
-//        Path targetJar = base.resolve("net/minecraft/client")
-//                .resolve(minecraftVersion + "-1")
-//                .resolve("client-" + minecraftVersion + "-1-srg.jar");
-//
-//        if (Files.exists(targetJar)) {
-//            return;
-//        }
-//
-//        Files.createDirectories(targetJar.getParent());
-//
-//        try (java.util.jar.JarFile source = new java.util.jar.JarFile(patchedJar.toFile())) {
-//            java.util.jar.Manifest manifest = source.getManifest();
-//            if (manifest == null) {
-//                manifest = new java.util.jar.Manifest();
-//            }
-//
-//            java.util.jar.Attributes attrs = manifest.getMainAttributes();
-//            if (attrs.getValue(java.util.jar.Attributes.Name.MANIFEST_VERSION) == null) {
-//                attrs.put(java.util.jar.Attributes.Name.MANIFEST_VERSION, "1.0");
-//            }
-//
-//            attrs.putValue("Minecraft-Dists", "CLIENT"); // we have to put it in there for neoforge to work  to do: did it?  -  um no it did not  -  maybe if we skip some shit?
-//
-//            try (java.util.jar.JarOutputStream out =
-//                         new java.util.jar.JarOutputStream(Files.newOutputStream(targetJar), manifest)) {
-//                var entries = source.entries();
-//                while (entries.hasMoreElements()) {
-//                    var entry = entries.nextElement();
-//                    if ("META-INF/MANIFEST.MF".equals(entry.getName())) {
-//                        continue;
-//                    }
-//
-//                    out.putNextEntry(new java.util.jar.JarEntry(entry.getName()));
-//                    try (var in = source.getInputStream(entry)) {
-//                        in.transferTo(out);
-//                    }
-//                    out.closeEntry();
-//                }
-//            }
-//        }
-//    }
 }

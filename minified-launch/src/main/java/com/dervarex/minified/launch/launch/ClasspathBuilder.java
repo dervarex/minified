@@ -1,12 +1,10 @@
 package com.dervarex.minified.launch.launch;
 
-import com.dervarex.minified.launch.launch.modding.Loader;
 import com.dervarex.minified.launch.launch.modding.fabric.FabricLoaderFetcher;
-import com.dervarex.minified.launch.launch.modding.forge.api.ForgeVersionFetcher;
-import com.dervarex.minified.launch.launch.modding.forge.api.ForgeVersionJson;
 import com.dervarex.minified.launch.launch.modding.neoforge.api.NeoVersionFetcher;
 import com.dervarex.minified.launch.launch.modding.neoforge.api.NeoVersionJson;
 import com.dervarex.minified.launch.launch.modding.quilt.QuiltLoaderFetcher;
+import com.dervarex.minified.launch.utils.OSUtil;
 import com.dervarex.minified.utils.json.JsonArray;
 import com.dervarex.minified.utils.json.JsonFile;
 import com.dervarex.minified.utils.json.JsonObject;
@@ -24,19 +22,6 @@ public class ClasspathBuilder {
 
         ArrayList<String> classpath = new ArrayList<>();
 
-//        if (config.getLoader() == Loader.NeoForge) {
-//            String neoForgeVersion = new NeoVersionFetcher().getLatest(versionJson.get("id").asString());
-//            classpath.add(
-//                    config.getLibrariesDirectory()
-//                            .resolve("net/neoforged/minecraft-client-patched")
-//                            .resolve(neoForgeVersion)
-//                            .resolve("minecraft-client-patched-" + neoForgeVersion + ".jar")
-//                            .toAbsolutePath()
-//                            .toString()
-//            );
-//        } else {
-//            classpath.add(config.getJarFile().toAbsolutePath().toString());
-//        }
         classpath.add(
                 config.getJarFile()
                         .toAbsolutePath()
@@ -111,95 +96,8 @@ public class ClasspathBuilder {
                     );
                 }
                 break;
-//            case NeoForge:
-//                try {
-//                    String neoForgeVersion =
-//                            new NeoVersionFetcher().getLatest(versionJson.get("id").asString());
-//
-//                    ensureNeoForgeCommonJar(
-//                            config,
-//                            versionJson.get("id").asString(),
-//                            neoForgeVersion
-//                    );
-//
-//                    // Das Runtime-Jar, das FML erwartet
-//                    classpath.add(
-//                            config.getLibrariesDirectory()
-//                                    .resolve("net/minecraft/client")
-//                                    .resolve(versionJson.get("id").asString() + "-1")
-//                                    .resolve("client-" + versionJson.get("id").asString() + "-1-srg.jar")
-//                                    .toAbsolutePath()
-//                                    .toString()
-//                    );
-//
-//                    JsonObject neoForgeProfile =
-//                            NeoVersionJson.getVersionJson(
-//                                    config.getJarFile().getParent(),
-//                                    neoForgeVersion
-//                            ).asObject();
-//
-//                    for (JsonValue value : neoForgeProfile.get("libraries").asArray()) {
-//                        JsonObject lib = value.asObject();
-//
-//                        if (isNeoForgePatchedClient(lib)) {
-//                            continue;
-//                        }
-//
-//                        addLibrary(lib, classpath, config);
-//                    }
-//                } catch (Exception e) {
-//                    throw new RuntimeException("Failed to load NeoForge libraries", e);
-//                }
-//                break;
-//            case NeoForge:
-//                try {
-//                    String neoForgeVersion = new NeoVersionFetcher().getLatest(versionJson.get("id").asString());
-//
-//                    JsonObject neoForgeProfile =
-//                            NeoVersionJson.getVersionJson(
-//                                    config.getJarFile().getParent(),
-//                                    neoForgeVersion
-//                            ).asObject();
-//
-//                    // add the universal jar
-//                    classpath.add(
-//                            config.getLibrariesDirectory()
-//                                    .resolve("net/neoforged/neoforge")
-//                                    .resolve(neoForgeVersion)
-//                                    .resolve("neoforge-" + neoForgeVersion + "-universal.jar")
-//                                    .toAbsolutePath()
-//                                    .toString()
-//                    );
-//
-//                    addModLoaderLibraries(
-//                            neoForgeProfile.get("libraries").asArray(),
-//                            classpath,
-//                            config
-//                    );
-//                } catch (Exception e) {
-//                    throw new RuntimeException("Failed to load NeoForge libraries", e);
-//                }
-//                break;
-//            case NeoForge:
-//                try {
-//                    JsonObject neoForgeProfile =
-//                            NeoVersionJson.getVersionJson(
-//                                    config.getJarFile().getParent(),
-//                                    new NeoVersionFetcher().getLatest(versionJson.get("id").asString())
-//                            ).asObject();
-//
-//                    addModLoaderLibraries(
-//                            neoForgeProfile.get("libraries").asArray(),
-//                            classpath,
-//                            config
-//                    );
-//                } catch (Exception e) {
-//                    throw new RuntimeException(
-//                            "Failed to load NeoForge libraries",
-//                            e
-//                    );
-//                }
-//                break;
+            case Forge:
+                break;
         }
 
         return String.join(
@@ -213,6 +111,17 @@ public class ClasspathBuilder {
             ArrayList<String> classpath,
             LaunchConfigurator config
     ) {
+        if (!isAllowed(library)) {
+            return;
+        }
+
+        JsonValue nativesValue =
+                library.get("natives");
+
+        if (nativesValue != null) {
+            return;
+        }
+
         JsonValue downloadsValue =
                 library.get("downloads");
 
@@ -284,6 +193,35 @@ public class ClasspathBuilder {
         }
     }
 
+    private static boolean isAllowed(JsonObject library) {
+        if (!library.has("rules")) {
+            return true;
+        }
+
+        JsonArray rules = library.get("rules").asArray();
+        String os = OSUtil.getMinecraftOs();
+
+        boolean allowed = false;
+
+        for (JsonValue ruleValue : rules) {
+            JsonObject rule = ruleValue.asObject();
+            String action = rule.get("action").asString();
+
+            if (!rule.has("os")) {
+                allowed = action.equals("allow");
+                continue;
+            }
+
+            JsonObject osObject = rule.get("os").asObject();
+            String ruleOs = osObject.get("name").asString();
+
+            if (ruleOs.equals(os)) {
+                allowed = action.equals("allow");
+            }
+        }
+
+        return allowed;
+    }
     private static String resolveLibraryPath(
             LaunchConfigurator config,
             String relativePath
@@ -302,9 +240,10 @@ public class ClasspathBuilder {
             return secondary.toAbsolutePath().toString();
         }
 
-        if (Files.exists(primary)) {
-            return primary.toAbsolutePath().toString();
-        }
+//        if (Files.exists(primary)) {
+//            return primary.toAbsolutePath().toString();
+//        } // who wrote this shit, that if doesn't do anything good
+        // oh I'm the only dev
 
         return primary.toAbsolutePath().toString();
     }
@@ -335,24 +274,5 @@ public class ClasspathBuilder {
                 + version
                 + "/"
                 + fileName;
-    }
-    private static boolean isNeoForgePatchedClient(JsonObject library) {
-        JsonValue nameValue = library.get("name");
-        if (nameValue != null && nameValue.asString().startsWith("net.neoforged:minecraft-client-patched:")) {
-            return true;
-        }
-
-        JsonValue downloadsValue = library.get("downloads");
-        if (downloadsValue != null) {
-            JsonValue artifactValue = downloadsValue.asObject().get("artifact");
-            if (artifactValue != null) {
-                JsonValue pathValue = artifactValue.asObject().get("path");
-                if (pathValue != null) {
-                    return pathValue.asString().startsWith("net/neoforged/minecraft-client-patched/");
-                }
-            }
-        }
-
-        return false;
     }
 }

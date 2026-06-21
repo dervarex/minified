@@ -16,53 +16,52 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class LauncherTest {
 
-    private static void printLaunchDiagnostics() {
-        System.out.println("--- Launch diagnostics ---");
-        System.out.println("os.name = " + System.getProperty("os.name"));
-        System.out.println("os.version = " + System.getProperty("os.version"));
-        System.out.println("java.version = " + System.getProperty("java.version"));
-        System.out.println("java.vendor = " + System.getProperty("java.vendor"));
-        System.out.println("XDG_RUNTIME_DIR = " + System.getenv("XDG_RUNTIME_DIR"));
-        System.out.println("XDG_SESSION_TYPE = " + System.getenv("XDG_SESSION_TYPE"));
-        System.out.println("WAYLAND_DISPLAY = " + System.getenv("WAYLAND_DISPLAY"));
-        System.out.println("DISPLAY = " + System.getenv("DISPLAY"));
-        System.out.println("XAUTHORITY = " + System.getenv("XAUTHORITY"));
-        System.out.println("XDG_CURRENT_DESKTOP = " + System.getenv("XDG_CURRENT_DESKTOP"));
-        System.out.println("GDK_BACKEND = " + System.getenv("GDK_BACKEND"));
-        System.out.println("LIBGL_ALWAYS_SOFTWARE = " + System.getenv("LIBGL_ALWAYS_SOFTWARE"));
-        printRunningProcessDiagnostics();
-        System.out.println("java.library.path = " + System.getProperty("java.library.path"));
-        System.out.println("--------------------------");
-    }
+//    private static void printLaunchDiagnostics() {
+//        System.out.println("--- Launch diagnostics ---");
+//        System.out.println("os.name = " + System.getProperty("os.name"));
+//        System.out.println("os.version = " + System.getProperty("os.version"));
+//        System.out.println("java.version = " + System.getProperty("java.version"));
+//        System.out.println("java.vendor = " + System.getProperty("java.vendor"));
+//        System.out.println("XDG_RUNTIME_DIR = " + System.getenv("XDG_RUNTIME_DIR"));
+//        System.out.println("XDG_SESSION_TYPE = " + System.getenv("XDG_SESSION_TYPE"));
+//        System.out.println("WAYLAND_DISPLAY = " + System.getenv("WAYLAND_DISPLAY"));
+//        System.out.println("DISPLAY = " + System.getenv("DISPLAY"));
+//        System.out.println("XAUTHORITY = " + System.getenv("XAUTHORITY"));
+//        System.out.println("XDG_CURRENT_DESKTOP = " + System.getenv("XDG_CURRENT_DESKTOP"));
+//        System.out.println("GDK_BACKEND = " + System.getenv("GDK_BACKEND"));
+//        System.out.println("LIBGL_ALWAYS_SOFTWARE = " + System.getenv("LIBGL_ALWAYS_SOFTWARE"));
+//        printRunningProcessDiagnostics();
+//        System.out.println("java.library.path = " + System.getProperty("java.library.path"));
+//        System.out.println("--------------------------");
+//    }
 
-    private static void printRunningProcessDiagnostics() {
-        boolean found = false;
-
-        for (ProcessHandle process : ProcessHandle.allProcesses().toArray(ProcessHandle[]::new)) {
-            ProcessHandle.Info info = process.info();
-            String commandLine = info.commandLine().orElse("");
-            String command = info.command().orElse("");
-
-            if (!commandLine.contains("xwayland-satellite") && !command.contains("xwayland-satellite")) {
-                continue;
-            }
-
-            found = true;
-            System.out.println("Detected process matching '" + "xwayland-satellite" + "': pid=" + process.pid());
-            if (!commandLine.isBlank()) {
-                System.out.println("  commandLine = " + commandLine);
-            } else if (!command.isBlank()) {
-                System.out.println("  command = " + command);
-            }
-        }
-
-        if (!found) {
-            System.out.println("No running process matched '" + "xwayland-satellite" + "'.");
-        }
-    }
+//    private static void printRunningProcessDiagnostics() {
+//        boolean found = false;
+//
+//        for (ProcessHandle process : ProcessHandle.allProcesses().toArray(ProcessHandle[]::new)) {
+//            ProcessHandle.Info info = process.info();
+//            String commandLine = info.commandLine().orElse("");
+//            String command = info.command().orElse("");
+//
+//            if (!commandLine.contains("xwayland-satellite") && !command.contains("xwayland-satellite")) {
+//                continue;
+//            }
+//
+//            found = true;
+//            System.out.println("Detected process matching '" + "xwayland-satellite" + "': pid=" + process.pid());
+//            if (!commandLine.isBlank()) {
+//                System.out.println("  commandLine = " + commandLine);
+//            } else if (!command.isBlank()) {
+//                System.out.println("  command = " + command);
+//            }
+//        }
+//
+//        if (!found) {
+//            System.out.println("No running process matched '" + "xwayland-satellite" + "'.");
+//        }
+//    }
 
     public static void main(String[] args) throws Exception {
-        System.out.println(new NeoVersionFetcher().getLatest("26.1.2"));
 
         //printLaunchDiagnostics();
 
@@ -138,13 +137,10 @@ public class LauncherTest {
                 .launcherName("MinifiedLauncher")
                 .launcherVersion("1.0.0")
                 .assetsDirectory(Path.of("/home/dervarex/Development/tmp/assets/"))
-                .librariesDirectory(
-                        Path.of("/home/dervarex/Development/tmp/jar/libraries/")
-                )
+                .librariesDirectory(Path.of("/home/dervarex/Development/tmp/jar/libraries/"))
                 .jarFile(Path.of("/home/dervarex/Development/tmp/jar/client.jar"))
                 .isDemoUser(false)
-                .loader(Loader.NeoForge)
-                .customJavaExecutable(Path.of("/lib/jvm/java-25-openjdk/bin/java"))
+                .loader(Loader.Vanilla)
                 .build();
 
 

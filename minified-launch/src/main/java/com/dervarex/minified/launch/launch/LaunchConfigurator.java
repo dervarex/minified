@@ -11,26 +11,34 @@ import java.util.Objects;
 @Getter
 public class LaunchConfigurator {
 
+    // Memory
     private int minRam = 2048;
     private int maxRam = 4096;
 
+    // Downloads
     private int downloadThreads = 5;
 
+    // Resolution
     private int resolutionWidth = 1920;
     private int resolutionHeight = 1080;
 
+    // Launcher metadata
     private String launcherName = "Launcher";
     private String launcherVersion = "1.0.0";
 
+    // Flags
     private boolean demoUser = false;
     private boolean customResolution = false;
+//    private boolean offlineMode = false;
 
+    // Paths
     private Path jarFile;            // required
     private Path librariesDirectory; // required
     private Path assetsDirectory;    // required
     private Path nativesDirectory;   // optional, defaults to <jarFile's parent directory>/natives
     private Path customJavaExecutable;
 
+    // Launch options
     private final List<String> extraJvmArgs = new ArrayList<>();
     private Loader loader = Loader.Vanilla;
 
@@ -41,19 +49,24 @@ public class LaunchConfigurator {
 
         private final LaunchConfigurator config = new LaunchConfigurator();
 
+        // Memory
         public Builder minRam(int minRam) {
             config.minRam = minRam;
             return this;
         }
+
         public Builder maxRam(int maxRam) {
             config.maxRam = maxRam;
             return this;
         }
+
+        // Downloads
         public Builder downloadThreads(int threads) {
             config.downloadThreads = threads;
             return this;
         }
 
+        // Resolution
         public Builder resolution(int width, int height) {
             config.resolutionWidth = width;
             config.resolutionHeight = height;
@@ -61,6 +74,7 @@ public class LaunchConfigurator {
             return this;
         }
 
+        // Launcher metadata
         public Builder launcherName(String name) {
             config.launcherName = name;
             return this;
@@ -71,27 +85,39 @@ public class LaunchConfigurator {
             return this;
         }
 
+        // Flags
         public Builder isDemoUser(boolean demo) {
             config.demoUser = demo;
             return this;
         }
 
+        // Paths
         public Builder jarFile(Path jarFile) {
             config.jarFile = jarFile;
             return this;
         }
+
         public Builder librariesDirectory(Path librariesDirectory) {
             config.librariesDirectory = librariesDirectory;
             return this;
         }
+
         public Builder assetsDirectory(Path assetsDirectory) {
             config.assetsDirectory = assetsDirectory;
             return this;
         }
+
         public Builder nativesDirectory(Path nativesDirectory) {
             config.nativesDirectory = nativesDirectory;
             return this;
         }
+
+        public Builder customJavaExecutable(Path customJavaExecutable) {
+            config.customJavaExecutable = customJavaExecutable;
+            return this;
+        }
+
+        // Launch options
         public Builder extraJvmArg(String arg) {
             config.extraJvmArgs.add(arg);
             return this;
@@ -101,15 +127,11 @@ public class LaunchConfigurator {
             config.extraJvmArgs.addAll(args);
             return this;
         }
+
         public Builder loader(Loader loader) {
             config.loader = loader;
             return this;
         }
-        public Builder  customJavaExecutable(Path customJavaExecutable) {
-            config.customJavaExecutable = customJavaExecutable;
-            return this;
-        }
-
 
         public LaunchConfigurator build() {
             Objects.requireNonNull(config.jarFile, "jarFile is required");

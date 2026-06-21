@@ -3,6 +3,7 @@ package com.dervarex.minified.launch.download.assets;
 import com.dervarex.minified.launch.ApiEndpoints;
 import com.dervarex.minified.launch.utils.DownloadHelper;
 import com.dervarex.minified.launch.version.VersionManifestClient;
+import com.dervarex.minified.utils.exceptions.NoConnectionException;
 import com.dervarex.minified.utils.http.HttpUtil;
 import com.dervarex.minified.utils.json.JsonFile;
 import com.dervarex.minified.utils.json.JsonObject;
@@ -41,19 +42,34 @@ public class AssetDownloader {
      * @param assetsDir the directory the assets should be downloaded to
      */
     public void downloadAssets(String version, Path assetsDir) {
-
         try {
+            boolean online = true;
+            try {
+                NetworkUtil.ensureOnline("downloading assets for version " + version);
+            } catch (NoConnectionException e) {
+                online = false;
+            }
 
-            NetworkUtil.ensureOnline("downloading assets for version " + version);
+            if (!online) {
+                AssetOfflineValidator.validate(version, assetsDir);
+                return;
+            }
+
             assetsDir.toFile().mkdirs();
 
-            JsonObject versionEntry = Objects.requireNonNull
-                            (VersionManifestClient.getVersionEntry(version))
-                    .asObject();
+            JsonObject versionEntry = Objects.requireNonNull(
+                    VersionManifestClient.getVersionEntry(version)
+            ).asObject();
 
-            JsonFile versionJson = new JsonFile(
-                    HttpUtil.get(versionEntry.get("url").asString())
-            );
+            Path cacheRoot = resolveCacheRoot(assetsDir);
+            Files.createDirectories(cacheRoot);
+
+            String versionJsonRaw = HttpUtil.get(versionEntry.get("url").asString());
+            Path versionCachePath = cacheRoot.resolve("versions").resolve(version + ".json");
+            Files.createDirectories(versionCachePath.getParent());
+            Files.writeString(versionCachePath, versionJsonRaw);
+
+            JsonFile versionJson = new JsonFile(versionJsonRaw);
 
             JsonObject assetIndex = versionJson
                     .get("assetIndex")
@@ -76,8 +92,15 @@ public class AssetDownloader {
             String assetIndexContent = HttpUtil.get(assetIndexUrl);
 
             Path indexPath = indexesDir.resolve(assetIndexId + ".json");
-
             Files.writeString(indexPath, assetIndexContent);
+
+            Path cachedIndexPath = cacheRoot
+                    .resolve("assets")
+                    .resolve("indexes")
+                    .resolve(assetIndexId + ".json");
+
+            Files.createDirectories(cachedIndexPath.getParent());
+            Files.writeString(cachedIndexPath, assetIndexContent);
 
             JsonObject objects = new JsonFile(assetIndexContent)
                     .get("objects")
@@ -87,7 +110,6 @@ public class AssetDownloader {
             Set<String> seenHashes = ConcurrentHashMap.newKeySet();
 
             for (String key : objects.keys()) {
-
                 JsonObject asset = objects
                         .get(key)
                         .asObject();
@@ -102,11 +124,7 @@ public class AssetDownloader {
 
                 String subDir = hash.substring(0, 2);
 
-                String url =
-                        ApiEndpoints.ResourcesUrl
-                                + subDir
-                                + "/"
-                                + hash;
+                String url = ApiEndpoints.ResourcesUrl + subDir + "/" + hash;
 
                 Path output = objectsDir
                         .resolve(subDir)
@@ -123,7 +141,7 @@ public class AssetDownloader {
                 );
             }
 
-            // wait for all libraries
+            // wait for all assets
             for (Future<?> future : futures) {
                 future.get();
             }
@@ -135,5 +153,13 @@ public class AssetDownloader {
         } finally {
             pool.shutdown();
         }
+    }
+
+    private Path resolveCacheRoot(Path assetsDir) {
+        Path parent = assetsDir.toAbsolutePath().getParent();
+        if (parent == null) {
+            return assetsDir.toAbsolutePath().resolve("cache");
+        }
+        return parent.resolve("cache");
     }
 }

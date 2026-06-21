@@ -19,6 +19,3 @@ public class ApiEndpoints {
     public static final String NeoForgeMavenMetadataUrl =
             "https://maven.neoforged.net/releases/net/neoforged/neoforge/maven-metadata.xml";
 }
-//https://maven.neoforged.net/releases/net/neoforged/neoforge/26.2.0.1-beta/neoforge-26.2.0.1-beta-installer.jar
-//https://maven.neoforged.net/releases/net/neoforged/neoforge/
-//
