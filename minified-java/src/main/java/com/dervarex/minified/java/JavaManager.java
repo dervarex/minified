@@ -17,6 +17,7 @@ import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.zip.GZIPInputStream;
@@ -140,11 +141,12 @@ public final class JavaManager {
      */
     public static JavaInstallation ensureJavaVersion(int requiredMajorVersion) throws HttpException, IOException {
         JavaInstallation current = currentRuntime();
-        if (requiredMajorVersion <= 0 || current.majorVersion() == requiredMajorVersion) {
+        if (requiredMajorVersion <= 0 || current.majorVersion() >= requiredMajorVersion) {
             return current;
         }
 
         RuntimeAsset asset = resolveRuntimeAsset(requiredMajorVersion);
+
         Path installRoot = runtimeInstallRoot()
                 .resolve(asset.platformId())
                 .resolve(String.valueOf(requiredMajorVersion))
@@ -152,24 +154,63 @@ public final class JavaManager {
 
         Path executable = locateExecutable(installRoot);
         if (Files.exists(executable)) {
-            return new JavaInstallation(requiredMajorVersion, inferHome(executable), executable, true, asset.releaseName());
+            ensureExecutableBit(executable);
+            return new JavaInstallation(
+                    requiredMajorVersion,
+                    inferHome(executable),
+                    executable,
+                    true,
+                    asset.releaseName()
+            );
         }
 
         Files.createDirectories(installRoot);
-        Path archive = Files.createTempFile(installRoot.getParent(), "java-runtime-", archiveSuffix(asset.packageName()));
+        Path archive = Files.createTempFile(
+                installRoot.getParent(),
+                "java-runtime-",
+                archiveSuffix(asset.packageName())
+        );
+
         try {
             downloadArchive(asset.downloadUrl(), asset.checksum(), archive);
             extractArchive(archive, installRoot, asset.packageName());
+
             Path installedExecutable = locateExecutable(installRoot);
             if (!Files.exists(installedExecutable)) {
-                throw new IOException("Downloaded Java runtime did not contain a java executable: " + installRoot);
+                throw new IOException(
+                        "Downloaded Java runtime did not contain a java executable: " + installRoot
+                );
             }
-            return new JavaInstallation(requiredMajorVersion, inferHome(installedExecutable), installedExecutable, true, asset.releaseName());
+
+            ensureExecutableBit(installedExecutable);
+
+            return new JavaInstallation(
+                    requiredMajorVersion,
+                    inferHome(installedExecutable),
+                    installedExecutable,
+                    true,
+                    asset.releaseName()
+            );
         } finally {
             try {
                 Files.deleteIfExists(archive);
             } catch (IOException ignored) {
             }
+        }
+    }
+
+    private static void ensureExecutableBit(Path executable) {
+        if (isWindows()) {
+            return;
+        }
+
+        try {
+            Files.setPosixFilePermissions(
+                    executable,
+                    PosixFilePermissions.fromString("rwxr-xr-x")
+            );
+        } catch (Exception ignored) {
+            executable.toFile().setExecutable(true, false);
         }
     }
 
@@ -267,47 +308,84 @@ public final class JavaManager {
         );
     }
 
-    private static RuntimeAsset parseRuntimeAsset(JsonValue assetValue, int requiredMajorVersion, String expectedImageType) {
+    private static RuntimeAsset parseRuntimeAsset(
+            JsonValue assetValue,
+            int requiredMajorVersion,
+            String expectedImageType
+    ) {
         if (assetValue == null || !assetValue.isObject()) {
             return null;
         }
 
         JsonObject assetObject = assetValue.asObject();
-        JsonObject binary = assetObject.getObject("binary");
-        JsonObject packageObject = binary == null ? null : binary.getObject("package");
-        if (binary == null || packageObject == null) {
+
+        JsonArray binaries = assetObject.getArray("binaries");
+        if (binaries == null || binaries.isNull()) {
             return null;
         }
 
-        String os = binary.getString("os");
-        String architecture = binary.getString("architecture");
-        String imageType = binary.getString("image_type");
-        String jvmImpl = binary.getString("jvm_impl");
-        String downloadUrl = packageObject.getString("link");
-        String checksum = packageObject.getString("checksum");
-        String packageName = packageObject.getString("name");
-        String releaseName = assetObject.getString("release_name");
+        for (JsonValue binaryValue : binaries) {
+            if (!binaryValue.isObject()) {
+                continue;
+            }
 
-        if (!platformOs().equals(os)) {
-            return null;
-        }
-        if (!platformArchitecture().equals(architecture)) {
-            return null;
-        }
-        if (imageType == null || !expectedImageType.equalsIgnoreCase(imageType)) {
-            return null;
-        }
-        if (jvmImpl != null && !"hotspot".equalsIgnoreCase(jvmImpl)) {
-            return null;
-        }
-        if (downloadUrl == null || checksum == null || packageName == null) {
-            return null;
-        }
-        if (releaseName == null || releaseName.isBlank()) {
-            releaseName = "java-" + requiredMajorVersion;
+            JsonObject binary = binaryValue.asObject();
+            JsonObject packageObject = binary.getObject("package");
+
+            if (packageObject == null) {
+                continue;
+            }
+
+            String os = binary.getString("os");
+            String architecture = binary.getString("architecture");
+            String imageType = binary.getString("image_type");
+            String jvmImpl = binary.getString("jvm_impl");
+
+            String downloadUrl = packageObject.getString("link");
+            String checksum = packageObject.getString("checksum");
+            String packageName = packageObject.getString("name");
+
+            String releaseName = assetObject.getString("release_name");
+
+            if (!platformOs().equals(os)) {
+                continue;
+            }
+
+            if (!platformArchitecture().equals(architecture)) {
+                continue;
+            }
+
+            if (imageType == null
+                    || !expectedImageType.equalsIgnoreCase(imageType)) {
+                continue;
+            }
+
+            if (jvmImpl != null
+                    && !"hotspot".equalsIgnoreCase(jvmImpl)) {
+                continue;
+            }
+
+            if (downloadUrl == null
+                    || checksum == null
+                    || packageName == null) {
+                continue;
+            }
+
+            if (releaseName == null || releaseName.isBlank()) {
+                releaseName = "java-" + requiredMajorVersion;
+            }
+
+            return new RuntimeAsset(
+                    requiredMajorVersion,
+                    releaseName,
+                    downloadUrl,
+                    checksum,
+                    packageName,
+                    platformId()
+            );
         }
 
-        return new RuntimeAsset(requiredMajorVersion, releaseName, downloadUrl, checksum, packageName, platformId());
+        return null;
     }
 
     private static void downloadArchive(String url, String expectedChecksum, Path archive) throws IOException {
@@ -491,10 +569,19 @@ public final class JavaManager {
         return arch.isBlank() ? "x64" : arch;
     }
 
-    private static String adoptiumAssetUrl(int majorVersion, String imageType) {
-        return "https://api.adoptium.net/v3/assets/latest/%d/ga?architecture=%s&heap_size=normal&image_type=%s&jvm_impl=hotspot&os=%s&vendor=eclipse"
-                .formatted(majorVersion, platformArchitecture(), imageType, platformOs());
-    }
+//    private static String adoptiumAssetUrl(int majorVersion, String imageType) {
+//        return "https://api.adoptium.net/v3/assets/latest/%d/ga?architecture=%s&heap_size=normal&image_type=%s&jvm_impl=hotspot&os=%s&vendor=eclipse"
+//                .formatted(majorVersion, platformArchitecture(), imageType, platformOs());
+//    }
+private static String adoptiumAssetUrl(int majorVersion, String imageType) {
+    return "https://api.adoptium.net/v3/assets/feature_releases/%d/ga?architecture=%s&heap_size=normal&image_type=%s&jvm_impl=hotspot&os=%s&vendor=eclipse"
+            .formatted(
+                    majorVersion,
+                    platformArchitecture(),
+                    imageType,
+                    platformOs()
+            );
+}
 
     private static Path defaultBaseDir() {
         String os = System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
