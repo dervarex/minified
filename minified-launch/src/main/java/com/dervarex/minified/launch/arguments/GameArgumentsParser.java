@@ -21,18 +21,16 @@ public final class GameArgumentsParser {
             Map<String, Boolean> features
     ) {
         ArrayList<String> output = new ArrayList<>();
+        boolean[] skipNext = new boolean[] { false };
 
         for (JsonValue entry : arguments) {
 
             if (entry.isString()) {
-
-                output.add(
-                        replaceVariables(
-                                entry.asString(),
-                                variables
-                        )
+                appendArgument(
+                        output,
+                        replaceVariables(entry.asString(), variables),
+                        skipNext
                 );
-
                 continue;
             }
 
@@ -45,24 +43,19 @@ public final class GameArgumentsParser {
             JsonValue value = object.get("value");
 
             if (value.isString()) {
-
-                output.add(
-                        replaceVariables(
-                                value.asString(),
-                                variables
-                        )
+                appendArgument(
+                        output,
+                        replaceVariables(value.asString(), variables),
+                        skipNext
                 );
-
                 continue;
             }
 
             for (JsonValue arg : value.asArray()) {
-
-                output.add(
-                        replaceVariables(
-                                arg.asString(),
-                                variables
-                        )
+                appendArgument(
+                        output,
+                        replaceVariables(arg.asString(), variables),
+                        skipNext
                 );
             }
         }
@@ -210,5 +203,22 @@ public final class GameArgumentsParser {
         }
 
         return "unknown";
+    }
+    private static void appendArgument(
+            List<String> output,
+            String arg,
+            boolean[] skipNext
+    ) {
+        if (skipNext[0]) {
+            skipNext[0] = false;
+            return;
+        }
+
+        if ("--clientId".equals(arg)) {
+            skipNext[0] = true;
+            return;
+        }
+
+        output.add(arg);
     }
 }

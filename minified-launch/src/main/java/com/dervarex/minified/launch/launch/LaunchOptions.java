@@ -150,6 +150,10 @@ final class LaunchOptions {
                                         .toAbsolutePath()
                                         .toString()
                         )
+                        .setVariable(
+                                "xuid",
+                                user == null ? "" : (user.getXuid() != null ? user.getXuid() : "")
+                        )
 
                         .setFeature(
                                 "has_custom_resolution",

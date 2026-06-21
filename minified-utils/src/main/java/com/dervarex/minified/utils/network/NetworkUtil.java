@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.net.*;
 
 public class NetworkUtil {
-    public static boolean fakeOffline = true;
+    private static final boolean fakeOffline = false; // used for debug purposes currently
     /**
      * Ensures that the user has a working internet connection
      * <p>

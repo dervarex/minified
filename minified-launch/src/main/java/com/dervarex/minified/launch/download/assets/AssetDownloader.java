@@ -157,9 +157,6 @@ public class AssetDownloader {
 
     private Path resolveCacheRoot(Path assetsDir) {
         Path parent = assetsDir.toAbsolutePath().getParent();
-        if (parent == null) {
-            return assetsDir.toAbsolutePath().resolve("cache");
-        }
-        return parent.resolve("cache");
+        return Objects.requireNonNullElseGet(parent, assetsDir::toAbsolutePath).resolve("cache");
     }
 }

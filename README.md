@@ -2,7 +2,7 @@
 
 A lightweight Java library for downloading, managing and launching Minecraft.
 
-Supports Vanilla, Forge, Neoforge Fabric and Quilt.
+Supports Vanilla, Forge, Neoforge, Fabric and Quilt.
 
 Minified provides a high-level API for authentication, version management, asset downloading, library resolution and game launching without requiring developers to reimplement Mojang's launcher logic.
 
@@ -13,7 +13,7 @@ Minified provides a high-level API for authentication, version management, asset
 * Library downloading
 * Native extraction
 * Minecraft launching
-* Microsoft account authentication
+* Microsoft account authentication(simplified wrapper arround net.raphimc.MinecraftAuth)
 * Session management
 * Forge support
 * Neoforge support
@@ -89,7 +89,6 @@ More unit tests and dedicated usage examples are planned in the future.
 ## Roadmap
 
 * Only use os-specific natives instead of downloading and extracting all natives
-* Fix Java Manager
 * Custom Modloader versions
 * Modrinth API Integration
 * Custom offline username support
@@ -117,3 +116,4 @@ See the LICENSE file for details.
 ## Credits
 
 Big thanks to [etkmlm](https://github.com/etkmlm) for explaining me important details about the Launch Process and the Forge installer, without him, I wouldn't have been able to implement Forge support.
+Thanks to net.raphimc.MinecraftAuth as well for providing a great library for Minecraft authentication, which I used as a dependency for Minified's authentication module.

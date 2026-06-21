@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Objects;
 
 @Getter
+@SuppressWarnings("unused")
 public class LaunchConfigurator {
 
     // Memory
@@ -29,7 +30,6 @@ public class LaunchConfigurator {
     // Flags
     private boolean demoUser = false;
     private boolean customResolution = false;
-//    private boolean offlineMode = false;
 
     // Paths
     private Path jarFile;            // required
