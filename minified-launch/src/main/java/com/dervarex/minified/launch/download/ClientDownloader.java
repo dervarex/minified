@@ -1,11 +1,9 @@
 package com.dervarex.minified.launch.download;
 
 import com.dervarex.minified.launch.utils.DownloadHelper;
-import com.dervarex.minified.launch.version.VersionManifestClient;
 import com.dervarex.minified.launch.version.VersionMetadataProvider;
 import com.dervarex.minified.utils.exceptions.HttpException;
 import com.dervarex.minified.utils.exceptions.NoConnectionException;
-import com.dervarex.minified.utils.json.JsonObject;
 import com.dervarex.minified.utils.network.NetworkUtil;
 
 import java.io.IOException;
@@ -16,17 +14,16 @@ public class ClientDownloader {
 
     /**
      * @param version the game version
-     * @param path the full path to the jar including the file name, for example /home/dervarex/client.jar
-     * @return true if the download worked correctly, false if there was an error
+     * @param path    the full path to the jar including the file name, for example /home/dervarex/client.jar
      */
-    public boolean downloadClient(String version, Path path)
+    public void downloadClient(String version, Path path)
             throws HttpException, IOException {
 
         try {
             NetworkUtil.ensureOnline("download client jar");
         } catch (NoConnectionException nce) {
             System.err.println("You do not have a working internet connection!");
-            return false;
+            return;
         }
 
         path.getParent().toFile().mkdirs();
@@ -34,11 +31,11 @@ public class ClientDownloader {
         String url = VersionMetadataProvider.getVersionJsonUrl(version);
         if (url == null) {
             System.out.println("ClientDownloader: Cannot find version!");
-            return false;
+            return;
         }
         String clientUrl = VersionMetadataProvider.getClientUrl(version);
         String sha1 = VersionMetadataProvider.getClientSha1(version);
 
-        return DownloadHelper.download(clientUrl, path, sha1);
+        DownloadHelper.download(clientUrl, path, sha1);
     }
 }

@@ -8,9 +8,6 @@ import com.dervarex.minified.utils.json.JsonParser;
 
 public class FabricLoaderFetcher {
 
-//    private static final String LOADERS_URL =
-//            "https://meta.fabricmc.net/v2/versions/loader";
-
     public static String getLatestLoaderVersion() throws Exception {
 
         JsonArray loaders = JsonParser

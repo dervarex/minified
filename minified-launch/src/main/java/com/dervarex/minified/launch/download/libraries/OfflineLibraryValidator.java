@@ -1,6 +1,12 @@
 package com.dervarex.minified.launch.download.libraries;
 
 import com.dervarex.minified.launch.launch.modding.Loader;
+import com.dervarex.minified.launch.launch.modding.fabric.FabricLoader;
+import com.dervarex.minified.launch.launch.modding.forge.ForgeLoader;
+import com.dervarex.minified.launch.launch.modding.neoforge.NeoforgeLoader;
+import com.dervarex.minified.launch.launch.modding.quilt.QuiltLoader;
+import com.dervarex.minified.launch.launch.modding.vanilla.VanillaLoader;
+import com.dervarex.minified.launch.utils.OSUtil;
 import com.dervarex.minified.utils.exceptions.OfflineModeNeedsNetworkException;
 import com.dervarex.minified.utils.json.JsonArray;
 import com.dervarex.minified.utils.json.JsonFile;
@@ -13,6 +19,7 @@ import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public final class OfflineLibraryValidator {
 
@@ -39,17 +46,24 @@ public final class OfflineLibraryValidator {
         validateLibraries(versionLibraries, librariesDir, problems);
 
         switch (loader) {
-            case Fabric -> {
+            case FabricLoader ignored -> {
                 Path fabricProfilePath = cacheRoot.resolve("profiles").resolve("fabric").resolve(version + ".json");
                 validateLoaderProfile(fabricProfilePath, librariesDir, problems);
             }
-            case Quilt -> {
+            case QuiltLoader ignored -> {
                 Path quiltProfilePath = cacheRoot.resolve("profiles").resolve("quilt").resolve(version + ".json");
                 validateLoaderProfile(quiltProfilePath, librariesDir, problems);
             }
-            case Vanilla, Forge, NeoForge -> {
+            case VanillaLoader ignored -> {
                 // nothing extra here
             }
+            case ForgeLoader ignored -> {
+                // nothing extra here
+            }
+            case NeoforgeLoader ignored -> {
+                // nothing extra here (why do I have to copy and paste this 3 times...)
+            }
+            default -> throw new IllegalStateException("Unexpected loader: " + loader);
         }
 
         if (!problems.isEmpty()) {
@@ -61,7 +75,7 @@ public final class OfflineLibraryValidator {
 
     private static void validateLoaderProfile(Path profilePath, Path librariesDir, List<String> problems) {
         if (!Files.exists(profilePath)) {
-            problems.add("Missing cached modloader profile: " + profilePath);
+            problems.add("Missing cached loader profile: " + profilePath);
             return;
         }
 
@@ -69,7 +83,7 @@ public final class OfflineLibraryValidator {
         try {
             profile = new JsonFile(Files.readString(profilePath));
         } catch (Exception e) {
-            problems.add("Invalid cached modloader profile: " + profilePath);
+            problems.add("Invalid cached loader profile: " + profilePath);
             return;
         }
 
@@ -230,12 +244,7 @@ public final class OfflineLibraryValidator {
     }
 
     private static String getMinecraftOs() {
-        String os = System.getProperty("os.name").toLowerCase();
-
-        if (os.contains("win")) return "windows";
-        if (os.contains("mac") || os.contains("darwin")) return "osx";
-        if (os.contains("linux") || os.contains("unix")) return "linux";
-        return "unknown";
+        return OSUtil.getMinecraftOs();
     }
 
     private static Path resolveNativesDirectory(Path librariesDir) {
@@ -251,9 +260,6 @@ public final class OfflineLibraryValidator {
 
     private static Path resolveCacheRoot(Path librariesDir) {
         Path parent = librariesDir.toAbsolutePath().getParent();
-        if (parent == null) {
-            return librariesDir.toAbsolutePath().resolve("cache");
-        }
-        return parent.resolve("cache");
+        return Objects.requireNonNullElseGet(parent, librariesDir::toAbsolutePath).resolve("cache");
     }
 }

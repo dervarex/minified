@@ -1,9 +1,15 @@
 package com.dervarex.minified.launch.download.libraries;
 
 import com.dervarex.minified.launch.launch.modding.Loader;
+import com.dervarex.minified.launch.launch.modding.fabric.FabricLoader;
 import com.dervarex.minified.launch.launch.modding.fabric.FabricLoaderFetcher;
+import com.dervarex.minified.launch.launch.modding.forge.ForgeLoader;
+import com.dervarex.minified.launch.launch.modding.neoforge.NeoforgeLoader;
+import com.dervarex.minified.launch.launch.modding.quilt.QuiltLoader;
 import com.dervarex.minified.launch.launch.modding.quilt.QuiltLoaderFetcher;
+import com.dervarex.minified.launch.launch.modding.vanilla.VanillaLoader;
 import com.dervarex.minified.launch.utils.DownloadHelper;
+import com.dervarex.minified.launch.utils.OSUtil;
 import com.dervarex.minified.launch.version.VersionManifestClient;
 import com.dervarex.minified.utils.exceptions.NoConnectionException;
 import com.dervarex.minified.utils.http.HttpUtil;
@@ -50,20 +56,19 @@ public class LibraryDownloader {
     /**
      * Downloads the libraries.
      *
-     * @param version the game version
      * @param loader the loader to use
      * @param librariesDir the directory the libraries should be downloaded to
      */
-    public void downloadLibraries(String version, Loader loader, Path librariesDir) {
+    public void downloadLibraries(Loader loader, Path librariesDir) {
         boolean online = true;
         try {
-            NetworkUtil.ensureOnline("downloading libraries for version " + version);
+            NetworkUtil.ensureOnline("downloading libraries for version " + loader.mcVersion());
         } catch (RuntimeException | NoConnectionException e) {
             online = false;
         }
 
         if (!online) {
-            OfflineLibraryValidator.validate(version, loader, librariesDir);
+            OfflineLibraryValidator.validate(loader.mcVersion(), loader, librariesDir);
             return;
         }
         try {
@@ -76,13 +81,13 @@ public class LibraryDownloader {
             Files.createDirectories(nativeDownloadDir);
 
             JsonObject versionEntry = Objects.requireNonNull(
-                    VersionManifestClient.getVersionEntry(version)
+                    VersionManifestClient.getVersionEntry(loader.mcVersion())
             ).asObject();
 
             String versionJsonRaw = HttpUtil.get(versionEntry.get("url").asString());
 
             Path cacheRoot = resolveCacheRoot(librariesDir);
-            Path versionCachePath = cacheRoot.resolve("versions").resolve(version + ".json");
+            Path versionCachePath = cacheRoot.resolve("versions").resolve(loader.mcVersion() + ".json");
             Files.createDirectories(versionCachePath.getParent());
             Files.writeString(versionCachePath, versionJsonRaw);
 
@@ -138,17 +143,17 @@ public class LibraryDownloader {
             }
 
             switch (loader) {
-                case Vanilla:
+                case VanillaLoader vanillaLoader:
                     // Nothing additional to download for vanilla
                     break;
 
-                case Fabric:
-                    JsonObject fabricProfile = FabricLoaderFetcher.getLatestProfile(version);
+                case FabricLoader fabricLoader:
+                    JsonObject fabricProfile = FabricLoaderFetcher.getLatestProfile(loader.mcVersion());
 
                     Path fabricCachePath = resolveCacheRoot(librariesDir)
                             .resolve("profiles")
                             .resolve("fabric")
-                            .resolve(version + ".json");
+                            .resolve(loader.mcVersion() + ".json");
 
                     Files.createDirectories(fabricCachePath.getParent());
                     Files.writeString(fabricCachePath, fabricProfile.toString());
@@ -160,13 +165,13 @@ public class LibraryDownloader {
                     );
                     break;
 
-                case Quilt:
-                    JsonObject quiltProfile = QuiltLoaderFetcher.getLatestProfile(version);
+                case QuiltLoader quiltLoader:
+                    JsonObject quiltProfile = QuiltLoaderFetcher.getLatestProfile(loader.mcVersion());
 
                     Path quiltCachePath = resolveCacheRoot(librariesDir)
                             .resolve("profiles")
                             .resolve("quilt")
-                            .resolve(version + ".json");
+                            .resolve(loader.mcVersion() + ".json");
 
                     Files.createDirectories(quiltCachePath.getParent());
                     Files.writeString(quiltCachePath, quiltProfile.toString());
@@ -177,10 +182,14 @@ public class LibraryDownloader {
                             futures
                     );
                     break;
-                case Forge:
-                case NeoForge:
+                case NeoforgeLoader neoforgeLoader:
                     // Nothing additional to download for forge and neoforge, as the installer will handle it for us :)
                     break;
+                case ForgeLoader forgeLoader:
+                    // Nothing additional to download for forge and neoforge, as the installer will handle it for us :)
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected loader: " + loader);
             }
 
             // Wait for all downloads
@@ -205,7 +214,7 @@ public class LibraryDownloader {
 
     /**
      * Download the Libraries for the selected modloader
-     * @param libraries the libraries array, which can be obtained from the modloader's version Json under the "libraries" key
+     * @param libraries the libraries array, which can be obtained from the modloader's version JSON under the "libraries" key
      * @param librariesDir the directory the libraries should be downloaded to
      * @param futures The futures list to add the download tasks to, so they can be waited on later. This is used to run the modloader library downloads in parallel with the normal library downloads.
      */
@@ -457,23 +466,7 @@ public class LibraryDownloader {
      * @return the operating system of the user, in the format that Minecraft uses for library rules
      */
     private String getMinecraftOs() {
-        String os = System.getProperty("os.name").toLowerCase();
-
-        if (os.contains("win")) {
-            return "windows";
-        }
-
-        if (os.contains("mac") || os.contains("darwin")) {
-            return "osx";
-        }
-
-        if (os.contains("linux")
-                // || os.contains("bsd")
-                || os.contains("unix")) {
-            return "linux";
-        }
-
-        return "unknown";
+        return OSUtil.getMinecraftOs();
     }
 
     private Path resolveNativesDirectory(Path librariesDir) {
@@ -491,9 +484,6 @@ public class LibraryDownloader {
     }
     private Path resolveCacheRoot(Path librariesDir) {
         Path parent = librariesDir.toAbsolutePath().getParent();
-        if (parent == null) {
-            return librariesDir.toAbsolutePath().resolve("cache");
-        }
-        return parent.resolve("cache");
+        return Objects.requireNonNullElseGet(parent, librariesDir::toAbsolutePath).resolve("cache");
     }
 }

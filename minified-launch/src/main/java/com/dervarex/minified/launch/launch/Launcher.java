@@ -10,14 +10,19 @@ import com.dervarex.minified.launch.download.ClientDownloader;
 import com.dervarex.minified.launch.download.assets.AssetDownloader;
 import com.dervarex.minified.launch.download.libraries.LibraryDownloader;
 import com.dervarex.minified.launch.launch.modding.Loader;
+import com.dervarex.minified.launch.launch.modding.fabric.FabricLoader;
 import com.dervarex.minified.launch.launch.modding.fabric.FabricLoaderFetcher;
+import com.dervarex.minified.launch.launch.modding.forge.ForgeLoader;
 import com.dervarex.minified.launch.launch.modding.forge.api.ForgeVersionFetcher;
 import com.dervarex.minified.launch.launch.modding.forge.api.ForgeVersionJson;
 import com.dervarex.minified.launch.launch.modding.forge.installer.ForgeInstallerInjector;
+import com.dervarex.minified.launch.launch.modding.neoforge.NeoforgeLoader;
 import com.dervarex.minified.launch.launch.modding.neoforge.api.NeoVersionFetcher;
 import com.dervarex.minified.launch.launch.modding.neoforge.api.NeoVersionJson;
 import com.dervarex.minified.launch.launch.modding.neoforge.installer.NeoInstallerInjector;
+import com.dervarex.minified.launch.launch.modding.quilt.QuiltLoader;
 import com.dervarex.minified.launch.launch.modding.quilt.QuiltLoaderFetcher;
+import com.dervarex.minified.launch.launch.modding.vanilla.VanillaLoader;
 import com.dervarex.minified.launch.utils.X11Helper;
 import com.dervarex.minified.launch.version.VersionMetadataProvider;
 import com.dervarex.minified.utils.exceptions.HttpException;
@@ -39,9 +44,8 @@ import java.util.List;
 public class Launcher {
     /**
      * Downloads required files and launches Minecraft.
-     * Can be used in offline mode, will throw {@code OfflineModeNeedsNetworkException} if any assets or libraries are not downloaded but are needed
+     * Can be used in offline mode, will throw {@code OfflineModeNeedsNetworkException} if any assets, libraries or other stuff is not downloaded but is needed
      *
-     * @param version the Minecraft version to launch
      * @param user    the logged-in user to launch with, or null to launch in offline mode(you won't be able to join online servers or use any online features in offline mode)
      * @param launchConfig configuration used by the launcher when starting the game,
      *                     such as the number of download threads, launcher name,
@@ -60,30 +64,29 @@ public class Launcher {
      * }</pre>
      */
     public static void launchMinecraft(
-            String version,
             User user,
             LaunchConfigurator launchConfig) {
 
         try {
+            Loader loader = launchConfig.getLoader();
+
             boolean online = true;
             try {
                 NetworkUtil.ensureOnline("launch minecraft");
             } catch (NoConnectionException e) {
                 online = false;
             }
-
-            Loader loader = launchConfig.getLoader();
             if (online) {
-                if (loader.equals(Loader.Forge)) {
+                if (loader instanceof ForgeLoader) {
                     ForgeInstallerInjector forgeInstallerInjector = new ForgeInstallerInjector();
-                    forgeInstallerInjector.install(launchConfig, version);
-                } else if (loader.equals(Loader.NeoForge)) {
+                    forgeInstallerInjector.install(launchConfig, loader.mcVersion());
+                } else if (loader instanceof NeoforgeLoader) {
                     NeoInstallerInjector neoInstallerInjector = new NeoInstallerInjector();
-                    neoInstallerInjector.install(launchConfig, version);
+                    neoInstallerInjector.install(launchConfig, loader.mcVersion());
                 }
             }
 
-            JsonFile versionJson = loadVersionJson(version, online);
+            JsonFile versionJson = loadVersionJson(loader.mcVersion(), online);
 
             JavaInstallation javaInstallation;
             if (launchConfig.getCustomJavaExecutable() == null) {
@@ -96,7 +99,7 @@ public class Launcher {
             }
 
             downloadFiles(
-                    version,
+                    loader.mcVersion(),
                     launchConfig,
                     online
             );
@@ -110,7 +113,7 @@ public class Launcher {
             LaunchOptions options =
                     LaunchOptions.buildLaunchOptions(
                             user,
-                            version,
+                            loader.mcVersion(),
                             launchConfig,
                             versionJson,
                             classpath
@@ -122,7 +125,7 @@ public class Launcher {
                             launchConfig,
                             options,
                             loader,
-                            version,
+                            loader.mcVersion(),
                             online
                     ); // includes the classpath
             Path nativesDir =
@@ -144,7 +147,7 @@ public class Launcher {
                             versionJson,
                             options,
                             loader,
-                            version,
+                            loader.mcVersion(),
                             launchConfig,
                             online
                     );
@@ -157,10 +160,10 @@ public class Launcher {
                             javaInstallation.executable()
                             .toAbsolutePath().toString() :
                             launchConfig.getCustomJavaExecutable()
-                            .toAbsolutePath().toString());                                   // java
-            command.addAll(jvmArgs);                                                         // -Dsomearg -cp ...
-            command.add   (getMainClass(versionJson, loader, version, launchConfig, online));// net.minecraft.client.main.Main
-            command.addAll(gameArgs);                                                        // --username ... --accessToken ...
+                            .toAbsolutePath().toString());                                                  // java
+            command.addAll(jvmArgs);                                                                        // -Dsomearg -cp ...
+            command.add   (getMainClass(versionJson, loader, loader.mcVersion(), launchConfig, online));// net.minecraft.client.main.Main
+            command.addAll(gameArgs);                                                                       // --username ... --accessToken ...
 
             launchProcess(command);
 
@@ -184,7 +187,6 @@ public class Launcher {
         ClientDownloader  clientDownloader = new ClientDownloader();
 
         libDownloader.downloadLibraries(
-                version,
                 launchConfig.getLoader(),
                 launchConfig.getLibrariesDirectory()
         );
@@ -249,20 +251,22 @@ public class Launcher {
         JsonObject loaderProfileJson = null;
 
         switch (loader) {
-            case Vanilla:
+            case VanillaLoader ignored:
                 break;
-            case Fabric:
+            case FabricLoader ignored:
                 loaderProfileJson = loadFabricProfileJson(version, online);
                 break;
-            case Forge:
+            case ForgeLoader ignored:
                 loaderProfileJson = loadForgeProfileJson(version, launchConfig, online);
                 break;
-            case NeoForge:
+            case NeoforgeLoader ignored:
                 loaderProfileJson = loadNeoForgeProfileJson(version, launchConfig, online);
                 break;
-            case Quilt:
+            case QuiltLoader ignored:
                 loaderProfileJson = loadQuiltProfileJson(version, online);
                 break;
+            default:
+                throw new IllegalStateException("Unexpected loader: " + loader);
         }
 
         if (loaderProfileJson != null) {
@@ -307,20 +311,22 @@ public class Launcher {
         JsonObject loaderProfileJson = null;
 
         switch (loader) {
-            case Vanilla:
+            case VanillaLoader ignored:
                 break;
-            case Fabric:
+            case FabricLoader ignored:
                 loaderProfileJson = loadFabricProfileJson(version, online);
                 break;
-            case Quilt:
+            case QuiltLoader ignored:
                 loaderProfileJson = loadQuiltProfileJson(version, online);
                 break;
-            case Forge:
+            case ForgeLoader ignored:
                 loaderProfileJson = loadForgeProfileJson(version, launchConfig, online);
                 break;
-            case NeoForge:
+            case NeoforgeLoader ignored:
                 loaderProfileJson = loadNeoForgeProfileJson(version, launchConfig, online);
                 break;
+            default:
+                throw new IllegalStateException("Unexpected loader: " + loader);
         }
 
         if (loaderProfileJson != null) {
@@ -350,11 +356,12 @@ public class Launcher {
             boolean online
     ) {
         JsonValue mainClassValue = switch (loader) {
-            case Vanilla -> versionJson.get("mainClass");
-            case Fabric -> loadFabricProfileJson(version, online).get("mainClass");
-            case Quilt -> loadQuiltProfileJson(version, online).get("mainClass");
-            case Forge -> loadForgeProfileJson(version, launchConfig, online).get("mainClass");
-            case NeoForge -> loadNeoForgeProfileJson(version, launchConfig, online).get("mainClass");
+            case VanillaLoader ignored -> versionJson.get("mainClass");
+            case FabricLoader ignored -> loadFabricProfileJson(version, online).get("mainClass");
+            case QuiltLoader ignored -> loadQuiltProfileJson(version, online).get("mainClass");
+            case ForgeLoader ignored -> loadForgeProfileJson(version, launchConfig, online).get("mainClass");
+            case NeoforgeLoader ignored -> loadNeoForgeProfileJson(version, launchConfig, online).get("mainClass");
+            default -> throw new IllegalStateException("Unexpected loader: " + loader);
         };
 
         if (mainClassValue == null) {

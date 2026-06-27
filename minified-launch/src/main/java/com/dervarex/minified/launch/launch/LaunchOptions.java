@@ -4,8 +4,10 @@ import com.dervarex.minified.auth.User;
 import com.dervarex.minified.utils.json.JsonFile;
 import lombok.Getter;
 
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * @hidden to not confuse the user, they should use {@link LaunchConfigurator} instead,
@@ -46,7 +48,7 @@ final class LaunchOptions {
 
                         .setVariable(
                                 "auth_player_name",
-                                user == null ? "offlineuser" : user.getUsername()
+                                user == null ? launchConfig.getOfflineUsername() : user.getUsername()
                         )
 
                         .setVariable(
@@ -77,12 +79,12 @@ final class LaunchOptions {
 
                         .setVariable(
                                 "auth_uuid",
-                                user == null ? "12345678901234567890" : user.getUuid()
+                                user == null ? getOfflineUuid(launchConfig.getOfflineUsername()) : user.getUuid()
                         )
 
                         .setVariable(
                                 "auth_access_token",
-                                user == null ? "some-access-token" : user.getAccessToken()
+                                user == null ? "0" : user.getAccessToken()
                         )
                         .setVariable(
                                 "user_properties",
@@ -99,11 +101,6 @@ final class LaunchOptions {
                                         .toAbsolutePath()
                                         .toString()
                         )
-
-//                            .setVariable(
-//                                    "auth_xuid",
-//                                    "" // minecraft doesn't seem to need this
-//                            )
 
                         .setVariable(
                                 "version_type",
@@ -164,5 +161,11 @@ final class LaunchOptions {
                                 "is_demo_user",
                                 launchConfig.isDemoUser()
                         );
+    }
+    private static String getOfflineUuid(String username) {
+        return UUID.nameUUIDFromBytes(
+                ("OfflinePlayer:" + username)
+                        .getBytes(StandardCharsets.UTF_8)
+        ).toString();
     }
 }

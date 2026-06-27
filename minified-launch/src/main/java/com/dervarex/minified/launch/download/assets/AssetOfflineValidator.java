@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public final class AssetOfflineValidator {
 
@@ -102,9 +103,6 @@ public final class AssetOfflineValidator {
 
     private static Path resolveCacheRoot(Path assetsDir) {
         Path parent = assetsDir.toAbsolutePath().getParent();
-        if (parent == null) {
-            return assetsDir.toAbsolutePath().resolve("cache");
-        }
-        return parent.resolve("cache");
+        return Objects.requireNonNullElseGet(parent, assetsDir::toAbsolutePath).resolve("cache");
     }
 }

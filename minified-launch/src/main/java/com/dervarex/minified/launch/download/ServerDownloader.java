@@ -19,21 +19,20 @@ public class ServerDownloader {
     /**
      *
      * @param version the game version
-     * @param path the full path to the jar including the file name, for example /home/dervarex/server.jar
-     * @return true if the download worked correctly, false if there was an error
+     * @param path    the full path to the jar including the file name, for example /home/dervarex/server.jar
      */
-    public boolean downloadServer(String version, Path path) throws HttpException, IOException {
+    public void downloadServer(String version, Path path) throws HttpException, IOException {
         try {
             NetworkUtil.ensureOnline("download server jar");
         } catch (NoConnectionException nce) {
             System.err.println("You do not have a working internet connection!");
-            return false;
+            return;
         }
         path.getParent().toFile().mkdirs();
         String url = VersionMetadataProvider.getVersionJsonUrl(version);
         if (url == null) {
             System.out.println("ServerDownloader: Cannot find version!");
-            return false;
+            return;
         }
 
         HttpRequest request = DownloadHelper.prepareClientRequest(url, "server");
@@ -47,7 +46,6 @@ public class ServerDownloader {
                 Thread.currentThread().interrupt();
             }
         }
-        return true;
     }
 
 }

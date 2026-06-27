@@ -1,15 +1,14 @@
-package com.dervarex.minified.launch.launch.modding.forge.installer;
+package com.dervarex.minified.launch.launch.modding.neoforge.installer;
 
 import com.dervarex.minified.launch.launch.LaunchConfigurator;
-import com.dervarex.minified.launch.launch.modding.forge.api.ForgeInstallerFetcher;
-import com.dervarex.minified.launch.launch.modding.forge.api.ForgeVersionFetcher;
+import com.dervarex.minified.launch.launch.modding.neoforge.api.NeoInstallerFetcher;
+import com.dervarex.minified.launch.launch.modding.neoforge.api.NeoVersionFetcher;
 import com.dervarex.minified.launch.utils.DownloadHelper;
 
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URLClassLoader;
@@ -21,7 +20,9 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.function.Consumer;
 
-public class ForgeInstallerInjector {
+public class NeoInstallerInjector {
+    private static final String INSTALLER_FILE_NAME = "neoforge-installer.jar";
+
     private static void prepare(LaunchConfigurator configurator) {
         Path gameDir = configurator.getJarFile().getParent();
         try {
@@ -43,22 +44,21 @@ public class ForgeInstallerInjector {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
     }
 
-    private static void downloadInstaller(
+    private static Path downloadInstaller(
             LaunchConfigurator configurator,
-            String loaderVersion
+            String versionOrMinecraftVersion
     ) {
-        String url = ForgeInstallerFetcher.getInstallerLink(
-                loaderVersion
-        );
+        NeoVersionFetcher versionFetcher = new NeoVersionFetcher();
+        String neoForgeVersion = versionFetcher.resolveLoaderVersion(versionOrMinecraftVersion);
+        String url = NeoInstallerFetcher.getInstallerLink(neoForgeVersion);
 
         HttpClient httpClient = HttpClient.newBuilder()
                 .followRedirects(HttpClient.Redirect.NORMAL)
                 .build();
 
-        String sha1 = "";
+        String sha1;
 
         try {
             HttpResponse<String> response = httpClient.send(
@@ -70,10 +70,7 @@ public class ForgeInstallerInjector {
             );
 
             if (response.statusCode() != 200) {
-                System.out.println("Link: " + url + sha1);
-                throw new IOException(
-                        "Failed to fetch SHA1: HTTP " + response.statusCode()
-                );
+                throw new IOException("Failed to fetch SHA1: HTTP " + response.statusCode());
             }
 
             sha1 = response.body().trim();
@@ -84,13 +81,10 @@ public class ForgeInstallerInjector {
         Path installerPath = configurator
                 .getJarFile()
                 .getParent()
-                .resolve("forge-installer.jar");
+                .resolve(INSTALLER_FILE_NAME);
 
-        DownloadHelper.download(
-                url,
-                installerPath,
-                sha1
-        );
+        DownloadHelper.download(url, installerPath, sha1);
+        return installerPath;
     }
 
     private static void install(URLClassLoader loader, File target, File installerFile, Consumer<String> logState)
@@ -103,16 +97,10 @@ public class ForgeInstallerInjector {
         Class<?> clientInstallClass = loader.loadClass("net.minecraftforge.installer.actions.ClientInstall");
         Class<?> callbackInterface = loader.loadClass("net.minecraftforge.installer.actions.ProgressCallback");
 
-        Object monitor = Proxy.newProxyInstance(
-                callbackInterface.getClassLoader(),
-                new Class<?>[]{callbackInterface},
-                (proxy, method, args) -> {
-                    if ("message".equals(method.getName()) && args != null && args.length > 0 && args[0] != null) {
-                        logState.accept(String.valueOf(args[0]));
-                    }
-                    return null;
-                }
-        );
+        Object monitor =
+                callbackInterface
+                        .getDeclaredField("TO_STD_OUT")
+                        .get(null);
 
         Constructor<?> ctor = null;
         for (Constructor<?> c : clientInstallClass.getConstructors()) {
@@ -131,30 +119,43 @@ public class ForgeInstallerInjector {
 
         Object clientInstall = ctor.newInstance(profile, monitor);
 
-        Method run = clientInstallClass.getMethod("run", File.class, File.class);
-        Object result = run.invoke(clientInstall, target, installerFile);
+        Method run = clientInstallClass.getMethod(
+                "run",
+                File.class,
+                java.util.function.Predicate.class,
+                File.class
+        );
+
+        java.util.function.Predicate<String> optionals =
+                value -> true;
+
+        Object result = run.invoke(
+                clientInstall,
+                target,
+                optionals,
+                installerFile
+        );
 
         if (result instanceof Boolean ok && !ok) {
-            throw new IllegalStateException("Forge installer reported failure");
+            throw new IllegalStateException("NeoForge installer reported failure");
         }
     }
 
-    public void install(LaunchConfigurator config, String version) {
+    public void install(LaunchConfigurator config, String versionOrMinecraftVersion) {
         prepare(config);
-        ForgeVersionFetcher forgeVersionFetcher = new ForgeVersionFetcher();
-        downloadInstaller(config, forgeVersionFetcher.getLatest(version));
-        try {
+        Path installerPath = downloadInstaller(config, versionOrMinecraftVersion);
+        try (URLClassLoader loader = new URLClassLoader(new java.net.URL[]{installerPath.toUri().toURL()})) {
             install(
-                    new URLClassLoader(new java.net.URL[]{
-                            Path.of(config.getJarFile().getParent().toAbsolutePath().toString(), "forge-installer.jar").toUri().toURL()
-                    }),
+                    loader,
                     config.getJarFile().getParent().toFile(),
-                    Path.of(config.getJarFile().getParent().toAbsolutePath().toString(),"forge-installer.jar").toFile(),
+                    installerPath.toFile(),
                     System.out::println
             );
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException(e);
         } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }

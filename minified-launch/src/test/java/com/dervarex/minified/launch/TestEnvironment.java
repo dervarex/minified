@@ -1,7 +1,7 @@
 package com.dervarex.minified.launch;
 
 import com.dervarex.minified.launch.launch.LaunchConfigurator;
-import com.dervarex.minified.launch.launch.modding.Loader;
+import com.dervarex.minified.launch.launch.modding.fabric.FabricLoader;
 
 import java.nio.file.Path;
 
@@ -22,7 +22,7 @@ public final class TestEnvironment {
             .librariesDirectory(LIBRARIES_DIR)
             .jarFile(CLIENT_JAR)
             .isDemoUser(false)
-            .loader(Loader.Vanilla)
+            .loader(new FabricLoader("1.21.11", "0.16.14"))
             .build();
 
     private TestEnvironment() {

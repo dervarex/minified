@@ -40,7 +40,10 @@ public class LaunchConfigurator {
 
     // Launch options
     private final List<String> extraJvmArgs = new ArrayList<>();
-    private Loader loader = Loader.Vanilla;
+    private Loader loader = null;
+
+    // User
+    private String offlineUsername;
 
     private LaunchConfigurator() {
     }
@@ -133,10 +136,22 @@ public class LaunchConfigurator {
             return this;
         }
 
+        // User
+
+        /**
+         * Only uses the custom username if offline mode is enabled
+         * @param username the username to use
+         */
+        public Builder offlineUsername(String username) {
+            config.offlineUsername = username;
+            return this;
+        }
+
         public LaunchConfigurator build() {
             Objects.requireNonNull(config.jarFile, "jarFile is required");
             Objects.requireNonNull(config.librariesDirectory, "librariesDirectory is required");
             Objects.requireNonNull(config.assetsDirectory, "assetsDirectory is required");
+            Objects.requireNonNull(config.loader, "loader is required");
 
             return config;
         }

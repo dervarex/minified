@@ -3,7 +3,6 @@ package com.dervarex.minified.launch.launch.modding.forge.api;
 import com.dervarex.minified.utils.json.JsonFile;
 
 import java.io.IOException;
-import java.net.URI;
 import java.nio.file.Path;
 
 public class ForgeVersionJson {

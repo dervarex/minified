@@ -15,13 +15,6 @@ import java.net.http.HttpResponse;
 import java.util.List;
 
 public class ForgeVersionFetcher {
-
-//    private static final String MAVEN_METADATA =
-//            "https://maven.minecraftforge.net/net/minecraftforge/forge/maven-metadata.xml";
-//
-//    private static final String PROMOTIONS =
-//            "https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json";
-
     private final HttpClient client = HttpClient.newHttpClient();
 
     private List<String> cachedVersions;

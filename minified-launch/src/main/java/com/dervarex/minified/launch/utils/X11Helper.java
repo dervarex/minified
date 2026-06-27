@@ -31,8 +31,6 @@ public class X11Helper {
     /**
      * Normalizes the child JVM graphics environment using the supplied X11
      * socket directory.
-     * @param processBuilder
-     * @param x11SocketDirectory
      */
     public static void configureGraphicsEnvironment(
             ProcessBuilder processBuilder,

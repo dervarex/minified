@@ -1,9 +1,14 @@
 package com.dervarex.minified.launch.launch;
 
+import com.dervarex.minified.launch.launch.modding.fabric.FabricLoader;
 import com.dervarex.minified.launch.launch.modding.fabric.FabricLoaderFetcher;
+import com.dervarex.minified.launch.launch.modding.forge.ForgeLoader;
+import com.dervarex.minified.launch.launch.modding.neoforge.NeoforgeLoader;
 import com.dervarex.minified.launch.launch.modding.neoforge.api.NeoVersionFetcher;
 import com.dervarex.minified.launch.launch.modding.neoforge.api.NeoVersionJson;
+import com.dervarex.minified.launch.launch.modding.quilt.QuiltLoader;
 import com.dervarex.minified.launch.launch.modding.quilt.QuiltLoaderFetcher;
+import com.dervarex.minified.launch.launch.modding.vanilla.VanillaLoader;
 import com.dervarex.minified.launch.utils.OSUtil;
 import com.dervarex.minified.utils.json.JsonArray;
 import com.dervarex.minified.utils.json.JsonFile;
@@ -34,10 +39,10 @@ public class ClasspathBuilder {
         }
 
         switch (config.getLoader()) {
-            case Vanilla:
+            case VanillaLoader ignored:
                 break;
 
-            case Fabric:
+            case FabricLoader ignored:
                 try {
                     JsonObject fabricProfile =
                             FabricLoaderFetcher.getLatestProfile(
@@ -57,7 +62,7 @@ public class ClasspathBuilder {
                 }
                 break;
 
-            case Quilt:
+            case QuiltLoader ignored:
                 try {
                     JsonObject quiltProfile =
                             QuiltLoaderFetcher.getLatestProfile(
@@ -76,7 +81,7 @@ public class ClasspathBuilder {
                     );
                 }
                 break;
-            case NeoForge:
+            case NeoforgeLoader ignored:
                 try {
                     JsonObject neoForgeProfile =
                             NeoVersionJson.getVersionJson(
@@ -96,8 +101,10 @@ public class ClasspathBuilder {
                     );
                 }
                 break;
-            case Forge:
+            case ForgeLoader ignored:
                 break;
+            default:
+                throw new IllegalStateException("Unexpected loader: " + config.getLoader());
         }
 
         return String.join(

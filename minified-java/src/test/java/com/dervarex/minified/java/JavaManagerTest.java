@@ -10,12 +10,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class JavaManagerTest {
-    @Test
-    void resolvesRequiredJavaVersionFromVersionJson() throws Exception {
-        JsonFile versionJson = new JsonFile(Path.of("/home/dervarex/Development/tmp/jsonfile/26-2-pre-2.json"));
-
-        assertEquals(25, JavaManager.getRequiredJavaVersion(versionJson));
-    }
 
     @Test
     void currentRuntimePointsToAnExistingExecutable() {
