@@ -7,4 +7,8 @@ public record VanillaLoader(String mcVersion) implements Loader {
     public String loaderVersion() {
         return mcVersion;
     }
+    @Override
+    public String iconUrl() {
+        return "https://raw.githubusercontent.com/dervarex/loader-logos/main/vanilla/vanilla.png";
+    }
 }

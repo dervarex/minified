@@ -54,15 +54,4 @@ public class FabricLoaderFetcher {
                 loaderVersion
         );
     }
-
-    public static void main(String[] args) {
-        try {
-            String minecraftVersion = "1.21.11";
-            JsonObject profile = getLatestProfile(minecraftVersion);
-            System.out.println("Latest Fabric loader profile for Minecraft " + minecraftVersion + ":");
-            System.out.println(profile.toString());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 }

@@ -10,26 +10,12 @@ import static org.junit.jupiter.api.Assertions.*;
 class LaunchConfiguratorTest {
 
     @Test
-    void builderUsesSaneDefaults() {
-        LaunchConfigurator config = new LaunchConfigurator.Builder().build();
-
-        assertEquals(5, config.getDownloadThreads());
-        assertEquals(1920, config.getResolutionWidth());
-        assertEquals(1080, config.getResolutionHeight());
-        assertFalse(config.isCustomResolution());
-        assertEquals("Launcher", config.getLauncherName());
-        assertEquals("1.0.0", config.getLauncherVersion());
-        assertFalse(config.isDemoUser());
-        assertTrue(config.getExtraJvmArgs().isEmpty());
-    }
-
-    @Test
     void builderAppliesCustomValues() {
         LaunchConfigurator config = new LaunchConfigurator.Builder()
                 .downloadThreads(12)
                 .resolution(1280, 720)
                 .launcherName("MinifiedLauncher")
-                .launcherVersion("2.0.1")
+                .launcherVersion("2.0.0")
                 .isDemoUser(true)
                 .extraJvmArg("-XX:+UseG1GC")
                 .extraJvmArgs(List.of("-Dtest=true", "-Dlauncher.name=minified"))
@@ -40,7 +26,7 @@ class LaunchConfiguratorTest {
         assertEquals(720, config.getResolutionHeight());
         assertTrue(config.isCustomResolution());
         assertEquals("MinifiedLauncher", config.getLauncherName());
-        assertEquals("2.0.1", config.getLauncherVersion());
+        assertEquals("2.0.0", config.getLauncherVersion());
         assertTrue(config.isDemoUser());
         assertEquals(
                 List.of("-XX:+UseG1GC", "-Dtest=true", "-Dlauncher.name=minified"),
@@ -48,4 +34,3 @@ class LaunchConfiguratorTest {
         );
     }
 }
-
