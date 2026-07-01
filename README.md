@@ -56,7 +56,7 @@ Launcher.launchMinecraft(
 
 Passing `null` as the user launches Minecraft in offline mode.
 
-## Available Modules1
+## Available Modules
 
 * `minified-auth`
 * `minified-java`
