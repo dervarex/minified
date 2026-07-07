@@ -30,7 +30,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.dervarex.minified:minified-launch:v1.2.2'
+    implementation 'com.github.dervarex.minified:minified-launch:v2.1.0'
 }
 ```
 
@@ -62,16 +62,23 @@ Passing `null` as the user launches Minecraft in offline mode.
 * `minified-java`
 * `minified-launch`
 * `minified-utils`
+* `minified-modrinth`
 
 ## Documentation
 
-Documentation is available in the Javadoc.
+Documentation is available in the Javadoc, and will later expand to a full website with guides and tutorials.
 
 ## Roadmap
 
-* Modrinth API integration
-* More documentation (mostly cleanup of existing documentation)
-* Usage examples
+* Custom loader support (the launcher has to handle installation itself)
+* Profile management and JSON persistence
+* Test and document supported Minecraft versions
+* Clean documentation and usage website
+* Support older Minecraft versions for all currently supported loaders
+
+**When I have way too much time:**
+
+* MiniLoader — a custom mod loader focused on directly editing Minecraft's source code. Mods are distributed as `.patch` files, which are merged and applied to the original Minecraft source.
 
 ### Abandoned Features
 
@@ -80,12 +87,6 @@ Documentation is available in the Javadoc.
     * The launcher was supposed to be built using Compose Desktop.
 
       Unfortunately, Compose Desktop and I had creative differences regarding the definition of a "working build". The feature was therefore sacrificed in favor of preserving my remaining motivation.
-
-## License
-
-Licensed under the Apache License 2.0.
-
-See the LICENSE file for details.
 
 ## Community
 
@@ -99,4 +100,18 @@ https://discord.gg/fhbcfMSvBy
 
 Big thanks to [etkmlm](https://github.com/etkmlm) for explaining important details about the launch process and the Forge installer. Without him, I wouldn't have been able to implement Forge support.
 
-Thanks to `net.raphimc.MinecraftAuth` for providing a great library for Minecraft authentication, which is used by Minified's authentication module.
+Thanks to MinecraftAuth by RaphiMC for providing an excellent authentication library, which is used by Minified's authentication module.
+
+A significant portion of the Modrinth integration was inspired by my earlier project, PandaClient, a Minecraft launcher I developed in 2023–2024. While much of the implementation has since been rewritten and improved for Minified, the original project laid the foundation for this module. I may share the full story behind this repository in the future.
+
+## License
+
+Licensed under the Apache License 2.0.
+
+See the LICENSE file for details.
+
+# Disclaimer
+
+`minified-modrinth` is an unofficial integration with the Modrinth API. It is not affiliated with, endorsed by, or sponsored by Modrinth or Rinth, Inc.
+
+This project is not an official Minecraft service and is not approved by or associated with Mojang or Microsoft.
