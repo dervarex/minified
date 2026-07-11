@@ -10,6 +10,7 @@ import com.dervarex.minified.launch.download.ClientDownloader;
 import com.dervarex.minified.launch.download.assets.AssetDownloader;
 import com.dervarex.minified.launch.download.libraries.LibraryDownloader;
 import com.dervarex.minified.launch.launch.modding.Loader;
+import com.dervarex.minified.launch.launch.modding.custom.CustomLoader;
 import com.dervarex.minified.launch.launch.modding.fabric.FabricLoader;
 import com.dervarex.minified.launch.launch.modding.fabric.FabricLoaderFetcher;
 import com.dervarex.minified.launch.launch.modding.forge.ForgeLoader;
@@ -29,12 +30,10 @@ import com.dervarex.minified.utils.exceptions.HttpException;
 import com.dervarex.minified.utils.exceptions.NoConnectionException;
 import com.dervarex.minified.utils.exceptions.OfflineModeNeedsNetworkException;
 import com.dervarex.minified.utils.http.HttpUtil;
-import com.dervarex.minified.utils.json.JsonArray;
-import com.dervarex.minified.utils.json.JsonFile;
-import com.dervarex.minified.utils.json.JsonObject;
-import com.dervarex.minified.utils.json.JsonValue;
+import com.dervarex.minified.utils.json.*;
 import com.dervarex.minified.utils.network.NetworkUtil;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -46,21 +45,21 @@ public class Launcher {
      * Downloads required files and launches Minecraft.
      * Can be used in offline mode, will throw {@code OfflineModeNeedsNetworkException} if any assets, libraries or other stuff is not downloaded but is needed
      *
-     * @param user    the logged-in user to launch with, or null to launch in offline mode(you won't be able to join online servers or use any online features in offline mode)
+     * @param user the logged-in user to launch with, or null to launch in offline mode(you won't be able to join online servers or use any online features in offline mode)
      * @param launchConfig configuration used by the launcher when starting the game,
-     *                     such as the number of download threads, launcher name,
-     *                     and launcher version
+     * such as the number of download threads, launcher name,
+     * and launcher version
      *<p>
-     *                     Example:
-     *                     <pre>{@code
-     *                  LaunchConfigurator config = new LaunchConfigurator.Builder()
-     *                 .downloadThreads(10)
-     *                 .launcherName("MinifiedLauncher")
-     *                 .launcherVersion("1.0.0")
-     *                 .assetsDirectory(Path.of("path to assets directory"))
-     *                 .librariesDirectory(Path.of("path to library directory"))
-     *                 .jarFile(Path.of("path to client.jar"))
-     *                 .build();
+     * Example:
+     * <pre>{@code
+     * LaunchConfigurator config = new LaunchConfigurator.Builder()
+     * .downloadThreads(10)
+     * .launcherName("MinifiedLauncher")
+     * .launcherVersion("1.0.0")
+     * .assetsDirectory(Path.of("path to assets directory"))
+     * .librariesDirectory(Path.of("path to library directory"))
+     * .jarFile(Path.of("path to client.jar"))
+     * .build();
      * }</pre>
      */
     public static void launchMinecraft(
@@ -109,6 +108,16 @@ public class Launcher {
                             versionJson,
                             launchConfig
                     );
+            if (loader instanceof CustomLoader customLoader && customLoader.customClasspathEntries() != null) {
+                StringBuilder cpBuilder = new StringBuilder(classpath);
+                for (String entry : customLoader.customClasspathEntries()) {
+                    if (cpBuilder.length() > 0) {
+                        cpBuilder.append(File.pathSeparator);
+                    }
+                    cpBuilder.append(entry);
+                }
+                classpath = cpBuilder.toString();
+            }
 
             LaunchOptions options =
                     LaunchOptions.buildLaunchOptions(
@@ -248,32 +257,38 @@ public class Launcher {
         jvmArgs.removeIf(arg ->
                 arg.equals("--sun-misc-unsafe-memory-access=allow"));
 
-        JsonObject loaderProfileJson = null;
+        if (loader instanceof CustomLoader customLoader) {
+            if (customLoader.customJvmArgs() != null) {
+                jvmArgs.addAll(customLoader.customJvmArgs());
+            }
+        } else {
+            JsonObject loaderProfileJson = null;
 
-        switch (loader) {
-            case VanillaLoader ignored:
-                break;
-            case FabricLoader ignored:
-                loaderProfileJson = loadFabricProfileJson(version, online);
-                break;
-            case ForgeLoader ignored:
-                loaderProfileJson = loadForgeProfileJson(version, launchConfig, online);
-                break;
-            case NeoforgeLoader ignored:
-                loaderProfileJson = loadNeoForgeProfileJson(version, launchConfig, online);
-                break;
-            case QuiltLoader ignored:
-                loaderProfileJson = loadQuiltProfileJson(version, online);
-                break;
-            default:
-                throw new IllegalStateException("Unexpected loader: " + loader);
-        }
+            switch (loader) {
+                case VanillaLoader ignored:
+                    break;
+                case FabricLoader ignored:
+                    loaderProfileJson = loadFabricProfileJson(version, online);
+                    break;
+                case ForgeLoader ignored:
+                    loaderProfileJson = loadForgeProfileJson(version, launchConfig, online);
+                    break;
+                case NeoforgeLoader ignored:
+                    loaderProfileJson = loadNeoForgeProfileJson(version, launchConfig, online);
+                    break;
+                case QuiltLoader ignored:
+                    loaderProfileJson = loadQuiltProfileJson(version, online);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected loader: " + loader);
+            }
 
-        if (loaderProfileJson != null) {
-            JsonValue fabricArguments = loaderProfileJson.get("arguments");
-            if (fabricArguments != null && fabricArguments.asObject().get("jvm") != null) {
-                for (JsonValue e : fabricArguments.asObject().get("jvm").asArray()) {
-                    jvmArgs.add(e.asString());
+            if (loaderProfileJson != null) {
+                JsonValue fabricArguments = loaderProfileJson.get("arguments");
+                if (fabricArguments != null && fabricArguments.asObject().get("jvm") != null) {
+                    for (JsonValue e : fabricArguments.asObject().get("jvm").asArray()) {
+                        jvmArgs.add(e.asString());
+                    }
                 }
             }
         }
@@ -308,34 +323,42 @@ public class Launcher {
         JsonValue gameValue = arguments.get("game");
         JsonArray gameArray = gameValue != null ? gameValue.asArray() : new JsonArray();
 
-        JsonObject loaderProfileJson = null;
+        if (loader instanceof CustomLoader customLoader) {
+            if (customLoader.customGameArgs() != null) {
+                for (String arg : customLoader.customGameArgs()) {
+                    gameArray.add(JsonParser.parse(arg));
+                }
+            }
+        } else {
+            JsonObject loaderProfileJson = null;
 
-        switch (loader) {
-            case VanillaLoader ignored:
-                break;
-            case FabricLoader ignored:
-                loaderProfileJson = loadFabricProfileJson(version, online);
-                break;
-            case QuiltLoader ignored:
-                loaderProfileJson = loadQuiltProfileJson(version, online);
-                break;
-            case ForgeLoader ignored:
-                loaderProfileJson = loadForgeProfileJson(version, launchConfig, online);
-                break;
-            case NeoforgeLoader ignored:
-                loaderProfileJson = loadNeoForgeProfileJson(version, launchConfig, online);
-                break;
-            default:
-                throw new IllegalStateException("Unexpected loader: " + loader);
-        }
+            switch (loader) {
+                case VanillaLoader ignored:
+                    break;
+                case FabricLoader ignored:
+                    loaderProfileJson = loadFabricProfileJson(version, online);
+                    break;
+                case QuiltLoader ignored:
+                    loaderProfileJson = loadQuiltProfileJson(version, online);
+                    break;
+                case ForgeLoader ignored:
+                    loaderProfileJson = loadForgeProfileJson(version, launchConfig, online);
+                    break;
+                case NeoforgeLoader ignored:
+                    loaderProfileJson = loadNeoForgeProfileJson(version, launchConfig, online);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected loader: " + loader);
+            }
 
-        if (loaderProfileJson != null) {
-            JsonValue loaderArguments = loaderProfileJson.get("arguments");
-            if (loaderArguments != null) {
-                JsonValue loaderGame = loaderArguments.asObject().get("game");
-                if (loaderGame != null) {
-                    for (JsonValue arg : loaderGame.asArray()) {
-                        gameArray.add(arg);
+            if (loaderProfileJson != null) {
+                JsonValue loaderArguments = loaderProfileJson.get("arguments");
+                if (loaderArguments != null) {
+                    JsonValue loaderGame = loaderArguments.asObject().get("game");
+                    if (loaderGame != null) {
+                        for (JsonValue arg : loaderGame.asArray()) {
+                            gameArray.add(arg);
+                        }
                     }
                 }
             }
@@ -355,6 +378,14 @@ public class Launcher {
             LaunchConfigurator launchConfig,
             boolean online
     ) {
+        if (loader instanceof CustomLoader customLoader) {
+            if (customLoader.mainClass() != null) {
+                return customLoader.mainClass();
+            }
+            JsonValue vanillaMain = versionJson.get("mainClass");
+            if (vanillaMain != null) return vanillaMain.asString();
+        }
+
         JsonValue mainClassValue = switch (loader) {
             case VanillaLoader ignored -> versionJson.get("mainClass");
             case FabricLoader ignored -> loadFabricProfileJson(version, online).get("mainClass");
@@ -395,7 +426,7 @@ public class Launcher {
         try {
             versionJsonUrl = VersionMetadataProvider.getVersionJsonUrl(version);
 
-        raw = HttpUtil.get(versionJsonUrl);
+            raw = HttpUtil.get(versionJsonUrl);
         } catch (HttpException e) {
             throw new RuntimeException(e);
         }

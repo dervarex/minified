@@ -43,7 +43,7 @@ public class LaunchConfigurator {
     private Loader loader = null;
 
     // User
-    private String offlineUsername;
+    private String offlineUsername = "Player";
 
     private LaunchConfigurator() {
     }

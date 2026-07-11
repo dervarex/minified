@@ -70,7 +70,6 @@ Documentation is available in the Javadoc, and will later expand to a full websi
 
 ## Roadmap
 
-* Custom loader support (the launcher has to handle installation itself)
 * Profile management and JSON persistence
 * Test and document supported Minecraft versions
 * Clean documentation and usage website

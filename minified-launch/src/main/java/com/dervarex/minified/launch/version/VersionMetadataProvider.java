@@ -26,38 +26,6 @@ public final class VersionMetadataProvider {
         return entry.asObject().get("url").asString();
     }
 
-    public static int getMinimumJavaVersion(String version) throws HttpException, IOException {
-        try {
-            NetworkUtil.ensureOnline("getMinimumJavaVersion");
-        } catch (NoConnectionException nce) {
-            return -1;
-        }
-                String url = getVersionJsonUrl(version);
-        if (url == null) {
-            try {
-                int latestLTS = Integer.parseInt(
-                        HttpClient.newHttpClient()
-                                .send(
-                                        HttpRequest.newBuilder()
-                                                .uri(URI.create("https://api.adoptium.net/v3/info/available_releases"))
-                                                .build(),
-                                        HttpResponse.BodyHandlers.ofString()
-                                )
-                                .body()
-                                .split("\"most_recent_lts\":")[1]
-                                .split(",")[0]
-                                .trim()
-                );
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        JsonFile json = new JsonFile(HttpUtil.get(url));
-        Integer majorVersion = json.get("javaVersion").asObject().getInt("majorVersion");
-        return majorVersion == null ? -1 : majorVersion;
-    }
-
     public static String getMainClass(String version) throws HttpException, IOException {
         String url = getVersionJsonUrl(version);
         if (url == null) {
