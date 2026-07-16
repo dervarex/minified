@@ -1,5 +1,6 @@
 package com.dervarex.minified.utils.json;
 
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -10,6 +11,40 @@ public final class JsonObject implements JsonValue {
 
     public JsonObject(Map<String, JsonValue> values) {
         this.values = new LinkedHashMap<>(values == null ? Map.of() : values);
+    }
+    public JsonObject() {
+        this.values = new LinkedHashMap<>();
+    }
+    public void put(String key, JsonValue value) {
+        values.put(key, value == null ? JsonNull.INSTANCE : value);
+    }
+
+    public void put(String key, String value) {
+        put(key, new JsonString(value));
+    }
+
+    public void put(String key, Number value) {
+        put(key, new JsonNumber(new BigDecimal(value.toString())));
+    }
+
+    public void put(String key, boolean value) {
+        put(key, new JsonBoolean(value));
+    }
+
+    public void putNull(String key) {
+        put(key, JsonNull.INSTANCE);
+    }
+
+    public JsonValue remove(String key) {
+        return values.remove(key);
+    }
+
+    public void clear() {
+        values.clear();
+    }
+
+    public int size() {
+        return values.size();
     }
 
     public Set<String> keys() { return Collections.unmodifiableSet(values.keySet()); }

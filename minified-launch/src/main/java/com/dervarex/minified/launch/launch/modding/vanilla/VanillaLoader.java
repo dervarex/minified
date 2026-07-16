@@ -4,6 +4,8 @@ import com.dervarex.minified.launch.launch.modding.Loader;
 
 public record VanillaLoader(String mcVersion) implements Loader {
     @Override
+    public String name() { return "VANILLA"; }
+    @Override
     public String loaderVersion() {
         return mcVersion;
     }

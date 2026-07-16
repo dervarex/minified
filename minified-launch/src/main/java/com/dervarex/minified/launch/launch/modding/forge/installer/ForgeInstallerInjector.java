@@ -1,6 +1,6 @@
 package com.dervarex.minified.launch.launch.modding.forge.installer;
 
-import com.dervarex.minified.launch.launch.LaunchConfigurator;
+import com.dervarex.minified.launch.launch.LaunchConfiguration;
 import com.dervarex.minified.launch.launch.modding.forge.api.ForgeInstallerFetcher;
 import com.dervarex.minified.launch.launch.modding.forge.api.ForgeVersionFetcher;
 import com.dervarex.minified.launch.utils.DownloadHelper;
@@ -22,7 +22,7 @@ import java.time.Duration;
 import java.util.function.Consumer;
 
 public class ForgeInstallerInjector {
-    private static void prepare(LaunchConfigurator configurator) {
+    private static void prepare(LaunchConfiguration configurator) {
         Path gameDir = configurator.getJarFile().getParent();
         try {
             Files.createDirectories(gameDir);
@@ -47,7 +47,7 @@ public class ForgeInstallerInjector {
     }
 
     private static void downloadInstaller(
-            LaunchConfigurator configurator,
+            LaunchConfiguration configurator,
             String loaderVersion
     ) {
         String url = ForgeInstallerFetcher.getInstallerLink(
@@ -139,7 +139,7 @@ public class ForgeInstallerInjector {
         }
     }
 
-    public void install(LaunchConfigurator config, String version) {
+    public void install(LaunchConfiguration config, String version) {
         prepare(config);
         ForgeVersionFetcher forgeVersionFetcher = new ForgeVersionFetcher();
         downloadInstaller(config, forgeVersionFetcher.getLatest(version));

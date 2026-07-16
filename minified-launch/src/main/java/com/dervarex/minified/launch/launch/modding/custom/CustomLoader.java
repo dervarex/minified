@@ -2,7 +2,6 @@ package com.dervarex.minified.launch.launch.modding.custom;
 
 import com.dervarex.minified.launch.launch.modding.Loader;
 import java.util.List;
-import java.util.ArrayList;
 
 /**
  * Custom Loader Option, the launcher will have to handle installation itself, we will not modify anything
@@ -15,6 +14,7 @@ import java.util.ArrayList;
  * @param customClasspathEntries entries that will be added to the classpath on launch
  */
 public record CustomLoader(
+        String name,
         String mcVersion,
         String loaderVersion,
         String iconUrl,
@@ -23,8 +23,10 @@ public record CustomLoader(
         List<String> customGameArgs,
         List<String> customClasspathEntries
 ) implements Loader {
-    public CustomLoader(String mcVersion, String loaderVersion, String iconUrl) {
-        this(mcVersion, loaderVersion, iconUrl, null, new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
+
+    public CustomLoader {
+        customJvmArgs = customJvmArgs == null ? List.of() : List.copyOf(customJvmArgs);
+        customGameArgs = customGameArgs == null ? List.of() : List.copyOf(customGameArgs);
+        customClasspathEntries = customClasspathEntries == null ? List.of() : List.copyOf(customClasspathEntries);
     }
 }
-

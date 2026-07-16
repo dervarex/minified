@@ -9,10 +9,25 @@ import java.nio.file.Paths;
 
 public final class JsonFile {
     private final Path path;
-    private final JsonValue root;
+    private JsonValue root;
 
     public JsonFile(File file) throws IOException {
         this(file.toPath());
+    }
+    public JsonFile() {
+        this.path = null;
+        this.root = new JsonObject();
+    }
+    public void save() throws IOException {
+        if (path == null) {
+            throw new IllegalStateException("No path associated with this JsonFile");
+        }
+
+        Files.writeString(path, root.toJson(), StandardCharsets.UTF_8);
+    }
+
+    public void save(Path path) throws IOException {
+        Files.writeString(path, root.toJson(), StandardCharsets.UTF_8);
     }
 
     public JsonFile(Path path) throws IOException {

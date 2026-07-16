@@ -10,11 +10,12 @@ import java.util.Objects;
 
 @Getter
 @SuppressWarnings("unused")
-public class LaunchConfigurator {
+public class LaunchConfiguration {
 
     // Memory
     private int minRam = 2048;
     private int maxRam = 4096;
+
 
     // Downloads
     private int downloadThreads = 5;
@@ -45,12 +46,12 @@ public class LaunchConfigurator {
     // User
     private String offlineUsername = "Player";
 
-    private LaunchConfigurator() {
+    private LaunchConfiguration() {
     }
 
     public static class Builder {
 
-        private final LaunchConfigurator config = new LaunchConfigurator();
+        private final LaunchConfiguration config = new LaunchConfiguration();
 
         // Memory
         public Builder minRam(int minRam) {
@@ -147,7 +148,7 @@ public class LaunchConfigurator {
             return this;
         }
 
-        public LaunchConfigurator build() {
+        public LaunchConfiguration build() {
             Objects.requireNonNull(config.jarFile, "jarFile is required");
             Objects.requireNonNull(config.librariesDirectory, "librariesDirectory is required");
             Objects.requireNonNull(config.assetsDirectory, "assetsDirectory is required");

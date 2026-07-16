@@ -1,6 +1,6 @@
 package com.dervarex.minified.launch.launch.modding.neoforge.installer;
 
-import com.dervarex.minified.launch.launch.LaunchConfigurator;
+import com.dervarex.minified.launch.launch.LaunchConfiguration;
 import com.dervarex.minified.launch.launch.modding.neoforge.api.NeoInstallerFetcher;
 import com.dervarex.minified.launch.launch.modding.neoforge.api.NeoVersionFetcher;
 import com.dervarex.minified.launch.utils.DownloadHelper;
@@ -23,7 +23,7 @@ import java.util.function.Consumer;
 public class NeoInstallerInjector {
     private static final String INSTALLER_FILE_NAME = "neoforge-installer.jar";
 
-    private static void prepare(LaunchConfigurator configurator) {
+    private static void prepare(LaunchConfiguration configurator) {
         Path gameDir = configurator.getJarFile().getParent();
         try {
             Files.createDirectories(gameDir);
@@ -47,7 +47,7 @@ public class NeoInstallerInjector {
     }
 
     private static Path downloadInstaller(
-            LaunchConfigurator configurator,
+            LaunchConfiguration configurator,
             String versionOrMinecraftVersion
     ) {
         NeoVersionFetcher versionFetcher = new NeoVersionFetcher();
@@ -141,7 +141,7 @@ public class NeoInstallerInjector {
         }
     }
 
-    public void install(LaunchConfigurator config, String versionOrMinecraftVersion) {
+    public void install(LaunchConfiguration config, String versionOrMinecraftVersion) {
         prepare(config);
         Path installerPath = downloadInstaller(config, versionOrMinecraftVersion);
         try (URLClassLoader loader = new URLClassLoader(new java.net.URL[]{installerPath.toUri().toURL()})) {

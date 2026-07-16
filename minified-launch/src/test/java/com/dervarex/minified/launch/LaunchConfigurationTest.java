@@ -1,17 +1,17 @@
 package com.dervarex.minified.launch;
 
-import com.dervarex.minified.launch.launch.LaunchConfigurator;
+import com.dervarex.minified.launch.launch.LaunchConfiguration;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class LaunchConfiguratorTest {
+class LaunchConfigurationTest {
 
     @Test
     void builderAppliesCustomValues() {
-        LaunchConfigurator config = new LaunchConfigurator.Builder()
+        LaunchConfiguration config = new LaunchConfiguration.Builder()
                 .downloadThreads(12)
                 .resolution(1280, 720)
                 .launcherName("MinifiedLauncher")

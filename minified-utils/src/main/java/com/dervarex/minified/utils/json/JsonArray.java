@@ -1,5 +1,6 @@
 package com.dervarex.minified.utils.json;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -76,5 +77,29 @@ public final class JsonArray implements JsonValue, Iterable<JsonValue> {
     @Override
     public Iterator<JsonValue> iterator() {
         return values.iterator();
+    }
+
+    public void add(String value) {
+        add(new JsonString(value));
+    }
+
+    public void add(Number value) {
+        add(new JsonNumber(new BigDecimal(value.toString())));
+    }
+
+    public void add(boolean value) {
+        add(new JsonBoolean(value));
+    }
+
+    public void addNull() {
+        add(JsonNull.INSTANCE);
+    }
+
+    public JsonValue remove(int index) {
+        return values.remove(index);
+    }
+
+    public void clear() {
+        values.clear();
     }
 }

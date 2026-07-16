@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * @hidden to not confuse the user, they should use {@link LaunchConfigurator} instead,
+ * @hidden to not confuse the user, they should use {@link LaunchConfiguration} instead,
  * this is just a wrapper for the launch options that are passed to the launch process.
  */
 @Getter
@@ -42,7 +42,7 @@ final class LaunchOptions {
         return new LaunchOptions();
     }
 
-    static LaunchOptions buildLaunchOptions(User user, String version, LaunchConfigurator launchConfig, JsonFile versionJson, String classpathString) {
+    static LaunchOptions buildLaunchOptions(User user, String version, LaunchConfiguration launchConfig, JsonFile versionJson, String classpathString) {
         return
                 LaunchOptions.create()
 

@@ -22,7 +22,7 @@ import java.util.ArrayList;
 
 public class ClasspathBuilder {
 
-    static String buildClasspath(JsonFile versionJson, LaunchConfigurator config) {
+    static String buildClasspath(JsonFile versionJson, LaunchConfiguration config) {
         String separator = System.getProperty("os.name").toLowerCase().contains("win") ? ";" : ":";
 
         ArrayList<String> classpath = new ArrayList<>();
@@ -116,7 +116,7 @@ public class ClasspathBuilder {
     private static void addLibrary(
             JsonObject library,
             ArrayList<String> classpath,
-            LaunchConfigurator config
+            LaunchConfiguration config
     ) {
         if (!isAllowed(library)) {
             return;
@@ -189,7 +189,7 @@ public class ClasspathBuilder {
     private static void addModLoaderLibraries(
             JsonArray libraries,
             ArrayList<String> classpath,
-            LaunchConfigurator config
+            LaunchConfiguration config
     ) {
         for (JsonValue value : libraries) {
             addLibrary(
@@ -230,7 +230,7 @@ public class ClasspathBuilder {
         return allowed;
     }
     private static String resolveLibraryPath(
-            LaunchConfigurator config,
+            LaunchConfiguration config,
             String relativePath
     ) {
         Path primary =

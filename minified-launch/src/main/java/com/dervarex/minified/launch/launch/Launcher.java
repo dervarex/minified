@@ -64,7 +64,7 @@ public class Launcher {
      */
     public static void launchMinecraft(
             User user,
-            LaunchConfigurator launchConfig) {
+            LaunchConfiguration launchConfig) {
 
         try {
             Loader loader = launchConfig.getLoader();
@@ -186,7 +186,7 @@ public class Launcher {
 
     private static void downloadFiles(
             String version,
-            LaunchConfigurator launchConfig,
+            LaunchConfiguration launchConfig,
             boolean online
     ) throws HttpException, IOException {
 
@@ -219,7 +219,7 @@ public class Launcher {
 
     private static List<String> buildJvmArguments(
             JsonFile versionJson,
-            LaunchConfigurator launchConfig,
+            LaunchConfiguration launchConfig,
             LaunchOptions options,
             Loader loader,
             String version,
@@ -301,7 +301,7 @@ public class Launcher {
             LaunchOptions options,
             Loader loader,
             String version,
-            LaunchConfigurator launchConfig,
+            LaunchConfiguration launchConfig,
             boolean online
     ) {
         JsonValue argumentsValue = versionJson.get("arguments");
@@ -375,7 +375,7 @@ public class Launcher {
             JsonFile versionJson,
             Loader loader,
             String version,
-            LaunchConfigurator launchConfig,
+            LaunchConfiguration launchConfig,
             boolean online
     ) {
         if (loader instanceof CustomLoader customLoader) {
@@ -466,7 +466,7 @@ public class Launcher {
 
     private static JsonObject loadForgeProfileJson(
             String version,
-            LaunchConfigurator launchConfig,
+            LaunchConfiguration launchConfig,
             boolean online
     ) {
         return loadProfileJson(
@@ -488,7 +488,7 @@ public class Launcher {
 
     private static JsonObject loadNeoForgeProfileJson(
             String version,
-            LaunchConfigurator launchConfig,
+            LaunchConfiguration launchConfig,
             boolean online
     ) {
         return loadProfileJson(

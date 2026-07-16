@@ -66,13 +66,12 @@ Passing `null` as the user launches Minecraft in offline mode.
 
 ## Documentation
 
-Documentation is available in the Javadoc, and will later expand to a full website with guides and tutorials.
+Documentation is available in the Javadoc, and on the [Documentation Website](https://dervarex.github.io/minified-docs/)
 
 ## Roadmap
 
 * Profile management and JSON persistence
 * Test and document supported Minecraft versions
-* Clean documentation and usage website
 * Support older Minecraft versions for all currently supported loaders
 
 **When I have way too much time:**

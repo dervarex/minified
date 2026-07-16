@@ -7,4 +7,6 @@ public record ForgeLoader(String mcVersion, String loaderVersion) implements Loa
     public String iconUrl() {
         return "https://raw.githubusercontent.com/dervarex/loader-logos/main/forge/forge-square.png";
     }
+    @Override
+    public String name() { return "FORGE"; }
 }

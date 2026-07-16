@@ -1,6 +1,6 @@
 package com.dervarex.minified.launch;
 
-import com.dervarex.minified.launch.launch.LaunchConfigurator;
+import com.dervarex.minified.launch.launch.LaunchConfiguration;
 import com.dervarex.minified.launch.launch.modding.fabric.FabricLoader;
 
 import java.nio.file.Path;
@@ -14,7 +14,7 @@ public final class TestEnvironment {
     private static final Path LIBRARIES_DIR = BASE_DIR.resolve("jar/libraries");
     private static final Path CLIENT_JAR = BASE_DIR.resolve("jar/client.jar");
 
-    private static final LaunchConfigurator CONFIG = new LaunchConfigurator.Builder()
+    private static final LaunchConfiguration CONFIG = new LaunchConfiguration.Builder()
             .downloadThreads(10)
             .launcherName("MinifiedLauncher")
             .launcherVersion("1.0.0")
@@ -32,7 +32,7 @@ public final class TestEnvironment {
         return AUTH_DIR;
     }
 
-    public static LaunchConfigurator config() {
+    public static LaunchConfiguration config() {
         return CONFIG;
     }
 }
