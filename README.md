@@ -70,7 +70,6 @@ Documentation is available in the Javadoc, and on the [Documentation Website](ht
 
 ## Roadmap
 
-* Profile management and JSON persistence
 * Test and document supported Minecraft versions
 * Support older Minecraft versions for all currently supported loaders
 

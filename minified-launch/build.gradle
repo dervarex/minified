@@ -43,8 +43,10 @@ dependencies {
 }
 
 test {
-    enabled = false
-    useJUnitPlatform()
+    enabled = true
+    useJUnitPlatform{
+        excludeTags "manual"
+    }
     // Some test sources in this module are integration-style (main methods)
     // and may not be discovered by the test runner. Do not fail the build
     // when no tests are discovered.

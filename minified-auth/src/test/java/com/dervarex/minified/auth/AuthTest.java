@@ -49,9 +49,8 @@ class AuthTest {
     }
 
     @Test
-    @Tag("integration")
+    @Tag("manual")
     void deviceCodeLoginThenReloadsFromSavedSession() throws Exception {
-        //Assumptions.assumeTrue(System.getenv("MINIFIED_AUTH_IT") != null, "Set MINIFIED_AUTH_IT=1 to run this test");
 
         System.out.println("Starting device code login. Follow the printed URL/code in the console.");
         AuthManager.startDeviceCodeLoginAsync();

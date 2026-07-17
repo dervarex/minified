@@ -14,7 +14,7 @@ import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Tag("integration")
+@Tag("manual")
 class DownloaderTest {
 
     @TempDir

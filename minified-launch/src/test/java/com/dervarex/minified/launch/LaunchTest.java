@@ -2,15 +2,22 @@ package com.dervarex.minified.launch;
 
 import com.dervarex.minified.auth.User;
 import com.dervarex.minified.launch.launch.Launcher;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
+import java.nio.file.Path;
+
+@Tag("manual")
 public class LaunchTest {
+    @TempDir
+    public Path tempDir;
 
-    public static void main(String[] args) {
-        User user = AuthTest.auth();
-
+    @Test
+     void launch() {
         Launcher.launchMinecraft(
-                user,
-                TestEnvironment.config()
+                null,
+                TestEnvironment.config(tempDir)
         );
     }
 }
