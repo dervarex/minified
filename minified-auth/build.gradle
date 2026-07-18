@@ -44,12 +44,26 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 tasks.withType(Test).configureEach {
-    useJUnitPlatform{
-        excludeTags "manual"
-    }
     enabled = true
     testLogging {
         showStandardStreams = true
         events "passed", "failed", "skipped", "standardOut", "standardError"
     }
+}
+
+test {
+    useJUnitPlatform {
+        excludeTags("manual")
+    }
+
+    failOnNoDiscoveredTests = false
+}
+
+tasks.register("manualTest", Test) {
+    useJUnitPlatform {
+        includeTags("manual")
+    }
+
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
 }

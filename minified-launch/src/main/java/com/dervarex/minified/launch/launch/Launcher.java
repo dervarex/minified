@@ -582,11 +582,11 @@ public class Launcher {
 
         processBuilder.inheritIO();
 
-        Process process =
-                processBuilder.start();
+        Process process = processBuilder.start();
 
-        int exitCode =
-                process.waitFor();
+        int exitCode = process.waitFor();
+
+        System.out.println("[Minified] Minecraft exited with code " + exitCode);
 
         if (exitCode != 0) {
             throw new RuntimeException(

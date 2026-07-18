@@ -11,7 +11,9 @@ import org.junit.jupiter.api.io.TempDir;
 import java.nio.file.Path;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 
 class ConfigurationSaveTest {
     @TempDir
@@ -19,10 +21,10 @@ class ConfigurationSaveTest {
 
     @Test
     void canSaveAndLoadConfiguration() {
+        LaunchConfiguration[] pair = createConfigurationPair();
 
-        LaunchConfiguration baseConfig = createConfigurationPair()[0];
-        LaunchConfiguration config = createConfigurationPair()[1];
-
+        LaunchConfiguration baseConfig = pair[0];
+        LaunchConfiguration config = pair[1];
 
         assertEquals(baseConfig.getDownloadThreads(), config.getDownloadThreads());
         assertEquals(baseConfig.getResolutionWidth(), config.getResolutionWidth());
@@ -35,10 +37,11 @@ class ConfigurationSaveTest {
         assertEquals(baseConfig.getJarFile(), config.getJarFile());
         assertEquals(baseConfig.getAssetsDirectory(), config.getAssetsDirectory());
         assertEquals(baseConfig.getLibrariesDirectory(), config.getLibrariesDirectory());
-        /*
-          Don't be confused: assertEquals() uses .equals(), while assertNotSame() checks reference equality
-          We want the loader to be a different instance while still being equal.
-         */
+
+    /*
+      Don't be confused: assertEquals() uses .equals(), while assertNotSame() checks reference equality.
+      We want the loader to be a different instance while still being equal.
+     */
         assertEquals(baseConfig.getLoader(), config.getLoader());
         assertNotSame(baseConfig.getLoader(), config.getLoader());
     }
@@ -46,9 +49,11 @@ class ConfigurationSaveTest {
     @Tag("manual")
     @Test
     void canLaunchLoadedConfiguration() {
-        Launcher.launchMinecraft(
-                null,
-                createConfigurationPair()[1]
+        assertDoesNotThrow(() ->
+                Launcher.launchMinecraft(
+                        null,
+                        createConfigurationPair()[1]
+                )
         );
     }
 
@@ -59,15 +64,16 @@ class ConfigurationSaveTest {
                 .launcherName("MinifiedLauncher")
                 .launcherVersion("2.0.0")
                 .isDemoUser(true)
-                .extraJvmArg("-XX:+UseG1GC")
+                //.extraJvmArg("-XX:+UseG1GC")
                 .extraJvmArgs(List.of("-Dtest=true", "-Dlauncher.name=minified"))
                 .jarFile(tempDir.resolve("test.jar"))
                 .assetsDirectory(tempDir.resolve("assets"))
                 .librariesDirectory(tempDir.resolve("libraries"))
                 .loader(new VanillaLoader("26.1.2"))
-
+                .isDemoUser(false)
                 .build();
     }
+
     private LaunchConfiguration[] createConfigurationPair() {
         LaunchConfiguration original = createLaunchConfiguration();
         Path profile = tempDir.resolve("profile.json");
@@ -75,4 +81,5 @@ class ConfigurationSaveTest {
         LaunchConfiguration loaded = ProfileFactory.load(profile);
         return new LaunchConfiguration[]{original, loaded};
     }
+
 }

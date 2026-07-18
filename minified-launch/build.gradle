@@ -43,13 +43,18 @@ dependencies {
 }
 
 test {
-    enabled = true
-    useJUnitPlatform{
-        excludeTags "manual"
+    useJUnitPlatform {
+        excludeTags("manual")
     }
-    // Some test sources in this module are integration-style (main methods)
-    // and may not be discovered by the test runner. Do not fail the build
-    // when no tests are discovered.
+
     failOnNoDiscoveredTests = false
 }
 
+tasks.register("manualTest", Test) {
+    useJUnitPlatform {
+        includeTags("manual")
+    }
+
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+}

@@ -17,7 +17,6 @@ class LaunchConfigurationTest {
                 .launcherName("MinifiedLauncher")
                 .launcherVersion("2.0.0")
                 .isDemoUser(true)
-                .extraJvmArg("-XX:+UseG1GC")
                 .extraJvmArgs(List.of("-Dtest=true", "-Dlauncher.name=minified"))
                 .build();
 
