@@ -1,5 +1,6 @@
 package com.dervarex.minified.launch.launch;
 
+import com.dervarex.minified.launch.events.EventBus;
 import com.dervarex.minified.launch.launch.modding.Loader;
 import lombok.Getter;
 
@@ -11,11 +12,9 @@ import java.util.Objects;
 @Getter
 @SuppressWarnings("unused")
 public class LaunchConfiguration {
-
     // Memory
     private int minRam = 2048;
     private int maxRam = 4096;
-
 
     // Downloads
     private int downloadThreads = 5;
@@ -46,12 +45,21 @@ public class LaunchConfiguration {
     // User
     private String offlineUsername = "Player";
 
-    private LaunchConfiguration() {
+    // Events
+    private EventBus eventBus;
+
+    private LaunchConfiguration(EventBus eventBus) {
+        this.eventBus = eventBus != null ? eventBus : new EventBus();
     }
 
     public static class Builder {
 
-        private final LaunchConfiguration config = new LaunchConfiguration();
+        private final LaunchConfiguration config;
+        private EventBus eventBus = new EventBus();
+
+        public Builder() {
+            this.config = new LaunchConfiguration(eventBus);
+        }
 
         // Memory
         public Builder minRam(int minRam) {
@@ -138,9 +146,9 @@ public class LaunchConfiguration {
         }
 
         // User
-
         /**
-         * Only uses the custom username if offline mode is enabled
+         * Only uses the custom username if offline mode is enabled.
+         *
          * @param username the username to use
          */
         public Builder offlineUsername(String username) {
@@ -148,7 +156,15 @@ public class LaunchConfiguration {
             return this;
         }
 
+        // Events
+        public Builder eventBus(EventBus eventBus) {
+            this.eventBus = eventBus != null ? eventBus : new EventBus();
+            return this;
+        }
+
         public LaunchConfiguration build() {
+            config.eventBus = eventBus;
+
             Objects.requireNonNull(config.jarFile, "jarFile is required");
             Objects.requireNonNull(config.librariesDirectory, "librariesDirectory is required");
             Objects.requireNonNull(config.assetsDirectory, "assetsDirectory is required");

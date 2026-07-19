@@ -37,7 +37,7 @@ dependencies {
 ### Launch Minecraft
 
 ```java
-LaunchConfigurator config = new LaunchConfigurator.Builder()
+LaunchConfiguration config = new LaunchConfiguration.Builder()
         .downloadThreads(10)
         .launcherName("MinifiedLauncher")
         .launcherVersion("1.0.0")
@@ -70,6 +70,7 @@ Documentation is available in the Javadoc, and on the [Documentation Website](ht
 
 ## Roadmap
 
+* Event system
 * Test and document supported Minecraft versions
 * Support older Minecraft versions for all currently supported loaders
 

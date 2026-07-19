@@ -9,6 +9,7 @@ import com.dervarex.minified.launch.arguments.LegacyMinecraftArgumentsParser;
 import com.dervarex.minified.launch.download.ClientDownloader;
 import com.dervarex.minified.launch.download.assets.AssetDownloader;
 import com.dervarex.minified.launch.download.libraries.LibraryDownloader;
+import com.dervarex.minified.launch.events.EventBus;
 import com.dervarex.minified.launch.launch.modding.Loader;
 import com.dervarex.minified.launch.launch.modding.custom.CustomLoader;
 import com.dervarex.minified.launch.launch.modding.fabric.FabricLoader;
@@ -43,7 +44,7 @@ import java.util.List;
 public class Launcher {
     /**
      * Downloads required files and launches Minecraft.
-     * Can be used in offline mode, will throw {@code OfflineModeNeedsNetworkException} if any assets, libraries or other stuff is not downloaded but is needed
+     * Can be used in offline mode, will throw {@code OfflineModeNeedsNetworkException} if any assets, libraries or other stuff is not downloaded but needed
      *
      * @param user the logged-in user to launch with, or null to launch in offline mode(you won't be able to join online servers or use any online features in offline mode)
      * @param launchConfig configuration used by the launcher when starting the game,
@@ -52,7 +53,7 @@ public class Launcher {
      *<p>
      * Example:
      * <pre>{@code
-     * LaunchConfigurator config = new LaunchConfigurator.Builder()
+     * LaunchConfiguration config = new LaunchConfiguration.Builder()
      * .downloadThreads(10)
      * .launcherName("MinifiedLauncher")
      * .launcherVersion("1.0.0")
@@ -65,17 +66,19 @@ public class Launcher {
     public static void launchMinecraft(
             User user,
             LaunchConfiguration launchConfig) {
+        LaunchContext context = new LaunchContext(user, launchConfig);
 
         try {
             Loader loader = launchConfig.getLoader();
 
-            boolean online = true;
+            context.setOnline(true);
             try {
                 NetworkUtil.ensureOnline("launch minecraft");
             } catch (NoConnectionException e) {
-                online = false;
+                context.setOnline(false);
             }
-            if (online) {
+
+            if (context.isOnline()) {
                 if (loader instanceof ForgeLoader) {
                     ForgeInstallerInjector forgeInstallerInjector = new ForgeInstallerInjector();
                     forgeInstallerInjector.install(launchConfig, loader.mcVersion());
@@ -85,7 +88,7 @@ public class Launcher {
                 }
             }
 
-            JsonFile versionJson = loadVersionJson(loader.mcVersion(), online);
+            JsonFile versionJson = loadVersionJson(loader.mcVersion(), context.isOnline());
 
             JavaInstallation javaInstallation;
             if (launchConfig.getCustomJavaExecutable() == null) {
@@ -99,8 +102,7 @@ public class Launcher {
 
             downloadFiles(
                     loader.mcVersion(),
-                    launchConfig,
-                    online
+                    context
             );
 
             String classpath =
@@ -135,7 +137,7 @@ public class Launcher {
                             options,
                             loader,
                             loader.mcVersion(),
-                            online
+                            context.isOnline()
                     ); // includes the classpath
             Path nativesDir =
                     launchConfig.getLibrariesDirectory()
@@ -158,7 +160,7 @@ public class Launcher {
                             loader,
                             loader.mcVersion(),
                             launchConfig,
-                            online
+                            context.isOnline()
                     );
 
             ArrayList<String> command =
@@ -171,7 +173,7 @@ public class Launcher {
                             launchConfig.getCustomJavaExecutable()
                             .toAbsolutePath().toString());                                                  // java
             command.addAll(jvmArgs);                                                                        // -Dsomearg -cp ...
-            command.add   (getMainClass(versionJson, loader, loader.mcVersion(), launchConfig, online));// net.minecraft.client.main.Main
+            command.add   (getMainClass(versionJson, loader, loader.mcVersion(), launchConfig, context.isOnline()));// net.minecraft.client.main.Main
             command.addAll(gameArgs);                                                                       // --username ... --accessToken ...
 
             launchProcess(command);
@@ -186,9 +188,10 @@ public class Launcher {
 
     private static void downloadFiles(
             String version,
-            LaunchConfiguration launchConfig,
-            boolean online
+            LaunchContext context
     ) throws HttpException, IOException {
+
+        LaunchConfiguration launchConfig = context.getLaunchConfiguration();
 
         // Downloads (will skip files if they already exist)
         LibraryDownloader libDownloader    = new LibraryDownloader(launchConfig.getDownloadThreads());
@@ -205,7 +208,7 @@ public class Launcher {
                 launchConfig.getAssetsDirectory()
         );
 
-        if (online) {
+        if (context.isOnline()) {
             clientDownloader.downloadClient(
                     version,
                     launchConfig.getJarFile()
