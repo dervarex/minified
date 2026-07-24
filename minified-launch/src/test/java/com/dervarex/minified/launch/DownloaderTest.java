@@ -4,6 +4,7 @@ import com.dervarex.minified.launch.download.ClientDownloader;
 import com.dervarex.minified.launch.download.ServerDownloader;
 import com.dervarex.minified.launch.download.assets.AssetDownloader;
 import com.dervarex.minified.launch.download.libraries.LibraryDownloader;
+import com.dervarex.minified.launch.launch.LaunchContext;
 import com.dervarex.minified.launch.launch.modding.vanilla.VanillaLoader;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -64,7 +65,7 @@ class DownloaderTest {
         Path assetsDir = tempDir.resolve("assets");
 
         AssetDownloader downloader = new AssetDownloader(10);
-        downloader.downloadAssets("1.21.11", assetsDir);
+        downloader.downloadAssets("1.21.11", assetsDir, new LaunchContext(null, TestEnvironment.config(tempDir)));
 
         assertTrue(Files.exists(assetsDir), "Assets directory should exist");
 

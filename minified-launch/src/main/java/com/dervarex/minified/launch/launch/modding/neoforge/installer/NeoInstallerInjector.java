@@ -1,6 +1,9 @@
 package com.dervarex.minified.launch.launch.modding.neoforge.installer;
 
+import com.dervarex.minified.launch.events.type.loader.InstallForgeEvent;
+import com.dervarex.minified.launch.events.type.loader.InstallNeoforgeEvent;
 import com.dervarex.minified.launch.launch.LaunchConfiguration;
+import com.dervarex.minified.launch.launch.LaunchContext;
 import com.dervarex.minified.launch.launch.modding.neoforge.api.NeoInstallerFetcher;
 import com.dervarex.minified.launch.launch.modding.neoforge.api.NeoVersionFetcher;
 import com.dervarex.minified.launch.utils.DownloadHelper;
@@ -23,8 +26,9 @@ import java.util.function.Consumer;
 public class NeoInstallerInjector {
     private static final String INSTALLER_FILE_NAME = "neoforge-installer.jar";
 
-    private static void prepare(LaunchConfiguration configurator) {
-        Path gameDir = configurator.getJarFile().getParent();
+    private static void prepare(LaunchContext context) {
+        context.getEventBus().post(new InstallNeoforgeEvent(InstallNeoforgeEvent.Stage.PREPARING, context.getLaunchConfiguration().getLoader().mcVersion(), context.getLaunchConfiguration().getLoader().loaderVersion()));
+        Path gameDir = context.getLaunchConfiguration().getJarFile().getParent();
         try {
             Files.createDirectories(gameDir);
             Files.createDirectories(gameDir.resolve("versions"));
@@ -32,6 +36,7 @@ public class NeoInstallerInjector {
             Path launcherProfiles = gameDir.resolve("launcher_profiles.json");
 
             if (!Files.exists(launcherProfiles)) {
+                context.getEventBus().post(new InstallNeoforgeEvent(InstallNeoforgeEvent.Stage.WRITING_PROFILE, context.getLaunchConfiguration().getLoader().mcVersion(), context.getLaunchConfiguration().getLoader().loaderVersion()));
                 Files.writeString(
                         launcherProfiles,
                         """
@@ -47,11 +52,11 @@ public class NeoInstallerInjector {
     }
 
     private static Path downloadInstaller(
-            LaunchConfiguration configurator,
-            String versionOrMinecraftVersion
+            LaunchContext context
     ) {
+        context.getEventBus().post(new InstallNeoforgeEvent(InstallNeoforgeEvent.Stage.DOWNLOADING_INSTALLER, context.getLaunchConfiguration().getLoader().mcVersion(), context.getLaunchConfiguration().getLoader().loaderVersion()));
         NeoVersionFetcher versionFetcher = new NeoVersionFetcher();
-        String neoForgeVersion = versionFetcher.resolveLoaderVersion(versionOrMinecraftVersion);
+        String neoForgeVersion = versionFetcher.resolveLoaderVersion(context.getLaunchConfiguration().getLoader().mcVersion());
         String url = NeoInstallerFetcher.getInstallerLink(neoForgeVersion);
 
         HttpClient httpClient = HttpClient.newBuilder()
@@ -78,7 +83,7 @@ public class NeoInstallerInjector {
             throw new RuntimeException(e);
         }
 
-        Path installerPath = configurator
+        Path installerPath = context.getLaunchConfiguration()
                 .getJarFile()
                 .getParent()
                 .resolve(INSTALLER_FILE_NAME);
@@ -87,8 +92,9 @@ public class NeoInstallerInjector {
         return installerPath;
     }
 
-    private static void install(URLClassLoader loader, File target, File installerFile, Consumer<String> logState)
+    private static void install(URLClassLoader loader, File target, File installerFile, Consumer<String> logState, LaunchContext context)
             throws ReflectiveOperationException {
+        context.getEventBus().post(new InstallNeoforgeEvent(InstallNeoforgeEvent.Stage.RUNNING_INSTALLER, context.getLaunchConfiguration().getLoader().mcVersion(), context.getLaunchConfiguration().getLoader().loaderVersion()));
 
         Class<?> utilClass = loader.loadClass("net.minecraftforge.installer.json.Util");
         Method loadInstallProfile = utilClass.getMethod("loadInstallProfile");
@@ -141,22 +147,28 @@ public class NeoInstallerInjector {
         }
     }
 
-    public void install(LaunchConfiguration config, String versionOrMinecraftVersion) {
-        prepare(config);
-        Path installerPath = downloadInstaller(config, versionOrMinecraftVersion);
+    public void install(/*String versionOrMinecraftVersion, */LaunchContext context) {
+        LaunchConfiguration config = context.getLaunchConfiguration();
+        prepare(context);
+        Path installerPath = downloadInstaller(context);
         try (URLClassLoader loader = new URLClassLoader(new java.net.URL[]{installerPath.toUri().toURL()})) {
             install(
                     loader,
                     config.getJarFile().getParent().toFile(),
                     installerPath.toFile(),
-                    System.out::println
+                    System.out::println, // todo replace with logger
+                    context
             );
         } catch (ReflectiveOperationException e) {
+            context.getEventBus().post(new InstallNeoforgeEvent(InstallNeoforgeEvent.Stage.FAILED, context.getLaunchConfiguration().getLoader().mcVersion(), context.getLaunchConfiguration().getLoader().loaderVersion()));
             throw new RuntimeException(e);
         } catch (MalformedURLException e) {
+            context.getEventBus().post(new InstallNeoforgeEvent(InstallNeoforgeEvent.Stage.FAILED, context.getLaunchConfiguration().getLoader().mcVersion(), context.getLaunchConfiguration().getLoader().loaderVersion()));
             throw new RuntimeException(e);
         } catch (IOException e) {
+            context.getEventBus().post(new InstallNeoforgeEvent(InstallNeoforgeEvent.Stage.FAILED, context.getLaunchConfiguration().getLoader().mcVersion(), context.getLaunchConfiguration().getLoader().loaderVersion()));
             throw new RuntimeException(e);
         }
+        context.getEventBus().post(new InstallNeoforgeEvent(InstallNeoforgeEvent.Stage.FINISHED, context.getLaunchConfiguration().getLoader().mcVersion(), context.getLaunchConfiguration().getLoader().loaderVersion()));
     }
 }

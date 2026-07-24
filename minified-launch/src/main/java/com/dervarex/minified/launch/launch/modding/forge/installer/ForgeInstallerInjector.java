@@ -1,8 +1,9 @@
 package com.dervarex.minified.launch.launch.modding.forge.installer;
 
+import com.dervarex.minified.launch.events.type.loader.InstallForgeEvent;
 import com.dervarex.minified.launch.launch.LaunchConfiguration;
+import com.dervarex.minified.launch.launch.LaunchContext;
 import com.dervarex.minified.launch.launch.modding.forge.api.ForgeInstallerFetcher;
-import com.dervarex.minified.launch.launch.modding.forge.api.ForgeVersionFetcher;
 import com.dervarex.minified.launch.utils.DownloadHelper;
 
 import java.io.File;
@@ -22,8 +23,9 @@ import java.time.Duration;
 import java.util.function.Consumer;
 
 public class ForgeInstallerInjector {
-    private static void prepare(LaunchConfiguration configurator) {
-        Path gameDir = configurator.getJarFile().getParent();
+    private static void prepare(LaunchContext context) {
+        context.getEventBus().post(new InstallForgeEvent(InstallForgeEvent.Stage.PREPARING, context.getLaunchConfiguration().getLoader().mcVersion(), context.getLaunchConfiguration().getLoader().loaderVersion()));
+        Path gameDir = context.getLaunchConfiguration().getJarFile().getParent();
         try {
             Files.createDirectories(gameDir);
             Files.createDirectories(gameDir.resolve("versions"));
@@ -31,6 +33,7 @@ public class ForgeInstallerInjector {
             Path launcherProfiles = gameDir.resolve("launcher_profiles.json");
 
             if (!Files.exists(launcherProfiles)) {
+                context.getEventBus().post(new InstallForgeEvent(InstallForgeEvent.Stage.WRITING_PROFILE, context.getLaunchConfiguration().getLoader().mcVersion(), context.getLaunchConfiguration().getLoader().loaderVersion()));
                 Files.writeString(
                         launcherProfiles,
                         """
@@ -46,13 +49,12 @@ public class ForgeInstallerInjector {
 
     }
 
-    private static void downloadInstaller(
-            LaunchConfiguration configurator,
-            String loaderVersion
-    ) {
+    private static void downloadInstaller(LaunchContext context) {
         String url = ForgeInstallerFetcher.getInstallerLink(
-                loaderVersion
+                context.getLaunchConfiguration().getLoader().loaderVersion()
         );
+        context.getEventBus().post(new InstallForgeEvent(InstallForgeEvent.Stage.DOWNLOADING_INSTALLER, context.getLaunchConfiguration().getLoader().mcVersion(), context.getLaunchConfiguration().getLoader().loaderVersion()));
+
 
         HttpClient httpClient = HttpClient.newBuilder()
                 .followRedirects(HttpClient.Redirect.NORMAL)
@@ -81,7 +83,7 @@ public class ForgeInstallerInjector {
             throw new RuntimeException(e);
         }
 
-        Path installerPath = configurator
+        Path installerPath = context.getLaunchConfiguration()
                 .getJarFile()
                 .getParent()
                 .resolve("forge-installer.jar");
@@ -93,15 +95,17 @@ public class ForgeInstallerInjector {
         );
     }
 
-    private static void install(URLClassLoader loader, File target, File installerFile, Consumer<String> logState)
+    private static void install(URLClassLoader urlClassLoader, File target, File installerFile, Consumer<String> logState, LaunchContext context)
             throws ReflectiveOperationException {
+        context.getEventBus().post(new InstallForgeEvent(InstallForgeEvent.Stage.RUNNING_INSTALLER, context.getLaunchConfiguration().getLoader().mcVersion(), context.getLaunchConfiguration().getLoader().loaderVersion()));
 
-        Class<?> utilClass = loader.loadClass("net.minecraftforge.installer.json.Util");
+
+        Class<?> utilClass = urlClassLoader.loadClass("net.minecraftforge.installer.json.Util");
         Method loadInstallProfile = utilClass.getMethod("loadInstallProfile");
         Object profile = loadInstallProfile.invoke(null);
 
-        Class<?> clientInstallClass = loader.loadClass("net.minecraftforge.installer.actions.ClientInstall");
-        Class<?> callbackInterface = loader.loadClass("net.minecraftforge.installer.actions.ProgressCallback");
+        Class<?> clientInstallClass = urlClassLoader.loadClass("net.minecraftforge.installer.actions.ClientInstall");
+        Class<?> callbackInterface = urlClassLoader.loadClass("net.minecraftforge.installer.actions.ProgressCallback");
 
         Object monitor = Proxy.newProxyInstance(
                 callbackInterface.getClassLoader(),
@@ -139,10 +143,10 @@ public class ForgeInstallerInjector {
         }
     }
 
-    public void install(LaunchConfiguration config, String version) {
-        prepare(config);
-        ForgeVersionFetcher forgeVersionFetcher = new ForgeVersionFetcher();
-        downloadInstaller(config, forgeVersionFetcher.getLatest(version));
+    public void install(/*String versionOrMinecraftVersion, */LaunchContext context) {
+        LaunchConfiguration config = context.getLaunchConfiguration();
+        prepare(context);
+        downloadInstaller(context);
         try {
             install(
                     new URLClassLoader(new java.net.URL[]{
@@ -150,12 +154,17 @@ public class ForgeInstallerInjector {
                     }),
                     config.getJarFile().getParent().toFile(),
                     Path.of(config.getJarFile().getParent().toAbsolutePath().toString(),"forge-installer.jar").toFile(),
-                    System.out::println
+                    System.out::println, // todo replace with logger
+                    context
             );
         } catch (ReflectiveOperationException e) {
+            context.getEventBus().post(new InstallForgeEvent(InstallForgeEvent.Stage.FAILED, context.getLaunchConfiguration().getLoader().mcVersion(), context.getLaunchConfiguration().getLoader().loaderVersion()));
             throw new RuntimeException(e);
         } catch (MalformedURLException e) {
+            context.getEventBus().post(new InstallForgeEvent(InstallForgeEvent.Stage.FAILED, context.getLaunchConfiguration().getLoader().mcVersion(), context.getLaunchConfiguration().getLoader().loaderVersion()));
             throw new RuntimeException(e);
         }
+        context.getEventBus().post(new InstallForgeEvent(InstallForgeEvent.Stage.FINISHED, context.getLaunchConfiguration().getLoader().mcVersion(), context.getLaunchConfiguration().getLoader().loaderVersion()));
+
     }
 }

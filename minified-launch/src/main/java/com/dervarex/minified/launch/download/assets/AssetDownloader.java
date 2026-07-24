@@ -1,15 +1,22 @@
 package com.dervarex.minified.launch.download.assets;
 
 import com.dervarex.minified.launch.ApiEndpoints;
+import com.dervarex.minified.launch.events.type.download.assets.DownloadAssetsEvent;
+import com.dervarex.minified.launch.launch.LaunchContext;
 import com.dervarex.minified.launch.utils.DownloadHelper;
 import com.dervarex.minified.launch.version.VersionManifestClient;
 import com.dervarex.minified.utils.exceptions.NoConnectionException;
 import com.dervarex.minified.utils.http.HttpUtil;
 import com.dervarex.minified.utils.json.JsonFile;
 import com.dervarex.minified.utils.json.JsonObject;
+import com.dervarex.minified.utils.json.JsonValue;
 import com.dervarex.minified.utils.network.NetworkUtil;
+import com.dervarex.minified.utils.sha.Hasher;
 
+import java.net.URI;
 import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -21,6 +28,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
 public class AssetDownloader {
@@ -36,12 +45,16 @@ public class AssetDownloader {
         this.pool = Executors.newFixedThreadPool(downloadThreads);
     }
 
+    public void downloadAssets(String version, Path assetsDir, LaunchContext context) {
+        downloadAssets(version, assetsDir, progress -> {}, context);
+    }
+
     /**
      * Downloads the assets
      * @param version the game version
      * @param assetsDir the directory the assets should be downloaded to
      */
-    public void downloadAssets(String version, Path assetsDir) {
+    public void downloadAssets(String version, Path assetsDir, Consumer<Double> progressConsumer, LaunchContext context) {
         try {
             boolean online = true;
             try {
@@ -108,6 +121,7 @@ public class AssetDownloader {
 
             List<Future<?>> futures = new ArrayList<>();
             Set<String> seenHashes = ConcurrentHashMap.newKeySet();
+            List<AssetTarget> targets = new ArrayList<>();
 
             for (String key : objects.keys()) {
                 JsonObject asset = objects
@@ -130,23 +144,78 @@ public class AssetDownloader {
                         .resolve(subDir)
                         .resolve(hash);
 
+                long size = resolveAssetSize(asset, url);
+                targets.add(new AssetTarget(url, output, hash, size));
+            }
+
+            long totalBytes = 0L;
+            for (AssetTarget target : targets) {
+                totalBytes += Math.max(target.size(), 0L);
+            }
+            final long totalBytesFinal = Math.max(totalBytes, 1L);
+
+            AtomicLong downloadedBytes = new AtomicLong();
+
+            for (AssetTarget target : targets) {
+                String currentFile = target.path().getFileName().toString();
+
+                if (isAlreadyDownloaded(target.path(), target.sha1())) {
+                    long current = downloadedBytes.addAndGet(target.size());
+                    updateProgress(
+                            current,
+                            totalBytesFinal,
+                            currentFile,
+                            target.size(),
+                            target.size(),
+                            progressConsumer,
+                            context
+                    );
+                    continue;
+                }
+
+                AtomicLong currentFileBytes = new AtomicLong();
+
                 futures.add(
                         DownloadHelper.download(
-                                url,
-                                output,
-                                hash,
+                                target.url(),
+                                target.path(),
+                                target.sha1(),
                                 pool,
-                                client
+                                client,
+                                bytes -> {
+                                    long current = downloadedBytes.addAndGet(bytes);
+                                    long fileCurrent = currentFileBytes.addAndGet(bytes);
+                                    updateProgress(
+                                            current,
+                                            totalBytesFinal,
+                                            currentFile,
+                                            fileCurrent,
+                                            target.size(),
+                                            progressConsumer,
+                                            context
+                                    );
+                                }
                         )
                 );
             }
 
-            // wait for all assets
             for (Future<?> future : futures) {
                 future.get();
             }
 
-            System.out.println("All assets downloaded.");
+            String finalFile = targets.isEmpty() ? "" : targets.get(targets.size() - 1).path().getFileName().toString();
+            long finalFileSize = targets.isEmpty() ? 0L : targets.get(targets.size() - 1).size();
+
+            updateProgress(
+                    totalBytesFinal,
+                    totalBytesFinal,
+                    finalFile,
+                    finalFileSize,
+                    finalFileSize,
+                    progressConsumer,
+                    context
+            );
+            //System.out.println("All assets downloaded.");
 
         } catch (Exception e) {
             throw new RuntimeException("Failed to download assets", e);
@@ -155,8 +224,81 @@ public class AssetDownloader {
         }
     }
 
+    private void updateProgress(
+            long downloadedBytes,
+            long totalBytes,
+            String currentFile,
+            long currentFileBytes,
+            long currentFileSize,
+            Consumer<Double> progressConsumer,
+            LaunchContext context
+    ) {
+        double progress = Math.min(1.0, downloadedBytes / (double) Math.max(totalBytes, 1L));
+        progressConsumer.accept(progress);
+
+        if (context != null) {
+            context.getEventBus().post(new DownloadAssetsEvent(
+                    progress,
+                    downloadedBytes,
+                    totalBytes,
+                    currentFile,
+                    currentFileBytes,
+                    currentFileSize
+            ));
+        }
+    }
+
+    private long resolveAssetSize(JsonObject asset, String url) {
+        JsonValue sizeValue = asset.get("size");
+
+        if (sizeValue != null) {
+            if (sizeValue.isNumber()) {
+                return sizeValue.asNumber().longValue();
+            }
+
+            if (sizeValue.isString()) {
+                return Long.parseLong(sizeValue.asString());
+            }
+        }
+
+        return resolveContentLength(url);
+    }
+
+    private long resolveContentLength(String url) {
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .timeout(Duration.ofSeconds(15))
+                    .method("HEAD", HttpRequest.BodyPublishers.noBody())
+                    .build();
+
+            HttpResponse<Void> response = client.send(request, HttpResponse.BodyHandlers.discarding());
+            if (response.statusCode() >= 200 && response.statusCode() < 300) {
+                return response.headers()
+                        .firstValueAsLong("Content-Length")
+                        .orElse(0L);
+            }
+        } catch (Exception ignored) {
+        }
+        return 0L;
+    }
+
+    private boolean isAlreadyDownloaded(Path path, String sha1) {
+        try {
+            if (!Files.exists(path) || Files.size(path) <= 0) {
+                return false;
+            }
+            return Hasher.sha1(path).equalsIgnoreCase(sha1);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     private Path resolveCacheRoot(Path assetsDir) {
         Path parent = assetsDir.toAbsolutePath().getParent();
         return Objects.requireNonNullElseGet(parent, assetsDir::toAbsolutePath).resolve("cache");
+    }
+
+    private record AssetTarget(String url, Path path, String sha1, long size) {
     }
 }

@@ -20,6 +20,7 @@ import java.security.MessageDigest;
 import java.time.Duration;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.function.LongConsumer;
 
 /**
  * Internal helper for downloading files and verifying SHA-1 checksums.
@@ -40,7 +41,18 @@ public class DownloadHelper {
      * @return a Future representing the download task
      */
     public static Future<?> download(String url, Path path, String expectedSha1, ExecutorService pool, HttpClient client) {
-        return pool.submit(() -> download(url, path, expectedSha1, client));
+        return download(url, path, expectedSha1, pool, client, bytes -> {});
+    }
+
+    public static Future<?> download(
+            String url,
+            Path path,
+            String expectedSha1,
+            ExecutorService pool,
+            HttpClient client,
+            LongConsumer progressConsumer
+    ) {
+        return pool.submit(() -> downloadInternal(url, path, expectedSha1, client, progressConsumer));
     }
 
     /**
@@ -52,33 +64,44 @@ public class DownloadHelper {
      * @return true if the file was downloaded or already exists with the correct sha1, false if the file has a wrong sha1 value after downloading
      */
     public static boolean download(String url, Path path, String expectedSha1) {
-        return download(
-                url,
-                path,
-                expectedSha1,
-                HttpClient.newHttpClient()
-        );
+        return download(url, path, expectedSha1, HttpClient.newHttpClient());
     }
 
-    private static boolean download(String url, Path path, String expectedSha1, HttpClient client) {
+    public static boolean download(String url, Path path, String expectedSha1, HttpClient client) {
+        return downloadInternal(url, path, expectedSha1, client, bytes -> {});
+    }
 
+    public static boolean download(
+            String url,
+            Path path,
+            String expectedSha1,
+            HttpClient client,
+            LongConsumer progressConsumer
+    ) {
+        return downloadInternal(url, path, expectedSha1, client, progressConsumer);
+    }
+
+    private static boolean downloadInternal(
+            String url,
+            Path path,
+            String expectedSha1,
+            HttpClient client,
+            LongConsumer progressConsumer
+    ) {
         Path tempFile = Path.of(path + ".tmp");
 
         try {
-
             if (Files.exists(path)) {
-
                 String existingSha1 = Hasher.sha1(path);
 
                 if (existingSha1.equalsIgnoreCase(expectedSha1)) {
-                    return true; // already exists and has correct sha1 value
+                    return true;
                 }
 
-                Files.delete(path); // delete file and redownload if the sha1 value is incorrect
+                Files.delete(path);
             }
 
             Path parent = path.getParent();
-
             if (parent != null) {
                 Files.createDirectories(parent);
             }
@@ -106,26 +129,21 @@ public class DownloadHelper {
                     InputStream in = response.body();
                     var out = Files.newOutputStream(tempFile)
             ) {
-
                 byte[] buffer = new byte[8192];
-
                 int read;
 
                 while ((read = in.read(buffer)) != -1) {
-
                     out.write(buffer, 0, read);
-
                     digest.update(buffer, 0, read);
+                    progressConsumer.accept(read);
                 }
             }
 
             String actualSha1 = Hasher.bytesToHex(digest.digest());
 
             if (!actualSha1.equalsIgnoreCase(expectedSha1)) {
-
                 Files.deleteIfExists(tempFile);
-
-                return false; // hashes were not the same after download
+                return false;
             }
 
             Files.move(
@@ -134,12 +152,9 @@ public class DownloadHelper {
                     StandardCopyOption.REPLACE_EXISTING
             );
 
-            //System.out.println("Downloaded: " + path);
-
             return true;
 
         } catch (Exception e) {
-
             try {
                 Files.deleteIfExists(tempFile);
             } catch (Exception ignored) {
@@ -151,6 +166,7 @@ public class DownloadHelper {
             );
         }
     }
+
     /**
      * Creates a download request from a version manifest.
      *

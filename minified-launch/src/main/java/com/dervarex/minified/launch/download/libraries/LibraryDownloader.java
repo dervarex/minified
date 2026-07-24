@@ -1,5 +1,7 @@
 package com.dervarex.minified.launch.download.libraries;
 
+import com.dervarex.minified.launch.events.type.download.libraries.DownloadLibrariesEvent;
+import com.dervarex.minified.launch.launch.LaunchContext;
 import com.dervarex.minified.launch.launch.modding.Loader;
 import com.dervarex.minified.launch.launch.modding.fabric.FabricLoader;
 import com.dervarex.minified.launch.launch.modding.fabric.FabricLoaderFetcher;
@@ -18,6 +20,7 @@ import com.dervarex.minified.utils.json.JsonFile;
 import com.dervarex.minified.utils.json.JsonObject;
 import com.dervarex.minified.utils.json.JsonValue;
 import com.dervarex.minified.utils.network.NetworkUtil;
+import com.dervarex.minified.utils.sha.Hasher;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,6 +39,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
+import java.util.function.LongConsumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -53,25 +59,34 @@ public class LibraryDownloader {
         this.pool = Executors.newFixedThreadPool(downloadThreads);
     }
 
+    public void downloadLibraries(Loader loader, Path librariesDir) {
+        downloadLibraries(loader, librariesDir, progress -> {}, null);
+    }
+
+    public void downloadLibraries(Loader loader, Path librariesDir, LaunchContext context) {
+        downloadLibraries(loader, librariesDir, progress -> {}, context);
+    }
+
     /**
      * Downloads the libraries.
      *
      * @param loader the loader to use
      * @param librariesDir the directory the libraries should be downloaded to
      */
-    public void downloadLibraries(Loader loader, Path librariesDir) {
-        boolean online = true;
+    public void downloadLibraries(Loader loader, Path librariesDir, Consumer<Double> progressConsumer, LaunchContext context) {
         try {
-            NetworkUtil.ensureOnline("downloading libraries for version " + loader.mcVersion());
-        } catch (RuntimeException | NoConnectionException e) {
-            online = false;
-        }
+            boolean online = true;
+            try {
+                NetworkUtil.ensureOnline("downloading libraries for version " + loader.mcVersion());
+            } catch (RuntimeException | NoConnectionException e) {
+                online = false;
+            }
 
-        if (!online) {
-            OfflineLibraryValidator.validate(loader.mcVersion(), loader, librariesDir);
-            return;
-        }
-        try {
+            if (!online) {
+                OfflineLibraryValidator.validate(loader.mcVersion(), loader, librariesDir);
+                return;
+            }
+
             librariesDir.toFile().mkdirs();
 
             Path nativesDir = resolveNativesDirectory(librariesDir);
@@ -95,6 +110,7 @@ public class LibraryDownloader {
 
             List<Future<?>> futures = new ArrayList<>();
             List<NativeArchive> nativeArchives = new ArrayList<>();
+            List<DownloadTarget> targets = new ArrayList<>();
 
             JsonArray libraries = versionJson.get("libraries").asArray();
 
@@ -125,18 +141,19 @@ public class LibraryDownloader {
                             artifact.get("path").asString()
                     );
 
-                    futures.add(DownloadHelper.download(url, path, sha1, pool, client));
+                    long size = resolveSize(artifact, url);
+                    targets.add(new DownloadTarget(url, path, sha1, size, true));
                 }
 
                 NativeDownload nativeDownload = resolveNativeDownload(library, downloads);
                 if (nativeDownload != null) {
-                    Path archivePath = nativeDownloadDir.resolve(nativeDownload.relativePath());
-                    futures.add(DownloadHelper.download(
+                    Path archivePath = nativeDownloadDownloadPath(nativeDownload, nativeDownloadDir);
+                    targets.add(new DownloadTarget(
                             nativeDownload.url(),
                             archivePath,
                             nativeDownload.sha1(),
-                            pool,
-                            client
+                            nativeDownload.size() > 0 ? nativeDownload.size() : resolveContentLength(nativeDownload.url()),
+                            true
                     ));
                     nativeArchives.add(new NativeArchive(archivePath, library));
                 }
@@ -161,7 +178,7 @@ public class LibraryDownloader {
                     downloadModLoaderLibraries(
                             fabricProfile.get("libraries").asArray(),
                             librariesDir,
-                            futures
+                            targets
                     );
                     break;
 
@@ -179,7 +196,7 @@ public class LibraryDownloader {
                     downloadModLoaderLibraries(
                             quiltProfile.get("libraries").asArray(),
                             librariesDir,
-                            futures
+                            targets
                     );
                     break;
                 case NeoforgeLoader neoforgeLoader:
@@ -192,6 +209,58 @@ public class LibraryDownloader {
                     throw new IllegalStateException("Unexpected loader: " + loader);
             }
 
+            AtomicLong totalBytes = new AtomicLong();
+            for (DownloadTarget target : targets) {
+                totalBytes.addAndGet(Math.max(target.size(), 1L));
+            }
+            final long totalBytesFinal = Math.max(totalBytes.get(), 1L);
+
+            AtomicLong downloadedBytes = new AtomicLong();
+
+            for (DownloadTarget target : targets) {
+                long targetSize = Math.max(target.size(), 1L);
+                String currentFile = target.path().getFileName().toString();
+
+                if (target.useSha1() && target.sha1() != null && isAlreadyDownloaded(target.path(), target.sha1())) {
+                    long current = downloadedBytes.addAndGet(targetSize);
+                    updateProgress(current, totalBytesFinal, currentFile, targetSize, targetSize, progressConsumer, context);
+                    continue;
+                }
+
+                AtomicLong currentFileBytes = new AtomicLong();
+
+                LongConsumer progressBytes = bytes -> {
+                    long current = downloadedBytes.addAndGet(bytes);
+                    long currentFileCurrent = currentFileBytes.addAndGet(bytes);
+
+                    updateProgress(
+                            current,
+                            totalBytesFinal,
+                            currentFile,
+                            currentFileCurrent,
+                            target.size(),
+                            progressConsumer,
+                            context
+                    );
+                };
+
+                if (target.useSha1()) {
+                    futures.add(DownloadHelper.download(
+                            target.url(),
+                            target.path(),
+                            target.sha1(),
+                            pool,
+                            client,
+                            progressBytes
+                    ));
+                } else {
+                    futures.add(pool.submit(() -> {
+                        downloadWithoutSha1(target.url(), target.path(), progressBytes);
+                        return null;
+                    }));
+                }
+            }
+
             // Wait for all downloads
             for (Future<?> future : futures) {
                 future.get();
@@ -199,16 +268,53 @@ public class LibraryDownloader {
 
             extractNativeArchives(nativeArchives, nativesDir);
 
-            pool.shutdown();
-
-            if (!pool.awaitTermination(1, TimeUnit.HOURS)) {
-                throw new RuntimeException("Download pool timeout");
-            }
-
-            System.out.println("All libraries downloaded.");
+            updateProgress(
+                    totalBytesFinal,
+                    totalBytesFinal,
+                    targets.isEmpty() ? "done" : targets.get(targets.size() - 1).path().getFileName().toString(),
+                    targets.isEmpty() ? 0L : Math.max(targets.get(targets.size() - 1).size(), 1L),
+                    targets.isEmpty() ? 0L : targets.get(targets.size() - 1).size(),
+                    progressConsumer,
+                    context
+            );
+            //System.out.println("All libraries downloaded.");
 
         } catch (Exception e) {
             throw new RuntimeException("Failed to download libraries", e);
+        } finally {
+            pool.shutdown();
+            try {
+                if (!pool.awaitTermination(1, TimeUnit.HOURS)) {
+                    throw new RuntimeException("Download pool timeout");
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException("Failed to shut down download pool", e);
+            }
+        }
+    }
+
+    private void updateProgress(
+            long downloadedBytes,
+            long totalBytes,
+            String currentFile,
+            long currentFileBytes,
+            long currentFileSize,
+            Consumer<Double> progressConsumer,
+            LaunchContext context
+    ) {
+        double progress = Math.min(1.0, downloadedBytes / (double) Math.max(totalBytes, 1L));
+        progressConsumer.accept(progress);
+
+        if (context != null) {
+            context.getEventBus().post(new DownloadLibrariesEvent(
+                    progress,
+                    downloadedBytes,
+                    totalBytes,
+                    currentFile,
+                    currentFileBytes,
+                    currentFileSize
+            ));
         }
     }
 
@@ -216,12 +322,12 @@ public class LibraryDownloader {
      * Download the Libraries for the selected modloader
      * @param libraries the libraries array, which can be obtained from the modloader's version JSON under the "libraries" key
      * @param librariesDir the directory the libraries should be downloaded to
-     * @param futures The futures list to add the download tasks to, so they can be waited on later. This is used to run the modloader library downloads in parallel with the normal library downloads.
+     * @param targets The targets list to add the download tasks to, so they can be waited on later. This is used to run the modloader library downloads in parallel with the normal library downloads.
      */
     private void downloadModLoaderLibraries(
             JsonArray libraries,
             Path librariesDir,
-            List<Future<?>> futures
+            List<DownloadTarget> targets
     ) {
         for (JsonValue libraryValue : libraries) {
             JsonObject library = libraryValue.asObject();
@@ -254,12 +360,8 @@ public class LibraryDownloader {
             String url = baseUrl + artifactPath;
             Path path = librariesDir.resolve(artifactPath);
 
-            futures.add(
-                    pool.submit(() -> {
-                        downloadWithoutSha1(url, path);
-                        return null;
-                    })
-            );
+            long size = resolveContentLength(url);
+            targets.add(new DownloadTarget(url, path, null, size, false));
         }
     }
 
@@ -284,13 +386,18 @@ public class LibraryDownloader {
                 + ".jar";
     }
 
-    private void downloadWithoutSha1(String url, Path path) {
+    private void downloadWithoutSha1(String url, Path path, LongConsumer progressConsumer) {
+        Path tempFile = Path.of(path + ".tmp");
+
         try {
             if (Files.exists(path) && Files.size(path) > 0) {
                 return;
             }
 
-            Files.createDirectories(path.getParent());
+            Path parent = path.getParent();
+            if (parent != null) {
+                Files.createDirectories(parent);
+            }
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(url))
@@ -307,15 +414,72 @@ public class LibraryDownloader {
                 );
             }
 
-            try (InputStream in = response.body()) {
-                Files.copy(
-                        in,
-                        path,
-                        StandardCopyOption.REPLACE_EXISTING
-                );
+            try (
+                    InputStream in = response.body();
+                    var out = Files.newOutputStream(tempFile)
+            ) {
+                byte[] buffer = new byte[8192];
+                int read;
+
+                while ((read = in.read(buffer)) != -1) {
+                    out.write(buffer, 0, read);
+                    progressConsumer.accept(read);
+                }
             }
+
+            Files.move(tempFile, path, StandardCopyOption.REPLACE_EXISTING);
         } catch (Exception e) {
+            try {
+                Files.deleteIfExists(tempFile);
+            } catch (Exception ignored) {
+            }
             throw new RuntimeException("Failed to download Fabric library from " + url, e);
+        }
+    }
+
+    private long resolveSize(JsonObject artifact, String url) {
+        JsonValue sizeValue = artifact.get("size");
+
+        if (sizeValue != null) {
+            if (sizeValue.isNumber()) {
+                return sizeValue.asNumber().longValue();
+            }
+
+            if (sizeValue.isString()) {
+                return Long.parseLong(sizeValue.asString());
+            }
+        }
+
+        return resolveContentLength(url);
+    }
+
+    private long resolveContentLength(String url) {
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .timeout(Duration.ofSeconds(15))
+                    .method("HEAD", HttpRequest.BodyPublishers.noBody())
+                    .build();
+
+            HttpResponse<Void> response = client.send(request, HttpResponse.BodyHandlers.discarding());
+            if (response.statusCode() >= 200 && response.statusCode() < 300) {
+                return response.headers()
+                        .firstValueAsLong("Content-Length")
+                        .orElse(0L);
+            }
+        } catch (Exception ignored) {
+        }
+        return 0L;
+    }
+
+    private boolean isAlreadyDownloaded(Path path, String sha1) {
+        try {
+            if (!Files.exists(path) || Files.size(path) <= 0) {
+                return false;
+            }
+            return Hasher.sha1(path).equalsIgnoreCase(sha1);
+        } catch (Exception e) {
+            return false;
         }
     }
 
@@ -413,15 +577,25 @@ public class LibraryDownloader {
         JsonValue pathValue = classifier.get("path");
         JsonValue urlValue = classifier.get("url");
         JsonValue sha1Value = classifier.get("sha1");
+        JsonValue sizeValue = classifier.get("size");
 
         if (pathValue == null || urlValue == null || sha1Value == null) {
             return null;
         }
 
+        long size = 0L;
+        if (sizeValue != null) {
+            try {
+                size = Long.parseLong(sizeValue.asString());
+            } catch (Exception ignored) {
+            }
+        }
+
         return new NativeDownload(
                 pathValue.asString(),
                 urlValue.asString(),
-                sha1Value.asString()
+                sha1Value.asString(),
+                size
         );
     }
 
@@ -469,6 +643,10 @@ public class LibraryDownloader {
         return OSUtil.getMinecraftOs();
     }
 
+    private Path nativeDownloadDownloadPath(NativeDownload nativeDownload, Path nativeDownloadDir) {
+        return nativeDownloadDir.resolve(nativeDownload.relativePath());
+    }
+
     private Path resolveNativesDirectory(Path librariesDir) {
         Path parent = librariesDir.toAbsolutePath().getParent();
         if (parent == null) {
@@ -477,11 +655,15 @@ public class LibraryDownloader {
         return parent.resolve("jar").resolve("natives").toAbsolutePath();
     }
 
-    private record NativeDownload(String relativePath, String url, String sha1) {
+    private record DownloadTarget(String url, Path path, String sha1, long size, boolean useSha1) {
+    }
+
+    private record NativeDownload(String relativePath, String url, String sha1, long size) {
     }
 
     private record NativeArchive(Path archive, JsonObject library) {
     }
+
     private Path resolveCacheRoot(Path librariesDir) {
         Path parent = librariesDir.toAbsolutePath().getParent();
         return Objects.requireNonNullElseGet(parent, librariesDir::toAbsolutePath).resolve("cache");

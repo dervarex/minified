@@ -9,7 +9,10 @@ import com.dervarex.minified.launch.arguments.LegacyMinecraftArgumentsParser;
 import com.dervarex.minified.launch.download.ClientDownloader;
 import com.dervarex.minified.launch.download.assets.AssetDownloader;
 import com.dervarex.minified.launch.download.libraries.LibraryDownloader;
-import com.dervarex.minified.launch.events.EventBus;
+import com.dervarex.minified.launch.events.type.connection.CheckConnectionEvent;
+import com.dervarex.minified.launch.events.type.java.EnsureJavaEvent;
+import com.dervarex.minified.launch.events.type.launch.LaunchStartedEvent;
+import com.dervarex.minified.launch.events.type.connection.OfflineEvent;
 import com.dervarex.minified.launch.launch.modding.Loader;
 import com.dervarex.minified.launch.launch.modding.custom.CustomLoader;
 import com.dervarex.minified.launch.launch.modding.fabric.FabricLoader;
@@ -73,18 +76,20 @@ public class Launcher {
 
             context.setOnline(true);
             try {
+                context.getEventBus().post(new CheckConnectionEvent());
                 NetworkUtil.ensureOnline("launch minecraft");
             } catch (NoConnectionException e) {
                 context.setOnline(false);
+                context.getEventBus().post(new OfflineEvent());
             }
 
             if (context.isOnline()) {
                 if (loader instanceof ForgeLoader) {
                     ForgeInstallerInjector forgeInstallerInjector = new ForgeInstallerInjector();
-                    forgeInstallerInjector.install(launchConfig, loader.mcVersion());
+                    forgeInstallerInjector.install(context);
                 } else if (loader instanceof NeoforgeLoader) {
                     NeoInstallerInjector neoInstallerInjector = new NeoInstallerInjector();
-                    neoInstallerInjector.install(launchConfig, loader.mcVersion());
+                    neoInstallerInjector.install(context);
                 }
             }
 
@@ -92,6 +97,7 @@ public class Launcher {
 
             JavaInstallation javaInstallation;
             if (launchConfig.getCustomJavaExecutable() == null) {
+                context.getEventBus().post(new EnsureJavaEvent());
                 javaInstallation =
                         JavaManager.ensureJavaVersion(
                                 JavaManager.getRequiredJavaVersion(versionJson)
@@ -176,7 +182,7 @@ public class Launcher {
             command.add   (getMainClass(versionJson, loader, loader.mcVersion(), launchConfig, context.isOnline()));// net.minecraft.client.main.Main
             command.addAll(gameArgs);                                                                       // --username ... --accessToken ...
 
-            launchProcess(command);
+            launchProcess(command, context);
 
         } catch (HttpException | IOException e) {
             throw new RuntimeException(e);
@@ -186,7 +192,7 @@ public class Launcher {
         }
     }
 
-    private static void downloadFiles(
+    private static void downloadFiles( // todo move to a different file
             String version,
             LaunchContext context
     ) throws HttpException, IOException {
@@ -205,7 +211,8 @@ public class Launcher {
 
         assetDownloader.downloadAssets(
                 version,
-                launchConfig.getAssetsDirectory()
+                launchConfig.getAssetsDirectory(),
+                context
         );
 
         if (context.isOnline()) {
@@ -569,7 +576,8 @@ public class Launcher {
     }
 
     private static void launchProcess(
-            List<String> command
+            List<String> command,
+            LaunchContext context
     ) throws IOException, InterruptedException {
 
         ProcessBuilder processBuilder =
@@ -584,6 +592,12 @@ public class Launcher {
         );
 
         processBuilder.inheritIO();
+
+        context.getEventBus().post(new LaunchStartedEvent(
+                context.getUser(),
+                context.getLaunchConfiguration(),
+                context.isOnline()
+        ));
 
         Process process = processBuilder.start();
 
