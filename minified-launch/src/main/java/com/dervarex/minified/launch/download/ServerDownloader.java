@@ -1,10 +1,14 @@
 package com.dervarex.minified.launch.download;
 
+import com.dervarex.minified.launch.events.type.connection.CheckConnectionEvent;
+import com.dervarex.minified.launch.events.type.connection.OfflineEvent;
+import com.dervarex.minified.launch.launch.LaunchContext;
 import com.dervarex.minified.launch.utils.DownloadHelper;
 import com.dervarex.minified.launch.version.VersionMetadataProvider;
 import com.dervarex.minified.utils.exceptions.HttpException;
 import com.dervarex.minified.utils.exceptions.NoConnectionException;
 import com.dervarex.minified.utils.network.NetworkUtil;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.net.http.HttpClient;
@@ -20,12 +24,19 @@ public class ServerDownloader {
      *
      * @param version the game version
      * @param path    the full path to the jar including the file name, for example /home/dervarex/server.jar
+     * @param context the launch context
      */
-    public void downloadServer(String version, Path path) throws HttpException, IOException {
+    public void downloadServer(String version, Path path, @Nullable LaunchContext context) throws HttpException, IOException {
         try {
+            if(context != null) {
+                context.getEventBus().post(new CheckConnectionEvent());
+            }
             NetworkUtil.ensureOnline("download server jar");
         } catch (NoConnectionException nce) {
             System.err.println("You do not have a working internet connection!");
+            if(context != null) {
+                context.getEventBus().post(new OfflineEvent());
+            }
             return;
         }
         path.getParent().toFile().mkdirs();

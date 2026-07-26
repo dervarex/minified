@@ -1,5 +1,7 @@
 package com.dervarex.minified.launch.download;
 
+import com.dervarex.minified.launch.events.type.connection.CheckConnectionEvent;
+import com.dervarex.minified.launch.events.type.connection.OfflineEvent;
 import com.dervarex.minified.launch.events.type.download.client.DownloadClientJarEvent;
 import com.dervarex.minified.launch.launch.LaunchContext;
 import com.dervarex.minified.launch.utils.DownloadHelper;
@@ -8,6 +10,7 @@ import com.dervarex.minified.utils.exceptions.HttpException;
 import com.dervarex.minified.utils.exceptions.NoConnectionException;
 import com.dervarex.minified.utils.network.NetworkUtil;
 import com.dervarex.minified.utils.sha.Hasher;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.net.URI;
@@ -26,24 +29,26 @@ public class ClientDownloader {
     /**
      * @param version the game version
      * @param path    the full path to the jar including the file name, for example /home/dervarex/client.jar
+     * @param context the launch context
      */
-    public void downloadClient(String version, Path path)
-            throws HttpException, IOException {
-        downloadClient(version, path, progress -> {}, null);
-    }
-
-    public void downloadClient(String version, Path path, LaunchContext context)
+    public void downloadClient(String version, Path path, @Nullable LaunchContext context)
             throws HttpException, IOException {
         downloadClient(version, path, progress -> {}, context);
     }
 
-    public void downloadClient(String version, Path path, Consumer<Double> progressConsumer, LaunchContext context)
+    public void downloadClient(String version, Path path, Consumer<Double> progressConsumer, @Nullable LaunchContext context)
             throws HttpException, IOException {
 
         try {
+            if(context != null) {
+                context.getEventBus().post(new CheckConnectionEvent());
+            }
             NetworkUtil.ensureOnline("download client jar");
         } catch (NoConnectionException nce) {
             System.err.println("You do not have a working internet connection!");
+            if(context != null) {
+                context.getEventBus().post(new OfflineEvent());
+            }
             return;
         }
 

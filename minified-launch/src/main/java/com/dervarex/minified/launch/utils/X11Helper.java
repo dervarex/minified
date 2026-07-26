@@ -1,5 +1,8 @@
 package com.dervarex.minified.launch.utils;
 
+import com.dervarex.minified.launch.events.type.environment.ConfigureX11EnvironmentEvent;
+import com.dervarex.minified.launch.launch.LaunchContext;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -15,7 +18,8 @@ public class X11Helper {
      * @param processBuilder the process builder for the child JVM,<p> which will be modified in-place to set DISPLAY and potentially XDG_SESSION_TYPE
      */
     public static void configureGraphicsEnvironment(
-            ProcessBuilder processBuilder
+            ProcessBuilder processBuilder,
+            LaunchContext context
     ) {
         if (!System.getProperty("os.name")
                 .toLowerCase()
@@ -24,7 +28,8 @@ public class X11Helper {
         }
         configureGraphicsEnvironment(
                 processBuilder,
-                Path.of("/tmp/.X11-unix")
+                Path.of("/tmp/.X11-unix"),
+                context
         );
     }
 
@@ -34,7 +39,8 @@ public class X11Helper {
      */
     public static void configureGraphicsEnvironment(
             ProcessBuilder processBuilder,
-            Path x11SocketDirectory
+            Path x11SocketDirectory,
+            LaunchContext context
     ) {
         if (!System.getProperty("os.name")
                 .toLowerCase()
@@ -55,6 +61,9 @@ public class X11Helper {
         if (resolvedDisplay == null) {
             return;
         }
+        context.getEventBus().post(new ConfigureX11EnvironmentEvent(
+                resolvedDisplay
+        ));
 
         environment.put("DISPLAY", resolvedDisplay);
 

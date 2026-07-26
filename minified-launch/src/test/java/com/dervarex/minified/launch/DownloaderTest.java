@@ -37,7 +37,7 @@ class DownloaderTest {
         Path serverJar = tempDir.resolve("server.jar");
 
         ServerDownloader downloader = new ServerDownloader();
-        downloader.downloadServer("1.21.11", serverJar);
+        downloader.downloadServer("1.21.11", serverJar, new LaunchContext(null, TestEnvironment.config(tempDir)));
 
         assertTrue(Files.exists(serverJar), "Server jar should exist");
         assertTrue(Files.size(serverJar) > 1024, "Server jar should not be empty");

@@ -16,7 +16,7 @@ public class NetworkUtil {
      *     NetworkUtil.ensureOnline("Login");
      *     // proceed with network operation
      * } catch (NoConnectionException e) {
-     *     // show user-friendly message
+     *     // show/print a human readable message
      *     System.out.println("You do not have a network connection");
      * }
      * }</pre>

@@ -11,7 +11,8 @@ import com.dervarex.minified.launch.download.assets.AssetDownloader;
 import com.dervarex.minified.launch.download.libraries.LibraryDownloader;
 import com.dervarex.minified.launch.events.type.connection.CheckConnectionEvent;
 import com.dervarex.minified.launch.events.type.java.EnsureJavaEvent;
-import com.dervarex.minified.launch.events.type.launch.LaunchStartedEvent;
+import com.dervarex.minified.launch.events.type.launch.GameStoppedEvent;
+import com.dervarex.minified.launch.events.type.launch.GameStartEvent;
 import com.dervarex.minified.launch.events.type.connection.OfflineEvent;
 import com.dervarex.minified.launch.launch.modding.Loader;
 import com.dervarex.minified.launch.launch.modding.custom.CustomLoader;
@@ -218,7 +219,8 @@ public class Launcher {
         if (context.isOnline()) {
             clientDownloader.downloadClient(
                     version,
-                    launchConfig.getJarFile()
+                    launchConfig.getJarFile(),
+                    context
             );
         } else if (!Files.exists(launchConfig.getJarFile())) {
             throw new OfflineModeNeedsNetworkException(
@@ -582,9 +584,9 @@ public class Launcher {
 
         ProcessBuilder processBuilder =
                 new ProcessBuilder(command);
-
         X11Helper.configureGraphicsEnvironment(
-                processBuilder
+                processBuilder,
+                context
         );
 
         System.out.println(
@@ -593,7 +595,7 @@ public class Launcher {
 
         processBuilder.inheritIO();
 
-        context.getEventBus().post(new LaunchStartedEvent(
+        context.getEventBus().post(new GameStartEvent(
                 context.getUser(),
                 context.getLaunchConfiguration(),
                 context.isOnline()
@@ -602,13 +604,11 @@ public class Launcher {
         Process process = processBuilder.start();
 
         int exitCode = process.waitFor();
-
-        System.out.println("[Minified] Minecraft exited with code " + exitCode);
-
-        if (exitCode != 0) {
-            throw new RuntimeException(
-                    "Minecraft exited with code " + exitCode
-            );
-        }
+        context.getEventBus().post(new GameStoppedEvent(exitCode, context.getLaunchConfiguration()));
+//        if (exitCode != 0) {
+//            throw new RuntimeException(
+//                    "Minecraft exited with code " + exitCode
+//            );
+//        }
     }
 }

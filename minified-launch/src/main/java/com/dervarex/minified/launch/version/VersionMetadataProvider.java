@@ -1,17 +1,11 @@
 package com.dervarex.minified.launch.version;
 
 import com.dervarex.minified.utils.exceptions.HttpException;
-import com.dervarex.minified.utils.exceptions.NoConnectionException;
 import com.dervarex.minified.utils.http.HttpUtil;
 import com.dervarex.minified.utils.json.JsonFile;
 import com.dervarex.minified.utils.json.JsonValue;
-import com.dervarex.minified.utils.network.NetworkUtil;
 
 import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 
 @SuppressWarnings("unused")
 public final class VersionMetadataProvider {
