@@ -4,7 +4,6 @@ plugins {
 }
 
 group = 'com.dervarex.minified.utils'
-version = '1.0.0'
 
 description = 'General utilities'
 
