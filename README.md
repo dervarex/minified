@@ -19,6 +19,11 @@ Minified provides a high-level API for authentication, version management, asset
 * NeoForge support
 * Fabric support
 * Quilt support
+* Event System
+* Java Manager
+* Modrinth API Integration
+
+[Roadmap](ROADMAP.md)
 
 ## Quick Start
 
@@ -67,24 +72,6 @@ Passing `null` as the user launches Minecraft in offline mode.
 ## Documentation
 
 Documentation is available in the Javadoc, and on the [Documentation Website](https://dervarex.github.io/minified-docs/)
-
-## Roadmap
-
-* Event system
-* Test and document supported Minecraft versions
-* Support older Minecraft versions for all currently supported loaders
-
-**When I have way too much time:**
-
-* MiniLoader — a custom mod loader focused on directly editing Minecraft's source code. Mods are distributed as `.patch` files, which are merged and applied to the original Minecraft source.
-
-### Abandoned Features
-
-* Own launcher to test the library in a real-world scenario
-
-    * The launcher was supposed to be built using Compose Desktop.
-
-      Unfortunately, Compose Desktop and I had creative differences regarding the definition of a "working build". The feature was therefore sacrificed in favor of preserving my remaining motivation.
 
 ## Community
 

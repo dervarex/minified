@@ -26,7 +26,7 @@ class DownloaderTest {
         Path clientJar = tempDir.resolve("client.jar");
 
         ClientDownloader downloader = new ClientDownloader();
-        downloader.downloadClient("1.21.11", clientJar);
+        downloader.downloadClient("1.21.11", clientJar, new LaunchContext(null, TestEnvironment.config(tempDir)));
 
         assertTrue(Files.exists(clientJar), "Client jar should exist");
         assertTrue(Files.size(clientJar) > 1024, "Client jar should not be empty");

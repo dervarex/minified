@@ -1,5 +1,6 @@
 package com.dervarex.minified.launch;
 
+import com.dervarex.minified.launch.launch.LaunchContext;
 import com.dervarex.minified.launch.utils.X11Helper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -48,7 +49,7 @@ class LauncherEnvironmentTest {
         processBuilder.environment().put("WAYLAND_DISPLAY", "wayland-1");
         processBuilder.environment().remove("XDG_SESSION_TYPE");
 
-        X11Helper.configureGraphicsEnvironment(processBuilder, tempDir);
+        X11Helper.configureGraphicsEnvironment(processBuilder, new LaunchContext(null, TestEnvironment.config(tempDir)));
 
         assertEquals(":9", processBuilder.environment().get("DISPLAY"));
         assertEquals("wayland-1", processBuilder.environment().get("WAYLAND_DISPLAY"));
@@ -64,7 +65,7 @@ class LauncherEnvironmentTest {
         processBuilder.environment().put("WAYLAND_DISPLAY", "wayland-1");
         processBuilder.environment().remove("XDG_SESSION_TYPE");
 
-        X11Helper.configureGraphicsEnvironment(processBuilder, tempDir);
+        X11Helper.configureGraphicsEnvironment(processBuilder, new LaunchContext(null, TestEnvironment.config(tempDir)));
 
         assertEquals(":5", processBuilder.environment().get("DISPLAY"));
         assertNull(processBuilder.environment().get("WAYLAND_DISPLAY"));
@@ -78,7 +79,7 @@ class LauncherEnvironmentTest {
         processBuilder.environment().put("WAYLAND_DISPLAY", "wayland-1");
         processBuilder.environment().remove("XDG_SESSION_TYPE");
 
-        X11Helper.configureGraphicsEnvironment(processBuilder, tempDir);
+        X11Helper.configureGraphicsEnvironment(processBuilder, new LaunchContext(null, TestEnvironment.config(tempDir)));
 
         assertNull(processBuilder.environment().get("DISPLAY"));
         assertEquals("wayland-1", processBuilder.environment().get("WAYLAND_DISPLAY"));
