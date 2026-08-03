@@ -1,0 +1,36 @@
+plugins {
+    id 'java'
+}
+
+group = 'com.dervarex.minified'
+version = '2.2.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation platform('org.junit:junit-bom:6.0.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    implementation project(":minified-utils")
+    implementation project(":minified-events")
+    compileOnly 'org.jetbrains:annotations:24.1.0'
+}
+
+test {
+    useJUnitPlatform {
+        excludeTags("manual")
+    }
+
+    failOnNoDiscoveredTests = false
+}
+
+tasks.register("manualTest", Test) {
+    useJUnitPlatform {
+        includeTags("manual")
+    }
+
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+}
