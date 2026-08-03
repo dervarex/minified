@@ -4,3 +4,7 @@
 
 # dictionary for spellchecker should be kept
 !.idea/dictionaries/
+
+# gradle and build directories
+.gradle/
+**/build/
