@@ -87,7 +87,7 @@ cd minified
 
 Linux is the primary target and the platform every change is expected to work on.
 Windows and macOS may work(and most likely will), but they are **not officially supported**, and have **not been tested** yet. Pull
-requests that improve behaviour there are welcome as long as they do not
+requests that improve behavior there are welcome as long as they do not
 complicate the Linux path or add platform-specific hacks to shared code.
 
 ---
@@ -156,7 +156,7 @@ Keep unrelated changes in separate commits.
 5. Expect review comments. They are about the code, not about you.
 
 Reformatting or renaming across files that are otherwise untouched will not be
-merged, it's unnecesary and hides the real changes.
+merged, it's unnecessary and hides the real changes.
 
 ---
 
@@ -181,7 +181,7 @@ are not officially supported yet, so such reports are handled differently.
 ## Feature requests and scope
 
 Minified is a library. It handles downloading, managing and launching, it does
-not implement launcher behaviour or user interface logic. Two consequences:
+not implement launcher behavior or user interface logic. Two consequences:
 
 - Features that belong in the launcher on top of the library (for example the ui) are out of scope here.
 - CurseForge integration is out of scope. Modrinth is the supported mod platform: it covers most of what's needed, is focused on Minecraft, has a much cleaner API, and is generally considered safer. CurseForge has had a number of malware issues in the past, and popular mods have increasingly been leaving the platform.
