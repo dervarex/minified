@@ -1,6 +1,5 @@
 ## Roadmap
 
-* Seperate events and launch
 * Add Server Management
 * code&project cleanup, more Exceptions, maybe like some exceptionEvent((Minified)Exception exception)?, package-info.java's  | nothing should ever implement -launch
 * Test and document supported Minecraft versions
