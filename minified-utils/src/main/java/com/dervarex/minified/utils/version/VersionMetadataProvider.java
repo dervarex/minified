@@ -1,4 +1,4 @@
-package com.dervarex.minified.launch.version;
+package com.dervarex.minified.utils.version;
 
 import com.dervarex.minified.utils.exceptions.HttpException;
 import com.dervarex.minified.utils.http.HttpUtil;
@@ -76,6 +76,33 @@ public final class VersionMetadataProvider {
                 .get("url")
                 .asString();
     }
+    public static String getServerSha1(String version)
+            throws HttpException, IOException {
+        String url = getVersionJsonUrl(version);
+        if (url == null) {
+            return null;
+        }
+        JsonFile json = new JsonFile(HttpUtil.get(url));
+        return json.get("downloads")
+                .asObject()
+                .get("server")
+                .asObject()
+                .get("sha1")
+                .asString();
+    }
 
+    public static String getServerUrl(String version)
+            throws HttpException, IOException {
+        String url = getVersionJsonUrl(version);
+        if (url == null) {
+            return null;
+        }
+        JsonFile json = new JsonFile(HttpUtil.get(url));
+        return json.get("downloads")
+                .asObject()
+                .get("server")
+                .asObject()
+                .get("url")
+                .asString();
+    }
 }
-

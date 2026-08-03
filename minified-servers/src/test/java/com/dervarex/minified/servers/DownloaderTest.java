@@ -1,5 +1,6 @@
 package com.dervarex.minified.servers;
 
+import com.dervarex.minified.events.EventBus;
 import com.dervarex.minified.launch.launch.LaunchContext;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -18,9 +19,12 @@ public class DownloaderTest {
     @Test
     void shouldDownloadServerJarSuccessfully() throws Exception {
         Path serverJar = tempDir.resolve("server.jar");
+        EventBus eventBus = new EventBus();
 
         ServerDownloader downloader = new ServerDownloader();
-        downloader.downloadServer("1.21.11", serverJar, new LaunchContext(null, TestEnvironment.config(tempDir)));
+        downloader.downloadServer("1.21.11", serverJar, eventBus);
+
+        eventBus.subscribe();
 
         assertTrue(Files.exists(serverJar), "Server jar should exist");
         assertTrue(Files.size(serverJar) > 1024, "Server jar should not be empty");

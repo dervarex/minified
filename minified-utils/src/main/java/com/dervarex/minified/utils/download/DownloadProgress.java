@@ -1,4 +1,4 @@
-package com.dervarex.minified.launch.utils;
+package com.dervarex.minified.utils.download;
 
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;

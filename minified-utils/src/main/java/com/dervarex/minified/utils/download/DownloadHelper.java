@@ -1,11 +1,10 @@
-package com.dervarex.minified.launch.utils;
+package com.dervarex.minified.utils.download;
 
 import com.dervarex.minified.utils.exceptions.HttpException;
 import com.dervarex.minified.utils.http.HttpUtil;
 import com.dervarex.minified.utils.json.JsonFile;
 import com.dervarex.minified.utils.json.JsonValue;
 import com.dervarex.minified.utils.sha.Hasher;
-import org.jetbrains.annotations.ApiStatus;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,11 +22,8 @@ import java.util.concurrent.Future;
 import java.util.function.LongConsumer;
 
 /**
- * Internal helper for downloading files and verifying SHA-1 checksums.
- * <p>Not intended to be used by launcher developers.</p>
- * @hidden
+ * Download helper for downloading files and verifying SHA-1 checksums.
  */
-@ApiStatus.Internal
 public class DownloadHelper {
     /**
      * Downloads a file asynchronously and verifies its SHA-1 checksum.

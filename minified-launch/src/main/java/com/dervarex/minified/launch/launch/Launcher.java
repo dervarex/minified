@@ -29,7 +29,7 @@ import com.dervarex.minified.launch.launch.modding.quilt.QuiltLoader;
 import com.dervarex.minified.launch.launch.modding.quilt.QuiltLoaderFetcher;
 import com.dervarex.minified.launch.launch.modding.vanilla.VanillaLoader;
 import com.dervarex.minified.launch.utils.X11Helper;
-import com.dervarex.minified.launch.version.VersionMetadataProvider;
+import com.dervarex.minified.utils.version.VersionMetadataProvider;
 import com.dervarex.minified.utils.exceptions.HttpException;
 import com.dervarex.minified.utils.exceptions.NoConnectionException;
 import com.dervarex.minified.utils.exceptions.OfflineModeNeedsNetworkException;

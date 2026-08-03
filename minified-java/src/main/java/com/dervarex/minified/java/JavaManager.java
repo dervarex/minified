@@ -5,6 +5,7 @@ import com.dervarex.minified.java.events.EnsureJavaVersionEvent;
 import com.dervarex.minified.java.events.download.JavaArchiveDownloadEvent;
 import com.dervarex.minified.java.events.extract.ArchiveType;
 import com.dervarex.minified.java.events.extract.ExtractArchiveEvent;
+import com.dervarex.minified.utils.ApiEndpoints;
 import com.dervarex.minified.utils.exceptions.HttpException;
 import com.dervarex.minified.utils.http.HttpUtil;
 import com.dervarex.minified.utils.json.JsonArray;
@@ -43,7 +44,7 @@ import java.util.zip.ZipInputStream;
  */
 @SuppressWarnings("unused")
 public final class JavaManager {
-    private static final String VERSION_MANIFEST_URL = "https://launchermeta.mojang.com/mc/game/version_manifest_v2.json";
+    private static final String VERSION_MANIFEST_URL = ApiEndpoints.VERSION_MANIFEST_URL;
 
     private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
             .followRedirects(HttpClient.Redirect.NORMAL)
@@ -811,13 +812,8 @@ public final class JavaManager {
 //    }
 
     private static String adoptiumAssetUrl(int majorVersion, String imageType) {
-        return "https://api.adoptium.net/v3/assets/feature_releases/%d/ga?architecture=%s&heap_size=normal&image_type=%s&jvm_impl=hotspot&os=%s&vendor=eclipse"
-                .formatted(
-                        majorVersion,
-                        platformArchitecture(),
-                        imageType,
-                        platformOs()
-                );
+        return String.format(Locale.ROOT, ApiEndpoints.ADOPTIUM_ASSET_URL_TEMPLATE,
+                majorVersion, platformArchitecture(), imageType, platformOs());
     }
 
     private static Path defaultBaseDir() {

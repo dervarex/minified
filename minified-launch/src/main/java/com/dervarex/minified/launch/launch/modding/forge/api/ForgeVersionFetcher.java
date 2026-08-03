@@ -1,6 +1,6 @@
 package com.dervarex.minified.launch.launch.modding.forge.api;
 
-import com.dervarex.minified.launch.ApiEndpoints;
+import com.dervarex.minified.utils.ApiEndpoints;
 import com.dervarex.minified.utils.json.JsonObject;
 import com.dervarex.minified.utils.json.JsonParser;
 import org.jsoup.Jsoup;
@@ -27,7 +27,7 @@ public class ForgeVersionFetcher {
 
         try {
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(ApiEndpoints.ForgeMavenMetadataUrl))
+                    .uri(URI.create(ApiEndpoints.FORGE_MAVEN_METADATA_URL))
                     .build();
 
             HttpResponse<String> response = client.send(
@@ -85,7 +85,7 @@ public class ForgeVersionFetcher {
 
         try {
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(ApiEndpoints.ForgePromotionsUrl))
+                    .uri(URI.create(ApiEndpoints.FORGE_PROMOTIONS_URL))
                     .build();
 
             HttpResponse<String> response = client.send(

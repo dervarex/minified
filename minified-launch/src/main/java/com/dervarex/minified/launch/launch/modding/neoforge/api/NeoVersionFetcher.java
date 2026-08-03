@@ -1,6 +1,6 @@
 package com.dervarex.minified.launch.launch.modding.neoforge.api;
 
-import com.dervarex.minified.launch.ApiEndpoints;
+import com.dervarex.minified.utils.ApiEndpoints;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
@@ -69,7 +69,7 @@ public final class NeoVersionFetcher {
     private List<String> fetchVersions() {
         try {
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(ApiEndpoints.NeoForgeMavenMetadataUrl))
+                    .uri(URI.create(ApiEndpoints.NEOFORGE_MAVEN_METADATA_URL))
                     .timeout(Duration.ofSeconds(15))
                     .GET()
                     .build();

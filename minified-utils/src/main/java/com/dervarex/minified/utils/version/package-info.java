@@ -4,5 +4,5 @@
  * <p>Use this package when you need to inspect versions, manifests, or metadata outside the
  * default launcher flow.</p>
  */
-package com.dervarex.minified.launch.version;
+package com.dervarex.minified.utils.version;
 

@@ -1,4 +1,4 @@
-package com.dervarex.minified.launch.version;
+package com.dervarex.minified.utils.version;
 
 import com.dervarex.minified.utils.exceptions.HttpException;
 import com.dervarex.minified.utils.json.JsonValue;

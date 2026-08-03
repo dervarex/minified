@@ -4,7 +4,7 @@ import com.dervarex.minified.launch.events.loader.InstallForgeEvent;
 import com.dervarex.minified.launch.launch.LaunchConfiguration;
 import com.dervarex.minified.launch.launch.LaunchContext;
 import com.dervarex.minified.launch.launch.modding.forge.api.ForgeInstallerFetcher;
-import com.dervarex.minified.launch.utils.DownloadHelper;
+import com.dervarex.minified.utils.download.DownloadHelper;
 
 import java.io.File;
 import java.io.IOException;

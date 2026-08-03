@@ -1,10 +1,10 @@
 package com.dervarex.minified.launch.download.assets;
 
-import com.dervarex.minified.launch.ApiEndpoints;
+import com.dervarex.minified.utils.ApiEndpoints;
 import com.dervarex.minified.launch.events.download.assets.DownloadAssetsEvent;
 import com.dervarex.minified.launch.launch.LaunchContext;
-import com.dervarex.minified.launch.utils.DownloadHelper;
-import com.dervarex.minified.launch.version.VersionManifestClient;
+import com.dervarex.minified.utils.download.DownloadHelper;
+import com.dervarex.minified.utils.version.VersionManifestClient;
 import com.dervarex.minified.utils.exceptions.NoConnectionException;
 import com.dervarex.minified.utils.http.HttpUtil;
 import com.dervarex.minified.utils.json.JsonFile;
@@ -138,7 +138,7 @@ public class AssetDownloader {
 
                 String subDir = hash.substring(0, 2);
 
-                String url = ApiEndpoints.ResourcesUrl + subDir + "/" + hash;
+                String url = ApiEndpoints.RESOURCES_URL + subDir + "/" + hash;
 
                 Path output = objectsDir
                         .resolve(subDir)
