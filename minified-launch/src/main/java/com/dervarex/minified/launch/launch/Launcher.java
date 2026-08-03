@@ -9,11 +9,10 @@ import com.dervarex.minified.launch.arguments.LegacyMinecraftArgumentsParser;
 import com.dervarex.minified.launch.download.ClientDownloader;
 import com.dervarex.minified.launch.download.assets.AssetDownloader;
 import com.dervarex.minified.launch.download.libraries.LibraryDownloader;
-import com.dervarex.minified.launch.events.type.connection.CheckConnectionEvent;
-import com.dervarex.minified.launch.events.type.java.EnsureJavaEvent;
-import com.dervarex.minified.launch.events.type.launch.GameStoppedEvent;
-import com.dervarex.minified.launch.events.type.launch.GameStartEvent;
-import com.dervarex.minified.launch.events.type.connection.OfflineEvent;
+import com.dervarex.minified.events.type.connection.CheckConnectionEvent;
+import com.dervarex.minified.launch.events.launch.GameStoppedEvent;
+import com.dervarex.minified.launch.events.launch.GameStartEvent;
+import com.dervarex.minified.events.type.connection.OfflineEvent;
 import com.dervarex.minified.launch.launch.modding.Loader;
 import com.dervarex.minified.launch.launch.modding.custom.CustomLoader;
 import com.dervarex.minified.launch.launch.modding.fabric.FabricLoader;
@@ -98,7 +97,7 @@ public class Launcher {
 
             JavaInstallation javaInstallation;
             if (launchConfig.getCustomJavaExecutable() == null) {
-                context.getEventBus().post(new EnsureJavaEvent());
+                //context.getEventBus().post(new EnsureJavaEvent());
                 javaInstallation =
                         JavaManager.ensureJavaVersion(
                                 JavaManager.getRequiredJavaVersion(versionJson)

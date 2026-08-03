@@ -1,5 +1,10 @@
 package com.dervarex.minified.java;
 
+import com.dervarex.minified.events.EventBus;
+import com.dervarex.minified.java.events.EnsureJavaVersionEvent;
+import com.dervarex.minified.java.events.download.JavaArchiveDownloadEvent;
+import com.dervarex.minified.java.events.extract.ArchiveType;
+import com.dervarex.minified.java.events.extract.ExtractArchiveEvent;
 import com.dervarex.minified.utils.exceptions.HttpException;
 import com.dervarex.minified.utils.http.HttpUtil;
 import com.dervarex.minified.utils.json.JsonArray;
@@ -7,6 +12,7 @@ import com.dervarex.minified.utils.json.JsonFile;
 import com.dervarex.minified.utils.json.JsonObject;
 import com.dervarex.minified.utils.json.JsonValue;
 
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -18,10 +24,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.util.Enumeration;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 
 /**
@@ -43,6 +51,8 @@ public final class JavaManager {
 
     private static Path baseDir = defaultBaseDir();
 
+    private static EventBus localEventBus;
+
     private JavaManager() {
     }
 
@@ -50,10 +60,17 @@ public final class JavaManager {
      * Configures the root directory used for managed Java runtimes.
      *
      * @param baseDir the directory where managed runtimes will be stored
+     * @param eventBus the EventBus Events will be pushed to
      */
+    public static synchronized void init(Path baseDir, EventBus eventBus) {
+        Objects.requireNonNull(baseDir, "baseDir");
+        JavaManager.baseDir = baseDir.toAbsolutePath();
+        localEventBus = eventBus;
+    }
     public static synchronized void init(Path baseDir) {
         Objects.requireNonNull(baseDir, "baseDir");
         JavaManager.baseDir = baseDir.toAbsolutePath();
+        localEventBus = new EventBus();
     }
 
     /**
@@ -188,6 +205,7 @@ public final class JavaManager {
         if (requiredMajorVersion <= 0 || current.majorVersion() >= requiredMajorVersion) {
             return current;
         }
+        localEventBus.post(new EnsureJavaVersionEvent(requiredMajorVersion));
 
         Path runtimeRoot = runtimeInstallRoot()
                 .resolve(platformId())
@@ -503,7 +521,6 @@ public final class JavaManager {
                 .uri(URI.create(url))
                 .GET()
                 .build();
-
         HttpResponse<InputStream> response;
         try {
             response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofInputStream());
@@ -511,29 +528,44 @@ public final class JavaManager {
             Thread.currentThread().interrupt();
             throw new IOException("Interrupted while downloading Java runtime", e);
         }
-
         if (response.statusCode() != 200) {
             throw new IOException("Failed to download Java runtime: HTTP " + response.statusCode() + " from " + url);
         }
 
+        long totalBytes = response.headers().firstValueAsLong("Content-Length").orElse(-1L);
+
         Path tempFile = Files.createTempFile(archive.getParent(), "java-runtime-download-", ".tmp");
         try {
             java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
+            long downloadedBytes = 0;
+            long lastEventTime = System.currentTimeMillis();
+
             try (InputStream in = response.body(); OutputStream out = Files.newOutputStream(tempFile)) {
                 byte[] buffer = new byte[8192];
                 int read;
                 while ((read = in.read(buffer)) != -1) {
                     out.write(buffer, 0, read);
                     digest.update(buffer, 0, read);
+                    downloadedBytes += read;
+
+                    long now = System.currentTimeMillis();
+                    if (now - lastEventTime >= 100) {
+                        double progress = totalBytes > 0 ? (double) downloadedBytes / totalBytes : -1.0;
+                        localEventBus.post(new JavaArchiveDownloadEvent(progress, downloadedBytes, totalBytes, url));
+                        lastEventTime = now;
+                    }
                 }
             }
+
+            // final 100% event to ensure the listener notices the finish
+            double finalProgress = totalBytes > 0 ? 1.0 : -1.0;
+            localEventBus.post(new JavaArchiveDownloadEvent(finalProgress, downloadedBytes, totalBytes, url));
 
             String actualChecksum = bytesToHex(digest.digest());
             if (!actualChecksum.equalsIgnoreCase(expectedChecksum)) {
                 throw new IOException("Checksum mismatch for Java runtime download. Expected "
                         + expectedChecksum + " but got " + actualChecksum);
             }
-
             Files.move(tempFile, archive, StandardCopyOption.REPLACE_EXISTING);
         } catch (Exception e) {
             try {
@@ -560,30 +592,54 @@ public final class JavaManager {
     }
 
     private static void extractZip(Path archive, Path destination) throws IOException {
-        try (ZipInputStream zipInputStream = new ZipInputStream(Files.newInputStream(archive))) {
-            ZipEntry entry;
-            while ((entry = zipInputStream.getNextEntry()) != null) {
+        try (ZipFile zipFile = new ZipFile(archive.toFile())) {
+            int totalEntries = zipFile.size();
+            int processedEntries = 0;
+            long lastEventTime = System.currentTimeMillis();
+
+            localEventBus.post(new ExtractArchiveEvent(ArchiveType.zip, 0));
+
+            Enumeration<? extends ZipEntry> entries = zipFile.entries();
+            while (entries.hasMoreElements()) {
+                ZipEntry entry = entries.nextElement();
                 Path target = resolveExtractionTarget(destination, entry.getName());
                 if (entry.isDirectory()) {
                     Files.createDirectories(target);
                 } else {
                     Files.createDirectories(target.getParent());
-                    Files.copy(zipInputStream, target, StandardCopyOption.REPLACE_EXISTING);
+                    try (InputStream in = zipFile.getInputStream(entry)) {
+                        Files.copy(in, target, StandardCopyOption.REPLACE_EXISTING);
+                    }
                 }
-                zipInputStream.closeEntry();
+                processedEntries++;
+
+                long now = System.currentTimeMillis();
+                if (now - lastEventTime >= 100 || processedEntries == totalEntries) {
+                    int progress = totalEntries > 0
+                            ? (int) ((processedEntries * 100L) / totalEntries)
+                            : 100;
+                    localEventBus.post(new ExtractArchiveEvent(ArchiveType.zip, progress));
+                    lastEventTime = now;
+                }
             }
         }
     }
 
     private static void extractTarGz(Path archive, Path destination) throws IOException {
-        try (GZIPInputStream gzipInputStream = new GZIPInputStream(Files.newInputStream(archive))) {
+        long totalCompressedBytes = Files.size(archive);
+        long lastEventTime = System.currentTimeMillis();
+
+        try (CountingInputStream countingIn = new CountingInputStream(Files.newInputStream(archive));
+             GZIPInputStream gzipInputStream = new GZIPInputStream(countingIn)) {
+
+            localEventBus.post(new ExtractArchiveEvent(ArchiveType.tarGz, 0));
+
             byte[] header = new byte[512];
             while (true) {
                 int read = readFully(gzipInputStream, header);
                 if (read == -1 || isEmptyBlock(header)) {
                     break;
                 }
-
                 String name = readTarString(header, 0, 100);
                 String prefix = readTarString(header, 345, 155);
                 if (!prefix.isBlank()) {
@@ -592,7 +648,6 @@ public final class JavaManager {
                 long size = readTarSize(header, 124, 12);
                 char typeFlag = (char) header[156];
                 Path target = resolveExtractionTarget(destination, name);
-
                 if (typeFlag == '5') {
                     Files.createDirectories(target);
                 } else if (typeFlag == '0' || typeFlag == '\0' || typeFlag == 0) {
@@ -603,9 +658,46 @@ public final class JavaManager {
                 } else {
                     skipFully(gzipInputStream, size);
                 }
-
                 skipFully(gzipInputStream, padding(size));
+
+                long now = System.currentTimeMillis();
+                if (now - lastEventTime >= 100) {
+                    int progress = totalCompressedBytes > 0
+                            ? (int) Math.min(99, (countingIn.getCount() * 100L) / totalCompressedBytes)
+                            : -1;
+                    localEventBus.post(new ExtractArchiveEvent(ArchiveType.tarGz, progress));
+                    lastEventTime = now;
+                }
             }
+
+            localEventBus.post(new ExtractArchiveEvent(ArchiveType.tarGz, 100));
+        }
+    }
+
+    /** Counts read bytes of the Stream (for progress calculation) */
+    private static final class CountingInputStream extends FilterInputStream {
+        private long count = 0;
+
+        CountingInputStream(InputStream in) {
+            super(in);
+        }
+
+        @Override
+        public int read() throws IOException {
+            int b = super.read();
+            if (b != -1) count++;
+            return b;
+        }
+
+        @Override
+        public int read(byte[] b, int off, int len) throws IOException {
+            int n = super.read(b, off, len);
+            if (n != -1) count += n;
+            return n;
+        }
+
+        long getCount() {
+            return count;
         }
     }
 

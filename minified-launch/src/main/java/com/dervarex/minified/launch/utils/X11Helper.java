@@ -1,6 +1,6 @@
 package com.dervarex.minified.launch.utils;
 
-import com.dervarex.minified.launch.events.type.environment.ConfigureX11EnvironmentEvent;
+import com.dervarex.minified.launch.events.environment.ConfigureX11EnvironmentEvent;
 import com.dervarex.minified.launch.launch.LaunchContext;
 
 import java.io.IOException;

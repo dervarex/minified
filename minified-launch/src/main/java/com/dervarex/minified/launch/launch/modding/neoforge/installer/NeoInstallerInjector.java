@@ -1,7 +1,6 @@
 package com.dervarex.minified.launch.launch.modding.neoforge.installer;
 
-import com.dervarex.minified.launch.events.type.loader.InstallForgeEvent;
-import com.dervarex.minified.launch.events.type.loader.InstallNeoforgeEvent;
+import com.dervarex.minified.launch.events.loader.InstallNeoforgeEvent;
 import com.dervarex.minified.launch.launch.LaunchConfiguration;
 import com.dervarex.minified.launch.launch.LaunchContext;
 import com.dervarex.minified.launch.launch.modding.neoforge.api.NeoInstallerFetcher;

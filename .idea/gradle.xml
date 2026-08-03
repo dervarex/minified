@@ -10,9 +10,11 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/minified-auth" />
+            <option value="$PROJECT_DIR$/minified-events" />
             <option value="$PROJECT_DIR$/minified-java" />
             <option value="$PROJECT_DIR$/minified-launch" />
             <option value="$PROJECT_DIR$/minified-modrinth" />
+            <option value="$PROJECT_DIR$/minified-servers" />
             <option value="$PROJECT_DIR$/minified-utils" />
           </set>
         </option>

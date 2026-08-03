@@ -1,6 +1,6 @@
 package com.dervarex.minified.launch.download.libraries;
 
-import com.dervarex.minified.launch.events.type.download.libraries.DownloadLibrariesEvent;
+import com.dervarex.minified.launch.events.download.libraries.DownloadLibrariesEvent;
 import com.dervarex.minified.launch.launch.LaunchContext;
 import com.dervarex.minified.launch.launch.modding.Loader;
 import com.dervarex.minified.launch.launch.modding.fabric.FabricLoader;

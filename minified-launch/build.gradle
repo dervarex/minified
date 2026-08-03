@@ -32,6 +32,7 @@ dependencies {
     implementation project(":minified-java")
     implementation project(":minified-auth")
     implementation project(":minified-utils")
+    implementation project(":minified-events")
     implementation 'org.jsoup:jsoup:1.21.1'
     implementation 'org.projectlombok:lombok:1.18.42'
 

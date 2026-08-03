@@ -1,7 +1,7 @@
 package com.dervarex.minified.launch.download.assets;
 
 import com.dervarex.minified.launch.ApiEndpoints;
-import com.dervarex.minified.launch.events.type.download.assets.DownloadAssetsEvent;
+import com.dervarex.minified.launch.events.download.assets.DownloadAssetsEvent;
 import com.dervarex.minified.launch.launch.LaunchContext;
 import com.dervarex.minified.launch.utils.DownloadHelper;
 import com.dervarex.minified.launch.version.VersionManifestClient;

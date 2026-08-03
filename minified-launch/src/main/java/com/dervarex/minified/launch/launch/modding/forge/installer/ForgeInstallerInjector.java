@@ -1,6 +1,6 @@
 package com.dervarex.minified.launch.launch.modding.forge.installer;
 
-import com.dervarex.minified.launch.events.type.loader.InstallForgeEvent;
+import com.dervarex.minified.launch.events.loader.InstallForgeEvent;
 import com.dervarex.minified.launch.launch.LaunchConfiguration;
 import com.dervarex.minified.launch.launch.LaunchContext;
 import com.dervarex.minified.launch.launch.modding.forge.api.ForgeInstallerFetcher;

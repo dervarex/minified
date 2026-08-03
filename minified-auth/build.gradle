@@ -25,7 +25,8 @@ dependencies {
 
     compileOnly 'org.jetbrains:annotations:24.1.0'
 
-    implementation(project(":minified-utils"))
+    implementation project(":minified-utils")
+    implementation project(":minified-events")
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
 }
 

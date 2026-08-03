@@ -1,6 +1,6 @@
 package com.dervarex.minified.launch.launch;
 
-import com.dervarex.minified.launch.events.EventBus;
+import com.dervarex.minified.events.EventBus;
 import com.dervarex.minified.launch.launch.modding.Loader;
 import lombok.Getter;
 

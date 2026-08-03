@@ -1,8 +1,8 @@
 package com.dervarex.minified.launch;
 
-import com.dervarex.minified.launch.events.EventBus;
-import com.dervarex.minified.launch.events.type.download.assets.DownloadAssetsEvent;
-import com.dervarex.minified.launch.events.type.download.client.DownloadClientJarEvent;
+import com.dervarex.minified.events.EventBus;
+import com.dervarex.minified.launch.events.download.assets.DownloadAssetsEvent;
+import com.dervarex.minified.launch.events.download.client.DownloadClientJarEvent;
 import com.dervarex.minified.launch.launch.LaunchConfiguration;
 import com.dervarex.minified.launch.launch.Launcher;
 import com.dervarex.minified.launch.launch.modding.fabric.FabricLoader;

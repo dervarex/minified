@@ -1,7 +1,6 @@
 package com.dervarex.minified.launch;
 
 import com.dervarex.minified.launch.download.ClientDownloader;
-import com.dervarex.minified.launch.download.ServerDownloader;
 import com.dervarex.minified.launch.download.assets.AssetDownloader;
 import com.dervarex.minified.launch.download.libraries.LibraryDownloader;
 import com.dervarex.minified.launch.launch.LaunchContext;
@@ -30,17 +29,6 @@ class DownloaderTest {
 
         assertTrue(Files.exists(clientJar), "Client jar should exist");
         assertTrue(Files.size(clientJar) > 1024, "Client jar should not be empty");
-    }
-
-    @Test
-    void shouldDownloadServerJarSuccessfully() throws Exception {
-        Path serverJar = tempDir.resolve("server.jar");
-
-        ServerDownloader downloader = new ServerDownloader();
-        downloader.downloadServer("1.21.11", serverJar, new LaunchContext(null, TestEnvironment.config(tempDir)));
-
-        assertTrue(Files.exists(serverJar), "Server jar should exist");
-        assertTrue(Files.size(serverJar) > 1024, "Server jar should not be empty");
     }
 
     @Test

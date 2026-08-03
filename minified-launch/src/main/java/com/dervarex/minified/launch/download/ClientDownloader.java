@@ -1,8 +1,8 @@
 package com.dervarex.minified.launch.download;
 
-import com.dervarex.minified.launch.events.type.connection.CheckConnectionEvent;
-import com.dervarex.minified.launch.events.type.connection.OfflineEvent;
-import com.dervarex.minified.launch.events.type.download.client.DownloadClientJarEvent;
+import com.dervarex.minified.events.type.connection.CheckConnectionEvent;
+import com.dervarex.minified.events.type.connection.OfflineEvent;
+import com.dervarex.minified.launch.events.download.client.DownloadClientJarEvent;
 import com.dervarex.minified.launch.launch.LaunchContext;
 import com.dervarex.minified.launch.utils.DownloadHelper;
 import com.dervarex.minified.launch.version.VersionMetadataProvider;

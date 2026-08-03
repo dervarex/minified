@@ -1,7 +1,7 @@
 package com.dervarex.minified.launch.launch;
 
 import com.dervarex.minified.auth.User;
-import com.dervarex.minified.launch.events.EventBus;
+import com.dervarex.minified.events.EventBus;
 import lombok.Getter;
 import lombok.Setter;
 
