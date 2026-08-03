@@ -8,6 +8,15 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public final class EventBus {
     private final Map<Class<?>, List<EventListener<?>>> listeners = new ConcurrentHashMap<>();
 
+    /**
+     * Example usage:
+     * <pre>{@code
+     * // replace SomeEvent with any event you'd like to listen to
+     * eventBus.subscribe(SomeEvent.class, event -> {
+     *     // Code here will get executed when the event gets triggered
+     * });
+     * }</pre>
+     */
     public <T extends Event> void subscribe(Class<T> type, EventListener<T> listener) {
         listeners.computeIfAbsent(type, k -> new CopyOnWriteArrayList<>()).add(listener);
     }
