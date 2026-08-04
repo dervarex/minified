@@ -1,6 +1,9 @@
 package com.dervarex.minified.auth;
 
 import com.dervarex.minified.auth.encryption.Encryptor;
+import com.dervarex.minified.auth.events.LoginStateChangeListener;
+import com.dervarex.minified.auth.exceptions.LoginFailedException;
+import com.dervarex.minified.events.EventBus;
 import com.dervarex.minified.java.JavaManager;
 import com.dervarex.minified.utils.exceptions.NoConnectionException;
 import com.dervarex.minified.utils.network.NetworkUtil;
@@ -17,7 +20,9 @@ import javax.crypto.SecretKey;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.io.PrintWriter;
@@ -29,6 +34,8 @@ public class AuthManager {
     private static Path BASE_DIR;
     private static Path KEY_FILE;
     private static Path SESSION_FILE;
+
+    private static EventBus eventBus;
 
     private static SecretKey masterKey;
     private static final Map<String, User> session = new HashMap<>();
@@ -44,15 +51,17 @@ public class AuthManager {
     /**
      * Initializes the auth manager using the given directory.
      * @param BaseDir the directory where the key and session files will be stored.
+     * @param eventBus the event bus to push event updates to
      */
 
-    public static void init(Path BaseDir) {
+    public static void init(Path BaseDir, EventBus eventBus) {
         BASE_DIR = BaseDir;
         SESSION_FILE = BASE_DIR.resolve("session.enc");
         KEY_FILE = BASE_DIR.resolve("master.key");
             prepareKeyDirectories();
         JavaManager.init(BASE_DIR.resolve("java"));
     }
+    public static void init (Path BaseDir) {init(BaseDir, new EventBus());}
 
     /**
      * Initializes the auth manager using the default application data directory.
@@ -61,8 +70,9 @@ public class AuthManager {
      * if you want full control over the storage location.
      *
      * @param launcherName the launcher name used to create the application directory
+     * @param eventBus the event bus to push event updates to
      */
-    public static void init(String launcherName) {
+    public static void init(String launcherName, EventBus eventBus) {
         String os = System.getProperty("os.name").toLowerCase();
 
         if (os.contains("win")) {
@@ -77,11 +87,13 @@ public class AuthManager {
         prepareKeyDirectories();
         JavaManager.init(BASE_DIR.resolve("java"));
     }
+    public static void init (String launcherName) {init(launcherName, new EventBus());}
+
     private static void prepareKeyDirectories() {
         try {
             if (!Files.exists(BASE_DIR)) Files.createDirectories(BASE_DIR);
             System.out.println("Auth base dir ready at " + BASE_DIR);
-            masterKey = Encryptor.loadOrCreateMasterKey(KEY_FILE);
+            masterKey = Encryptor.loadOrCreateMasterKey(KEY_FILE, eventBus);
             System.out.println("AuthManager initialized");
         } catch (Exception e) {
             StringWriter sw = new StringWriter();
@@ -143,7 +155,7 @@ public class AuthManager {
             StringWriter sw = new StringWriter();
             e.printStackTrace(new PrintWriter(sw));
             System.out.println("Login failed: " + sw);
-            throw new RuntimeException("Login failed", e);
+            throw new LoginFailedException("Login failed", e);
         }
     }
 
@@ -154,7 +166,7 @@ public class AuthManager {
      */
     private static User persistSession(StepFullJavaSession.FullJavaSession javaSession) throws Exception {
         JsonObject serialized = MinecraftAuth.JAVA_DEVICE_CODE_LOGIN.toJson(javaSession);
-        Encryptor.saveEncryptedSession(serialized, masterKey, SESSION_FILE);
+        Encryptor.saveEncryptedSession(serialized, masterKey, SESSION_FILE, eventBus);
 
         StepMCProfile.MCProfile profile = javaSession.getMcProfile();
         User user = new User(profile.getId().toString(),
@@ -268,7 +280,7 @@ public class AuthManager {
     public static User loginWithSavedSession() {
         System.out.println("Login with saved session");
         try {
-            JsonObject saved = Encryptor.loadEncryptedSession(SESSION_FILE, masterKey);
+            JsonObject saved = Encryptor.loadEncryptedSession(SESSION_FILE, masterKey, eventBus);
             if (saved == null) return null;
 
             HttpClient httpClient = MinecraftAuth.createHttpClient();
@@ -309,5 +321,20 @@ public class AuthManager {
      */
     public static User getUser() {
         return session.values().stream().findFirst().orElse(null);
+    }
+
+    private static final List<LoginStateChangeListener> listeners = new CopyOnWriteArrayList<>();
+
+    public static void addStateChangeListener(LoginStateChangeListener listener) {
+        listeners.add(listener);
+    }
+    public static void removeStateChangeListener(LoginStateChangeListener listener) {
+        listeners.remove(listener);
+    }
+
+    private static void notifyStateChanged() {
+        for (LoginStateChangeListener listener : listeners) {
+            listener.onStateChanged(loginState);
+        }
     }
 }
