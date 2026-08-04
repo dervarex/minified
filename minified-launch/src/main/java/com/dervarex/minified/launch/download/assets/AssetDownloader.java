@@ -1,5 +1,6 @@
 package com.dervarex.minified.launch.download.assets;
 
+import com.dervarex.minified.launch.exceptions.download.AssetDownloadException;
 import com.dervarex.minified.utils.ApiEndpoints;
 import com.dervarex.minified.launch.events.download.assets.DownloadAssetsEvent;
 import com.dervarex.minified.launch.launch.LaunchContext;
@@ -215,10 +216,9 @@ public class AssetDownloader {
                     progressConsumer,
                     context
             );
-            //System.out.println("All assets downloaded.");
 
         } catch (Exception e) {
-            throw new RuntimeException("Failed to download assets", e);
+            throw new AssetDownloadException("Failed to download assets", e);
         } finally {
             pool.shutdown();
         }

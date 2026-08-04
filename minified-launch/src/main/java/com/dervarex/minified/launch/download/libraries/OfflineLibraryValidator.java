@@ -1,5 +1,6 @@
 package com.dervarex.minified.launch.download.libraries;
 
+import com.dervarex.minified.launch.exceptions.loader.UnexpectedLoaderException;
 import com.dervarex.minified.launch.launch.modding.Loader;
 import com.dervarex.minified.launch.launch.modding.fabric.FabricLoader;
 import com.dervarex.minified.launch.launch.modding.forge.ForgeLoader;
@@ -63,7 +64,7 @@ public final class OfflineLibraryValidator {
             case NeoforgeLoader ignored -> {
                 // nothing extra here (why do I have to copy and paste this 3 times...)
             }
-            default -> throw new IllegalStateException("Unexpected loader: " + loader);
+            default -> throw new UnexpectedLoaderException("Unexpected loader: " + loader);
         }
 
         if (!problems.isEmpty()) {
@@ -168,7 +169,7 @@ public final class OfflineLibraryValidator {
         }
     }
 
-    private static String sha1(Path file) throws Exception {
+    private static String sha1(Path file) throws Exception { //todo move
         MessageDigest digest = MessageDigest.getInstance("SHA-1");
         byte[] bytes = Files.readAllBytes(file);
         byte[] hash = digest.digest(bytes);

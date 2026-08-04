@@ -1,5 +1,9 @@
 package com.dervarex.minified.launch.profile;
 
+import com.dervarex.minified.launch.exceptions.libraries.FailedToLoadLibrariesException;
+import com.dervarex.minified.launch.exceptions.loader.UnknownLoaderTypeException;
+import com.dervarex.minified.launch.exceptions.profile.FailedToLoadProfileException;
+import com.dervarex.minified.launch.exceptions.profile.FailedToSaveProfileException;
 import com.dervarex.minified.launch.launch.LaunchConfiguration;
 import com.dervarex.minified.launch.launch.modding.Loader;
 import com.dervarex.minified.launch.launch.modding.custom.CustomLoader;
@@ -102,7 +106,7 @@ public class ProfileFactory {
         try {
             profileJson.save(path);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to save profile", e);
+            throw new FailedToSaveProfileException("Failed to save profile", e);
         }
     }
 
@@ -116,7 +120,7 @@ public class ProfileFactory {
         try {
             profileJson = new JsonFile(path);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to load profile", e);
+            throw new FailedToLoadProfileException("Failed to load profile", e);
         }
 
         JsonObject root = profileJson.asObject();
@@ -230,7 +234,7 @@ public class ProfileFactory {
         Function<JsonObject, Loader> loaderFactory = LOADERS.get(type);
 
         if (loaderFactory == null) {
-            throw new IllegalArgumentException("Unknown loader type: " + type);
+            throw new UnknownLoaderTypeException("Unknown loader type: " + type);
         }
 
         return loaderFactory.apply(loaderJson);

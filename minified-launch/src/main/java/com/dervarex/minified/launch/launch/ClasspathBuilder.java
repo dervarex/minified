@@ -1,5 +1,7 @@
 package com.dervarex.minified.launch.launch;
 
+import com.dervarex.minified.launch.exceptions.libraries.FailedToLoadLibrariesException;
+import com.dervarex.minified.launch.exceptions.loader.UnexpectedLoaderException;
 import com.dervarex.minified.launch.launch.modding.fabric.FabricLoader;
 import com.dervarex.minified.launch.launch.modding.fabric.FabricLoaderFetcher;
 import com.dervarex.minified.launch.launch.modding.forge.ForgeLoader;
@@ -55,8 +57,9 @@ public class ClasspathBuilder {
                             config
                     );
                 } catch (Exception e) {
-                    throw new RuntimeException(
+                    throw new FailedToLoadLibrariesException(
                             "Failed to load Fabric libraries",
+                            config.getLoader(),
                             e
                     );
                 }
@@ -75,8 +78,9 @@ public class ClasspathBuilder {
                             config
                     );
                 } catch (Exception e) {
-                    throw new RuntimeException(
+                    throw new FailedToLoadLibrariesException(
                             "Failed to load Quilt libraries",
+                            config.getLoader(),
                             e
                     );
                 }
@@ -95,8 +99,9 @@ public class ClasspathBuilder {
                             config
                     );
                 } catch (Exception e) {
-                    throw new RuntimeException(
+                    throw new FailedToLoadLibrariesException(
                             "Failed to load NeoForge libraries",
+                            config.getLoader(),
                             e
                     );
                 }
@@ -104,7 +109,7 @@ public class ClasspathBuilder {
             case ForgeLoader ignored:
                 break;
             default:
-                throw new IllegalStateException("Unexpected loader: " + config.getLoader());
+                throw new UnexpectedLoaderException("Unexpected loader: " + config.getLoader());
         }
 
         return String.join(

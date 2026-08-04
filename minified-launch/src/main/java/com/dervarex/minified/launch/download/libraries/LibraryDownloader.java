@@ -1,6 +1,8 @@
 package com.dervarex.minified.launch.download.libraries;
 
 import com.dervarex.minified.launch.events.download.libraries.DownloadLibrariesEvent;
+import com.dervarex.minified.launch.exceptions.download.*;
+import com.dervarex.minified.launch.exceptions.loader.UnexpectedLoaderException;
 import com.dervarex.minified.launch.launch.LaunchContext;
 import com.dervarex.minified.launch.launch.modding.Loader;
 import com.dervarex.minified.launch.launch.modding.fabric.FabricLoader;
@@ -206,7 +208,7 @@ public class LibraryDownloader {
                     // Nothing additional to download for forge and neoforge, as the installer will handle it for us :)
                     break;
                 default:
-                    throw new IllegalStateException("Unexpected loader: " + loader);
+                    throw new UnexpectedLoaderException("Unexpected loader: " + loader);
             }
 
             AtomicLong totalBytes = new AtomicLong();
@@ -280,16 +282,16 @@ public class LibraryDownloader {
             //System.out.println("All libraries downloaded.");
 
         } catch (Exception e) {
-            throw new RuntimeException("Failed to download libraries", e);
+            throw new LibraryDownloadException("Failed to download libraries", e);
         } finally {
             pool.shutdown();
             try {
                 if (!pool.awaitTermination(1, TimeUnit.HOURS)) {
-                    throw new RuntimeException("Download pool timeout");
+                    throw new DownloadPoolTimeoutException("Download pool timeout");
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                throw new RuntimeException("Failed to shut down download pool", e);
+                throw new DownloadPoolShutdownException("Failed to shut down download pool", e);
             }
         }
     }
@@ -386,7 +388,7 @@ public class LibraryDownloader {
                 + ".jar";
     }
 
-    private void downloadWithoutSha1(String url, Path path, LongConsumer progressConsumer) {
+    private void downloadWithoutSha1(String url, Path path, LongConsumer progressConsumer) { //todo move to different file
         Path tempFile = Path.of(path + ".tmp");
 
         try {
@@ -409,8 +411,9 @@ public class LibraryDownloader {
                     client.send(request, HttpResponse.BodyHandlers.ofInputStream());
 
             if (response.statusCode() != 200) {
-                throw new RuntimeException(
-                        "Failed to download " + url + " (HTTP " + response.statusCode() + ")"
+                throw new HttpDownloadException(
+                        "Failed to download " + url + " (HTTP " + response.statusCode() + ")",
+                        response.statusCode()
                 );
             }
 
@@ -433,7 +436,7 @@ public class LibraryDownloader {
                 Files.deleteIfExists(tempFile);
             } catch (Exception ignored) {
             }
-            throw new RuntimeException("Failed to download Fabric library from " + url, e);
+            throw new DownloadException("Failed to download Fabric library from " + url, e);
         }
     }
 
@@ -522,7 +525,7 @@ public class LibraryDownloader {
                 }
             }
         } catch (Exception e) {
-            throw new RuntimeException("Failed to extract native archive " + archive, e);
+            throw new NativeExtractionException("Failed to extract native archive " + archive, e);
         }
     }
 

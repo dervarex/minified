@@ -1,5 +1,7 @@
 package com.dervarex.minified.launch.launch.modding.quilt;
 
+import com.dervarex.minified.launch.exceptions.version.FailedToFetchVersionsException;
+import com.dervarex.minified.launch.exceptions.loader.NoLoadersFoundException;
 import com.dervarex.minified.utils.ApiEndpoints;
 import com.dervarex.minified.utils.http.HttpUtil;
 import com.dervarex.minified.utils.json.JsonArray;
@@ -19,9 +21,10 @@ public class QuiltLoaderFetcher {
                 .asArray();
 
         if (loaders.size() == 0) {
-            throw new RuntimeException(
+            throw new NoLoadersFoundException(
                     "No Quilt loaders found for Minecraft "
-                            + minecraftVersion
+                            + minecraftVersion,
+                    minecraftVersion
             );
         }
 
@@ -30,8 +33,9 @@ public class QuiltLoaderFetcher {
                 .asObject();
 
         if (!loader.has("loader")) {
-            throw new RuntimeException(
-                    "Invalid Quilt loader response"
+            throw new FailedToFetchVersionsException(
+                    "Invalid Quilt loader response",
+                    "QUILT"
             );
         }
 

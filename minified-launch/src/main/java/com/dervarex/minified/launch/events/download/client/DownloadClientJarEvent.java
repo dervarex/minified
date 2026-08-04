@@ -6,5 +6,4 @@ public record DownloadClientJarEvent(
         double progress,
         long downloadedBytes,
         long totalBytes
-) implements Event {
-}
+) implements Event { }

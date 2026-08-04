@@ -1,5 +1,7 @@
 package com.dervarex.minified.launch.launch.modding.forge.api;
 
+import com.dervarex.minified.launch.exceptions.loader.forge.FailedToFetchPromotionsException;
+import com.dervarex.minified.launch.exceptions.version.FailedToFetchVersionsException;
 import com.dervarex.minified.utils.ApiEndpoints;
 import com.dervarex.minified.utils.json.JsonObject;
 import com.dervarex.minified.utils.json.JsonParser;
@@ -43,7 +45,7 @@ public class ForgeVersionFetcher {
             return cachedVersions;
 
         } catch (IOException | InterruptedException e) {
-            throw new RuntimeException("Failed to fetch Forge versions", e);
+            throw new FailedToFetchVersionsException("Failed to fetch Forge versions", "FORGE", e);
         }
     }
 
@@ -102,7 +104,7 @@ public class ForgeVersionFetcher {
             return cachedPromotions;
 
         } catch (IOException | InterruptedException e) {
-            throw new RuntimeException("Failed to fetch Forge promotions", e);
+            throw new FailedToFetchPromotionsException("Failed to fetch Forge promotions", e);
         }
     }
 }

@@ -1,5 +1,7 @@
 package com.dervarex.minified.launch.launch.modding.neoforge.api;
 
+import com.dervarex.minified.launch.exceptions.loader.neoforge.FailedToReadMetadataException;
+import com.dervarex.minified.launch.exceptions.loader.neoforge.MalformedMetadataException;
 import com.dervarex.minified.utils.ApiEndpoints;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
@@ -76,7 +78,7 @@ public final class NeoVersionFetcher {
 
             HttpResponse<String> response = HTTP.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() != 200) {
-                throw new IOException("Failed to fetch NeoForge metadata: HTTP " + response.statusCode());
+                throw new FailedToReadMetadataException("Failed to fetch NeoForge metadata: HTTP " + response.statusCode());
             }
 
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -94,11 +96,11 @@ public final class NeoVersionFetcher {
                 }
             }
             if (versions.isEmpty()) {
-                throw new IllegalStateException("NeoForge metadata did not contain any versions");
+                throw new MalformedMetadataException("NeoForge metadata did not contain any versions");
             }
             return List.copyOf(versions);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to read NeoForge metadata", e);
+            throw new FailedToReadMetadataException("Failed to read NeoForge metadata", e);
         }
     }
 

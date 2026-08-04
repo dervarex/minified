@@ -1,6 +1,8 @@
 package com.dervarex.minified.launch.launch.modding.forge.installer;
 
 import com.dervarex.minified.launch.events.loader.InstallForgeEvent;
+import com.dervarex.minified.launch.exceptions.loader.forge.ForgeInstallerReportFailureException;
+import com.dervarex.minified.launch.exceptions.loader.forge.ForgePreparationException;
 import com.dervarex.minified.launch.launch.LaunchConfiguration;
 import com.dervarex.minified.launch.launch.LaunchContext;
 import com.dervarex.minified.launch.launch.modding.forge.api.ForgeInstallerFetcher;
@@ -44,7 +46,7 @@ public class ForgeInstallerInjector {
                 );
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new ForgePreparationException(e);
         }
 
     }
@@ -80,7 +82,7 @@ public class ForgeInstallerInjector {
 
             sha1 = response.body().trim();
         } catch (IOException | InterruptedException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException(e); // no custom exception here
         }
 
         Path installerPath = context.getLaunchConfiguration()
@@ -139,7 +141,7 @@ public class ForgeInstallerInjector {
         Object result = run.invoke(clientInstall, target, installerFile);
 
         if (result instanceof Boolean ok && !ok) {
-            throw new IllegalStateException("Forge installer reported failure");
+            throw new ForgeInstallerReportFailureException("Forge installer reported failure");
         }
     }
 
@@ -157,14 +159,10 @@ public class ForgeInstallerInjector {
                     System.out::println, // todo replace with logger
                     context
             );
-        } catch (ReflectiveOperationException e) {
+        } catch (ReflectiveOperationException | MalformedURLException e) {
             context.getEventBus().post(new InstallForgeEvent(InstallForgeEvent.Stage.FAILED, context.getLaunchConfiguration().getLoader().mcVersion(), context.getLaunchConfiguration().getLoader().loaderVersion()));
-            throw new RuntimeException(e);
-        } catch (MalformedURLException e) {
-            context.getEventBus().post(new InstallForgeEvent(InstallForgeEvent.Stage.FAILED, context.getLaunchConfiguration().getLoader().mcVersion(), context.getLaunchConfiguration().getLoader().loaderVersion()));
-            throw new RuntimeException(e);
+            throw new RuntimeException(e); // no custom exception
         }
         context.getEventBus().post(new InstallForgeEvent(InstallForgeEvent.Stage.FINISHED, context.getLaunchConfiguration().getLoader().mcVersion(), context.getLaunchConfiguration().getLoader().loaderVersion()));
-
     }
 }

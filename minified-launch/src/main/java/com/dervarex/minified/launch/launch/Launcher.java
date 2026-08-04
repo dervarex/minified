@@ -13,6 +13,9 @@ import com.dervarex.minified.events.type.connection.CheckConnectionEvent;
 import com.dervarex.minified.launch.events.launch.GameStoppedEvent;
 import com.dervarex.minified.launch.events.launch.GameStartEvent;
 import com.dervarex.minified.events.type.connection.OfflineEvent;
+import com.dervarex.minified.launch.exceptions.cache.FailedToCacheException;
+import com.dervarex.minified.launch.exceptions.version.MalformedVersionJsonException;
+import com.dervarex.minified.launch.exceptions.loader.UnexpectedLoaderException;
 import com.dervarex.minified.launch.launch.modding.Loader;
 import com.dervarex.minified.launch.launch.modding.custom.CustomLoader;
 import com.dervarex.minified.launch.launch.modding.fabric.FabricLoader;
@@ -291,7 +294,7 @@ public class Launcher {
                     loaderProfileJson = loadQuiltProfileJson(version, online);
                     break;
                 default:
-                    throw new IllegalStateException("Unexpected loader: " + loader);
+                    throw new UnexpectedLoaderException("Unexpected loader: " + loader);
             }
 
             if (loaderProfileJson != null) {
@@ -320,7 +323,7 @@ public class Launcher {
         if (argumentsValue == null) {
             JsonValue minecraftArguments = versionJson.get("minecraftArguments");
             if (minecraftArguments == null) {
-                throw new RuntimeException("No arguments or minecraftArguments found in version JSON");
+                throw new MalformedVersionJsonException("No arguments or minecraftArguments found in version JSON");
             }
 
             return X11Helper.substituteVariables(
@@ -359,7 +362,7 @@ public class Launcher {
                     loaderProfileJson = loadNeoForgeProfileJson(version, launchConfig, online);
                     break;
                 default:
-                    throw new IllegalStateException("Unexpected loader: " + loader);
+                    throw new UnexpectedLoaderException("Unexpected loader: " + loader);
             }
 
             if (loaderProfileJson != null) {
@@ -403,11 +406,11 @@ public class Launcher {
             case QuiltLoader ignored -> loadQuiltProfileJson(version, online).get("mainClass");
             case ForgeLoader ignored -> loadForgeProfileJson(version, launchConfig, online).get("mainClass");
             case NeoforgeLoader ignored -> loadNeoForgeProfileJson(version, launchConfig, online).get("mainClass");
-            default -> throw new IllegalStateException("Unexpected loader: " + loader);
+            default -> throw new UnexpectedLoaderException("Unexpected loader: " + loader);
         };
 
         if (mainClassValue == null) {
-            throw new RuntimeException(
+            throw new MalformedVersionJsonException(
                     "Main class not found in version JSON"
             );
         }
@@ -439,7 +442,7 @@ public class Launcher {
 
             raw = HttpUtil.get(versionJsonUrl);
         } catch (HttpException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException(e); // no custom exception
         }
         writeCache(cachePath, raw);
         return new JsonFile(raw);
@@ -475,7 +478,7 @@ public class Launcher {
         );
     }
 
-    private static JsonObject loadForgeProfileJson(
+    private static JsonObject loadForgeProfileJson(//todo move
             String version,
             LaunchConfiguration launchConfig,
             boolean online
@@ -497,7 +500,7 @@ public class Launcher {
         );
     }
 
-    private static JsonObject loadNeoForgeProfileJson(
+    private static JsonObject loadNeoForgeProfileJson( //todo move
             String version,
             LaunchConfiguration launchConfig,
             boolean online
@@ -545,7 +548,7 @@ public class Launcher {
         try {
             writeCache(cachePath, profile.toString());
         } catch (IOException e) {
-            throw new RuntimeException("Failed to cache " + loaderName + " profile", e);
+            throw new FailedToCacheException("Failed to cache " + loaderName + " profile", e);
         }
         return profile;
     }
@@ -608,6 +611,6 @@ public class Launcher {
 //            throw new RuntimeException(
 //                    "Minecraft exited with code " + exitCode
 //            );
-//        }
+//        } todo: NonZeroExitCodeException or NonZeroExitCodeEvent?
     }
 }
