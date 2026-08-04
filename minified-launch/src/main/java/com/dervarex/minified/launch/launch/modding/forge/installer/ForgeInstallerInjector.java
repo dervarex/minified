@@ -156,7 +156,7 @@ public class ForgeInstallerInjector {
                     }),
                     config.getJarFile().getParent().toFile(),
                     Path.of(config.getJarFile().getParent().toAbsolutePath().toString(),"forge-installer.jar").toFile(),
-                    System.out::println, // todo replace with logger
+                    System.out::println,
                     context
             );
         } catch (ReflectiveOperationException | MalformedURLException e) {

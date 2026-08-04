@@ -2,6 +2,7 @@ package com.dervarex.minified.launch.launch.modding.quilt;
 
 import com.dervarex.minified.launch.exceptions.version.FailedToFetchVersionsException;
 import com.dervarex.minified.launch.exceptions.loader.NoLoadersFoundException;
+import com.dervarex.minified.launch.launch.CacheManager;
 import com.dervarex.minified.utils.ApiEndpoints;
 import com.dervarex.minified.utils.http.HttpUtil;
 import com.dervarex.minified.utils.json.JsonArray;
@@ -76,15 +77,18 @@ public class QuiltLoaderFetcher {
                 loaderVersion
         );
     }
-
-    public static void main(String[] args) {
-        try {
-            String minecraftVersion = "1.21.11";
-            JsonObject profile = getLatestProfile(minecraftVersion);
-            System.out.println("Latest Quilt loader profile for Minecraft " + minecraftVersion + ":");
-            System.out.println(profile.toString());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public static JsonObject loadQuiltProfileJson(String version, boolean online) {
+        return CacheManager.loadProfileJson(
+                version,
+                "quilt",
+                online,
+                () -> {
+                    try {
+                        return QuiltLoaderFetcher.getLatestProfile(version);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+        );
     }
 }

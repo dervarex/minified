@@ -1,6 +1,8 @@
 package com.dervarex.minified.launch.launch.modding.fabric;
 
 import com.dervarex.minified.launch.exceptions.loader.NoLoadersFoundException;
+import com.dervarex.minified.launch.launch.CacheManager;
+import com.dervarex.minified.launch.launch.ProfileCacheManager;
 import com.dervarex.minified.launch.launch.modding.Loader;
 import com.dervarex.minified.utils.ApiEndpoints;
 import com.dervarex.minified.utils.http.HttpUtil;
@@ -54,6 +56,20 @@ public class FabricLoaderFetcher {
         return getProfileJson(
                 minecraftVersion,
                 loaderVersion
+        );
+    }
+    public static JsonObject loadFabricProfileJson(String version, boolean online) {
+        return CacheManager.loadProfileJson(
+                version,
+                "fabric",
+                online,
+                () -> {
+                    try {
+                        return FabricLoaderFetcher.getLatestProfile(version);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                }
         );
     }
 }

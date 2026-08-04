@@ -1,11 +1,14 @@
 package com.dervarex.minified.utils.version;
 
 import com.dervarex.minified.utils.exceptions.HttpException;
+import com.dervarex.minified.utils.exceptions.OfflineModeNeedsNetworkException;
 import com.dervarex.minified.utils.http.HttpUtil;
 import com.dervarex.minified.utils.json.JsonFile;
 import com.dervarex.minified.utils.json.JsonValue;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 @SuppressWarnings("unused")
 public final class VersionMetadataProvider {

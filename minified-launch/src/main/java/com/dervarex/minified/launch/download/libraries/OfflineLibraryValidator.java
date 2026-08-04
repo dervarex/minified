@@ -152,7 +152,7 @@ public final class OfflineLibraryValidator {
         }
 
         try {
-            String actualSha1 = sha1(file);
+            String actualSha1 = com.dervarex.minified.utils.sha.Hasher.sha1(file);
             if (!actualSha1.equalsIgnoreCase(expectedSha1)) {
                 problems.add("SHA1 mismatch: " + file);
             }
@@ -167,19 +167,6 @@ public final class OfflineLibraryValidator {
         } catch (IOException e) {
             return true;
         }
-    }
-
-    private static String sha1(Path file) throws Exception { //todo move
-        MessageDigest digest = MessageDigest.getInstance("SHA-1");
-        byte[] bytes = Files.readAllBytes(file);
-        byte[] hash = digest.digest(bytes);
-
-        StringBuilder sb = new StringBuilder(hash.length * 2);
-        for (byte b : hash) {
-            sb.append(Character.forDigit((b >>> 4) & 0xF, 16));
-            sb.append(Character.forDigit(b & 0xF, 16));
-        }
-        return sb.toString();
     }
 
     private static NativeDownload resolveNativeDownload(JsonObject library, JsonObject downloads) {

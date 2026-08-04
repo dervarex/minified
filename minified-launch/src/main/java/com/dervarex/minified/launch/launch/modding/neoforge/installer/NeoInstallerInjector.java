@@ -158,7 +158,7 @@ public class NeoInstallerInjector {
                     loader,
                     config.getJarFile().getParent().toFile(),
                     installerPath.toFile(),
-                    System.out::println, // todo replace with logger
+                    System.out::println,
                     context
             );
         } catch (ReflectiveOperationException | IOException e) {
