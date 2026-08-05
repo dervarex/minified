@@ -12,9 +12,8 @@ import com.dervarex.minified.launch.launch.modding.neoforge.NeoforgeLoader;
 import com.dervarex.minified.launch.launch.modding.quilt.QuiltLoader;
 import com.dervarex.minified.launch.launch.modding.quilt.QuiltLoaderFetcher;
 import com.dervarex.minified.launch.launch.modding.vanilla.VanillaLoader;
-import com.dervarex.minified.utils.download.DownloadHelper;
 import com.dervarex.minified.launch.utils.OSUtil;
-import com.dervarex.minified.utils.version.VersionManifestClient;
+import com.dervarex.minified.utils.download.DownloadHelper;
 import com.dervarex.minified.utils.exceptions.NoConnectionException;
 import com.dervarex.minified.utils.http.HttpUtil;
 import com.dervarex.minified.utils.json.JsonArray;
@@ -23,6 +22,7 @@ import com.dervarex.minified.utils.json.JsonObject;
 import com.dervarex.minified.utils.json.JsonValue;
 import com.dervarex.minified.utils.network.NetworkUtil;
 import com.dervarex.minified.utils.sha.Hasher;
+import com.dervarex.minified.utils.version.VersionManifestClient;
 
 import java.io.IOException;
 import java.io.InputStream;

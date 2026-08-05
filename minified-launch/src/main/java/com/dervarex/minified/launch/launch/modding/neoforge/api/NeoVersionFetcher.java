@@ -8,7 +8,6 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
 import javax.xml.parsers.DocumentBuilderFactory;
-import java.io.IOException;
 import java.io.StringReader;
 import java.math.BigInteger;
 import java.net.URI;

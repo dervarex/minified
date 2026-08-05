@@ -17,7 +17,6 @@ import com.dervarex.minified.utils.json.JsonValue;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;

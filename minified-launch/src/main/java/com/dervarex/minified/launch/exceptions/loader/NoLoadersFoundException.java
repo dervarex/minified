@@ -1,6 +1,5 @@
 package com.dervarex.minified.launch.exceptions.loader;
 
-import com.dervarex.minified.launch.launch.modding.Loader;
 import lombok.Getter;
 
 @Getter

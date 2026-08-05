@@ -1,8 +1,8 @@
 package com.dervarex.minified.modrinth;
 
 import com.dervarex.minified.modrinth.projects.ProjectsClient;
-import com.dervarex.minified.modrinth.teams.TeamsClient;
 import com.dervarex.minified.modrinth.tags.TagsClient;
+import com.dervarex.minified.modrinth.teams.TeamsClient;
 import com.dervarex.minified.modrinth.users.UsersClient;
 import com.dervarex.minified.modrinth.versions.VersionsClient;
 

@@ -3,8 +3,8 @@ package com.dervarex.minified.utils.json;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.Iterator;
+import java.util.List;
 
 public final class JsonArray implements JsonValue, Iterable<JsonValue> {
     private final List<JsonValue> values;

@@ -3,11 +3,8 @@ package com.dervarex.minified.modrinth.users;
 import com.dervarex.minified.modrinth.Modrinth;
 import com.dervarex.minified.modrinth.internal.AbstractModrinthClient;
 import com.dervarex.minified.modrinth.internal.ModrinthJson;
-import com.dervarex.minified.utils.json.JsonArray;
 import com.dervarex.minified.utils.json.JsonObject;
-import com.dervarex.minified.utils.json.JsonValue;
 
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 

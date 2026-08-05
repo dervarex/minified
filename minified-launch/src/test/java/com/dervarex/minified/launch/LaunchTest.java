@@ -1,6 +1,5 @@
 package com.dervarex.minified.launch;
 
-import com.dervarex.minified.auth.User;
 import com.dervarex.minified.launch.launch.Launcher;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;

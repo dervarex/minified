@@ -16,6 +16,8 @@ import net.raphimc.minecraftauth.step.java.session.StepFullJavaSession;
 import net.raphimc.minecraftauth.step.msa.StepMsaDeviceCode;
 
 import javax.crypto.SecretKey;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -24,8 +26,6 @@ import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 
 @SuppressWarnings("unused") // required to make intelliJ shut up
 public class AuthManager {

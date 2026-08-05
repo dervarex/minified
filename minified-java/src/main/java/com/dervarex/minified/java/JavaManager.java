@@ -31,7 +31,6 @@ import java.util.Objects;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-import java.util.zip.ZipInputStream;
 
 /**
  * Resolves, downloads, and caches Java runtimes for Minecraft launches.

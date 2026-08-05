@@ -5,11 +5,11 @@ import com.dervarex.minified.events.type.connection.OfflineEvent;
 import com.dervarex.minified.launch.events.download.client.DownloadClientJarEvent;
 import com.dervarex.minified.launch.launch.LaunchContext;
 import com.dervarex.minified.utils.download.DownloadHelper;
-import com.dervarex.minified.utils.version.VersionMetadataProvider;
 import com.dervarex.minified.utils.exceptions.HttpException;
 import com.dervarex.minified.utils.exceptions.NoConnectionException;
 import com.dervarex.minified.utils.network.NetworkUtil;
 import com.dervarex.minified.utils.sha.Hasher;
+import com.dervarex.minified.utils.version.VersionMetadataProvider;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;

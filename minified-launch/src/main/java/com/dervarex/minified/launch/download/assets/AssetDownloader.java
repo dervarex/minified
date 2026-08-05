@@ -1,11 +1,10 @@
 package com.dervarex.minified.launch.download.assets;
 
-import com.dervarex.minified.launch.exceptions.download.AssetDownloadException;
-import com.dervarex.minified.utils.ApiEndpoints;
 import com.dervarex.minified.launch.events.download.assets.DownloadAssetsEvent;
+import com.dervarex.minified.launch.exceptions.download.AssetDownloadException;
 import com.dervarex.minified.launch.launch.LaunchContext;
+import com.dervarex.minified.utils.ApiEndpoints;
 import com.dervarex.minified.utils.download.DownloadHelper;
-import com.dervarex.minified.utils.version.VersionManifestClient;
 import com.dervarex.minified.utils.exceptions.NoConnectionException;
 import com.dervarex.minified.utils.http.HttpUtil;
 import com.dervarex.minified.utils.json.JsonFile;
@@ -13,6 +12,7 @@ import com.dervarex.minified.utils.json.JsonObject;
 import com.dervarex.minified.utils.json.JsonValue;
 import com.dervarex.minified.utils.network.NetworkUtil;
 import com.dervarex.minified.utils.sha.Hasher;
+import com.dervarex.minified.utils.version.VersionManifestClient;
 
 import java.net.URI;
 import java.net.http.HttpClient;

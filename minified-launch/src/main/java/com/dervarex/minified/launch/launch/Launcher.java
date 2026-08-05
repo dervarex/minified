@@ -1,17 +1,17 @@
 package com.dervarex.minified.launch.launch;
 
 import com.dervarex.minified.auth.User;
+import com.dervarex.minified.events.type.connection.CheckConnectionEvent;
+import com.dervarex.minified.events.type.connection.OfflineEvent;
 import com.dervarex.minified.java.JavaInstallation;
 import com.dervarex.minified.java.JavaManager;
 import com.dervarex.minified.launch.download.ClientDownloader;
 import com.dervarex.minified.launch.download.assets.AssetDownloader;
 import com.dervarex.minified.launch.download.libraries.LibraryDownloader;
-import com.dervarex.minified.events.type.connection.CheckConnectionEvent;
-import com.dervarex.minified.launch.events.launch.GameStoppedEvent;
 import com.dervarex.minified.launch.events.launch.GameStartEvent;
-import com.dervarex.minified.events.type.connection.OfflineEvent;
-import com.dervarex.minified.launch.exceptions.version.MalformedVersionJsonException;
+import com.dervarex.minified.launch.events.launch.GameStoppedEvent;
 import com.dervarex.minified.launch.exceptions.loader.UnexpectedLoaderException;
+import com.dervarex.minified.launch.exceptions.version.MalformedVersionJsonException;
 import com.dervarex.minified.launch.launch.modding.Loader;
 import com.dervarex.minified.launch.launch.modding.custom.CustomLoader;
 import com.dervarex.minified.launch.launch.modding.fabric.FabricLoader;
@@ -29,7 +29,9 @@ import com.dervarex.minified.launch.utils.X11Helper;
 import com.dervarex.minified.utils.exceptions.HttpException;
 import com.dervarex.minified.utils.exceptions.NoConnectionException;
 import com.dervarex.minified.utils.exceptions.OfflineModeNeedsNetworkException;
-import com.dervarex.minified.utils.json.*;
+import com.dervarex.minified.utils.json.JsonFile;
+import com.dervarex.minified.utils.json.JsonObject;
+import com.dervarex.minified.utils.json.JsonValue;
 import com.dervarex.minified.utils.network.NetworkUtil;
 
 import java.io.File;

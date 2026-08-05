@@ -1,6 +1,5 @@
 package com.dervarex.minified.launch.profile;
 
-import com.dervarex.minified.launch.exceptions.libraries.FailedToLoadLibrariesException;
 import com.dervarex.minified.launch.exceptions.loader.UnknownLoaderTypeException;
 import com.dervarex.minified.launch.exceptions.profile.FailedToLoadProfileException;
 import com.dervarex.minified.launch.exceptions.profile.FailedToSaveProfileException;
