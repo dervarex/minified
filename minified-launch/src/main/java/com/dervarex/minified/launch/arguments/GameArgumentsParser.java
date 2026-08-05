@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-@SuppressWarnings("unused")
 public final class GameArgumentsParser {
     private static final String OS_NAME = getMinecraftOsName();
 

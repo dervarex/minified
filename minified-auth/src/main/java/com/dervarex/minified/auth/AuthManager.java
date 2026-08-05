@@ -27,7 +27,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-@SuppressWarnings("unused") // required to make intelliJ shut up
 public class AuthManager {
 
     private static final Map<String, User> session = new HashMap<>();

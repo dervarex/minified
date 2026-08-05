@@ -14,7 +14,6 @@ import java.util.UUID;
  * this is just a wrapper for the launch options that are passed to the launch process.
  */
 @Getter
-@SuppressWarnings("unused")
 final class LaunchOptions {
     private final Map<String, String> variables =
             new HashMap<>();

@@ -23,7 +23,6 @@ import java.time.Duration;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
-@SuppressWarnings("unused")
 public class ClientDownloader {
 
     /**

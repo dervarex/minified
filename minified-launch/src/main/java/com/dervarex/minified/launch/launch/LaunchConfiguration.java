@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Objects;
 
 @Getter
-@SuppressWarnings("unused")
 public class LaunchConfiguration {
     // Memory
     private int minRam = 2048;

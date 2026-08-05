@@ -6,7 +6,6 @@ import com.dervarex.minified.utils.json.JsonValue;
 
 import java.util.ArrayList;
 
-@SuppressWarnings("unused")
 public final class JvmArgumentsParser {
     private static final String OS_NAME = getMinecraftOsName();
     private static final String OS_VERSION = System.getProperty("os.version");

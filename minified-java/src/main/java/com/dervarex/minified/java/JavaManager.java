@@ -41,7 +41,6 @@ import java.util.zip.ZipFile;
  * <p>The default runtime cache is placed under a user-specific application directory, but callers
  * may override it with {@link #init(Path)}.</p>
  */
-@SuppressWarnings("unused")
 public final class JavaManager {
     private static final String VERSION_MANIFEST_URL = ApiEndpoints.VERSION_MANIFEST_URL;
 

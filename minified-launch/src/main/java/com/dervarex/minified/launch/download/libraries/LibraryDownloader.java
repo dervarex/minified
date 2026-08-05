@@ -47,7 +47,6 @@ import java.util.function.LongConsumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-@SuppressWarnings("unused")
 public class LibraryDownloader {
 
     private final ExecutorService pool;
