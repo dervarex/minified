@@ -1,10 +1,13 @@
 package com.dervarex.minified.modrinth;
 
+import org.apiguardian.api.API;
+
 import java.util.Arrays;
 
 /**
  * Generic search result container used by Modrinth endpoints.
  */
+@API(status = API.Status.STABLE)
 public final class SearchResult<T> {
     public T[] hits;
     public int offset;

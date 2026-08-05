@@ -1,8 +1,11 @@
 package com.dervarex.minified.modrinth;
 
+import org.apiguardian.api.API;
+
 /**
  * Thrown when dependency resolution cannot be completed.
  */
+@API(status = API.Status.STABLE)
 public final class ModrinthDependencyResolutionException extends ModrinthException {
     public ModrinthDependencyResolutionException(String message) {
         super(message);

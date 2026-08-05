@@ -7,9 +7,11 @@ import com.dervarex.minified.utils.http.HttpUtil;
 import com.dervarex.minified.utils.json.JsonArray;
 import com.dervarex.minified.utils.json.JsonObject;
 import com.dervarex.minified.utils.json.JsonParser;
+import org.apiguardian.api.API;
 
 public class FabricLoaderFetcher {
 
+    @API(status = API.Status.STABLE)
     public static String getLatestLoaderVersion() throws Exception {
 
         JsonArray loaders = JsonParser
@@ -27,6 +29,7 @@ public class FabricLoaderFetcher {
                 .asString();
     }
 
+    @API(status = API.Status.STABLE)
     public static JsonObject getProfileJson(
             String minecraftVersion,
             String loaderVersion
@@ -54,20 +57,6 @@ public class FabricLoaderFetcher {
         return getProfileJson(
                 minecraftVersion,
                 loaderVersion
-        );
-    }
-    public static JsonObject loadFabricProfileJson(String version, boolean online) {
-        return CacheManager.loadProfileJson(
-                version,
-                "fabric",
-                online,
-                () -> {
-                    try {
-                        return FabricLoaderFetcher.getLatestProfile(version);
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                }
         );
     }
 }

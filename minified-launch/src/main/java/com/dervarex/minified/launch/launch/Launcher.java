@@ -16,14 +16,16 @@ import com.dervarex.minified.launch.launch.modding.Loader;
 import com.dervarex.minified.launch.launch.modding.custom.CustomLoader;
 import com.dervarex.minified.launch.launch.modding.fabric.FabricLoader;
 import com.dervarex.minified.launch.launch.modding.fabric.FabricLoaderFetcher;
+import com.dervarex.minified.launch.launch.modding.fabric.FabricProfileJsonLoader;
 import com.dervarex.minified.launch.launch.modding.forge.ForgeLoader;
-import com.dervarex.minified.launch.launch.modding.forge.api.ForgeLoaderFetcher;
+import com.dervarex.minified.launch.launch.modding.forge.api.ForgeProfileJsonLoader;
 import com.dervarex.minified.launch.launch.modding.forge.installer.ForgeInstallerInjector;
 import com.dervarex.minified.launch.launch.modding.neoforge.NeoforgeLoader;
-import com.dervarex.minified.launch.launch.modding.neoforge.api.NeoLoaderFetcher;
+import com.dervarex.minified.launch.launch.modding.neoforge.api.NeoProfileJsonLoader;
 import com.dervarex.minified.launch.launch.modding.neoforge.installer.NeoInstallerInjector;
 import com.dervarex.minified.launch.launch.modding.quilt.QuiltLoader;
 import com.dervarex.minified.launch.launch.modding.quilt.QuiltLoaderFetcher;
+import com.dervarex.minified.launch.launch.modding.quilt.QuiltProfileJsonLoader;
 import com.dervarex.minified.launch.launch.modding.vanilla.VanillaLoader;
 import com.dervarex.minified.launch.utils.X11Helper;
 import com.dervarex.minified.utils.exceptions.HttpException;
@@ -33,6 +35,7 @@ import com.dervarex.minified.utils.json.JsonFile;
 import com.dervarex.minified.utils.json.JsonObject;
 import com.dervarex.minified.utils.json.JsonValue;
 import com.dervarex.minified.utils.network.NetworkUtil;
+import org.apiguardian.api.API;
 
 import java.io.File;
 import java.io.IOException;
@@ -63,6 +66,7 @@ public class Launcher {
      * .build();
      * }</pre>
      */
+    @API(status = API.Status.STABLE)
     public static void launchMinecraft(
             User user,
             LaunchConfiguration launchConfig) {
@@ -241,10 +245,10 @@ public class Launcher {
 
         JsonValue mainClassValue = switch (loader) {
             case VanillaLoader ignored -> versionJson.get("mainClass");
-            case FabricLoader ignored -> FabricLoaderFetcher.loadFabricProfileJson(version, online).get("mainClass");
-            case QuiltLoader ignored -> QuiltLoaderFetcher.loadQuiltProfileJson(version, online).get("mainClass");
-            case ForgeLoader ignored -> ForgeLoaderFetcher.loadForgeProfileJson(version, launchConfig, online).get("mainClass");
-            case NeoforgeLoader ignored -> NeoLoaderFetcher.loadNeoForgeProfileJson(version, launchConfig, online).get("mainClass");
+            case FabricLoader ignored -> FabricProfileJsonLoader.loadFabricProfileJson(version, online).get("mainClass");
+            case QuiltLoader ignored -> QuiltProfileJsonLoader.loadQuiltProfileJson(version, online).get("mainClass");
+            case ForgeLoader ignored -> ForgeProfileJsonLoader.loadForgeProfileJson(version, launchConfig, online).get("mainClass");
+            case NeoforgeLoader ignored -> NeoProfileJsonLoader.loadNeoforgeProfileJson(version, launchConfig, online).get("mainClass");
             default -> throw new UnexpectedLoaderException("Unexpected loader: " + loader);
         };
 
@@ -293,6 +297,7 @@ public class Launcher {
 //            );
 //        } todo: NonZeroExitCodeException or NonZeroExitCodeEvent?
     }
+    @API(status = API.Status.INTERNAL, consumers = {"com.dervarex.minified.launch.*"})
     public interface ProfileSupplier {
         JsonObject get();
     }

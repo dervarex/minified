@@ -1,5 +1,7 @@
 package com.dervarex.minified.modrinth.loaders;
 
+import org.apiguardian.api.API;
+
 public enum ShaderLoader {
     IRIS("iris"),
     OPTIFINE("optifine"),
@@ -12,10 +14,12 @@ public enum ShaderLoader {
         this.apiValue = apiValue;
     }
 
+    @API(status = API.Status.INTERNAL)
     public String getApiValue() {
         return apiValue;
     }
 
+    @API(status = API.Status.INTERNAL)
     public static ShaderLoader fromApiValue(String value) {
         if (value == null) {
             return null;

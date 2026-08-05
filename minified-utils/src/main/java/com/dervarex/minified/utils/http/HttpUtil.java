@@ -1,6 +1,7 @@
 package com.dervarex.minified.utils.http;
 
 import com.dervarex.minified.utils.exceptions.HttpException;
+import org.apiguardian.api.API;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,6 +13,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Simple yet advanced Http Utility
+ */
+@API(status = API.Status.STABLE)
 public final class HttpUtil {
     private static final int DEFAULT_TIMEOUT_MS = 10_000;
 

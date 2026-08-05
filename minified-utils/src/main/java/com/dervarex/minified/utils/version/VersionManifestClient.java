@@ -5,9 +5,11 @@ import com.dervarex.minified.utils.exceptions.HttpException;
 import com.dervarex.minified.utils.http.HttpUtil;
 import com.dervarex.minified.utils.json.JsonFile;
 import com.dervarex.minified.utils.json.JsonValue;
+import org.apiguardian.api.API;
 
 import java.io.IOException;
 
+@API(status = API.Status.INTERNAL)
 public final class VersionManifestClient {
     private VersionManifestClient() {
     }

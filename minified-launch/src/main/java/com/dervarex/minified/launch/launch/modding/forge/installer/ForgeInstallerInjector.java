@@ -7,6 +7,7 @@ import com.dervarex.minified.launch.launch.LaunchConfiguration;
 import com.dervarex.minified.launch.launch.LaunchContext;
 import com.dervarex.minified.launch.launch.modding.forge.api.ForgeInstallerFetcher;
 import com.dervarex.minified.utils.download.DownloadHelper;
+import org.apiguardian.api.API;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,6 +25,7 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.function.Consumer;
 
+@API(status = API.Status.INTERNAL, consumers = {"com.dervarex.minified.launch.*"})
 public class ForgeInstallerInjector {
     private static void prepare(LaunchContext context) {
         context.getEventBus().post(new InstallForgeEvent(InstallForgeEvent.Stage.PREPARING, context.getLaunchConfiguration().getLoader().mcVersion(), context.getLaunchConfiguration().getLoader().loaderVersion()));
@@ -145,7 +147,7 @@ public class ForgeInstallerInjector {
         }
     }
 
-    public void install(/*String versionOrMinecraftVersion, */LaunchContext context) {
+    public void install(LaunchContext context) {
         LaunchConfiguration config = context.getLaunchConfiguration();
         prepare(context);
         downloadInstaller(context);

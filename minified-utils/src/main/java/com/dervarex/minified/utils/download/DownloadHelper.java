@@ -5,6 +5,7 @@ import com.dervarex.minified.utils.http.HttpUtil;
 import com.dervarex.minified.utils.json.JsonFile;
 import com.dervarex.minified.utils.json.JsonValue;
 import com.dervarex.minified.utils.sha.Hasher;
+import org.apiguardian.api.API;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,7 +24,9 @@ import java.util.function.LongConsumer;
 
 /**
  * Download helper for downloading files and verifying SHA-1 checksums.
+ * Recently moved over from the Launch module, be careful.
  */
+@API(status = API.Status.EXPERIMENTAL)
 public class DownloadHelper {
     /**
      * Downloads a file asynchronously and verifies its SHA-1 checksum.

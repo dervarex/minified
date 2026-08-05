@@ -1,5 +1,7 @@
 package com.dervarex.minified.utils.exceptions;
 
+import org.apiguardian.api.API;
+
 import java.time.Instant;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -11,6 +13,7 @@ import java.util.StringJoiner;
  * Throw this when an operation must be terminated intentionally (user cancel,
  * precondition failed, safety stop) rather than due to an unexpected bug.
  */
+@API(status = API.Status.STABLE)
 public class StopException extends RuntimeException {
 
     public enum Severity { INFO, WARNING, ERROR, FATAL }

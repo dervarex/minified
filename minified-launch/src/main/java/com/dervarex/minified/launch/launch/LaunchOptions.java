@@ -3,6 +3,7 @@ package com.dervarex.minified.launch.launch;
 import com.dervarex.minified.auth.User;
 import com.dervarex.minified.utils.json.JsonFile;
 import lombok.Getter;
+import org.apiguardian.api.API;
 
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -10,9 +11,10 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * @hidden to not confuse the user, they should use {@link LaunchConfiguration} instead,
+ * @hidden to not confuse the api user, they should use {@link LaunchConfiguration} instead,
  * this is just a wrapper for the launch options that are passed to the launch process.
  */
+@API(status = API.Status.INTERNAL, consumers = {"com.dervarex.minified.launch.*"})
 @Getter
 final class LaunchOptions {
     private final Map<String, String> variables =

@@ -12,6 +12,7 @@ import com.dervarex.minified.utils.json.JsonArray;
 import com.dervarex.minified.utils.json.JsonFile;
 import com.dervarex.minified.utils.json.JsonObject;
 import com.dervarex.minified.utils.json.JsonValue;
+import org.apiguardian.api.API;
 
 import java.io.FilterInputStream;
 import java.io.IOException;
@@ -61,11 +62,13 @@ public final class JavaManager {
      * @param baseDir the directory where managed runtimes will be stored
      * @param eventBus the EventBus Events will be pushed to
      */
+    @API(status = API.Status.STABLE)
     public static synchronized void init(Path baseDir, EventBus eventBus) {
         Objects.requireNonNull(baseDir, "baseDir");
         JavaManager.baseDir = baseDir.toAbsolutePath();
         localEventBus = eventBus;
     }
+    @API(status = API.Status.STABLE)
     public static synchronized void init(Path baseDir) {
         Objects.requireNonNull(baseDir, "baseDir");
         JavaManager.baseDir = baseDir.toAbsolutePath();
@@ -75,6 +78,7 @@ public final class JavaManager {
     /**
      * @return the configured root directory used for managed Java runtimes
      */
+    @API(status = API.Status.STABLE)
     public static synchronized Path getBaseDir() {
         return baseDir;
     }
@@ -84,6 +88,7 @@ public final class JavaManager {
      *
      * @return the current runtime information
      */
+    @API(status = API.Status.STABLE)
     public static JavaInstallation currentRuntime() {
         Path home = Path.of(System.getProperty("java.home")).toAbsolutePath();
         Path executable = resolveExecutable(home);
@@ -96,6 +101,7 @@ public final class JavaManager {
      * @param versionJson a parsed Minecraft version JSON
      * @return the required Java major version, or {@code -1} if the document does not contain one
      */
+    @API(status = API.Status.STABLE)
     public static int getRequiredJavaVersion(JsonValue versionJson) {
         if (versionJson == null || !versionJson.isObject()) {
             return -1;
@@ -114,6 +120,7 @@ public final class JavaManager {
      * @param versionJson a parsed Minecraft version JSON file
      * @return the required Java major version, or {@code -1} if the document does not contain one
      */
+    @API(status = API.Status.STABLE)
     public static int getRequiredJavaVersion(JsonFile versionJson) {
         return versionJson == null ? -1 : getRequiredJavaVersion(versionJson.getRoot());
     }
@@ -126,6 +133,7 @@ public final class JavaManager {
      * @throws HttpException if a manifest request fails
      * @throws IOException if the version JSON cannot be read
      */
+    @API(status = API.Status.STABLE)
     public static int getRequiredJavaVersion(String minecraftVersion) throws HttpException, IOException {
         Path cachedPath = cachedVersionJsonPath(minecraftVersion);
 
@@ -167,6 +175,7 @@ public final class JavaManager {
      * @return the required Java major version, or {@code -1} if it could not be resolved
      * @throws IOException if the file cannot be read
      */
+    @API(status = API.Status.STABLE)
     public static int getRequiredJavaVersion(Path versionJsonPath) throws IOException {
         if (versionJsonPath == null || !Files.exists(versionJsonPath)) {
             return -1;
@@ -186,6 +195,7 @@ public final class JavaManager {
      * @throws HttpException if a manifest request fails
      * @throws IOException if a runtime download or extraction fails
      */
+    @API(status = API.Status.STABLE)
     public static JavaInstallation ensureJavaForMinecraftVersion(String minecraftVersion) throws HttpException, IOException {
         int requiredJavaVersion = getRequiredJavaVersion(minecraftVersion);
         return ensureJavaVersion(requiredJavaVersion);
@@ -199,6 +209,7 @@ public final class JavaManager {
      * @throws HttpException if the runtime manifest request fails
      * @throws IOException if a runtime download or extraction fails
      */
+    @API(status = API.Status.STABLE)
     public static JavaInstallation ensureJavaVersion(int requiredMajorVersion) throws HttpException, IOException {
         JavaInstallation current = currentRuntime();
         if (requiredMajorVersion <= 0 || current.majorVersion() >= requiredMajorVersion) {
@@ -298,6 +309,7 @@ public final class JavaManager {
      * @throws HttpException if a manifest request fails
      * @throws IOException if a runtime download or extraction fails
      */
+    @API(status = API.Status.STABLE)
     public static Path ensureJavaExecutable(String minecraftVersion) throws HttpException, IOException {
         return ensureJavaForMinecraftVersion(minecraftVersion).executable();
     }
@@ -310,6 +322,7 @@ public final class JavaManager {
      * @throws HttpException if a runtime manifest request fails
      * @throws IOException if a runtime download or extraction fails
      */
+    @API(status = API.Status.STABLE)
     public static Path ensureJavaExecutable(int requiredMajorVersion) throws HttpException, IOException {
         return ensureJavaVersion(requiredMajorVersion).executable();
     }
@@ -322,6 +335,7 @@ public final class JavaManager {
      * @throws HttpException if the version manifest request fails
      * @throws IOException if the manifest cannot be read
      */
+    @API(status = API.Status.STABLE)
     public static String getVersionJsonUrl(String minecraftVersion) throws HttpException, IOException {
         JsonFile manifest = new JsonFile(HttpUtil.get(VERSION_MANIFEST_URL));
         JsonArray versions = manifest.getArray("versions");
@@ -803,12 +817,6 @@ public final class JavaManager {
         }
         return arch.isBlank() ? "x64" : arch;
     }
-
-//    private static String adoptiumAssetUrl(int majorVersion, String imageType) {
-//        return "https://api.adoptium.net/v3/assets/latest/%d/ga?architecture=%s&heap_size=normal&image_type=%s&jvm_impl=hotspot&os=%s&vendor=eclipse"
-//                .formatted(majorVersion, platformArchitecture(), imageType, platformOs());
-//    }
-
     private static String adoptiumAssetUrl(int majorVersion, String imageType) {
         return String.format(Locale.ROOT, ApiEndpoints.ADOPTIUM_ASSET_URL_TEMPLATE,
                 majorVersion, platformArchitecture(), imageType, platformOs());

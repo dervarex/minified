@@ -1,6 +1,7 @@
 package com.dervarex.minified.launch.launch.modding.vanilla;
 
 import com.dervarex.minified.launch.launch.modding.Loader;
+import org.apiguardian.api.API;
 
 public record VanillaLoader(String mcVersion) implements Loader {
     @Override

@@ -1,5 +1,8 @@
 package com.dervarex.minified.modrinth.loaders;
 
+import org.apiguardian.api.API;
+
+@API(status = API.Status.STABLE)
 public enum PluginLoader {
     PAPER("paper"),
     SPIGOT("spigot"),
@@ -14,10 +17,12 @@ public enum PluginLoader {
         this.apiValue = apiValue;
     }
 
+    @API(status = API.Status.INTERNAL)
     public String getApiValue() {
         return apiValue;
     }
 
+    @API(status = API.Status.INTERNAL)
     public static PluginLoader fromApiValue(String value) {
         if (value == null) {
             return null;

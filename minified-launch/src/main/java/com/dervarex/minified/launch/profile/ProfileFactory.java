@@ -14,6 +14,7 @@ import com.dervarex.minified.launch.launch.modding.vanilla.VanillaLoader;
 import com.dervarex.minified.utils.json.JsonArray;
 import com.dervarex.minified.utils.json.JsonFile;
 import com.dervarex.minified.utils.json.JsonObject;
+import org.apiguardian.api.API;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -37,6 +38,7 @@ public class ProfileFactory {
      * @param profile the LaunchConfiguration that should be saved
      * @param path the full path to the JSON file where it should be saved to
      */
+    @API(status = API.Status.STABLE)
     public static void save(LaunchConfiguration profile, Path path) {
         JsonFile profileJson = new JsonFile();
         JsonObject root = profileJson.asObject();
@@ -114,6 +116,7 @@ public class ProfileFactory {
      * @param path the path of the JSON file that was saved by {@link #save(LaunchConfiguration, Path)}
      * @return the LaunchConfiguration that can be used to launch the game
      */
+    @API(status = API.Status.STABLE)
     public static LaunchConfiguration load(Path path) {
         JsonFile profileJson;
         try {

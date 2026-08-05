@@ -8,13 +8,15 @@ import com.dervarex.minified.utils.http.HttpUtil;
 import com.dervarex.minified.utils.json.JsonFile;
 import com.dervarex.minified.utils.json.JsonObject;
 import com.dervarex.minified.utils.version.VersionMetadataProvider;
+import org.apiguardian.api.API;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+@API(status = API.Status.INTERNAL, consumers = {"com.dervarex.minified.launch.*"})
 public class CacheManager {
-    public static Path cacheRoot() {
+    private static Path cacheRoot() {
         return JavaManager.getBaseDir().resolve("cache");
     }
     private static void writeCache(Path path, String content) throws IOException {

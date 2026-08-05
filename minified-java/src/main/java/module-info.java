@@ -3,4 +3,5 @@ module minified.minified.java.main {
     requires java.net.http;
     requires minified.minified.events.main;
     requires minified.minified.utils.main;
+    requires org.apiguardian.api;
 }

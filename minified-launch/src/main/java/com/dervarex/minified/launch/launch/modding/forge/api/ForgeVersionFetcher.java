@@ -5,6 +5,7 @@ import com.dervarex.minified.launch.exceptions.version.FailedToFetchVersionsExce
 import com.dervarex.minified.utils.ApiEndpoints;
 import com.dervarex.minified.utils.json.JsonObject;
 import com.dervarex.minified.utils.json.JsonParser;
+import org.apiguardian.api.API;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
@@ -22,6 +23,7 @@ public class ForgeVersionFetcher {
     private List<String> cachedVersions;
     private JsonObject cachedPromotions;
 
+    @API(status = API.Status.STABLE)
     public List<String> getAvailableVersions() {
         if (cachedVersions != null) {
             return cachedVersions;
@@ -49,6 +51,7 @@ public class ForgeVersionFetcher {
         }
     }
 
+    @API(status = API.Status.STABLE)
     public List<String> getVersionsForMinecraft(String minecraftVersion) {
         return getAvailableVersions()
                 .stream()
@@ -56,6 +59,7 @@ public class ForgeVersionFetcher {
                 .toList();
     }
 
+    @API(status = API.Status.STABLE)
     public String getLatest(String minecraftVersion) {
         JsonObject promos = getPromotions();
 
@@ -66,6 +70,7 @@ public class ForgeVersionFetcher {
         return minecraftVersion + "-" + forgeVersion;
     }
 
+    @API(status = API.Status.STABLE)
     public String getRecommended(String minecraftVersion) {
         JsonObject promos = getPromotions();
 

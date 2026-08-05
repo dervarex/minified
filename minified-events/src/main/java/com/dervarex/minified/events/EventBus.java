@@ -1,5 +1,7 @@
 package com.dervarex.minified.events;
 
+import org.apiguardian.api.API;
+
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -17,10 +19,12 @@ public final class EventBus {
      * });
      * }</pre>
      */
+    @API(status = API.Status.STABLE)
     public <T extends Event> void subscribe(Class<T> type, EventListener<T> listener) {
         listeners.computeIfAbsent(type, k -> new CopyOnWriteArrayList<>()).add(listener);
     }
 
+    @API(status = API.Status.STABLE)
     public <T extends Event> void unsubscribe(
             Class<T> type,
             EventListener<T> listener
@@ -35,6 +39,7 @@ public final class EventBus {
     }
 
     @SuppressWarnings("unchecked")
+    @API(status = API.Status.STABLE)
     public <T extends Event> void post(T event) {
         for (EventListener<?> listener : listeners.getOrDefault(event.getClass(), List.of())) {
             ((EventListener<T>) listener).onEvent(event);

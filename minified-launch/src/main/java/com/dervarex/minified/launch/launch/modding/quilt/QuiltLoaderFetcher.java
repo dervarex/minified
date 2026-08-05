@@ -8,9 +8,11 @@ import com.dervarex.minified.utils.http.HttpUtil;
 import com.dervarex.minified.utils.json.JsonArray;
 import com.dervarex.minified.utils.json.JsonObject;
 import com.dervarex.minified.utils.json.JsonParser;
+import org.apiguardian.api.API;
 
 public class QuiltLoaderFetcher {
 
+    @API(status = API.Status.STABLE)
     public static String getLatestLoaderVersion(
             String minecraftVersion
     ) throws Exception {
@@ -47,6 +49,7 @@ public class QuiltLoaderFetcher {
                 .asString();
     }
 
+    @API(status = API.Status.STABLE)
     public static JsonObject getProfileJson(
             String minecraftVersion,
             String loaderVersion
@@ -65,6 +68,7 @@ public class QuiltLoaderFetcher {
                 .asObject();
     }
 
+    @API(status = API.Status.STABLE)
     public static JsonObject getLatestProfile(
             String minecraftVersion
     ) throws Exception {
@@ -75,20 +79,6 @@ public class QuiltLoaderFetcher {
         return getProfileJson(
                 minecraftVersion,
                 loaderVersion
-        );
-    }
-    public static JsonObject loadQuiltProfileJson(String version, boolean online) {
-        return CacheManager.loadProfileJson(
-                version,
-                "quilt",
-                online,
-                () -> {
-                    try {
-                        return QuiltLoaderFetcher.getLatestProfile(version);
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                }
         );
     }
 }

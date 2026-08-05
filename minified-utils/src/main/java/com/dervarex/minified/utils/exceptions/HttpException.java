@@ -1,5 +1,7 @@
 package com.dervarex.minified.utils.exceptions;
 
+import org.apiguardian.api.API;
+
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.*;
@@ -9,6 +11,7 @@ import java.util.*;
  * <p>
  * Use this when an HTTP call fails or returns a non-success code.
  */
+@API(status = API.Status.STABLE)
 public class HttpException extends Exception {
 
     public enum Method { GET, POST, PUT, DELETE, HEAD, PATCH, OPTIONS, TRACE, CONNECT }

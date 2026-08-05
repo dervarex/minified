@@ -5,12 +5,14 @@ import com.dervarex.minified.modrinth.tags.TagsClient;
 import com.dervarex.minified.modrinth.teams.TeamsClient;
 import com.dervarex.minified.modrinth.users.UsersClient;
 import com.dervarex.minified.modrinth.versions.VersionsClient;
+import org.apiguardian.api.API;
 
 import java.util.Objects;
 
 /**
  * Entry point for the public Modrinth API.
  */
+@API(status = API.Status.STABLE)
 public final class Modrinth {
     public static final String DEFAULT_BASE_URL = "https://api.modrinth.com/v2";
 

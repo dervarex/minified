@@ -3,6 +3,7 @@ package com.dervarex.minified.modrinth;
 import com.dervarex.minified.modrinth.loaders.ModLoader;
 import com.dervarex.minified.modrinth.projects.ProjectType;
 import com.dervarex.minified.modrinth.projects.SideSupport;
+import org.apiguardian.api.API;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,6 +13,7 @@ import java.util.Objects;
 /**
  * Builder-based search request for the public project search endpoint.
  */
+@API(status = API.Status.STABLE)
 public final class SearchRequest extends SearchOptions {
     public String query;
     public String index = "relevance";

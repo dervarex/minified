@@ -9,6 +9,7 @@ import com.dervarex.minified.launch.launch.LaunchContext;
 import com.dervarex.minified.launch.launch.modding.neoforge.api.NeoInstallerFetcher;
 import com.dervarex.minified.launch.launch.modding.neoforge.api.NeoVersionFetcher;
 import com.dervarex.minified.utils.download.DownloadHelper;
+import org.apiguardian.api.API;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,8 +25,10 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.function.Consumer;
 
+@API(status = API.Status.INTERNAL, consumers = {"com.dervarex.minified.launch.*"})
 public class NeoInstallerInjector {
     private static final String INSTALLER_FILE_NAME = "neoforge-installer.jar";
+
 
     private static void prepare(LaunchContext context) {
         context.getEventBus().post(new InstallNeoforgeEvent(InstallNeoforgeEvent.Stage.PREPARING, context.getLaunchConfiguration().getLoader().mcVersion(), context.getLaunchConfiguration().getLoader().loaderVersion()));

@@ -16,14 +16,15 @@ import com.dervarex.minified.utils.json.JsonArray;
 import com.dervarex.minified.utils.json.JsonFile;
 import com.dervarex.minified.utils.json.JsonObject;
 import com.dervarex.minified.utils.json.JsonValue;
+import org.apiguardian.api.API;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 
+@API(status = API.Status.INTERNAL, consumers = {"com.dervarex.minified.launch.*"})
 public class ClasspathBuilder {
-
     static String buildClasspath(JsonFile versionJson, LaunchConfiguration config) {
         String separator = System.getProperty("os.name").toLowerCase().contains("win") ? ";" : ":";
 

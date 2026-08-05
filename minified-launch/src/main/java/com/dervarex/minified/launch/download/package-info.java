@@ -1,11 +1,7 @@
 /**
- * Internal download services used by the launcher.
- *
- * <p>This package is not part of the supported public API. Use the higher-level launcher API
- * instead of calling downloader types directly.</p>
+ * Internal download services used by the launcher
  */
-@ApiStatus.Internal
+@API(status = API.Status.INTERNAL, consumers = {"com.dervarex.minified.launch"})
 package com.dervarex.minified.launch.download;
 
-import org.jetbrains.annotations.ApiStatus;
-
+import org.apiguardian.api.API;

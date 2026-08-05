@@ -6,6 +6,7 @@ import com.dervarex.minified.auth.events.encryption.SaveEncryptedSessionEvent;
 import com.dervarex.minified.events.EventBus;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import org.apiguardian.api.API;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -16,6 +17,7 @@ import java.nio.file.Path;
 import java.security.SecureRandom;
 import java.util.Base64;
 
+@API(status = API.Status.INTERNAL, consumers = {"com.dervarex.minified.auth.*"})
 public class Encryptor {
     private static final Gson GSON = new Gson();
 
@@ -52,7 +54,6 @@ public class Encryptor {
      * @param sessionFile the File to save the Session to
      * @throws Exception when encrypting or writing to the file fails
      */
-
     public static void saveEncryptedSession(JsonObject sessionJson, SecretKey masterKey, Path sessionFile, EventBus eventBus) throws Exception {
         Cipher cipher = Cipher.getInstance("AES");
         cipher.init(Cipher.ENCRYPT_MODE, masterKey);
@@ -69,7 +70,6 @@ public class Encryptor {
      * @param masterKey   the master key, used to decrypt the file
      * @return the decrypted session as a JsonObject, or null if no session file exists
      */
-
     public static JsonObject loadEncryptedSession(Path sessionFile, SecretKey masterKey, EventBus eventBus) throws Exception {
         if (!Files.exists(sessionFile)) {
             System.out.println("No saved session");

@@ -8,4 +8,5 @@ module minified.minified.utils.main {
     exports com.dervarex.minified.utils.http;
     exports com.dervarex.minified.utils;
     requires java.net.http;
+    requires org.apiguardian.api;
 }

@@ -1,8 +1,11 @@
 package com.dervarex.minified.modrinth;
 
+import org.apiguardian.api.API;
+
 /**
  * Base class for HTTP and protocol level API errors.
  */
+@API(status = API.Status.STABLE)
 public class ModrinthApiException extends ModrinthException {
     private final int statusCode;
     private final String requestUrl;

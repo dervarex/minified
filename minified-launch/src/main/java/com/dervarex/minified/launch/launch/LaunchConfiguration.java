@@ -3,6 +3,7 @@ package com.dervarex.minified.launch.launch;
 import com.dervarex.minified.events.EventBus;
 import com.dervarex.minified.launch.launch.modding.Loader;
 import lombok.Getter;
+import org.apiguardian.api.API;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.Objects;
 
 @Getter
+@API(status = API.Status.STABLE)
 public class LaunchConfiguration {
     // Memory
     private int minRam = 2048;

@@ -4,11 +4,13 @@ import com.dervarex.minified.launch.launch.CacheManager;
 import com.dervarex.minified.launch.launch.LaunchConfiguration;
 import com.dervarex.minified.utils.json.JsonFile;
 import com.dervarex.minified.utils.json.JsonObject;
+import org.apiguardian.api.API;
 
 import java.nio.file.Path;
 
-public class NeoLoaderFetcher {
-    public static JsonObject loadNeoForgeProfileJson( //todo move
+public class NeoProfileJsonLoader {
+    @API(status = API.Status.INTERNAL, consumers = {"com.dervarex.minified.launch.*"})
+    public static JsonObject loadNeoforgeProfileJson(
                                                       String version,
                                                       LaunchConfiguration launchConfig,
                                                       boolean online

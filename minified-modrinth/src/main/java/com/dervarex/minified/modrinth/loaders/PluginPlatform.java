@@ -1,5 +1,7 @@
 package com.dervarex.minified.modrinth.loaders;
 
+import org.apiguardian.api.API;
+
 /**
  * Represents the platform or host plugin a plugin is built for.
  */
@@ -15,10 +17,12 @@ public enum PluginPlatform {
         this.apiValue = apiValue;
     }
 
+    @API(status = API.Status.INTERNAL)
     public String getApiValue() {
         return apiValue;
     }
 
+    @API(status = API.Status.INTERNAL)
     public static PluginPlatform fromApiValue(String value) {
         if (value == null) {
             return null;

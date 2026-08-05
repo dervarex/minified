@@ -8,19 +8,21 @@ import com.dervarex.minified.launch.exceptions.version.MalformedVersionJsonExcep
 import com.dervarex.minified.launch.launch.modding.Loader;
 import com.dervarex.minified.launch.launch.modding.custom.CustomLoader;
 import com.dervarex.minified.launch.launch.modding.fabric.FabricLoader;
-import com.dervarex.minified.launch.launch.modding.fabric.FabricLoaderFetcher;
+import com.dervarex.minified.launch.launch.modding.fabric.FabricProfileJsonLoader;
 import com.dervarex.minified.launch.launch.modding.forge.ForgeLoader;
-import com.dervarex.minified.launch.launch.modding.forge.api.ForgeLoaderFetcher;
+import com.dervarex.minified.launch.launch.modding.forge.api.ForgeProfileJsonLoader;
 import com.dervarex.minified.launch.launch.modding.neoforge.NeoforgeLoader;
-import com.dervarex.minified.launch.launch.modding.neoforge.api.NeoLoaderFetcher;
+import com.dervarex.minified.launch.launch.modding.neoforge.api.NeoProfileJsonLoader;
 import com.dervarex.minified.launch.launch.modding.quilt.QuiltLoader;
-import com.dervarex.minified.launch.launch.modding.quilt.QuiltLoaderFetcher;
+import com.dervarex.minified.launch.launch.modding.quilt.QuiltProfileJsonLoader;
 import com.dervarex.minified.launch.launch.modding.vanilla.VanillaLoader;
 import com.dervarex.minified.launch.utils.X11Helper;
 import com.dervarex.minified.utils.json.*;
+import org.apiguardian.api.API;
 
 import java.util.List;
 
+@API(status = API.Status.INTERNAL, consumers = {"com.dervarex.minified.launch.*"})
 public class ArgumentsBuilder {
     static List<String> buildJvmArguments(
             JsonFile versionJson,
@@ -73,16 +75,16 @@ public class ArgumentsBuilder {
                 case VanillaLoader ignored:
                     break;
                 case FabricLoader ignored:
-                    loaderProfileJson = FabricLoaderFetcher.loadFabricProfileJson(version, online);
+                    loaderProfileJson = FabricProfileJsonLoader.loadFabricProfileJson(version, online);
                     break;
                 case ForgeLoader ignored:
-                    loaderProfileJson = ForgeLoaderFetcher.loadForgeProfileJson(version, launchConfig, online);
+                    loaderProfileJson = ForgeProfileJsonLoader.loadForgeProfileJson(version, launchConfig, online);
                     break;
                 case NeoforgeLoader ignored:
-                    loaderProfileJson = NeoLoaderFetcher.loadNeoForgeProfileJson(version, launchConfig, online);
+                    loaderProfileJson = NeoProfileJsonLoader.loadNeoforgeProfileJson(version, launchConfig, online);
                     break;
                 case QuiltLoader ignored:
-                    loaderProfileJson = QuiltLoaderFetcher.loadQuiltProfileJson(version, online);
+                    loaderProfileJson = QuiltProfileJsonLoader.loadQuiltProfileJson(version, online);
                     break;
                 default:
                     throw new UnexpectedLoaderException("Unexpected loader: " + loader);
@@ -140,16 +142,16 @@ public class ArgumentsBuilder {
                 case VanillaLoader ignored:
                     break;
                 case FabricLoader ignored:
-                    loaderProfileJson = FabricLoaderFetcher.loadFabricProfileJson(version, online);
+                    loaderProfileJson = FabricProfileJsonLoader.loadFabricProfileJson(version, online);
                     break;
                 case QuiltLoader ignored:
-                    loaderProfileJson = QuiltLoaderFetcher.loadQuiltProfileJson(version, online);
+                    loaderProfileJson = QuiltProfileJsonLoader.loadQuiltProfileJson(version, online);
                     break;
                 case ForgeLoader ignored:
-                    loaderProfileJson = ForgeLoaderFetcher.loadForgeProfileJson(version, launchConfig, online);
+                    loaderProfileJson = ForgeProfileJsonLoader.loadForgeProfileJson(version, launchConfig, online);
                     break;
                 case NeoforgeLoader ignored:
-                    loaderProfileJson = NeoLoaderFetcher.loadNeoForgeProfileJson(version, launchConfig, online);
+                    loaderProfileJson = NeoProfileJsonLoader.loadNeoforgeProfileJson(version, launchConfig, online);
                     break;
                 default:
                     throw new UnexpectedLoaderException("Unexpected loader: " + loader);
