@@ -11,7 +11,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import net.lenni0451.commons.httpclient.HttpClient;
 import net.raphimc.minecraftauth.MinecraftAuth;
-import net.raphimc.minecraftauth.step.bedrock.StepMCChain;
 import net.raphimc.minecraftauth.step.java.StepMCProfile;
 import net.raphimc.minecraftauth.step.java.session.StepFullJavaSession;
 import net.raphimc.minecraftauth.step.msa.StepMsaDeviceCode;
@@ -146,7 +145,7 @@ public class AuthManager {
                             }));
 
             User user = persistSession(javaSession);
-            System.out.println("Login successful for " + user.getUsername());
+            System.out.println("Login successful for " + user.username());
             return user;
         } catch (NoConnectionException nce) {
             System.out.println(nce.getMessage());
@@ -173,7 +172,7 @@ public class AuthManager {
                 profile.getName(),
                 profile.getMcToken().getAccessToken(),
                 serialized);
-        session.put(user.getUuid(), user);
+        session.put(user.uuid(), user);
         return user;
     }
 
@@ -221,9 +220,9 @@ public class AuthManager {
                 User user = persistSession(javaSession);
 
                 loginState.status = LoginStatus.SUCCESS;
-                loginState.username = user.getUsername();
+                loginState.username = user.username();
                 loginState.message = "Login successful";
-                System.out.println("Login successful for " + user.getUsername());
+                System.out.println("Login successful for " + user.username());
                 if (codeReadyLatch != null) codeReadyLatch.countDown();
             } catch (NoConnectionException nce) {
                 loginState.status = LoginStatus.ERROR;
@@ -293,7 +292,7 @@ public class AuthManager {
 
             // Refresh saved token if it has changed
             User user = persistSession(refreshed);
-            System.out.println("Saved session OK for " + user.getUsername());
+            System.out.println("Saved session OK for " + user.username());
             return user;
         } catch (Exception e) {
             StringWriter sw = new StringWriter();

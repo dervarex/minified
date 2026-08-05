@@ -48,7 +48,7 @@ final class LaunchOptions {
 
                         .setVariable(
                                 "auth_player_name",
-                                user == null ? launchConfig.getOfflineUsername() : user.getUsername()
+                                user == null ? launchConfig.getOfflineUsername() : user.username()
                         )
 
                         .setVariable(
@@ -79,12 +79,12 @@ final class LaunchOptions {
 
                         .setVariable(
                                 "auth_uuid",
-                                user == null ? getOfflineUuid(launchConfig.getOfflineUsername()) : user.getUuid()
+                                user == null ? getOfflineUuid(launchConfig.getOfflineUsername()) : user.uuid()
                         )
 
                         .setVariable(
                                 "auth_access_token",
-                                user == null ? "0" : user.getAccessToken()
+                                user == null ? "0" : user.accessToken()
                         )
                         .setVariable(
                                 "user_properties",
