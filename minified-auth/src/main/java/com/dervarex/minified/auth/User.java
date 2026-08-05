@@ -9,4 +9,5 @@ import com.google.gson.JsonObject;
  * {@link #accessToken} is the token used for authenticated requests
  * {@link #serializedSession} is the full session data as returned by the authentication server
  */
-public record User(String uuid, String username, String accessToken, JsonObject serializedSession) { }
+public record User(String uuid, String username, String accessToken, JsonObject serializedSession) {
+}

@@ -30,26 +30,21 @@ import java.util.concurrent.TimeUnit;
 @SuppressWarnings("unused") // required to make intelliJ shut up
 public class AuthManager {
 
+    private static final Map<String, User> session = new HashMap<>();
+    private static final Gson GSON = new Gson();
+    private static final List<LoginStateChangeListener> listeners = new CopyOnWriteArrayList<>();
     private static Path BASE_DIR;
     private static Path KEY_FILE;
     private static Path SESSION_FILE;
-
     private static EventBus eventBus;
-
     private static SecretKey masterKey;
-    private static final Map<String, User> session = new HashMap<>();
-
-    private static final Gson GSON = new Gson();
-
-    // Async login state management
-    public enum LoginStatus { IDLE, STARTING, PENDING, SUCCESS, ERROR }
-
     private static volatile LoginState loginState = new LoginState();
     private static volatile CountDownLatch codeReadyLatch = null;
 
     /**
      * Initializes the auth manager using the given directory.
-     * @param BaseDir the directory where the key and session files will be stored.
+     *
+     * @param BaseDir  the directory where the key and session files will be stored.
      * @param eventBus the event bus to push event updates to
      */
 
@@ -57,10 +52,13 @@ public class AuthManager {
         BASE_DIR = BaseDir;
         SESSION_FILE = BASE_DIR.resolve("session.enc");
         KEY_FILE = BASE_DIR.resolve("master.key");
-            prepareKeyDirectories();
+        prepareKeyDirectories();
         JavaManager.init(BASE_DIR.resolve("java"));
     }
-    public static void init (Path BaseDir) {init(BaseDir, new EventBus());}
+
+    public static void init(Path BaseDir) {
+        init(BaseDir, new EventBus());
+    }
 
     /**
      * Initializes the auth manager using the default application data directory.
@@ -69,7 +67,7 @@ public class AuthManager {
      * if you want full control over the storage location.
      *
      * @param launcherName the launcher name used to create the application directory
-     * @param eventBus the event bus to push event updates to
+     * @param eventBus     the event bus to push event updates to
      */
     public static void init(String launcherName, EventBus eventBus) {
         String os = System.getProperty("os.name").toLowerCase();
@@ -86,7 +84,10 @@ public class AuthManager {
         prepareKeyDirectories();
         JavaManager.init(BASE_DIR.resolve("java"));
     }
-    public static void init (String launcherName) {init(launcherName, new EventBus());}
+
+    public static void init(String launcherName) {
+        init(launcherName, new EventBus());
+    }
 
     private static void prepareKeyDirectories() {
         try {
@@ -100,6 +101,7 @@ public class AuthManager {
             System.out.println("AuthManager init failed: " + sw);
         }
     }
+
     /**
      * Starts the device-code login flow and blocks until the login completes.
      * <p>
@@ -239,7 +241,10 @@ public class AuthManager {
             }
         }, "DeviceCodeLoginThread").start();
 
-        try { if (codeReadyLatch != null) codeReadyLatch.await(2, TimeUnit.SECONDS); } catch (InterruptedException ignored) {}
+        try {
+            if (codeReadyLatch != null) codeReadyLatch.await(2, TimeUnit.SECONDS);
+        } catch (InterruptedException ignored) {
+        }
         return GSON.toJson(loginState);
     }
 
@@ -273,6 +278,7 @@ public class AuthManager {
 
     /**
      * Attempts to load a saved session from disk, refreshes it if possible, and returns the corresponding User.
+     *
      * @return the logged-in user, or nul if no valid session could be found.
      */
 
@@ -322,11 +328,10 @@ public class AuthManager {
         return session.values().stream().findFirst().orElse(null);
     }
 
-    private static final List<LoginStateChangeListener> listeners = new CopyOnWriteArrayList<>();
-
     public static void addStateChangeListener(LoginStateChangeListener listener) {
         listeners.add(listener);
     }
+
     public static void removeStateChangeListener(LoginStateChangeListener listener) {
         listeners.remove(listener);
     }
@@ -336,4 +341,7 @@ public class AuthManager {
             listener.onStateChanged(loginState);
         }
     }
+
+    // Async login state management
+    public enum LoginStatus {IDLE, STARTING, PENDING, SUCCESS, ERROR}
 }

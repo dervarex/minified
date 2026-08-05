@@ -21,6 +21,7 @@ public class Encryptor {
 
     /**
      * Loads the master key, if it already exists, or creates a new one and saves it to disk.
+     *
      * @param keyFile the file to check for
      * @return the SecretKey that will be used to encrypt and decrypt the refreshtoken
      * @throws Exception when something goes wrong with file access or key generation
@@ -45,8 +46,9 @@ public class Encryptor {
      * Encrypts the session json and saves it to disk.
      * <p>
      * The session can be loaded again with {@link #loadEncryptedSession(Path, SecretKey, EventBus)}
+     *
      * @param sessionJson the JSON object of the Session
-     * @param masterKey the SecretKey to encrypt and decrypt the session
+     * @param masterKey   the SecretKey to encrypt and decrypt the session
      * @param sessionFile the File to save the Session to
      * @throws Exception when encrypting or writing to the file fails
      */
@@ -62,8 +64,9 @@ public class Encryptor {
 
     /**
      * Loads the encrypted session from disk and returns the decrypted json object.
+     *
      * @param sessionFile the file where it will load the session from
-     * @param masterKey the master key, used to decrypt the file
+     * @param masterKey   the master key, used to decrypt the file
      * @return the decrypted session as a JsonObject, or null if no session file exists
      */
 
