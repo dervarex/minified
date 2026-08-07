@@ -1,7 +1,7 @@
 package com.dervarex.minified.modrinth.projects;
 
 import com.dervarex.minified.modrinth.Modrinth;
-import com.dervarex.minified.modrinth.ModrinthStateException;
+import com.dervarex.minified.modrinth.exceptions.ModrinthStateException;
 import com.dervarex.minified.modrinth.VersionSearchOptions;
 import com.dervarex.minified.modrinth.loaders.ModLoader;
 import com.dervarex.minified.modrinth.versions.Version;

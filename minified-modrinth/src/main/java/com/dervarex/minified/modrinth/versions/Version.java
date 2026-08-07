@@ -1,8 +1,8 @@
 package com.dervarex.minified.modrinth.versions;
 
 import com.dervarex.minified.modrinth.Modrinth;
-import com.dervarex.minified.modrinth.ModrinthDependencyResolutionException;
-import com.dervarex.minified.modrinth.ModrinthStateException;
+import com.dervarex.minified.modrinth.exceptions.ModrinthDependencyResolutionException;
+import com.dervarex.minified.modrinth.exceptions.ModrinthStateException;
 import com.dervarex.minified.modrinth.loaders.ModLoader;
 import com.dervarex.minified.modrinth.projects.Project;
 

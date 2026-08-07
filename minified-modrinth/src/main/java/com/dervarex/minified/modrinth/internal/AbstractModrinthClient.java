@@ -1,6 +1,10 @@
 package com.dervarex.minified.modrinth.internal;
 
 import com.dervarex.minified.modrinth.*;
+import com.dervarex.minified.modrinth.exceptions.ModrinthApiException;
+import com.dervarex.minified.modrinth.exceptions.ModrinthNotFoundException;
+import com.dervarex.minified.modrinth.exceptions.ModrinthRateLimitedException;
+import com.dervarex.minified.modrinth.exceptions.ModrinthSerializationException;
 import com.dervarex.minified.utils.exceptions.HttpException;
 import com.dervarex.minified.utils.http.HttpUtil;
 import com.dervarex.minified.utils.json.JsonArray;

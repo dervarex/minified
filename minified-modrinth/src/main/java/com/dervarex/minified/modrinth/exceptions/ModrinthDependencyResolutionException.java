@@ -1,4 +1,4 @@
-package com.dervarex.minified.modrinth;
+package com.dervarex.minified.modrinth.exceptions;
 
 import org.apiguardian.api.API;
 
