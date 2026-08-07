@@ -1,24 +1,25 @@
 package com.dervarex.minified.utils.json;
 
-public final class JsonBoolean implements JsonValue {
-    private final boolean value;
+public record JsonBoolean(boolean value) implements JsonValue {
 
-    public JsonBoolean(boolean value) {
-        this.value = value;
+    @Override
+    public JsonType getType() {
+        return JsonType.BOOLEAN;
     }
 
-    public boolean getValue() { return value; }
+    @Override
+    public boolean asBoolean() {
+        return value;
+    }
 
     @Override
-    public JsonType getType() { return JsonType.BOOLEAN; }
+    public String toJson() {
+        return value ? "true" : "false";
+    }
 
     @Override
-    public boolean asBoolean() { return value; }
-
-    @Override
-    public String toJson() { return value ? "true" : "false"; }
-
-    @Override
-    public String toString() { return toJson(); }
+    public String toString() {
+        return toJson();
+    }
 }
 
