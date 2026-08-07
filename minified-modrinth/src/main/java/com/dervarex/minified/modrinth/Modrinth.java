@@ -13,6 +13,8 @@ import java.util.Objects;
  * Entry point for the public Modrinth API.
  */
 @API(status = API.Status.STABLE)
+// This class could be a record class, but we've got a few constructor problems here when converting it
+@SuppressWarnings("ClassCanBeRecord")
 public final class Modrinth {
     public static final String DEFAULT_BASE_URL = "https://api.modrinth.com/v2";
 
