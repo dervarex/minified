@@ -1,6 +1,7 @@
 ## Roadmap
 
 * convert classes to record classes
+* fix `exports` in module-info.java files to export everything needed
 * minified-worlds
 * Test and document supported Minecraft versions
 * Support older Minecraft versions for all currently supported loaders
