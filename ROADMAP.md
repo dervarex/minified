@@ -1,6 +1,5 @@
 ## Roadmap
 
-* move exceptions from modrinth module to extra package
 * convert classes to record classes
 * minified-worlds
 * Test and document supported Minecraft versions
