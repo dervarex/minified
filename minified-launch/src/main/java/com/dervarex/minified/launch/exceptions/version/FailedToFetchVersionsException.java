@@ -1,5 +1,8 @@
 package com.dervarex.minified.launch.exceptions.version;
 
+import lombok.Getter;
+
+@Getter
 public class FailedToFetchVersionsException extends RuntimeException {
     /**
      * Loader as String in UPPERCASE, for example FABRIC or NEOFORGE
