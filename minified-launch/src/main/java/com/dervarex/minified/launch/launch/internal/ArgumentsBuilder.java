@@ -1,10 +1,11 @@
-package com.dervarex.minified.launch.launch;
+package com.dervarex.minified.launch.launch.internal;
 
 import com.dervarex.minified.launch.arguments.GameArgumentsParser;
 import com.dervarex.minified.launch.arguments.JvmArgumentsParser;
 import com.dervarex.minified.launch.arguments.LegacyMinecraftArgumentsParser;
 import com.dervarex.minified.launch.exceptions.loader.UnexpectedLoaderException;
 import com.dervarex.minified.launch.exceptions.version.MalformedVersionJsonException;
+import com.dervarex.minified.launch.launch.LaunchConfiguration;
 import com.dervarex.minified.launch.launch.modding.Loader;
 import com.dervarex.minified.launch.launch.modding.custom.CustomLoader;
 import com.dervarex.minified.launch.launch.modding.fabric.FabricLoader;
@@ -24,10 +25,10 @@ import java.util.List;
 
 @API(status = API.Status.INTERNAL, consumers = {"com.dervarex.minified.launch.*"})
 public class ArgumentsBuilder {
-    static List<String> buildJvmArguments(
+    public static List<String> buildJvmArguments(
             JsonFile versionJson,
             LaunchConfiguration launchConfig,
-            LaunchOptions options,
+            com.dervarex.minified.launch.launch.internal.LaunchOptions options,
             Loader loader,
             String version,
             boolean online
@@ -102,7 +103,7 @@ public class ArgumentsBuilder {
 
         return X11Helper.substituteVariables(jvmArgs, options.getVariables());
     }
-    static List<String> buildGameArguments(
+    public static List<String> buildGameArguments(
             JsonFile versionJson,
             LaunchOptions options,
             Loader loader,

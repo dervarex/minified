@@ -1,6 +1,6 @@
 package com.dervarex.minified.launch.launch.modding.fabric;
 
-import com.dervarex.minified.launch.launch.CacheManager;
+import com.dervarex.minified.launch.launch.internal.CacheManager;
 import com.dervarex.minified.utils.json.JsonObject;
 import org.apiguardian.api.API;
 

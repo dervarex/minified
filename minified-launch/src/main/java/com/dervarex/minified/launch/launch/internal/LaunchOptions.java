@@ -1,6 +1,7 @@
-package com.dervarex.minified.launch.launch;
+package com.dervarex.minified.launch.launch.internal;
 
 import com.dervarex.minified.auth.User;
+import com.dervarex.minified.launch.launch.LaunchConfiguration;
 import com.dervarex.minified.utils.json.JsonFile;
 import lombok.Getter;
 import org.apiguardian.api.API;
@@ -11,12 +12,11 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * @hidden to not confuse the api user, they should use {@link LaunchConfiguration} instead,
- * this is just a wrapper for the launch options that are passed to the launch process.
+ * wrapper for the launch options that are passed to the launch process.
  */
 @API(status = API.Status.INTERNAL, consumers = {"com.dervarex.minified.launch.*"})
 @Getter
-final class LaunchOptions {
+public final class LaunchOptions {
     private final Map<String, String> variables =
             new HashMap<>();
 
@@ -43,7 +43,7 @@ final class LaunchOptions {
         return new LaunchOptions();
     }
 
-    static LaunchOptions buildLaunchOptions(User user, String version, LaunchConfiguration launchConfig, JsonFile versionJson, String classpathString) {
+    public static LaunchOptions buildLaunchOptions(User user, String version, LaunchConfiguration launchConfig, JsonFile versionJson, String classpathString) {
         return
                 LaunchOptions.create()
 

@@ -1,7 +1,8 @@
-package com.dervarex.minified.launch.launch;
+package com.dervarex.minified.launch.launch.internal;
 
 import com.dervarex.minified.java.JavaManager;
 import com.dervarex.minified.launch.exceptions.cache.FailedToCacheException;
+import com.dervarex.minified.launch.launch.Launcher;
 import com.dervarex.minified.utils.exceptions.HttpException;
 import com.dervarex.minified.utils.exceptions.OfflineModeNeedsNetworkException;
 import com.dervarex.minified.utils.http.HttpUtil;
@@ -65,7 +66,7 @@ public class CacheManager {
         }
         return profile;
     }
-    static JsonFile loadVersionJson(String version, boolean online) throws IOException {
+    public static JsonFile loadVersionJson(String version, boolean online) throws IOException {
         Path cachePath = CacheManager.cachedVersionJsonPath(version);
 
         if (Files.exists(cachePath)) {

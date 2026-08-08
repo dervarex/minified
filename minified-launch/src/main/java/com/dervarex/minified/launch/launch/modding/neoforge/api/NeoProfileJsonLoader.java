@@ -1,6 +1,6 @@
 package com.dervarex.minified.launch.launch.modding.neoforge.api;
 
-import com.dervarex.minified.launch.launch.CacheManager;
+import com.dervarex.minified.launch.launch.internal.CacheManager;
 import com.dervarex.minified.launch.launch.LaunchConfiguration;
 import com.dervarex.minified.utils.json.JsonFile;
 import com.dervarex.minified.utils.json.JsonObject;

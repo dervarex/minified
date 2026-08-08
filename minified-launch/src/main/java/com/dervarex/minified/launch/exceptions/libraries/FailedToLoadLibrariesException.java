@@ -16,5 +16,4 @@ public class FailedToLoadLibrariesException extends RuntimeException {
         super(message, cause);
         this.loader = loader;
     }
-
 }

@@ -2,7 +2,6 @@ package com.dervarex.minified.launch.launch.modding.quilt;
 
 import com.dervarex.minified.launch.exceptions.loader.NoLoadersFoundException;
 import com.dervarex.minified.launch.exceptions.version.FailedToFetchVersionsException;
-import com.dervarex.minified.launch.launch.CacheManager;
 import com.dervarex.minified.utils.ApiEndpoints;
 import com.dervarex.minified.utils.http.HttpUtil;
 import com.dervarex.minified.utils.json.JsonArray;

@@ -1,7 +1,8 @@
-package com.dervarex.minified.launch.launch;
+package com.dervarex.minified.launch.launch.internal;
 
 import com.dervarex.minified.launch.exceptions.libraries.FailedToLoadLibrariesException;
 import com.dervarex.minified.launch.exceptions.loader.UnexpectedLoaderException;
+import com.dervarex.minified.launch.launch.LaunchConfiguration;
 import com.dervarex.minified.launch.launch.modding.fabric.FabricLoader;
 import com.dervarex.minified.launch.launch.modding.fabric.FabricLoaderFetcher;
 import com.dervarex.minified.launch.launch.modding.forge.ForgeLoader;
@@ -25,7 +26,7 @@ import java.util.ArrayList;
 
 @API(status = API.Status.INTERNAL, consumers = {"com.dervarex.minified.launch.*"})
 public class ClasspathBuilder {
-    static String buildClasspath(JsonFile versionJson, LaunchConfiguration config) {
+    public static String buildClasspath(JsonFile versionJson, LaunchConfiguration config) {
         String separator = System.getProperty("os.name").toLowerCase().contains("win") ? ";" : ":";
 
         ArrayList<String> classpath = new ArrayList<>();
