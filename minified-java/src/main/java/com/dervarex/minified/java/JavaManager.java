@@ -26,9 +26,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.time.Duration;
 import java.util.Enumeration;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -47,11 +49,14 @@ public final class JavaManager {
 
     private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
             .followRedirects(HttpClient.Redirect.NORMAL)
+            .connectTimeout(Duration.ofSeconds(15))
             .build();
+
+    private static final ConcurrentHashMap<String, Object> installLocks = new ConcurrentHashMap<>();
 
     private static Path baseDir = defaultBaseDir();
 
-    private static EventBus localEventBus;
+    private static volatile EventBus localEventBus = new EventBus();
 
     private JavaManager() {
     }
@@ -233,54 +238,74 @@ public final class JavaManager {
             );
         }
 
-        RuntimeAsset asset = resolveRuntimeAsset(requiredMajorVersion);
-
-        Path installRoot = runtimeRoot
-                .resolve(sanitizeSegment(asset.releaseName()));
-
-        Path executable = locateExecutable(installRoot);
-        if (Files.exists(executable)) {
-            ensureExecutableBit(executable);
-            return new JavaInstallation(
-                    requiredMajorVersion,
-                    inferHome(executable),
-                    executable,
-                    true,
-                    asset.releaseName()
-            );
-        }
-
-        Files.createDirectories(installRoot);
-        Path archive = Files.createTempFile(
-                installRoot.getParent(),
-                "java-runtime-",
-                archiveSuffix(asset.packageName())
-        );
-
-        try {
-            downloadArchive(asset.downloadUrl(), asset.checksum(), archive);
-            extractArchive(archive, installRoot, asset.packageName());
-
-            Path installedExecutable = locateExecutable(installRoot);
-            if (!Files.exists(installedExecutable)) {
-                throw new IOException(
-                        "Downloaded Java runtime did not contain a java executable: " + installRoot
-                );
-            }
-
-            ensureExecutableBit(installedExecutable);
-
-            return new JavaInstallation(
-                    requiredMajorVersion,
-                    inferHome(installedExecutable),
-                    installedExecutable,
-                    true,
-                    asset.releaseName()
-            );
-        } finally {
+        String lockKey = runtimeRoot.toString();
+        Object lock = installLocks.computeIfAbsent(lockKey, key -> new Object());
+        synchronized (lock) {
             try {
-                Files.deleteIfExists(archive);
-            } catch (IOException ignored) {
+                Path recheckedExecutable = locateExecutable(runtimeRoot);
+                if (Files.exists(recheckedExecutable)) {
+                    ensureExecutableBit(recheckedExecutable);
+                    return new JavaInstallation(
+                            requiredMajorVersion,
+                            inferHome(recheckedExecutable),
+                            recheckedExecutable,
+                            true,
+                            inferReleaseName(recheckedExecutable)
+                    );
+                }
+
+                RuntimeAsset asset = resolveRuntimeAsset(requiredMajorVersion);
+
+                Path installRoot = runtimeRoot
+                        .resolve(sanitizeSegment(asset.releaseName()));
+
+                Path executable = locateExecutable(installRoot);
+                if (Files.exists(executable)) {
+                    ensureExecutableBit(executable);
+                    return new JavaInstallation(
+                            requiredMajorVersion,
+                            inferHome(executable),
+                            executable,
+                            true,
+                            asset.releaseName()
+                    );
+                }
+
+                Files.createDirectories(installRoot);
+                Path archive = Files.createTempFile(
+                        installRoot.getParent(),
+                        "java-runtime-",
+                        archiveSuffix(asset.packageName())
+                );
+
+                try {
+                    downloadArchive(asset.downloadUrl(), asset.checksum(), archive);
+                    extractArchive(archive, installRoot, asset.packageName());
+
+                    Path installedExecutable = locateExecutable(installRoot);
+                    if (!Files.exists(installedExecutable)) {
+                        throw new IOException(
+                                "Downloaded Java runtime did not contain a java executable: " + installRoot
+                        );
+                    }
+
+                    ensureExecutableBit(installedExecutable);
+
+                    return new JavaInstallation(
+                            requiredMajorVersion,
+                            inferHome(installedExecutable),
+                            installedExecutable,
+                            true,
+                            asset.releaseName()
+                    );
+                } finally {
+                    try {
+                        Files.deleteIfExists(archive);
+                    } catch (IOException ignored) {
+                    }
+                }
+            } finally {
+                installLocks.remove(lockKey, lock);
             }
         }
     }
@@ -384,7 +409,7 @@ public final class JavaManager {
         );
     }
 
-    private static JsonArray loadAdoptiumAssets(int majorVersion, String imageType) throws IOException {
+    private static JsonArray loadAdoptiumAssets(int majorVersion, String imageType) {
         Path cachePath = cachedAdoptiumAssetsPath(majorVersion, imageType);
 
         if (Files.exists(cachePath)) {
@@ -496,8 +521,7 @@ public final class JavaManager {
                 continue;
             }
 
-            if (imageType == null
-                    || !expectedImageType.equalsIgnoreCase(imageType)) {
+            if (!expectedImageType.equalsIgnoreCase(imageType)) {
                 continue;
             }
 
@@ -532,6 +556,7 @@ public final class JavaManager {
     private static void downloadArchive(String url, String expectedChecksum, Path archive) throws IOException {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url))
+                .timeout(Duration.ofMinutes(10))
                 .GET()
                 .build();
         HttpResponse<InputStream> response;
@@ -663,7 +688,7 @@ public final class JavaManager {
                 Path target = resolveExtractionTarget(destination, name);
                 if (typeFlag == '5') {
                     Files.createDirectories(target);
-                } else if (typeFlag == '0' || typeFlag == '\0' || typeFlag == 0) {
+                } else if (typeFlag == '0' || typeFlag == 0) {
                     Files.createDirectories(target.getParent());
                     try (OutputStream out = Files.newOutputStream(target)) {
                         copyFixedSize(gzipInputStream, out, size);
@@ -712,11 +737,6 @@ public final class JavaManager {
         long getCount() {
             return count;
         }
-    }
-
-    private static JavaInstallation currentOrManaged(Path executableRoot, int majorVersion, boolean managed, String releaseName) {
-        Path executable = locateExecutable(executableRoot);
-        return new JavaInstallation(majorVersion, inferHome(executable), executable, managed, releaseName);
     }
 
     private static Path locateExecutable(Path root) {
