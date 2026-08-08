@@ -2,11 +2,13 @@ package com.dervarex.minified.launch.launch;
 
 import com.dervarex.minified.events.EventBus;
 import com.dervarex.minified.launch.launch.modding.Loader;
+import lombok.AccessLevel;
 import lombok.Getter;
 import org.apiguardian.api.API;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -40,6 +42,7 @@ public class LaunchConfiguration {
     private Path customJavaExecutable;
 
     // Launch options
+    @Getter(AccessLevel.NONE)
     private final List<String> extraJvmArgs = new ArrayList<>();
     private Loader loader = null;
 
@@ -51,6 +54,10 @@ public class LaunchConfiguration {
 
     private LaunchConfiguration(EventBus eventBus) {
         this.eventBus = eventBus != null ? eventBus : new EventBus();
+    }
+
+    public List<String> getExtraJvmArgs() {
+        return Collections.unmodifiableList(extraJvmArgs);
     }
 
     public static class Builder {
@@ -137,7 +144,9 @@ public class LaunchConfiguration {
         }
 
         public Builder extraJvmArgs(List<String> args) {
-            config.extraJvmArgs.addAll(args);
+            if (args != null) {
+                config.extraJvmArgs.addAll(args);
+            }
             return this;
         }
 

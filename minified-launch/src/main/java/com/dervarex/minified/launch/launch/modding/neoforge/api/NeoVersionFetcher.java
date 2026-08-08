@@ -50,12 +50,10 @@ public final class NeoVersionFetcher {
                 .toList();
 
         if (!matchingBranch.isEmpty()) {
-            return matchingBranch.get(0);
+            return matchingBranch.getFirst();
         }
 
-        return allVersions.stream()
-                .sorted(VERSION_ORDER.reversed())
-                .findFirst()
+        return allVersions.stream().max(VERSION_ORDER)
                 .orElseThrow(() -> new IllegalStateException("No NeoForge versions found in metadata"));
     }
 
@@ -68,7 +66,7 @@ public final class NeoVersionFetcher {
 
         List<String> loaded = fetchVersions();
         cachedVersions.compareAndSet(null, loaded);
-        return Objects.requireNonNullElseGet(cachedVersions.get(), () -> loaded);
+        return Objects.requireNonNullElse(cachedVersions.get(), loaded);
     }
 
     private List<String> fetchVersions() {

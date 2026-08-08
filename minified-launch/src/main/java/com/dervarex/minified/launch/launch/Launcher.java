@@ -277,10 +277,6 @@ public class Launcher {
                 context
         );
 
-        System.out.println(
-                String.join(" ", command)
-        );
-
         processBuilder.inheritIO();
 
         context.getEventBus().post(new GameStartEvent(

@@ -64,10 +64,6 @@ public class LibraryDownloader {
         downloadLibraries(loader, librariesDir, progress -> {}, null);
     }
 
-    public void downloadLibraries(Loader loader, Path librariesDir, LaunchContext context) {
-        downloadLibraries(loader, librariesDir, progress -> {}, context);
-    }
-
     /**
      * Downloads the libraries.
      *
@@ -161,11 +157,11 @@ public class LibraryDownloader {
             }
 
             switch (loader) {
-                case VanillaLoader vanillaLoader:
+                case VanillaLoader ignored:
                     // Nothing additional to download for vanilla
                     break;
 
-                case FabricLoader fabricLoader:
+                case FabricLoader ignored:
                     JsonObject fabricProfile = FabricLoaderFetcher.getLatestProfile(loader.mcVersion());
 
                     Path fabricCachePath = resolveCacheRoot(librariesDir)
@@ -183,7 +179,7 @@ public class LibraryDownloader {
                     );
                     break;
 
-                case QuiltLoader quiltLoader:
+                case QuiltLoader ignored:
                     JsonObject quiltProfile = QuiltLoaderFetcher.getLatestProfile(loader.mcVersion());
 
                     Path quiltCachePath = resolveCacheRoot(librariesDir)
@@ -200,10 +196,10 @@ public class LibraryDownloader {
                             targets
                     );
                     break;
-                case NeoforgeLoader neoforgeLoader:
+                case NeoforgeLoader ignored:
                     // Nothing additional to download for forge and neoforge, as the installer will handle it for us :)
                     break;
-                case ForgeLoader forgeLoader:
+                case ForgeLoader ignored:
                     // Nothing additional to download for forge and neoforge, as the installer will handle it for us :)
                     break;
                 default:
@@ -272,9 +268,9 @@ public class LibraryDownloader {
             updateProgress(
                     totalBytesFinal,
                     totalBytesFinal,
-                    targets.isEmpty() ? "done" : targets.get(targets.size() - 1).path().getFileName().toString(),
-                    targets.isEmpty() ? 0L : Math.max(targets.get(targets.size() - 1).size(), 1L),
-                    targets.isEmpty() ? 0L : targets.get(targets.size() - 1).size(),
+                    targets.isEmpty() ? "done" : targets.getLast().path().getFileName().toString(),
+                    targets.isEmpty() ? 0L : Math.max(targets.getLast().size(), 1L),
+                    targets.isEmpty() ? 0L : targets.getLast().size(),
                     progressConsumer,
                     context
             );

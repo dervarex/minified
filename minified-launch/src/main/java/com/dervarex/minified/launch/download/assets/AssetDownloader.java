@@ -203,8 +203,8 @@ public class AssetDownloader {
                 future.get();
             }
 
-            String finalFile = targets.isEmpty() ? "" : targets.get(targets.size() - 1).path().getFileName().toString();
-            long finalFileSize = targets.isEmpty() ? 0L : targets.get(targets.size() - 1).size();
+            String finalFile = targets.isEmpty() ? "" : targets.getLast().path().getFileName().toString();
+            long finalFileSize = targets.isEmpty() ? 0L : targets.getLast().size();
 
             updateProgress(
                     totalBytesFinal,

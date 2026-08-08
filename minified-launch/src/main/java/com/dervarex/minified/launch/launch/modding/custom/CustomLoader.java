@@ -1,10 +1,9 @@
 package com.dervarex.minified.launch.launch.modding.custom;
-
 import com.dervarex.minified.launch.launch.modding.Loader;
 import java.util.List;
-
 /**
  * Custom Loader Option, the launcher will have to handle installation itself, we will not modify anything
+ * @param name the display name of the custom loader
  * @param mcVersion the base Minecraft version
  * @param loaderVersion the custom loader version
  * @param iconUrl direct url to an icon for the loader
@@ -23,7 +22,6 @@ public record CustomLoader(
         List<String> customGameArgs,
         List<String> customClasspathEntries
 ) implements Loader {
-
     public CustomLoader {
         customJvmArgs = customJvmArgs == null ? List.of() : List.copyOf(customJvmArgs);
         customGameArgs = customGameArgs == null ? List.of() : List.copyOf(customGameArgs);
