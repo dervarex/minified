@@ -1,7 +1,9 @@
 package com.dervarex.minified.launch.exceptions.libraries;
 
 import com.dervarex.minified.launch.launch.modding.Loader;
+import lombok.Getter;
 
+@Getter
 public class FailedToLoadLibrariesException extends RuntimeException {
     private final Loader loader;
 
@@ -14,4 +16,5 @@ public class FailedToLoadLibrariesException extends RuntimeException {
         super(message, cause);
         this.loader = loader;
     }
+
 }
