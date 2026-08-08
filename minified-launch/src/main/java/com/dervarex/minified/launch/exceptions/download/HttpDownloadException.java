@@ -1,5 +1,8 @@
 package com.dervarex.minified.launch.exceptions.download;
 
+import lombok.Getter;
+
+@Getter
 public class HttpDownloadException extends DownloadException {
 
     private final int statusCode;
@@ -14,7 +17,4 @@ public class HttpDownloadException extends DownloadException {
         this.statusCode = statusCode;
     }
 
-    public int getStatusCode() {
-        return statusCode;
-    }
 }
