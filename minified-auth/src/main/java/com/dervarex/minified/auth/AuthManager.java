@@ -82,6 +82,7 @@ public class AuthManager {
         } else {
             BASE_DIR = Path.of(System.getProperty("user.home"), ".local", "share"); // linux
         }
+        BASE_DIR = BASE_DIR.resolve(launcherName);
         SESSION_FILE = BASE_DIR.resolve("session.enc");
         KEY_FILE = BASE_DIR.resolve("master.key");
         prepareKeyDirectories();
@@ -202,19 +203,26 @@ public class AuthManager {
      *
      * @return the initial login state as JSON, usually {@code STARTING} or {@code PENDING}
      */
-    @API(status = API.Status.STABLE)
-    public static synchronized String startDeviceCodeLoginAsync() {
-        // Already in progress?
-        if (loginState.status == LoginStatus.PENDING || loginState.status == LoginStatus.STARTING) {
-            System.out.println("Login already in progress");
-            return GSON.toJson(loginState);
+    @API(status = API.Status.EXPERIMENTAL)
+    public static String startDeviceCodeLoginAsync() {
+        final LoginState currentState;
+        final CountDownLatch latch;
+
+        synchronized (AuthManager.class) {
+            // Already in progress?
+            if (loginState.status == LoginStatus.PENDING || loginState.status == LoginStatus.STARTING) {
+                System.out.println("Login already in progress");
+                return GSON.toJson(loginState);
+            }
+            currentState = new LoginState();
+            currentState.status = LoginStatus.STARTING;
+            currentState.message = "Starting device code login";
+            loginState = currentState;
+            codeReadyLatch = new CountDownLatch(1);
+            latch = codeReadyLatch;
         }
-        loginState = new LoginState();
-        loginState.status = LoginStatus.STARTING;
-        loginState.message = "Starting device code login";
-        notifyStateChanged();
+        notifyStateChanged(currentState);
         System.out.println("Starting device code login");
-        codeReadyLatch = new CountDownLatch(1);
 
         new Thread(() -> {
             HttpClient httpClient = MinecraftAuth.createHttpClient();
@@ -224,45 +232,48 @@ public class AuthManager {
                         httpClient,
                         new StepMsaDeviceCode.MsaDeviceCodeCallback(msa -> {
                             // expose code & URLs immediately
-                            loginState.userCode = msa.getUserCode();
-                            loginState.verificationUri = msa.getVerificationUri();
-                            loginState.directVerificationUri = msa.getDirectVerificationUri();
-                            loginState.status = LoginStatus.PENDING;
-                            loginState.message = "Waiting for user to authorize in browser";
-                            notifyStateChanged();
+                            currentState.userCode = msa.getUserCode();
+                            currentState.verificationUri = msa.getVerificationUri();
+                            currentState.directVerificationUri = msa.getDirectVerificationUri();
+                            currentState.status = LoginStatus.PENDING;
+                            currentState.message = "Waiting for user to authorize in browser";
+                            notifyStateChanged(currentState);
                             System.out.println("Waiting for user authorization");
                             //try { OSUtil.openBrowser(msa.getDirectVerificationUri()); } catch (Exception ignored) {}
-                            if (codeReadyLatch != null) codeReadyLatch.countDown();
+                            latch.countDown();
                         })
                 );
 
                 User user = persistSession(javaSession);
 
-                loginState.status = LoginStatus.SUCCESS;
-                loginState.username = user.username();
-                loginState.message = "Login successful";
-                notifyStateChanged();
+                currentState.status = LoginStatus.SUCCESS;
+                currentState.username = user.username();
+                currentState.message = "Login successful";
+                notifyStateChanged(currentState);
                 System.out.println("Login successful for " + user.username());
-                if (codeReadyLatch != null) codeReadyLatch.countDown();
+                latch.countDown();
             } catch (NoConnectionException nce) {
-                loginState.status = LoginStatus.ERROR;
-                loginState.message = nce.getMessage();
-                notifyStateChanged();
+                currentState.status = LoginStatus.ERROR;
+                currentState.message = nce.getMessage();
+                notifyStateChanged(currentState);
                 System.out.println("Connectivity error: " + nce.getMessage());
-                if (codeReadyLatch != null) codeReadyLatch.countDown();
+                latch.countDown();
             } catch (Exception e) {
                 StringWriter sw = new StringWriter();
                 e.printStackTrace(new PrintWriter(sw));
-                loginState.status = LoginStatus.ERROR;
-                loginState.message = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
-                notifyStateChanged();
-                System.out.println("Async login failed: " + loginState.message + "\n" + sw);
-                if (codeReadyLatch != null) codeReadyLatch.countDown();
+                currentState.status = LoginStatus.ERROR;
+                currentState.message = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
+                notifyStateChanged(currentState);
+                System.out.println("Async login failed: " + currentState.message + "\n" + sw);
+                latch.countDown();
             }
         }, "DeviceCodeLoginThread").start();
 
         try {
-            if (codeReadyLatch != null) codeReadyLatch.await(2, TimeUnit.SECONDS);
+            boolean ready = latch.await(2, TimeUnit.SECONDS);
+            if (!ready) {
+                System.out.println("Timed out waiting for code or login result");
+            }
         } catch (InterruptedException ignored) {
         }
         return GSON.toJson(loginState);
@@ -365,8 +376,12 @@ public class AuthManager {
     }
 
     private static void notifyStateChanged() {
+        notifyStateChanged(loginState);
+    }
+
+    private static void notifyStateChanged(LoginState state) {
         for (LoginStateChangeListener listener : listeners) {
-            listener.onStateChanged(loginState);
+            listener.onStateChanged(state);
         }
     }
 
