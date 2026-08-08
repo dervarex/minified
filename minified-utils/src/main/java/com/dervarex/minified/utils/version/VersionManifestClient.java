@@ -15,7 +15,7 @@ public final class VersionManifestClient {
     }
 
     /**
-     * @return the minecraft version manifest
+     * @return the Minecraft version manifest
      * @throws HttpException if there is no working connection
      * @throws IOException if there is an error reading the response
      */
@@ -24,7 +24,7 @@ public final class VersionManifestClient {
     }
 
     /**
-     * @return all minecraft versions as an iterable of JSON values,
+     * @return all Minecraft versions as an iterable of JSON values,
      * each containing the version's metadata (id, type, url, time, releaseTime)
      * @throws HttpException
      * @throws IOException

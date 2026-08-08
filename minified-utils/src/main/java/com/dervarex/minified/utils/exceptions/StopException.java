@@ -19,8 +19,8 @@ public class StopException extends RuntimeException {
     public enum Severity { INFO, WARNING, ERROR, FATAL }
 
     private final long timestampEpochMillis = System.currentTimeMillis();
-    private final String reason; // short human readable reason
-    private final String code; // machine readable code (e.g. "USER_CANCEL", "PRECONDITION_FAILED")
+    private final String reason; // short human-readable reason
+    private final String code; // machine-readable code (e.g. "USER_CANCEL", "PRECONDITION_FAILED")
     private final Severity severity;
     private final boolean recoverable; // true if caller may retry later
     private final Map<String, String> metadata; // extra context (operation, ids, etc.)

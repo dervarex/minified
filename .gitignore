@@ -1,5 +1,5 @@
 # ignore intelliJ files
-.idea/
+.idea/*
 *.iml
 
 # dictionary for spellchecker should be kept

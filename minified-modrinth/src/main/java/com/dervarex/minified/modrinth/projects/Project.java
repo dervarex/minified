@@ -13,9 +13,7 @@ import java.time.Instant;
  */
 public class Project {
 
-    // ------------------------------------------------------------------------
     // IDs
-    // ------------------------------------------------------------------------
 
     /** Project ID returned by the detail endpoint. */
     public String id;
@@ -25,9 +23,7 @@ public class Project {
 
     public String slug;
 
-    // ------------------------------------------------------------------------
     // Basic information
-    // ------------------------------------------------------------------------
 
     public String title;
     public String description;
@@ -41,9 +37,7 @@ public class Project {
     public ProjectType projectType;
     public String monetizationStatus;
 
-    // ------------------------------------------------------------------------
     // Ownership
-    // ------------------------------------------------------------------------
 
     public String author;
     public String authorId;

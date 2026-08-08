@@ -138,7 +138,7 @@ public class AuthManager {
             StepFullJavaSession.FullJavaSession javaSession =
                     MinecraftAuth.JAVA_DEVICE_CODE_LOGIN.getFromInput(httpClient,
                             new StepMsaDeviceCode.MsaDeviceCodeCallback(msa -> {
-                                // expose code & urls immediately
+                                // expose code & URLs immediately
                                 loginState.userCode = msa.getUserCode();
                                 loginState.verificationUri = msa.getVerificationUri();
                                 loginState.directVerificationUri = msa.getDirectVerificationUri();
@@ -223,7 +223,7 @@ public class AuthManager {
                 StepFullJavaSession.FullJavaSession javaSession = MinecraftAuth.JAVA_DEVICE_CODE_LOGIN.getFromInput(
                         httpClient,
                         new StepMsaDeviceCode.MsaDeviceCodeCallback(msa -> {
-                            // expose code & urls immediately
+                            // expose code & URLs immediately
                             loginState.userCode = msa.getUserCode();
                             loginState.verificationUri = msa.getVerificationUri();
                             loginState.directVerificationUri = msa.getDirectVerificationUri();
