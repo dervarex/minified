@@ -52,6 +52,9 @@ public class Project {
     public SideSupport clientSide;
     public SideSupport serverSide;
 
+    /** Preferred over clientSide/serverSide going forward. */
+    public Environment[] environment;
+
     // Tags
 
     public String[] categories;
@@ -60,6 +63,9 @@ public class Project {
     public String[] versions;
     public String[] gameVersions;
     public String[] loaders;
+
+    /** Search endpoint only. */
+    public DisclosureType[] disclosureTypes;
 
     // Statistics
 
@@ -74,6 +80,10 @@ public class Project {
     // Appearance
 
     public String iconUrl;
+
+    /** Detail endpoint only; the unoptimized icon. */
+    public String rawIconUrl;
+
     public Integer color;
 
     // Links
@@ -141,6 +151,14 @@ public class Project {
 
     public boolean supportsVersion(String version) {
         return contains(gameVersions, version);
+    }
+
+    public boolean supportsEnvironment(Environment value) {
+        return contains(environment, value);
+    }
+
+    public boolean hasDisclosure(DisclosureType value) {
+        return contains(disclosureTypes, value);
     }
 
     public GalleryImage getFeaturedGallery() {
@@ -211,6 +229,20 @@ public class Project {
         }
 
         for (String entry : array) {
+            if (value.equals(entry)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static <T> boolean contains(T[] array, T value) {
+        if (array == null || value == null) {
+            return false;
+        }
+
+        for (T entry : array) {
             if (value.equals(entry)) {
                 return true;
             }

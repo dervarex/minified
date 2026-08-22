@@ -4,6 +4,7 @@ import com.dervarex.minified.modrinth.Modrinth;
 import com.dervarex.minified.modrinth.exceptions.ModrinthDependencyResolutionException;
 import com.dervarex.minified.modrinth.exceptions.ModrinthStateException;
 import com.dervarex.minified.modrinth.loaders.ModLoader;
+import com.dervarex.minified.modrinth.projects.Environment;
 import com.dervarex.minified.modrinth.projects.Project;
 
 import java.nio.file.Path;
@@ -26,6 +27,7 @@ public class Version {
     public Instant published;
     public String[] gameVersions;
     public String[] loaders;
+    public Environment environment;
     public VersionDependency[] dependencies;
     public VersionFile[] files;
 
@@ -80,6 +82,10 @@ public class Version {
 
     public String[] getLoaders() {
         return loaders;
+    }
+
+    public Environment getEnvironment() {
+        return environment;
     }
 
     public VersionFile[] getFiles() {

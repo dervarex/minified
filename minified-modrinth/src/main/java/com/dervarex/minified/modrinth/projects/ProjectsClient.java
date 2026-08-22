@@ -12,9 +12,12 @@ import com.dervarex.minified.utils.json.JsonObject;
 import com.dervarex.minified.utils.json.JsonValue;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.function.IntFunction;
 
 public final class ProjectsClient extends AbstractModrinthClient {
     public ProjectsClient(Modrinth modrinth) {
@@ -115,12 +118,14 @@ public final class ProjectsClient extends AbstractModrinthClient {
         project.team = ModrinthJson.string(object, "team");
         project.clientSide = SideSupport.fromApiValue(ModrinthJson.string(object, "client_side"));
         project.serverSide = SideSupport.fromApiValue(ModrinthJson.string(object, "server_side"));
+        project.environment = mapValues(ModrinthJson.strings(object, "environment"), Environment::fromApiValue, Environment[]::new);
         project.categories = ModrinthJson.strings(object, "categories");
         project.displayCategories = ModrinthJson.strings(object, "display_categories");
         project.additionalCategories = ModrinthJson.strings(object, "additional_categories");
         project.versions = ModrinthJson.strings(object, "versions");
         project.gameVersions = ModrinthJson.strings(object, "game_versions");
         project.loaders = ModrinthJson.strings(object, "loaders");
+        project.disclosureTypes = mapValues(ModrinthJson.strings(object, "disclosure_types"), DisclosureType::fromApiValue, DisclosureType[]::new);
         Long follows = ModrinthJson.longValue(object, "follows");
         project.follows = follows == null ? 0L : follows;
         Long followers = ModrinthJson.longValue(object, "followers");
@@ -128,6 +133,7 @@ public final class ProjectsClient extends AbstractModrinthClient {
         Long downloads = ModrinthJson.longValue(object, "downloads");
         project.downloads = downloads == null ? 0L : downloads;
         project.iconUrl = ModrinthJson.string(object, "icon_url");
+        project.rawIconUrl = ModrinthJson.string(object, "raw_icon_url");
         project.color = ModrinthJson.integer(object, "color");
         project.threadId = ModrinthJson.string(object, "thread_id");
         project.issuesUrl = ModrinthJson.string(object, "issues_url");
@@ -142,15 +148,15 @@ public final class ProjectsClient extends AbstractModrinthClient {
                     .map(this::parseDonationUrl)
                     .toArray(DonationUrl[]::new);
         }
-        JsonObject license = ModrinthJson.object(object, "license");
-        if (license != null) {
-            project.setLicense(parseLicense(license));
+        JsonValue license = object.get("license");
+        if (license != null && !license.isNull()) {
+            // Detail endpoint returns a license object, search hits only return the license id as a string.
+            project.setLicense(license.isObject() ? parseLicense(license.asObject()) : new com.dervarex.minified.modrinth.projects.ProjectLicense(license.asString(), null, null));
         }
         JsonArray gallery = ModrinthJson.array(object, "gallery");
         if (gallery != null) {
             project.gallery = gallery.values().stream()
                     .filter(value -> value != null && !value.isNull())
-                    .map(JsonValue::asObject)
                     .map(this::parseGalleryImage)
                     .toArray(GalleryImage[]::new);
         }
@@ -169,6 +175,16 @@ public final class ProjectsClient extends AbstractModrinthClient {
         donationUrl.platform = ModrinthJson.string(object, "platform");
         donationUrl.url = ModrinthJson.string(object, "url");
         return donationUrl;
+    }
+
+    private GalleryImage parseGalleryImage(JsonValue value) {
+        if (value.isString()) {
+            // Search hits only return the gallery image URL, without any metadata
+            GalleryImage image = new GalleryImage();
+            image.url = value.asString();
+            return image;
+        }
+        return parseGalleryImage(value.asObject());
     }
 
     private GalleryImage parseGalleryImage(JsonObject object) {
@@ -231,6 +247,13 @@ public final class ProjectsClient extends AbstractModrinthClient {
         }
         builder.append(']');
         return builder.toString();
+    }
+
+    private static <T> T[] mapValues(String[] values, Function<String, T> mapper, IntFunction<T[]> generator) {
+        if (values == null) {
+            return null;
+        }
+        return Arrays.stream(values).map(mapper).toArray(generator);
     }
 
     private static String toJsonArray(String... values) {
