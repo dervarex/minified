@@ -1,10 +1,5 @@
 # Minified
 
-> [!IMPORTANT]
-> **Minified is currently undergoing a major cleanup.** <p>
-> A lot of internals are being restructured and the documentation is temporarily outdated as a result. <p>
-> If you're just getting started, it's probably best to wait until this is finished, the improvements will be substantial and the docs will be fully up to date again.
-
 A lightweight Java library for downloading, managing and launching Minecraft.
 
 Supports Vanilla, Forge, NeoForge, Fabric and Quilt.
