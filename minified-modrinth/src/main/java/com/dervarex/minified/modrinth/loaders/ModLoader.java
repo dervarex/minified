@@ -1,5 +1,8 @@
 package com.dervarex.minified.modrinth.loaders;
 
+import org.apiguardian.api.API;
+
+@API(status = API.Status.STABLE)
 public enum ModLoader {
     FABRIC("fabric"),
     FORGE("forge"),
@@ -21,10 +24,12 @@ public enum ModLoader {
         this.apiValue = apiValue;
     }
 
+    @API(status = API.Status.INTERNAL)
     public String getApiValue() {
         return apiValue;
     }
 
+    @API(status = API.Status.INTERNAL)
     public static ModLoader fromApiValue(String value) {
         if (value == null) {
             return null;

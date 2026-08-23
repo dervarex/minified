@@ -1,6 +1,6 @@
 package com.dervarex.minified.modrinth.internal;
 
-import com.dervarex.minified.modrinth.ModrinthSerializationException;
+import com.dervarex.minified.modrinth.exceptions.ModrinthSerializationException;
 import com.dervarex.minified.utils.json.JsonArray;
 import com.dervarex.minified.utils.json.JsonObject;
 import com.dervarex.minified.utils.json.JsonValue;

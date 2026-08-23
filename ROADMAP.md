@@ -1,7 +1,6 @@
 ## Roadmap
 
-* Add Server Management
-* code&project cleanup, more Exceptions, maybe like some exceptionEvent((Minified)Exception exception)?, package-info.java's  | nothing should ever implement -launch
+* minified-worlds
 * Test and document supported Minecraft versions
 * Support older Minecraft versions for all currently supported loaders
 
@@ -12,3 +11,5 @@
 * Own launcher to test the library in a real-world scenario
     * The launcher was supposed to be built using Compose Desktop.
       Unfortunately, Compose Desktop and I had creative differences regarding the definition of a "working build". The feature was therefore sacrificed in favor of preserving my remaining motivation.
+* **Server Management**
+    * No concrete plan yet for what this should do or how the launcher would handle it, may be reconsidered when requested

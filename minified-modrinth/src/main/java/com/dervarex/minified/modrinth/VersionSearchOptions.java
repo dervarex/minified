@@ -1,6 +1,7 @@
 package com.dervarex.minified.modrinth;
 
 import com.dervarex.minified.modrinth.loaders.ModLoader;
+import org.apiguardian.api.API;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -8,6 +9,7 @@ import java.util.Objects;
 /**
  * Filters used when listing versions for a project.
  */
+@API(status = API.Status.STABLE)
 public final class VersionSearchOptions extends SearchOptions {
     public String[] gameVersions;
     public String[] loaders;

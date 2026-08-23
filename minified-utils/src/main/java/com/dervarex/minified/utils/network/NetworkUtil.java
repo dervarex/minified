@@ -1,10 +1,12 @@
 package com.dervarex.minified.utils.network;
 
 import com.dervarex.minified.utils.exceptions.NoConnectionException;
+import org.apiguardian.api.API;
 
 import java.io.IOException;
 import java.net.*;
 
+@API(status = API.Status.STABLE)
 public class NetworkUtil {
     private static final boolean fakeOffline = false; // used for debug purposes currently
     /**

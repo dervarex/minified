@@ -1,12 +1,14 @@
 package com.dervarex.minified.launch.launch.modding.neoforge.api;
 
+import com.dervarex.minified.launch.exceptions.loader.neoforge.FailedToReadMetadataException;
+import com.dervarex.minified.launch.exceptions.loader.neoforge.MalformedMetadataException;
 import com.dervarex.minified.utils.ApiEndpoints;
+import org.apiguardian.api.API;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
 import javax.xml.parsers.DocumentBuilderFactory;
-import java.io.IOException;
 import java.io.StringReader;
 import java.math.BigInteger;
 import java.net.URI;
@@ -29,10 +31,12 @@ public final class NeoVersionFetcher {
 
     private final AtomicReference<List<String>> cachedVersions = new AtomicReference<>();
 
+    @API(status = API.Status.STABLE)
     public String getLatest(String minecraftVersion) {
         return resolveLoaderVersion(minecraftVersion);
     }
 
+    @API(status = API.Status.STABLE)
     public String resolveLoaderVersion(String versionOrMinecraftVersion) {
         List<String> allVersions = getAllVersions();
 
@@ -46,16 +50,15 @@ public final class NeoVersionFetcher {
                 .toList();
 
         if (!matchingBranch.isEmpty()) {
-            return matchingBranch.get(0);
+            return matchingBranch.getFirst();
         }
 
-        return allVersions.stream()
-                .sorted(VERSION_ORDER.reversed())
-                .findFirst()
+        return allVersions.stream().max(VERSION_ORDER)
                 .orElseThrow(() -> new IllegalStateException("No NeoForge versions found in metadata"));
     }
 
-    private List<String> getAllVersions() {
+    @API(status = API.Status.STABLE)
+    public List<String> getAllVersions() {
         List<String> cached = cachedVersions.get();
         if (cached != null) {
             return cached;
@@ -63,7 +66,7 @@ public final class NeoVersionFetcher {
 
         List<String> loaded = fetchVersions();
         cachedVersions.compareAndSet(null, loaded);
-        return Objects.requireNonNullElseGet(cachedVersions.get(), () -> loaded);
+        return Objects.requireNonNullElse(cachedVersions.get(), loaded);
     }
 
     private List<String> fetchVersions() {
@@ -76,7 +79,7 @@ public final class NeoVersionFetcher {
 
             HttpResponse<String> response = HTTP.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() != 200) {
-                throw new IOException("Failed to fetch NeoForge metadata: HTTP " + response.statusCode());
+                throw new FailedToReadMetadataException("Failed to fetch NeoForge metadata: HTTP " + response.statusCode());
             }
 
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -94,11 +97,11 @@ public final class NeoVersionFetcher {
                 }
             }
             if (versions.isEmpty()) {
-                throw new IllegalStateException("NeoForge metadata did not contain any versions");
+                throw new MalformedMetadataException("NeoForge metadata did not contain any versions");
             }
             return List.copyOf(versions);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to read NeoForge metadata", e);
+            throw new FailedToReadMetadataException("Failed to read NeoForge metadata", e);
         }
     }
 

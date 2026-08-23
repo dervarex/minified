@@ -6,7 +6,6 @@ import com.dervarex.minified.utils.json.JsonValue;
 import java.io.IOException;
 import java.util.ArrayList;
 
-@SuppressWarnings("unused")
 public final class VersionListProvider {
     private VersionListProvider() {
     }

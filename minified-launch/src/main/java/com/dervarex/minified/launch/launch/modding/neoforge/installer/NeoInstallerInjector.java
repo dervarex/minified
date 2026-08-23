@@ -1,17 +1,20 @@
 package com.dervarex.minified.launch.launch.modding.neoforge.installer;
 
 import com.dervarex.minified.launch.events.loader.InstallNeoforgeEvent;
+import com.dervarex.minified.launch.exceptions.download.DownloadException;
+import com.dervarex.minified.launch.exceptions.loader.neoforge.NeoforgeInstallerReportFailureException;
+import com.dervarex.minified.launch.exceptions.loader.neoforge.NeoforgePreparationException;
 import com.dervarex.minified.launch.launch.LaunchConfiguration;
 import com.dervarex.minified.launch.launch.LaunchContext;
 import com.dervarex.minified.launch.launch.modding.neoforge.api.NeoInstallerFetcher;
 import com.dervarex.minified.launch.launch.modding.neoforge.api.NeoVersionFetcher;
 import com.dervarex.minified.utils.download.DownloadHelper;
+import org.apiguardian.api.API;
 
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URLClassLoader;
 import java.net.http.HttpClient;
@@ -22,8 +25,10 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.function.Consumer;
 
+@API(status = API.Status.INTERNAL, consumers = {"com.dervarex.minified.launch.*"})
 public class NeoInstallerInjector {
     private static final String INSTALLER_FILE_NAME = "neoforge-installer.jar";
+
 
     private static void prepare(LaunchContext context) {
         context.getEventBus().post(new InstallNeoforgeEvent(InstallNeoforgeEvent.Stage.PREPARING, context.getLaunchConfiguration().getLoader().mcVersion(), context.getLaunchConfiguration().getLoader().loaderVersion()));
@@ -46,7 +51,7 @@ public class NeoInstallerInjector {
                 );
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new NeoforgePreparationException(e);
         }
     }
 
@@ -79,7 +84,7 @@ public class NeoInstallerInjector {
 
             sha1 = response.body().trim();
         } catch (IOException | InterruptedException e) {
-            throw new RuntimeException(e);
+            throw new DownloadException(e);
         }
 
         Path installerPath = context.getLaunchConfiguration()
@@ -142,7 +147,7 @@ public class NeoInstallerInjector {
         );
 
         if (result instanceof Boolean ok && !ok) {
-            throw new IllegalStateException("NeoForge installer reported failure");
+            throw new NeoforgeInstallerReportFailureException("NeoForge installer reported failure");
         }
     }
 
@@ -155,16 +160,10 @@ public class NeoInstallerInjector {
                     loader,
                     config.getJarFile().getParent().toFile(),
                     installerPath.toFile(),
-                    System.out::println, // todo replace with logger
+                    System.out::println,
                     context
             );
-        } catch (ReflectiveOperationException e) {
-            context.getEventBus().post(new InstallNeoforgeEvent(InstallNeoforgeEvent.Stage.FAILED, context.getLaunchConfiguration().getLoader().mcVersion(), context.getLaunchConfiguration().getLoader().loaderVersion()));
-            throw new RuntimeException(e);
-        } catch (MalformedURLException e) {
-            context.getEventBus().post(new InstallNeoforgeEvent(InstallNeoforgeEvent.Stage.FAILED, context.getLaunchConfiguration().getLoader().mcVersion(), context.getLaunchConfiguration().getLoader().loaderVersion()));
-            throw new RuntimeException(e);
-        } catch (IOException e) {
+        } catch (ReflectiveOperationException | IOException e) {
             context.getEventBus().post(new InstallNeoforgeEvent(InstallNeoforgeEvent.Stage.FAILED, context.getLaunchConfiguration().getLoader().mcVersion(), context.getLaunchConfiguration().getLoader().loaderVersion()));
             throw new RuntimeException(e);
         }

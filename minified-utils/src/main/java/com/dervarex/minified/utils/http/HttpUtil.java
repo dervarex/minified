@@ -1,6 +1,7 @@
 package com.dervarex.minified.utils.http;
 
 import com.dervarex.minified.utils.exceptions.HttpException;
+import org.apiguardian.api.API;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,6 +13,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Simple yet advanced Http Utility
+ */
+@API(status = API.Status.STABLE)
 public final class HttpUtil {
     private static final int DEFAULT_TIMEOUT_MS = 10_000;
 
@@ -92,17 +97,17 @@ public final class HttpUtil {
 
     private static HttpException buildHttpException(String method, String url, HttpResponse response) {
         HttpException.Method httpMethod = HttpException.Method.valueOf(method.toUpperCase());
-        int code = response.getStatusCode();
+        int code = response.statusCode();
         boolean transientFailure = code == 429 || code == 502 || code == 503 || code == 504;
-        String requestId = response.getHeaders().getOrDefault("x-request-id",
-                response.getHeaders().getOrDefault("X-Request-Id", ""));
+        String requestId = response.headers().getOrDefault("x-request-id",
+                response.headers().getOrDefault("X-Request-Id", ""));
         return new HttpException.Builder()
                 .status(code)
-                .statusMessage(response.getStatusMessage())
+                .statusMessage(response.statusMessage())
                 .method(httpMethod)
                 .url(url)
-                .headers(response.getHeaders())
-                .body(response.getBody())
+                .headers(response.headers())
+                .body(response.body())
                 .requestId(requestId)
                 .transientFailure(transientFailure)
                 .build();

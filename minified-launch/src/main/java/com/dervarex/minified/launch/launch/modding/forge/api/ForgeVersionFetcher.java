@@ -1,8 +1,11 @@
 package com.dervarex.minified.launch.launch.modding.forge.api;
 
+import com.dervarex.minified.launch.exceptions.loader.forge.FailedToFetchPromotionsException;
+import com.dervarex.minified.launch.exceptions.version.FailedToFetchVersionsException;
 import com.dervarex.minified.utils.ApiEndpoints;
 import com.dervarex.minified.utils.json.JsonObject;
 import com.dervarex.minified.utils.json.JsonParser;
+import org.apiguardian.api.API;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
@@ -20,6 +23,7 @@ public class ForgeVersionFetcher {
     private List<String> cachedVersions;
     private JsonObject cachedPromotions;
 
+    @API(status = API.Status.STABLE)
     public List<String> getAvailableVersions() {
         if (cachedVersions != null) {
             return cachedVersions;
@@ -43,10 +47,11 @@ public class ForgeVersionFetcher {
             return cachedVersions;
 
         } catch (IOException | InterruptedException e) {
-            throw new RuntimeException("Failed to fetch Forge versions", e);
+            throw new FailedToFetchVersionsException("Failed to fetch Forge versions", "FORGE", e);
         }
     }
 
+    @API(status = API.Status.STABLE)
     public List<String> getVersionsForMinecraft(String minecraftVersion) {
         return getAvailableVersions()
                 .stream()
@@ -54,6 +59,7 @@ public class ForgeVersionFetcher {
                 .toList();
     }
 
+    @API(status = API.Status.STABLE)
     public String getLatest(String minecraftVersion) {
         JsonObject promos = getPromotions();
 
@@ -64,6 +70,7 @@ public class ForgeVersionFetcher {
         return minecraftVersion + "-" + forgeVersion;
     }
 
+    @API(status = API.Status.STABLE)
     public String getRecommended(String minecraftVersion) {
         JsonObject promos = getPromotions();
 
@@ -102,7 +109,7 @@ public class ForgeVersionFetcher {
             return cachedPromotions;
 
         } catch (IOException | InterruptedException e) {
-            throw new RuntimeException("Failed to fetch Forge promotions", e);
+            throw new FailedToFetchPromotionsException("Failed to fetch Forge promotions", e);
         }
     }
 }

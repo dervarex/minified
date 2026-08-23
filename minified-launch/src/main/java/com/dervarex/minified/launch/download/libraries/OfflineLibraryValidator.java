@@ -1,5 +1,6 @@
 package com.dervarex.minified.launch.download.libraries;
 
+import com.dervarex.minified.launch.exceptions.loader.UnexpectedLoaderException;
 import com.dervarex.minified.launch.launch.modding.Loader;
 import com.dervarex.minified.launch.launch.modding.fabric.FabricLoader;
 import com.dervarex.minified.launch.launch.modding.forge.ForgeLoader;
@@ -16,7 +17,6 @@ import com.dervarex.minified.utils.json.JsonValue;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -63,7 +63,7 @@ public final class OfflineLibraryValidator {
             case NeoforgeLoader ignored -> {
                 // nothing extra here (why do I have to copy and paste this 3 times...)
             }
-            default -> throw new IllegalStateException("Unexpected loader: " + loader);
+            default -> throw new UnexpectedLoaderException("Unexpected loader: " + loader);
         }
 
         if (!problems.isEmpty()) {
@@ -151,7 +151,7 @@ public final class OfflineLibraryValidator {
         }
 
         try {
-            String actualSha1 = sha1(file);
+            String actualSha1 = com.dervarex.minified.utils.sha.Hasher.sha1(file);
             if (!actualSha1.equalsIgnoreCase(expectedSha1)) {
                 problems.add("SHA1 mismatch: " + file);
             }
@@ -166,19 +166,6 @@ public final class OfflineLibraryValidator {
         } catch (IOException e) {
             return true;
         }
-    }
-
-    private static String sha1(Path file) throws Exception {
-        MessageDigest digest = MessageDigest.getInstance("SHA-1");
-        byte[] bytes = Files.readAllBytes(file);
-        byte[] hash = digest.digest(bytes);
-
-        StringBuilder sb = new StringBuilder(hash.length * 2);
-        for (byte b : hash) {
-            sb.append(Character.forDigit((b >>> 4) & 0xF, 16));
-            sb.append(Character.forDigit(b & 0xF, 16));
-        }
-        return sb.toString();
     }
 
     private static NativeDownload resolveNativeDownload(JsonObject library, JsonObject downloads) {

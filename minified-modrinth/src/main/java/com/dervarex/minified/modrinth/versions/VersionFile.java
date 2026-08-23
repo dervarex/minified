@@ -1,6 +1,6 @@
 package com.dervarex.minified.modrinth.versions;
 
-import com.dervarex.minified.modrinth.ModrinthDownloadException;
+import com.dervarex.minified.modrinth.exceptions.ModrinthDownloadException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;

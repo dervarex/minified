@@ -1,3 +1,4 @@
 package com.dervarex.minified.events;
 
-public interface Event {}
+public interface Event {
+}

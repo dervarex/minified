@@ -3,7 +3,6 @@ package com.dervarex.minified.auth;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Tag;
 
 import java.nio.file.Path;
@@ -76,12 +75,12 @@ class AuthTest {
 
         User reloaded = AuthManager.loginWithSavedSession();
         assertNotNull(reloaded);
-        assertNotNull(reloaded.getUuid());
-        assertNotNull(reloaded.getUsername());
+        assertNotNull(reloaded.uuid());
+        assertNotNull(reloaded.username());
         System.out.println("Serialized Session:");
         System.out.println();
-        System.out.println(reloaded.getSerializedSession());
+        System.out.println(reloaded.serializedSession());
         System.out.println();
-        System.out.println("Reloaded session for " + reloaded.getUsername() + " (" + reloaded.getUuid() + ")");
+        System.out.println("Reloaded session for " + reloaded.username() + " (" + reloaded.uuid() + ")");
     }
 }

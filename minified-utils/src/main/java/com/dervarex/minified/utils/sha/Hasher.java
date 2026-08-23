@@ -1,5 +1,7 @@
 package com.dervarex.minified.utils.sha;
 
+import org.apiguardian.api.API;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -7,6 +9,10 @@ import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+/**
+ * Hashing utilities
+ */
+@API(status=API.Status.STABLE)
 public class Hasher {
     private static final char[] HEX = "0123456789abcdef".toCharArray();
 

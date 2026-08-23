@@ -1,10 +1,10 @@
 package com.dervarex.minified.launch.download.assets;
 
-import com.dervarex.minified.utils.ApiEndpoints;
 import com.dervarex.minified.launch.events.download.assets.DownloadAssetsEvent;
+import com.dervarex.minified.launch.exceptions.download.AssetDownloadException;
 import com.dervarex.minified.launch.launch.LaunchContext;
+import com.dervarex.minified.utils.ApiEndpoints;
 import com.dervarex.minified.utils.download.DownloadHelper;
-import com.dervarex.minified.utils.version.VersionManifestClient;
 import com.dervarex.minified.utils.exceptions.NoConnectionException;
 import com.dervarex.minified.utils.http.HttpUtil;
 import com.dervarex.minified.utils.json.JsonFile;
@@ -12,6 +12,7 @@ import com.dervarex.minified.utils.json.JsonObject;
 import com.dervarex.minified.utils.json.JsonValue;
 import com.dervarex.minified.utils.network.NetworkUtil;
 import com.dervarex.minified.utils.sha.Hasher;
+import com.dervarex.minified.utils.version.VersionManifestClient;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -31,7 +32,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
-@SuppressWarnings("unused")
 public class AssetDownloader {
 
     private final ExecutorService pool;
@@ -203,8 +203,8 @@ public class AssetDownloader {
                 future.get();
             }
 
-            String finalFile = targets.isEmpty() ? "" : targets.get(targets.size() - 1).path().getFileName().toString();
-            long finalFileSize = targets.isEmpty() ? 0L : targets.get(targets.size() - 1).size();
+            String finalFile = targets.isEmpty() ? "" : targets.getLast().path().getFileName().toString();
+            long finalFileSize = targets.isEmpty() ? 0L : targets.getLast().size();
 
             updateProgress(
                     totalBytesFinal,
@@ -215,10 +215,9 @@ public class AssetDownloader {
                     progressConsumer,
                     context
             );
-            //System.out.println("All assets downloaded.");
 
         } catch (Exception e) {
-            throw new RuntimeException("Failed to download assets", e);
+            throw new AssetDownloadException("Failed to download assets", e);
         } finally {
             pool.shutdown();
         }

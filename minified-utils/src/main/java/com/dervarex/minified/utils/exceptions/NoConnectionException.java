@@ -1,5 +1,7 @@
 package com.dervarex.minified.utils.exceptions;
 
+import org.apiguardian.api.API;
+
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -9,6 +11,7 @@ import java.util.stream.Collectors;
  * <p>
  * Gives Diagnostics (DNS, TCP, HTTP Tests), user suggestions and can be serialized as JSON.
  */
+@API(status = API.Status.STABLE)
 public class NoConnectionException extends Exception {
 
     private final long timestampEpochMillis = System.currentTimeMillis();

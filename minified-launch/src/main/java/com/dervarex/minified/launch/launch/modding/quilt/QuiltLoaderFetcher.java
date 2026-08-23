@@ -1,13 +1,17 @@
 package com.dervarex.minified.launch.launch.modding.quilt;
 
+import com.dervarex.minified.launch.exceptions.loader.NoLoadersFoundException;
+import com.dervarex.minified.launch.exceptions.version.FailedToFetchVersionsException;
 import com.dervarex.minified.utils.ApiEndpoints;
 import com.dervarex.minified.utils.http.HttpUtil;
 import com.dervarex.minified.utils.json.JsonArray;
 import com.dervarex.minified.utils.json.JsonObject;
 import com.dervarex.minified.utils.json.JsonParser;
+import org.apiguardian.api.API;
 
 public class QuiltLoaderFetcher {
 
+    @API(status = API.Status.STABLE)
     public static String getLatestLoaderVersion(
             String minecraftVersion
     ) throws Exception {
@@ -19,9 +23,10 @@ public class QuiltLoaderFetcher {
                 .asArray();
 
         if (loaders.size() == 0) {
-            throw new RuntimeException(
+            throw new NoLoadersFoundException(
                     "No Quilt loaders found for Minecraft "
-                            + minecraftVersion
+                            + minecraftVersion,
+                    minecraftVersion
             );
         }
 
@@ -30,8 +35,9 @@ public class QuiltLoaderFetcher {
                 .asObject();
 
         if (!loader.has("loader")) {
-            throw new RuntimeException(
-                    "Invalid Quilt loader response"
+            throw new FailedToFetchVersionsException(
+                    "Invalid Quilt loader response",
+                    "QUILT"
             );
         }
 
@@ -42,6 +48,7 @@ public class QuiltLoaderFetcher {
                 .asString();
     }
 
+    @API(status = API.Status.STABLE)
     public static JsonObject getProfileJson(
             String minecraftVersion,
             String loaderVersion
@@ -60,6 +67,7 @@ public class QuiltLoaderFetcher {
                 .asObject();
     }
 
+    @API(status = API.Status.STABLE)
     public static JsonObject getLatestProfile(
             String minecraftVersion
     ) throws Exception {
@@ -71,16 +79,5 @@ public class QuiltLoaderFetcher {
                 minecraftVersion,
                 loaderVersion
         );
-    }
-
-    public static void main(String[] args) {
-        try {
-            String minecraftVersion = "1.21.11";
-            JsonObject profile = getLatestProfile(minecraftVersion);
-            System.out.println("Latest Quilt loader profile for Minecraft " + minecraftVersion + ":");
-            System.out.println(profile.toString());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 }

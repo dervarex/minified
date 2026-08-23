@@ -4,7 +4,6 @@
  * <p>Only the auth implementation should use this package. Application code should stay in
  * {@code com.dervarex.minified.auth} and treat this package as private implementation detail.
  */
-@ApiStatus.Internal
 package com.dervarex.minified.auth.encryption;
 
-import org.jetbrains.annotations.ApiStatus;
+import org.apiguardian.api.API;

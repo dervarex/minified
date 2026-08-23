@@ -1,5 +1,8 @@
 package com.dervarex.minified.launch.profile;
 
+import com.dervarex.minified.launch.exceptions.loader.UnknownLoaderTypeException;
+import com.dervarex.minified.launch.exceptions.profile.FailedToLoadProfileException;
+import com.dervarex.minified.launch.exceptions.profile.FailedToSaveProfileException;
 import com.dervarex.minified.launch.launch.LaunchConfiguration;
 import com.dervarex.minified.launch.launch.modding.Loader;
 import com.dervarex.minified.launch.launch.modding.custom.CustomLoader;
@@ -11,12 +14,15 @@ import com.dervarex.minified.launch.launch.modding.vanilla.VanillaLoader;
 import com.dervarex.minified.utils.json.JsonArray;
 import com.dervarex.minified.utils.json.JsonFile;
 import com.dervarex.minified.utils.json.JsonObject;
+import com.dervarex.minified.utils.json.JsonValue;
+import org.apiguardian.api.API;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 
 public class ProfileFactory {
@@ -34,6 +40,7 @@ public class ProfileFactory {
      * @param profile the LaunchConfiguration that should be saved
      * @param path the full path to the JSON file where it should be saved to
      */
+    @API(status = API.Status.STABLE)
     public static void save(LaunchConfiguration profile, Path path) {
         JsonFile profileJson = new JsonFile();
         JsonObject root = profileJson.asObject();
@@ -102,7 +109,7 @@ public class ProfileFactory {
         try {
             profileJson.save(path);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to save profile", e);
+            throw new FailedToSaveProfileException("Failed to save profile", e);
         }
     }
 
@@ -111,44 +118,59 @@ public class ProfileFactory {
      * @param path the path of the JSON file that was saved by {@link #save(LaunchConfiguration, Path)}
      * @return the LaunchConfiguration that can be used to launch the game
      */
+    @API(status = API.Status.STABLE)
     public static LaunchConfiguration load(Path path) {
-        JsonFile profileJson;
         try {
-            profileJson = new JsonFile(path);
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to load profile", e);
+            JsonFile profileJson = new JsonFile(path);
+            JsonObject root = profileJson.asObject();
+
+            JsonObject resolution = Objects.requireNonNull(root.getObject("resolution"), "Missing 'resolution' section");
+            JsonObject launcher = Objects.requireNonNull(root.getObject("launcher"), "Missing 'launcher' section");
+            JsonObject flags = Objects.requireNonNull(root.getObject("flags"), "Missing 'flags' section");
+            JsonObject paths = Objects.requireNonNull(root.getObject("paths"), "Missing 'paths' section");
+            JsonObject launch = Objects.requireNonNull(root.getObject("launch"), "Missing 'launch' section");
+            JsonObject user = Objects.requireNonNull(root.getObject("user"), "Missing 'user' section");
+
+            Loader loader = null;
+            if (launch.has("loader")) {
+                loader = deserializeLoader(launch.get("loader").asObject());
+            }
+
+            LaunchConfiguration.Builder builder = new LaunchConfiguration.Builder()
+                    .minRam(root.get("minRam").asInt())
+                    .maxRam(root.get("maxRam").asInt())
+                    .downloadThreads(root.get("downloadThreads").asInt())
+                    .launcherName(launcher.get("name").asString())
+                    .launcherVersion(launcher.get("version").asString())
+                    .isDemoUser(flags.get("demoUser").asBoolean())
+                    .offlineUsername(user.get("offlineUsername").asString());
+
+            if (flags.get("customResolution").asBoolean()) {
+                builder.resolution(
+                        resolution.get("width").asInt(),
+                        resolution.get("height").asInt()
+                );
+            }
+
+            applyPaths(paths, builder);
+
+            if (launch.has("extraJvmArgs")) {
+                builder.extraJvmArgs(readStringList(launch.getArray("extraJvmArgs")));
+            }
+
+            if (loader != null) {
+                builder.loader(loader);
+            }
+
+            return builder.build();
+        } catch (UnknownLoaderTypeException e) {
+            throw e;
+        } catch (IOException | RuntimeException e) {
+            throw new FailedToLoadProfileException("Failed to load profile", e);
         }
+    }
 
-        JsonObject root = profileJson.asObject();
-
-        JsonObject resolution = root.getObject("resolution");
-        JsonObject launcher = root.getObject("launcher");
-        JsonObject flags = root.getObject("flags");
-        JsonObject paths = root.getObject("paths");
-        JsonObject launch = root.getObject("launch");
-        JsonObject user = root.getObject("user");
-
-        Loader loader = null;
-        if (launch.has("loader")) {
-            loader = deserializeLoader(launch.get("loader").asObject());
-        }
-
-        LaunchConfiguration.Builder builder = new LaunchConfiguration.Builder()
-                .minRam(root.get("minRam").asInt())
-                .maxRam(root.get("maxRam").asInt())
-                .downloadThreads(root.get("downloadThreads").asInt())
-                .launcherName(launcher.get("name").asString())
-                .launcherVersion(launcher.get("version").asString())
-                .isDemoUser(flags.get("demoUser").asBoolean())
-                .offlineUsername(user.get("offlineUsername").asString());
-
-        if (flags.get("customResolution").asBoolean()) {
-            builder.resolution(
-                    resolution.get("width").asInt(),
-                    resolution.get("height").asInt()
-            );
-        }
-
+    private static void applyPaths(JsonObject paths, LaunchConfiguration.Builder builder) {
         if (paths.has("jarFile")) {
             builder.jarFile(Path.of(paths.get("jarFile").asString()));
         }
@@ -168,49 +190,42 @@ public class ProfileFactory {
         if (paths.has("customJavaExecutable")) {
             builder.customJavaExecutable(Path.of(paths.get("customJavaExecutable").asString()));
         }
-
-        if (launch.has("extraJvmArgs")) {
-            builder.extraJvmArgs(
-                    launch.getArray("extraJvmArgs")
-                            .values()
-                            .stream()
-                            .map(v -> v.asString())
-                            .toList()
-            );
-        }
-
-        if (loader != null) {
-            builder.loader(loader);
-        }
-
-        return builder.build();
     }
 
     private static JsonObject serializeLoader(Loader loader) {
         JsonObject json = new JsonObject();
 
-        if (loader instanceof CustomLoader custom) {
+        if (loader instanceof CustomLoader(
+                String name,
+                String mcVersion,
+                String loaderVersion,
+                String iconUrl,
+                String mainClass,
+                List<String> customJvmArgs,
+                List<String> customGameArgs,
+                List<String> customClasspathEntries
+        )) {
             json.put("type", "CUSTOM");
-            json.put("name", custom.name());
-            json.put("mcVersion", custom.mcVersion());
-            json.put("loaderVersion", custom.loaderVersion());
-            json.put("iconUrl", custom.iconUrl());
-            json.put("mainClass", custom.mainClass());
+            json.put("name", name);
+            json.put("mcVersion", mcVersion);
+            json.put("loaderVersion", loaderVersion);
+            json.put("iconUrl", iconUrl);
+            json.put("mainClass", mainClass);
 
             JsonArray jvmArgs = new JsonArray();
-            for (String arg : custom.customJvmArgs()) {
+            for (String arg : customJvmArgs) {
                 jvmArgs.add(arg);
             }
             json.put("customJvmArgs", jvmArgs);
 
             JsonArray gameArgs = new JsonArray();
-            for (String arg : custom.customGameArgs()) {
+            for (String arg : customGameArgs) {
                 gameArgs.add(arg);
             }
             json.put("customGameArgs", gameArgs);
 
             JsonArray classpathEntries = new JsonArray();
-            for (String entry : custom.customClasspathEntries()) {
+            for (String entry : customClasspathEntries) {
                 classpathEntries.add(entry);
             }
             json.put("customClasspathEntries", classpathEntries);
@@ -230,7 +245,7 @@ public class ProfileFactory {
         Function<JsonObject, Loader> loaderFactory = LOADERS.get(type);
 
         if (loaderFactory == null) {
-            throw new IllegalArgumentException("Unknown loader type: " + type);
+            throw new UnknownLoaderTypeException("Unknown loader type: " + type);
         }
 
         return loaderFactory.apply(loaderJson);
@@ -282,9 +297,12 @@ public class ProfileFactory {
     }
 
     private static List<String> readStringList(JsonArray array) {
+        if (array == null) {
+            return List.of();
+        }
         return array.values()
                 .stream()
-                .map(v -> v.asString())
+                .map(JsonValue::asString)
                 .toList();
     }
 }

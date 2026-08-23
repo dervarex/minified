@@ -1,6 +1,7 @@
 package com.dervarex.minified.launch.launch.modding.forge.api;
 
 import com.dervarex.minified.utils.json.JsonFile;
+import org.apiguardian.api.API;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -13,6 +14,7 @@ public class ForgeVersionJson {
      * @return the version JSON for the given forge loader version
      * @throws IOException if an I/O error occurs while fetching the version JSON
      */
+    @API(status = API.Status.STABLE)
     public static JsonFile getVersionJson(Path gameDir, String loaderVersion) throws IOException {
         String version = loaderVersion.split("-")[0];
         String loader = loaderVersion.split("-")[1];

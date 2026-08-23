@@ -4,6 +4,7 @@ import com.dervarex.minified.modrinth.Modrinth;
 import com.dervarex.minified.modrinth.VersionSearchOptions;
 import com.dervarex.minified.modrinth.internal.AbstractModrinthClient;
 import com.dervarex.minified.modrinth.internal.ModrinthJson;
+import com.dervarex.minified.modrinth.projects.Environment;
 
 import com.dervarex.minified.utils.json.JsonArray;
 import com.dervarex.minified.utils.json.JsonObject;
@@ -123,6 +124,7 @@ public final class VersionsClient extends AbstractModrinthClient {
         version.published = ModrinthJson.instant(object, "date_published");
         version.gameVersions = ModrinthJson.strings(object, "game_versions");
         version.loaders = ModrinthJson.strings(object, "loaders");
+        version.environment = Environment.fromApiValue(ModrinthJson.string(object, "environment"));
         JsonArray dependencies = ModrinthJson.array(object, "dependencies");
         if (dependencies != null) {
             version.dependencies = dependencies.values().stream()

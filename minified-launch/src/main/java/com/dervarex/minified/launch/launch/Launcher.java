@@ -1,41 +1,43 @@
 package com.dervarex.minified.launch.launch;
 
 import com.dervarex.minified.auth.User;
+import com.dervarex.minified.events.type.connection.CheckConnectionEvent;
+import com.dervarex.minified.events.type.connection.OfflineEvent;
 import com.dervarex.minified.java.JavaInstallation;
 import com.dervarex.minified.java.JavaManager;
-import com.dervarex.minified.launch.arguments.GameArgumentsParser;
-import com.dervarex.minified.launch.arguments.JvmArgumentsParser;
-import com.dervarex.minified.launch.arguments.LegacyMinecraftArgumentsParser;
 import com.dervarex.minified.launch.download.ClientDownloader;
 import com.dervarex.minified.launch.download.assets.AssetDownloader;
 import com.dervarex.minified.launch.download.libraries.LibraryDownloader;
-import com.dervarex.minified.events.type.connection.CheckConnectionEvent;
-import com.dervarex.minified.launch.events.launch.GameStoppedEvent;
 import com.dervarex.minified.launch.events.launch.GameStartEvent;
-import com.dervarex.minified.events.type.connection.OfflineEvent;
+import com.dervarex.minified.launch.events.launch.GameStoppedEvent;
+import com.dervarex.minified.launch.exceptions.loader.UnexpectedLoaderException;
+import com.dervarex.minified.launch.exceptions.version.MalformedVersionJsonException;
+import com.dervarex.minified.launch.launch.internal.ArgumentsBuilder;
+import com.dervarex.minified.launch.launch.internal.CacheManager;
+import com.dervarex.minified.launch.launch.internal.ClasspathBuilder;
+import com.dervarex.minified.launch.launch.internal.LaunchOptions;
 import com.dervarex.minified.launch.launch.modding.Loader;
 import com.dervarex.minified.launch.launch.modding.custom.CustomLoader;
 import com.dervarex.minified.launch.launch.modding.fabric.FabricLoader;
-import com.dervarex.minified.launch.launch.modding.fabric.FabricLoaderFetcher;
+import com.dervarex.minified.launch.launch.modding.fabric.FabricProfileJsonLoader;
 import com.dervarex.minified.launch.launch.modding.forge.ForgeLoader;
-import com.dervarex.minified.launch.launch.modding.forge.api.ForgeVersionFetcher;
-import com.dervarex.minified.launch.launch.modding.forge.api.ForgeVersionJson;
+import com.dervarex.minified.launch.launch.modding.forge.api.ForgeProfileJsonLoader;
 import com.dervarex.minified.launch.launch.modding.forge.installer.ForgeInstallerInjector;
 import com.dervarex.minified.launch.launch.modding.neoforge.NeoforgeLoader;
-import com.dervarex.minified.launch.launch.modding.neoforge.api.NeoVersionFetcher;
-import com.dervarex.minified.launch.launch.modding.neoforge.api.NeoVersionJson;
+import com.dervarex.minified.launch.launch.modding.neoforge.api.NeoProfileJsonLoader;
 import com.dervarex.minified.launch.launch.modding.neoforge.installer.NeoInstallerInjector;
 import com.dervarex.minified.launch.launch.modding.quilt.QuiltLoader;
-import com.dervarex.minified.launch.launch.modding.quilt.QuiltLoaderFetcher;
+import com.dervarex.minified.launch.launch.modding.quilt.QuiltProfileJsonLoader;
 import com.dervarex.minified.launch.launch.modding.vanilla.VanillaLoader;
 import com.dervarex.minified.launch.utils.X11Helper;
-import com.dervarex.minified.utils.version.VersionMetadataProvider;
 import com.dervarex.minified.utils.exceptions.HttpException;
 import com.dervarex.minified.utils.exceptions.NoConnectionException;
 import com.dervarex.minified.utils.exceptions.OfflineModeNeedsNetworkException;
-import com.dervarex.minified.utils.http.HttpUtil;
-import com.dervarex.minified.utils.json.*;
+import com.dervarex.minified.utils.json.JsonFile;
+import com.dervarex.minified.utils.json.JsonObject;
+import com.dervarex.minified.utils.json.JsonValue;
 import com.dervarex.minified.utils.network.NetworkUtil;
+import org.apiguardian.api.API;
 
 import java.io.File;
 import java.io.IOException;
@@ -66,6 +68,7 @@ public class Launcher {
      * .build();
      * }</pre>
      */
+    @API(status = API.Status.STABLE)
     public static void launchMinecraft(
             User user,
             LaunchConfiguration launchConfig) {
@@ -77,7 +80,7 @@ public class Launcher {
             context.setOnline(true);
             try {
                 context.getEventBus().post(new CheckConnectionEvent());
-                NetworkUtil.ensureOnline("launch minecraft");
+                NetworkUtil.ensureOnline("launch Minecraft");
             } catch (NoConnectionException e) {
                 context.setOnline(false);
                 context.getEventBus().post(new OfflineEvent());
@@ -93,11 +96,10 @@ public class Launcher {
                 }
             }
 
-            JsonFile versionJson = loadVersionJson(loader.mcVersion(), context.isOnline());
+            JsonFile versionJson = CacheManager.loadVersionJson(loader.mcVersion(), context.isOnline());
 
             JavaInstallation javaInstallation;
             if (launchConfig.getCustomJavaExecutable() == null) {
-                //context.getEventBus().post(new EnsureJavaEvent());
                 javaInstallation =
                         JavaManager.ensureJavaVersion(
                                 JavaManager.getRequiredJavaVersion(versionJson)
@@ -119,7 +121,7 @@ public class Launcher {
             if (loader instanceof CustomLoader customLoader && customLoader.customClasspathEntries() != null) {
                 StringBuilder cpBuilder = new StringBuilder(classpath);
                 for (String entry : customLoader.customClasspathEntries()) {
-                    if (cpBuilder.length() > 0) {
+                    if (!cpBuilder.isEmpty()) {
                         cpBuilder.append(File.pathSeparator);
                     }
                     cpBuilder.append(entry);
@@ -137,7 +139,7 @@ public class Launcher {
                     );
 
             List<String> jvmArgs =
-                    buildJvmArguments(
+                    ArgumentsBuilder.buildJvmArguments(
                             versionJson,
                             launchConfig,
                             options,
@@ -160,7 +162,7 @@ public class Launcher {
             );
 
             List<String> gameArgs =
-                    buildGameArguments(
+                    ArgumentsBuilder.buildGameArguments(
                             versionJson,
                             options,
                             loader,
@@ -192,7 +194,7 @@ public class Launcher {
         }
     }
 
-    private static void downloadFiles( // todo move to a different file
+    private static void downloadFiles(
             String version,
             LaunchContext context
     ) throws HttpException, IOException {
@@ -228,160 +230,6 @@ public class Launcher {
         }
     }
 
-    private static List<String> buildJvmArguments(
-            JsonFile versionJson,
-            LaunchConfiguration launchConfig,
-            LaunchOptions options,
-            Loader loader,
-            String version,
-            boolean online
-    ) {
-        JsonArray mergedJvm = new JsonArray();
-
-        JsonValue argumentsValue = versionJson.get("arguments");
-        if (argumentsValue != null) {
-            JsonObject arguments = argumentsValue.asObject();
-
-            JsonValue defaultUserJvmValue = arguments.get("default-user-jvm");
-            if (defaultUserJvmValue != null) {
-                for (JsonValue value : defaultUserJvmValue.asArray()) {
-                    mergedJvm.add(value);
-                }
-            }
-
-            JsonValue jvmValue = arguments.get("jvm");
-            if (jvmValue != null) {
-                for (JsonValue value : jvmValue.asArray()) {
-                    mergedJvm.add(value);
-                }
-            }
-        }
-
-        List<String> jvmArgs = JvmArgumentsParser.parse(
-                mergedJvm,
-                launchConfig.getMinRam(),
-                launchConfig.getMaxRam()
-        );
-
-        jvmArgs.addAll(launchConfig.getExtraJvmArgs());
-        jvmArgs.removeIf(arg -> arg.equals("-XX:+UseCompactObjectHeaders")); // I don't know if we should do it like that, but it seems to work fine
-        jvmArgs.removeIf(arg ->
-                arg.equals("--sun-misc-unsafe-memory-access=allow"));
-
-        if (loader instanceof CustomLoader customLoader) {
-            if (customLoader.customJvmArgs() != null) {
-                jvmArgs.addAll(customLoader.customJvmArgs());
-            }
-        } else {
-            JsonObject loaderProfileJson = null;
-
-            switch (loader) {
-                case VanillaLoader ignored:
-                    break;
-                case FabricLoader ignored:
-                    loaderProfileJson = loadFabricProfileJson(version, online);
-                    break;
-                case ForgeLoader ignored:
-                    loaderProfileJson = loadForgeProfileJson(version, launchConfig, online);
-                    break;
-                case NeoforgeLoader ignored:
-                    loaderProfileJson = loadNeoForgeProfileJson(version, launchConfig, online);
-                    break;
-                case QuiltLoader ignored:
-                    loaderProfileJson = loadQuiltProfileJson(version, online);
-                    break;
-                default:
-                    throw new IllegalStateException("Unexpected loader: " + loader);
-            }
-
-            if (loaderProfileJson != null) {
-                JsonValue fabricArguments = loaderProfileJson.get("arguments");
-                if (fabricArguments != null && fabricArguments.asObject().get("jvm") != null) {
-                    for (JsonValue e : fabricArguments.asObject().get("jvm").asArray()) {
-                        jvmArgs.add(e.asString());
-                    }
-                }
-            }
-        }
-
-        return X11Helper.substituteVariables(jvmArgs, options.getVariables());
-    }
-
-    private static List<String> buildGameArguments(
-            JsonFile versionJson,
-            LaunchOptions options,
-            Loader loader,
-            String version,
-            LaunchConfiguration launchConfig,
-            boolean online
-    ) {
-        JsonValue argumentsValue = versionJson.get("arguments");
-
-        if (argumentsValue == null) {
-            JsonValue minecraftArguments = versionJson.get("minecraftArguments");
-            if (minecraftArguments == null) {
-                throw new RuntimeException("No arguments or minecraftArguments found in version JSON");
-            }
-
-            return X11Helper.substituteVariables(
-                    LegacyMinecraftArgumentsParser.parse(minecraftArguments.asString()),
-                    options.getVariables()
-            );
-        }
-
-        JsonObject arguments = argumentsValue.asObject();
-
-        JsonValue gameValue = arguments.get("game");
-        JsonArray gameArray = gameValue != null ? gameValue.asArray() : new JsonArray();
-
-        if (loader instanceof CustomLoader customLoader) {
-            if (customLoader.customGameArgs() != null) {
-                for (String arg : customLoader.customGameArgs()) {
-                    gameArray.add(JsonParser.parse(arg));
-                }
-            }
-        } else {
-            JsonObject loaderProfileJson = null;
-
-            switch (loader) {
-                case VanillaLoader ignored:
-                    break;
-                case FabricLoader ignored:
-                    loaderProfileJson = loadFabricProfileJson(version, online);
-                    break;
-                case QuiltLoader ignored:
-                    loaderProfileJson = loadQuiltProfileJson(version, online);
-                    break;
-                case ForgeLoader ignored:
-                    loaderProfileJson = loadForgeProfileJson(version, launchConfig, online);
-                    break;
-                case NeoforgeLoader ignored:
-                    loaderProfileJson = loadNeoForgeProfileJson(version, launchConfig, online);
-                    break;
-                default:
-                    throw new IllegalStateException("Unexpected loader: " + loader);
-            }
-
-            if (loaderProfileJson != null) {
-                JsonValue loaderArguments = loaderProfileJson.get("arguments");
-                if (loaderArguments != null) {
-                    JsonValue loaderGame = loaderArguments.asObject().get("game");
-                    if (loaderGame != null) {
-                        for (JsonValue arg : loaderGame.asArray()) {
-                            gameArray.add(arg);
-                        }
-                    }
-                }
-            }
-        }
-
-        return GameArgumentsParser.parse(
-                gameArray,
-                options.getVariables(),
-                options.getFeatures()
-        );
-    }
-
     private static String getMainClass(
             JsonFile versionJson,
             Loader loader,
@@ -399,15 +247,15 @@ public class Launcher {
 
         JsonValue mainClassValue = switch (loader) {
             case VanillaLoader ignored -> versionJson.get("mainClass");
-            case FabricLoader ignored -> loadFabricProfileJson(version, online).get("mainClass");
-            case QuiltLoader ignored -> loadQuiltProfileJson(version, online).get("mainClass");
-            case ForgeLoader ignored -> loadForgeProfileJson(version, launchConfig, online).get("mainClass");
-            case NeoforgeLoader ignored -> loadNeoForgeProfileJson(version, launchConfig, online).get("mainClass");
-            default -> throw new IllegalStateException("Unexpected loader: " + loader);
+            case FabricLoader ignored -> FabricProfileJsonLoader.loadFabricProfileJson(version, online).get("mainClass");
+            case QuiltLoader ignored -> QuiltProfileJsonLoader.loadQuiltProfileJson(version, online).get("mainClass");
+            case ForgeLoader ignored -> ForgeProfileJsonLoader.loadForgeProfileJson(version, launchConfig, online).get("mainClass");
+            case NeoforgeLoader ignored -> NeoProfileJsonLoader.loadNeoforgeProfileJson(version, launchConfig, online).get("mainClass");
+            default -> throw new UnexpectedLoaderException("Unexpected loader: " + loader);
         };
 
         if (mainClassValue == null) {
-            throw new RuntimeException(
+            throw new MalformedVersionJsonException(
                     "Main class not found in version JSON"
             );
         }
@@ -415,166 +263,7 @@ public class Launcher {
         return mainClassValue.asString();
     }
 
-    private static JsonFile loadVersionJson(String version, boolean online) throws IOException {
-        Path cachePath = cachedVersionJsonPath(version);
 
-        if (Files.exists(cachePath)) {
-            try {
-                return new JsonFile(Files.readString(cachePath));
-            } catch (Exception ignored) {
-                // broken cache, fall through to network if possible
-            }
-        }
-
-        if (!online) {
-            throw new OfflineModeNeedsNetworkException(
-                    "Missing cached version JSON: " + cachePath
-            );
-        }
-
-        String versionJsonUrl;
-        String raw;
-        try {
-            versionJsonUrl = VersionMetadataProvider.getVersionJsonUrl(version);
-
-            raw = HttpUtil.get(versionJsonUrl);
-        } catch (HttpException e) {
-            throw new RuntimeException(e);
-        }
-        writeCache(cachePath, raw);
-        return new JsonFile(raw);
-    }
-
-    private static JsonObject loadFabricProfileJson(String version, boolean online) {
-        return loadProfileJson(
-                version,
-                "fabric",
-                online,
-                () -> {
-                    try {
-                        return FabricLoaderFetcher.getLatestProfile(version);
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-        );
-    }
-
-    private static JsonObject loadQuiltProfileJson(String version, boolean online) {
-        return loadProfileJson(
-                version,
-                "quilt",
-                online,
-                () -> {
-                    try {
-                        return QuiltLoaderFetcher.getLatestProfile(version);
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-        );
-    }
-
-    private static JsonObject loadForgeProfileJson(
-            String version,
-            LaunchConfiguration launchConfig,
-            boolean online
-    ) {
-        return loadProfileJson(
-                version,
-                "forge",
-                online,
-                () -> {
-                    try {
-                        Path parent = launchConfig.getJarFile().getParent().toAbsolutePath();
-                        String latest = new ForgeVersionFetcher().getLatest(version);
-                        JsonFile forgeVersionJson = ForgeVersionJson.getVersionJson(parent, latest);
-                        return forgeVersionJson.asObject();
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-        );
-    }
-
-    private static JsonObject loadNeoForgeProfileJson(
-            String version,
-            LaunchConfiguration launchConfig,
-            boolean online
-    ) {
-        return loadProfileJson(
-                version,
-                "neoforge",
-                online,
-                () -> {
-                    try {
-                        Path parent = launchConfig.getJarFile().getParent().toAbsolutePath();
-                        String latest = new NeoVersionFetcher().getLatest(version);
-                        JsonFile neoVersionJson = NeoVersionJson.getVersionJson(parent, latest);
-                        return neoVersionJson.asObject();
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-        );
-    }
-
-    private static JsonObject loadProfileJson(
-            String version,
-            String loaderName,
-            boolean online,
-            ProfileSupplier supplier
-    ) {
-        Path cachePath = cachedProfileJsonPath(loaderName, version);
-
-        if (Files.exists(cachePath)) {
-            try {
-                return new JsonFile(Files.readString(cachePath)).asObject();
-            } catch (Exception ignored) {
-                // broken cache, fall through
-            }
-        }
-
-        if (!online) {
-            throw new OfflineModeNeedsNetworkException(
-                    "Missing cached " + loaderName + " profile: " + cachePath
-            );
-        }
-
-        JsonObject profile = supplier.get();
-        try {
-            writeCache(cachePath, profile.toString());
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to cache " + loaderName + " profile", e);
-        }
-        return profile;
-    }
-
-    private static Path cachedProfileJsonPath(String loaderName, String version) {
-        return cacheRoot()
-                .resolve("profiles")
-                .resolve(loaderName)
-                .resolve(version + ".json");
-    }
-
-    private static Path cachedVersionJsonPath(String version) {
-        return cacheRoot()
-                .resolve("versions")
-                .resolve(version + ".json");
-    }
-
-    private static Path cacheRoot() {
-        return JavaManager.getBaseDir().resolve("cache");
-    }
-
-    private static void writeCache(Path path, String content) throws IOException {
-        Files.createDirectories(path.getParent());
-        Files.writeString(path, content);
-    }
-
-    private interface ProfileSupplier {
-        JsonObject get();
-    }
 
     private static void launchProcess(
             List<String> command,
@@ -586,10 +275,6 @@ public class Launcher {
         X11Helper.configureGraphicsEnvironment(
                 processBuilder,
                 context
-        );
-
-        System.out.println(
-                String.join(" ", command)
         );
 
         processBuilder.inheritIO();
@@ -608,6 +293,10 @@ public class Launcher {
 //            throw new RuntimeException(
 //                    "Minecraft exited with code " + exitCode
 //            );
-//        }
+//        } todo: NonZeroExitCodeException or NonZeroExitCodeEvent?
+    }
+    @API(status = API.Status.INTERNAL, consumers = {"com.dervarex.minified.launch.*"})
+    public interface ProfileSupplier {
+        JsonObject get();
     }
 }

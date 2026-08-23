@@ -3,6 +3,7 @@ package com.dervarex.minified.launch.launch.modding.neoforge.api;
 import com.dervarex.minified.utils.json.JsonFile;
 import com.dervarex.minified.utils.json.JsonObject;
 import com.dervarex.minified.utils.json.JsonParser;
+import org.apiguardian.api.API;
 
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
@@ -18,6 +19,7 @@ public final class NeoVersionJson {
     /**
      * Resolves the local NeoForge version JSON as automatically as possible.
      */
+    @API(status = API.Status.STABLE)
     public static JsonFile getVersionJson(Path gameDir, String loaderVersion) throws IOException {
         Path versionsDir = gameDir.resolve("versions");
 
@@ -36,20 +38,6 @@ public final class NeoVersionJson {
         return new JsonFile(
                 fallbackFolder.resolve("neoforge-" + loaderVersion + ".json").toFile()
         );
-    }
-
-    /**
-     * NeoForge does not reliably use the old
-     * mcversion-neoforge-version naming scheme. (from forge)
-     * <p>
-     * Therefore we simply resolve using the loader version.
-     */
-    public static JsonFile getVersionJson(
-            Path gameDir,
-            String minecraftVersion,
-            String neoForgeVersion
-    ) throws IOException {
-        return getVersionJson(gameDir, neoForgeVersion);
     }
 
     private static List<Path> candidatePaths(Path versionsDir, String loaderVersion) {

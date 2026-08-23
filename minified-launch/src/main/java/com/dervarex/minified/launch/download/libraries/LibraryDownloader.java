@@ -1,6 +1,8 @@
 package com.dervarex.minified.launch.download.libraries;
 
 import com.dervarex.minified.launch.events.download.libraries.DownloadLibrariesEvent;
+import com.dervarex.minified.launch.exceptions.download.*;
+import com.dervarex.minified.launch.exceptions.loader.UnexpectedLoaderException;
 import com.dervarex.minified.launch.launch.LaunchContext;
 import com.dervarex.minified.launch.launch.modding.Loader;
 import com.dervarex.minified.launch.launch.modding.fabric.FabricLoader;
@@ -10,9 +12,8 @@ import com.dervarex.minified.launch.launch.modding.neoforge.NeoforgeLoader;
 import com.dervarex.minified.launch.launch.modding.quilt.QuiltLoader;
 import com.dervarex.minified.launch.launch.modding.quilt.QuiltLoaderFetcher;
 import com.dervarex.minified.launch.launch.modding.vanilla.VanillaLoader;
-import com.dervarex.minified.utils.download.DownloadHelper;
 import com.dervarex.minified.launch.utils.OSUtil;
-import com.dervarex.minified.utils.version.VersionManifestClient;
+import com.dervarex.minified.utils.download.DownloadHelper;
 import com.dervarex.minified.utils.exceptions.NoConnectionException;
 import com.dervarex.minified.utils.http.HttpUtil;
 import com.dervarex.minified.utils.json.JsonArray;
@@ -21,6 +22,7 @@ import com.dervarex.minified.utils.json.JsonObject;
 import com.dervarex.minified.utils.json.JsonValue;
 import com.dervarex.minified.utils.network.NetworkUtil;
 import com.dervarex.minified.utils.sha.Hasher;
+import com.dervarex.minified.utils.version.VersionManifestClient;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -45,7 +47,6 @@ import java.util.function.LongConsumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-@SuppressWarnings("unused")
 public class LibraryDownloader {
 
     private final ExecutorService pool;
@@ -61,10 +62,6 @@ public class LibraryDownloader {
 
     public void downloadLibraries(Loader loader, Path librariesDir) {
         downloadLibraries(loader, librariesDir, progress -> {}, null);
-    }
-
-    public void downloadLibraries(Loader loader, Path librariesDir, LaunchContext context) {
-        downloadLibraries(loader, librariesDir, progress -> {}, context);
     }
 
     /**
@@ -160,11 +157,11 @@ public class LibraryDownloader {
             }
 
             switch (loader) {
-                case VanillaLoader vanillaLoader:
+                case VanillaLoader ignored:
                     // Nothing additional to download for vanilla
                     break;
 
-                case FabricLoader fabricLoader:
+                case FabricLoader ignored:
                     JsonObject fabricProfile = FabricLoaderFetcher.getLatestProfile(loader.mcVersion());
 
                     Path fabricCachePath = resolveCacheRoot(librariesDir)
@@ -182,7 +179,7 @@ public class LibraryDownloader {
                     );
                     break;
 
-                case QuiltLoader quiltLoader:
+                case QuiltLoader ignored:
                     JsonObject quiltProfile = QuiltLoaderFetcher.getLatestProfile(loader.mcVersion());
 
                     Path quiltCachePath = resolveCacheRoot(librariesDir)
@@ -199,14 +196,14 @@ public class LibraryDownloader {
                             targets
                     );
                     break;
-                case NeoforgeLoader neoforgeLoader:
+                case NeoforgeLoader ignored:
                     // Nothing additional to download for forge and neoforge, as the installer will handle it for us :)
                     break;
-                case ForgeLoader forgeLoader:
+                case ForgeLoader ignored:
                     // Nothing additional to download for forge and neoforge, as the installer will handle it for us :)
                     break;
                 default:
-                    throw new IllegalStateException("Unexpected loader: " + loader);
+                    throw new UnexpectedLoaderException("Unexpected loader: " + loader);
             }
 
             AtomicLong totalBytes = new AtomicLong();
@@ -271,25 +268,25 @@ public class LibraryDownloader {
             updateProgress(
                     totalBytesFinal,
                     totalBytesFinal,
-                    targets.isEmpty() ? "done" : targets.get(targets.size() - 1).path().getFileName().toString(),
-                    targets.isEmpty() ? 0L : Math.max(targets.get(targets.size() - 1).size(), 1L),
-                    targets.isEmpty() ? 0L : targets.get(targets.size() - 1).size(),
+                    targets.isEmpty() ? "done" : targets.getLast().path().getFileName().toString(),
+                    targets.isEmpty() ? 0L : Math.max(targets.getLast().size(), 1L),
+                    targets.isEmpty() ? 0L : targets.getLast().size(),
                     progressConsumer,
                     context
             );
             //System.out.println("All libraries downloaded.");
 
         } catch (Exception e) {
-            throw new RuntimeException("Failed to download libraries", e);
+            throw new LibraryDownloadException("Failed to download libraries", e);
         } finally {
             pool.shutdown();
             try {
                 if (!pool.awaitTermination(1, TimeUnit.HOURS)) {
-                    throw new RuntimeException("Download pool timeout");
+                    throw new DownloadPoolTimeoutException("Download pool timeout");
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                throw new RuntimeException("Failed to shut down download pool", e);
+                throw new DownloadPoolShutdownException("Failed to shut down download pool", e);
             }
         }
     }
@@ -386,7 +383,7 @@ public class LibraryDownloader {
                 + ".jar";
     }
 
-    private void downloadWithoutSha1(String url, Path path, LongConsumer progressConsumer) {
+    private void downloadWithoutSha1(String url, Path path, LongConsumer progressConsumer) { //todo move to different file
         Path tempFile = Path.of(path + ".tmp");
 
         try {
@@ -409,8 +406,9 @@ public class LibraryDownloader {
                     client.send(request, HttpResponse.BodyHandlers.ofInputStream());
 
             if (response.statusCode() != 200) {
-                throw new RuntimeException(
-                        "Failed to download " + url + " (HTTP " + response.statusCode() + ")"
+                throw new HttpDownloadException(
+                        "Failed to download " + url + " (HTTP " + response.statusCode() + ")",
+                        response.statusCode()
                 );
             }
 
@@ -433,7 +431,7 @@ public class LibraryDownloader {
                 Files.deleteIfExists(tempFile);
             } catch (Exception ignored) {
             }
-            throw new RuntimeException("Failed to download Fabric library from " + url, e);
+            throw new DownloadException("Failed to download Fabric library from " + url, e);
         }
     }
 
@@ -522,7 +520,7 @@ public class LibraryDownloader {
                 }
             }
         } catch (Exception e) {
-            throw new RuntimeException("Failed to extract native archive " + archive, e);
+            throw new NativeExtractionException("Failed to extract native archive " + archive, e);
         }
     }
 

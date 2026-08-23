@@ -1,10 +1,13 @@
 package com.dervarex.minified.launch.launch.modding.forge.installer;
 
 import com.dervarex.minified.launch.events.loader.InstallForgeEvent;
+import com.dervarex.minified.launch.exceptions.loader.forge.ForgeInstallerReportFailureException;
+import com.dervarex.minified.launch.exceptions.loader.forge.ForgePreparationException;
 import com.dervarex.minified.launch.launch.LaunchConfiguration;
 import com.dervarex.minified.launch.launch.LaunchContext;
 import com.dervarex.minified.launch.launch.modding.forge.api.ForgeInstallerFetcher;
 import com.dervarex.minified.utils.download.DownloadHelper;
+import org.apiguardian.api.API;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,6 +25,7 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.function.Consumer;
 
+@API(status = API.Status.INTERNAL, consumers = {"com.dervarex.minified.launch.*"})
 public class ForgeInstallerInjector {
     private static void prepare(LaunchContext context) {
         context.getEventBus().post(new InstallForgeEvent(InstallForgeEvent.Stage.PREPARING, context.getLaunchConfiguration().getLoader().mcVersion(), context.getLaunchConfiguration().getLoader().loaderVersion()));
@@ -44,7 +48,7 @@ public class ForgeInstallerInjector {
                 );
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new ForgePreparationException(e);
         }
 
     }
@@ -80,7 +84,7 @@ public class ForgeInstallerInjector {
 
             sha1 = response.body().trim();
         } catch (IOException | InterruptedException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException(e); // no custom exception here
         }
 
         Path installerPath = context.getLaunchConfiguration()
@@ -139,11 +143,11 @@ public class ForgeInstallerInjector {
         Object result = run.invoke(clientInstall, target, installerFile);
 
         if (result instanceof Boolean ok && !ok) {
-            throw new IllegalStateException("Forge installer reported failure");
+            throw new ForgeInstallerReportFailureException("Forge installer reported failure");
         }
     }
 
-    public void install(/*String versionOrMinecraftVersion, */LaunchContext context) {
+    public void install(LaunchContext context) {
         LaunchConfiguration config = context.getLaunchConfiguration();
         prepare(context);
         downloadInstaller(context);
@@ -154,17 +158,13 @@ public class ForgeInstallerInjector {
                     }),
                     config.getJarFile().getParent().toFile(),
                     Path.of(config.getJarFile().getParent().toAbsolutePath().toString(),"forge-installer.jar").toFile(),
-                    System.out::println, // todo replace with logger
+                    System.out::println,
                     context
             );
-        } catch (ReflectiveOperationException e) {
+        } catch (ReflectiveOperationException | MalformedURLException e) {
             context.getEventBus().post(new InstallForgeEvent(InstallForgeEvent.Stage.FAILED, context.getLaunchConfiguration().getLoader().mcVersion(), context.getLaunchConfiguration().getLoader().loaderVersion()));
-            throw new RuntimeException(e);
-        } catch (MalformedURLException e) {
-            context.getEventBus().post(new InstallForgeEvent(InstallForgeEvent.Stage.FAILED, context.getLaunchConfiguration().getLoader().mcVersion(), context.getLaunchConfiguration().getLoader().loaderVersion()));
-            throw new RuntimeException(e);
+            throw new RuntimeException(e); // no custom exception
         }
         context.getEventBus().post(new InstallForgeEvent(InstallForgeEvent.Stage.FINISHED, context.getLaunchConfiguration().getLoader().mcVersion(), context.getLaunchConfiguration().getLoader().loaderVersion()));
-
     }
 }

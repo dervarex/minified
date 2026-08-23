@@ -1,8 +1,14 @@
 package com.dervarex.minified.utils.download;
 
+import org.apiguardian.api.API;
+
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
+/**
+ * Recently moved over from Launch module, be careful.
+ */
+@API(status = API.Status.EXPERIMENTAL)
 public final class DownloadProgress {
 
     private final AtomicLong downloaded = new AtomicLong();

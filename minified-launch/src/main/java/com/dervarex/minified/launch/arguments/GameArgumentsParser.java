@@ -3,12 +3,12 @@ package com.dervarex.minified.launch.arguments;
 import com.dervarex.minified.utils.json.JsonArray;
 import com.dervarex.minified.utils.json.JsonObject;
 import com.dervarex.minified.utils.json.JsonValue;
+import org.apiguardian.api.API;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-@SuppressWarnings("unused")
 public final class GameArgumentsParser {
     private static final String OS_NAME = getMinecraftOsName();
 

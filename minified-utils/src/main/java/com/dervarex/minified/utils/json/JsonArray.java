@@ -3,29 +3,34 @@ package com.dervarex.minified.utils.json;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.Iterator;
+import java.util.List;
 
-public final class JsonArray implements JsonValue, Iterable<JsonValue> {
-    private final List<JsonValue> values;
-
+public record JsonArray(List<JsonValue> values) implements JsonValue, Iterable<JsonValue> {
     public JsonArray() {
-        this.values = new ArrayList<>();
+        this(new ArrayList<>());
     }
 
     public JsonArray(List<JsonValue> values) {
         this.values = new ArrayList<>(values == null ? List.of() : values);
     }
 
-    public List<JsonValue> values() { return Collections.unmodifiableList(values); }
+    @Override
+    public List<JsonValue> values() {
+        return Collections.unmodifiableList(values);
+    }
 
     public void add(JsonValue value) {
         this.values.add(value);
     }
 
-    public int size() { return values.size(); }
+    public int size() {
+        return values.size();
+    }
 
-    public JsonValue get(int index) { return values.get(index); }
+    public JsonValue get(int index) {
+        return values.get(index);
+    }
 
     public JsonObject getObject(int index) {
         JsonValue value = values.get(index);
@@ -47,16 +52,20 @@ public final class JsonArray implements JsonValue, Iterable<JsonValue> {
         return value == null || value.isNull() ? null : value.asBoolean();
     }
 
-    public java.math.BigDecimal getNumber(int index) {
+    public BigDecimal getNumber(int index) {
         JsonValue value = values.get(index);
         return value == null || value.isNull() ? null : value.asNumber();
     }
 
     @Override
-    public JsonType getType() { return JsonType.ARRAY; }
+    public JsonType getType() {
+        return JsonType.ARRAY;
+    }
 
     @Override
-    public JsonArray asArray() { return this; }
+    public JsonArray asArray() {
+        return this;
+    }
 
     @Override
     public String toJson() {
@@ -72,7 +81,9 @@ public final class JsonArray implements JsonValue, Iterable<JsonValue> {
     }
 
     @Override
-    public String toString() { return toJson(); }
+    public String toString() {
+        return toJson();
+    }
 
     @Override
     public Iterator<JsonValue> iterator() {

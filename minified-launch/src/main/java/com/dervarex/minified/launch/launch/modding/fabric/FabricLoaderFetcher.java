@@ -1,13 +1,16 @@
 package com.dervarex.minified.launch.launch.modding.fabric;
 
+import com.dervarex.minified.launch.exceptions.loader.NoLoadersFoundException;
 import com.dervarex.minified.utils.ApiEndpoints;
 import com.dervarex.minified.utils.http.HttpUtil;
 import com.dervarex.minified.utils.json.JsonArray;
 import com.dervarex.minified.utils.json.JsonObject;
 import com.dervarex.minified.utils.json.JsonParser;
+import org.apiguardian.api.API;
 
 public class FabricLoaderFetcher {
 
+    @API(status = API.Status.STABLE)
     public static String getLatestLoaderVersion() throws Exception {
 
         JsonArray loaders = JsonParser
@@ -15,7 +18,7 @@ public class FabricLoaderFetcher {
                 .asArray();
 
         if (loaders.size() == 0) {
-            throw new RuntimeException("No Fabric loaders found");
+            throw new NoLoadersFoundException("No Fabric loaders found", "FABRIC");
         }
 
         return loaders
@@ -25,6 +28,7 @@ public class FabricLoaderFetcher {
                 .asString();
     }
 
+    @API(status = API.Status.STABLE)
     public static JsonObject getProfileJson(
             String minecraftVersion,
             String loaderVersion

@@ -1,6 +1,8 @@
 package com.dervarex.minified.modrinth;
 
 import com.dervarex.minified.modrinth.loaders.ModLoader;
+import com.dervarex.minified.modrinth.projects.DisclosureType;
+import com.dervarex.minified.modrinth.projects.Environment;
 import com.dervarex.minified.modrinth.projects.GalleryImage;
 import com.dervarex.minified.modrinth.projects.Project;
 import com.dervarex.minified.modrinth.projects.ProjectType;
@@ -9,10 +11,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ModrinthModelTest {
     @Test
@@ -22,6 +21,7 @@ public class ModrinthModelTest {
                 .projectType(ProjectType.MOD)
                 .clientSide(SideSupport.REQUIRED)
                 .serverSide(SideSupport.UNSUPPORTED)
+                .environment(Environment.CLIENT_ONLY)
                 .categories("performance", "optimization")
                 .gameVersions("1.21.8")
                 .loaders(ModLoader.FABRIC)
@@ -34,6 +34,7 @@ public class ModrinthModelTest {
         assertEquals("downloads", request.index);
         assertEquals(10, request.limit);
         assertEquals(5, request.offset);
+        assertArrayEquals(new String[]{"client_only"}, request.environment);
         assertNotNull(request.facets);
         assertFalse(request.facets.isEmpty());
     }
@@ -56,6 +57,26 @@ public class ModrinthModelTest {
         assertTrue(project.hasLoader(ModLoader.FABRIC));
         assertTrue(project.supportsVersion("1.21.8"));
         assertNotNull(project.getFeaturedGallery());
+    }
+
+    @Test
+    void projectEnvironmentAndDisclosureConvenienceMethodsWork() {
+        Project project = new Project();
+        project.environment = new Environment[]{Environment.CLIENT_ONLY};
+        project.disclosureTypes = new DisclosureType[]{DisclosureType.AI_CONTENT_CODE};
+
+        assertTrue(project.supportsEnvironment(Environment.CLIENT_ONLY));
+        assertFalse(project.supportsEnvironment(Environment.SERVER_ONLY));
+        assertTrue(project.hasDisclosure(DisclosureType.AI_CONTENT_CODE));
+        assertFalse(project.hasDisclosure(DisclosureType.ADVERTISEMENTS));
+    }
+
+    @Test
+    void environmentFallsBackToUnknownForUnrecognizedValues() {
+        assertEquals(Environment.CLIENT_ONLY, Environment.fromApiValue("client_only"));
+        assertEquals(Environment.UNKNOWN, Environment.fromApiValue("something_new"));
+        assertEquals(DisclosureType.TELEMETRY_OPT_IN, DisclosureType.fromApiValue("telemetry_opt_in"));
+        assertEquals(DisclosureType.UNKNOWN, DisclosureType.fromApiValue("something_new"));
     }
 }
 

@@ -2,6 +2,7 @@ package com.dervarex.minified.launch;
 
 import com.dervarex.minified.launch.launch.LaunchContext;
 import com.dervarex.minified.launch.utils.X11Helper;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -11,6 +12,7 @@ import java.nio.file.Path;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+@Tag("manual")
 class LauncherEnvironmentTest {
 
     @TempDir

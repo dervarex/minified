@@ -1,8 +1,10 @@
 package com.dervarex.minified.modrinth;
 
 import com.dervarex.minified.modrinth.loaders.ModLoader;
+import com.dervarex.minified.modrinth.projects.Environment;
 import com.dervarex.minified.modrinth.projects.ProjectType;
 import com.dervarex.minified.modrinth.projects.SideSupport;
+import org.apiguardian.api.API;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,12 +14,14 @@ import java.util.Objects;
 /**
  * Builder-based search request for the public project search endpoint.
  */
+@API(status = API.Status.STABLE)
 public final class SearchRequest extends SearchOptions {
     public String query;
     public String index = "relevance";
     public ProjectType projectType;
     public SideSupport clientSide;
     public SideSupport serverSide;
+    public String[] environment;
     public String[] categories;
     public String[] gameVersions;
     public String[] loaders;
@@ -77,6 +81,20 @@ public final class SearchRequest extends SearchOptions {
             if (support != null) {
                 facet("server_side", support.getApiValue());
             }
+            return this;
+        }
+
+        public Builder environment(Environment... values) {
+            Environment[] input = values == null ? new Environment[0] : values;
+            String[] apiValues = new String[input.length];
+            int count = 0;
+            for (Environment value : input) {
+                if (value != null) {
+                    apiValues[count++] = value.toString();
+                }
+            }
+            request.environment = Arrays.copyOf(apiValues, count);
+            facet("environment", request.environment);
             return this;
         }
 
