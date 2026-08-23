@@ -31,7 +31,7 @@ public class Hasher {
         return bytesToHex(digest.digest());
     }
 
-    public String sha(Path path, int hashbits) throws Exception {
+    public static String sha(Path path, int hashbits) throws Exception {
 
         MessageDigest digest = MessageDigest.getInstance("SHA-" + hashbits);
 
