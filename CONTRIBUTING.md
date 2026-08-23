@@ -212,14 +212,16 @@ When integrating an API:
 
 ---
 
-## Releases
+## AI
 
-Releases are cut by the maintainer. Each GitHub release includes sources JARs for
-all modules. Contributors do not need to change version numbers in a pull
-request, leave versioning to the release process.
+Tools like Claude Code (and other AI coding assistants) are allowed and used in this project. This file itself was generated with the help of Claude - as were parts of the accompanying docs. However, I have reviewed every single line it generated afterwards.
+**Important:** fully check and validate the exact logic, structure, and content of the documents before being relied upon.
+
+As another example, Gemini has taught me how to set up a multi module Project using Gradle.
+> **remember:** AI is a powerful tool, but its output is a draft, not a guarantee, always verify the output
+
 
 ---
-
 ## Questions
 
 Open an issue with your question. If it turns out to be a common one, it might end up in the README or here.
