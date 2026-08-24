@@ -19,18 +19,11 @@ public class NbtTest {
 
     static Path nbtFile;
     @BeforeAll
-    void setup() throws IOException {
-        nbtFile = tempDir.resolve("level.dat");
-        // copy nbt file content to level.dat in temporary directory
-        try (InputStream in = getClass().getResourceAsStream("/nbt/level.dat")) {
+    static void setup() {
+        nbtFile = tempDir.resolve("test.dat");
+        // copy nbt file content to test.dat in temporary directory
+        try (InputStream in = NbtTest.class.getResourceAsStream("/nbt/test.dat")) {
             Files.copy(in, nbtFile, StandardCopyOption.REPLACE_EXISTING);
-        }
-    }
-    @Test
-    void parse() {
-        LinkedHashMap<String, Object> nbt;
-        try {
-            nbt = Parser.readFile(nbtFile.toFile());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
