@@ -1,9 +1,8 @@
 package com.dervarex.minified.utils.nbt;
 
+import com.dervarex.minified.utils.nbt.tag.*;
+
 import java.io.*;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.InflaterInputStream;
 
@@ -18,7 +17,7 @@ public class Parser {
      * Parse the given .nbt file
      * @param file the file to parse, has to end with .nbt
      */
-    public static LinkedHashMap<String, Object> readFile(File file) throws IOException {
+    public static NbtCompound readFile(File file) throws IOException {
         try (PushbackInputStream pb = new PushbackInputStream(new BufferedInputStream(
                 new FileInputStream(file)), 2)) {
 
@@ -56,48 +55,48 @@ public class Parser {
     /**
      * Reads the content from a compound, until TAG_END has been found
      */
-    private static LinkedHashMap<String, Object> readCompoundBody(DataInputStream in) throws IOException {
-        LinkedHashMap<String, Object> map = new LinkedHashMap<>();
+    private static NbtCompound readCompoundBody(DataInputStream in) throws IOException {
+        NbtCompound compound = new NbtCompound();
         while (true) {
             int type = in.readUnsignedByte();
             if (type == TAG_End) break;
             String name = in.readUTF();
-            map.put(name, readPayload(type, in));
+            compound.put(name, readPayload(type, in));
         }
-        return map;
+        return compound;
     }
 
-    private static Object readPayload(int type, DataInputStream in) throws IOException {
+    private static NbtTag readPayload(int type, DataInputStream in) throws IOException {
         switch (type) {
-            case TAG_Byte:   return in.readByte();
-            case TAG_Short:  return in.readShort();
-            case TAG_Int:    return in.readInt();
-            case TAG_Long:   return in.readLong();
-            case TAG_Float:  return in.readFloat();
-            case TAG_Double: return in.readDouble();
-            case TAG_String: return in.readUTF();
+            case TAG_Byte:   return new NbtByte(in.readByte());
+            case TAG_Short:  return new NbtShort(in.readShort());
+            case TAG_Int:    return new NbtInt(in.readInt());
+            case TAG_Long:   return new NbtLong(in.readLong());
+            case TAG_Float:  return new NbtFloat(in.readFloat());
+            case TAG_Double: return new NbtDouble(in.readDouble());
+            case TAG_String: return new NbtString(in.readUTF());
             case TAG_Byte_Array: {
                 int len = in.readInt();
                 byte[] arr = new byte[len];
                 in.readFully(arr);
-                return arr;
+                return new NbtByteArray(arr);
             }
             case TAG_Int_Array: {
                 int len = in.readInt();
                 int[] arr = new int[len];
                 for (int i = 0; i < len; i++) arr[i] = in.readInt();
-                return arr;
+                return new NbtIntArray(arr);
             }
             case TAG_Long_Array: {
                 int len = in.readInt();
                 long[] arr = new long[len];
                 for (int i = 0; i < len; i++) arr[i] = in.readLong();
-                return arr;
+                return new NbtLongArray(arr);
             }
             case TAG_List: {
                 int elementType = in.readUnsignedByte();
                 int len = in.readInt();
-                List<Object> list = new ArrayList<>(Math.max(len, 0));
+                NbtList list = new NbtList((byte) elementType);
                 for (int i = 0; i < len; i++) {
                     list.add(readPayload(elementType, in));
                 }
