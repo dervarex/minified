@@ -22,6 +22,7 @@ public final class NbtCompound implements NbtTag {
     public void putDouble(String key, double value)     { put(key, new NbtDouble(value)); }
     public void putFloat(String key, float value)        { put(key, new NbtFloat(value)); }
     public void putCompound(String key, NbtCompound value) { put(key, value); }
+    public void putList(String key, NbtCompound value) { put(key, value); }
 
     public Optional<NbtTag> get(String key) {
         return Optional.ofNullable(entries.get(key));
@@ -55,6 +56,12 @@ public final class NbtCompound implements NbtTag {
         return get(key).filter(NbtCompound.class::isInstance)
                 .map(NbtCompound.class::cast)
                 .orElseThrow(() -> new NoSuchElementException("No compound tag: " + key));
+    }
+
+    public NbtCompound getList(String key) {
+        return get(key).filter(NbtCompound.class::isInstance)
+                .map(NbtCompound.class::cast)
+                .orElseThrow(() -> new NoSuchElementException("No list tag: " + key));
     }
 
     public boolean has(String key) { return entries.containsKey(key); }
