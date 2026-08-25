@@ -2,6 +2,7 @@ package com.dervarex.minified.worlds;
 
 import com.dervarex.minified.worlds.world.*;
 import com.dervarex.minified.worlds.world.data.*;
+import com.dervarex.minified.worlds.world.level.Level;
 import com.dervarex.minified.worlds.world.playerdata.Player;
 import com.dervarex.minified.worlds.world.worlds.End;
 import com.dervarex.minified.worlds.world.worlds.Nether;

@@ -1,5 +1,9 @@
 package com.dervarex.minified.worlds;
 
-public class WorldParser {
+import java.nio.file.Path;
 
+public class WorldParser {
+    public World parse(Path world) {
+
+    }
 }
