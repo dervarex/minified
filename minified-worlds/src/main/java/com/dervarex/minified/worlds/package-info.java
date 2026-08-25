@@ -1,6 +1,7 @@
 /**
  * A Minecraft World isn't just a level.dat and some .mca chunk files - it's more:
  *
+ * <pre>
  * level.dat           - obviously the most important and well known .dat file, contains world metadata and settings
  * level.dat_old       - backup of level.dat
  * session.lock        - for preventing simultaneous access to a world
@@ -37,11 +38,6 @@
  * poi/
  *     .mca data for "points of interest"
  *
- * generated/
- *     minecraft/
- *         structures/
- *             generated structure data
- *
  * DIM-1/   -  that's the nether
  *     region/
  *         .mca chunk data
@@ -55,5 +51,6 @@
  *         map_*.dat - dimension-specific maps
  *
  * todo: remove this here and make a seperate section in the documentation
+ * </pre>
  */
 package com.dervarex.minified.worlds;
