@@ -4,12 +4,13 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import com.dervarex.minified.utils.nbt.tag.NbtCompound;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.LinkedHashMap;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -30,12 +31,12 @@ public class NbtTest {
     }
     @Test
     void testRoundTrip() throws IOException {
-        LinkedHashMap<String, Object> nbt = Parser.readFile(nbtFile.toFile());
+        NbtCompound nbt = Parser.readFile(nbtFile.toFile());
 
         Path output = tempDir.resolve("level_out.dat");
         Writer.writeFile(output.toFile(), nbt);
 
-        LinkedHashMap<String, Object> reparsed = Parser.readFile(output.toFile());
+        NbtCompound reparsed = Parser.readFile(output.toFile());
         assertTrue(NbtEquals.deepEquals(nbt, reparsed));
     }
 }

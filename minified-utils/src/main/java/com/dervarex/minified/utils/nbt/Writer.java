@@ -1,8 +1,8 @@
 package com.dervarex.minified.utils.nbt;
 
+import com.dervarex.minified.utils.nbt.tag.*;
+
 import java.io.*;
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPOutputStream;
 
@@ -18,7 +18,7 @@ public class Writer {
      * @param file target file
      * @param nbt root compound, e.g. as returned by Parser.readFile
      */
-    public static void writeFile(File file, LinkedHashMap<String, Object> nbt) throws IOException {
+    public static void writeFile(File file, NbtCompound nbt) throws IOException {
         try (DataOutputStream out = new DataOutputStream(
                 new GZIPOutputStream(new BufferedOutputStream(new FileOutputStream(file))))) {
             out.writeByte(TAG_Compound);
@@ -32,7 +32,7 @@ public class Writer {
      * formats that don't expect Gzip (e.g. individual chunk payloads
      * that are compressed at the region-file level instead).
      */
-    public static void writeFileUncompressed(File file, LinkedHashMap<String, Object> nbt) throws IOException {
+    public static void writeFileUncompressed(File file, NbtCompound nbt) throws IOException {
         try (DataOutputStream out = new DataOutputStream(
                 new BufferedOutputStream(new FileOutputStream(file)))) {
             out.writeByte(TAG_Compound);
@@ -41,78 +41,45 @@ public class Writer {
         }
     }
 
-    private static void writeCompoundBody(DataOutputStream out, LinkedHashMap<String, Object> map) throws IOException {
-        for (Map.Entry<String, Object> entry : map.entrySet()) {
-            int type = typeOf(entry.getValue());
-            out.writeByte(type);
+    private static void writeCompoundBody(DataOutputStream out, NbtCompound compound) throws IOException {
+        for (Map.Entry<String, NbtTag> entry : compound.asMap().entrySet()) {
+            NbtTag value = entry.getValue();
+            out.writeByte(value.id());
             out.writeUTF(entry.getKey());
-            writePayload(type, entry.getValue(), out);
+            writePayload(value, out);
         }
         out.writeByte(TAG_End);
     }
 
-    @SuppressWarnings("unchecked")
-    private static void writePayload(int type, Object value, DataOutputStream out) throws IOException {
-        switch (type) {
-            case TAG_Byte:   out.writeByte((Byte) value); break;
-            case TAG_Short:  out.writeShort((Short) value); break;
-            case TAG_Int:    out.writeInt((Integer) value); break;
-            case TAG_Long:   out.writeLong((Long) value); break;
-            case TAG_Float:  out.writeFloat((Float) value); break;
-            case TAG_Double: out.writeDouble((Double) value); break;
-            case TAG_String: out.writeUTF((String) value); break;
-            case TAG_Byte_Array: {
-                byte[] arr = (byte[]) value;
-                out.writeInt(arr.length);
-                out.write(arr);
-                break;
+    private static void writePayload(NbtTag tag, DataOutputStream out) throws IOException {
+        switch (tag) {
+            case NbtByte t -> out.writeByte(t.value());
+            case NbtBoolean t -> out.writeByte(t.value() ? 1 : 0);
+            case NbtShort t -> out.writeShort(t.value());
+            case NbtInt t -> out.writeInt(t.value());
+            case NbtLong t -> out.writeLong(t.value());
+            case NbtFloat t -> out.writeFloat(t.value());
+            case NbtDouble t -> out.writeDouble(t.value());
+            case NbtString t -> out.writeUTF(t.value());
+            case NbtByteArray t -> {
+                out.writeInt(t.value().length);
+                out.write(t.value());
             }
-            case TAG_Int_Array: {
-                int[] arr = (int[]) value;
-                out.writeInt(arr.length);
-                for (int v : arr) out.writeInt(v);
-                break;
+            case NbtIntArray t -> {
+                out.writeInt(t.value().length);
+                for (int v : t.value()) out.writeInt(v);
             }
-            case TAG_Long_Array: {
-                long[] arr = (long[]) value;
-                out.writeInt(arr.length);
-                for (long v : arr) out.writeLong(v);
-                break;
+            case NbtLongArray t -> {
+                out.writeInt(t.value().length);
+                for (long v : t.value()) out.writeLong(v);
             }
-            case TAG_List: {
-                List<Object> list = (List<Object>) value;
-                int elementType = list.isEmpty() ? TAG_End : typeOf(list.getFirst());
-                out.writeByte(elementType);
-                out.writeInt(list.size());
-                for (Object o : list) writePayload(elementType, o, out);
-                break;
+            case NbtList t -> {
+                out.writeByte(t.elementId());
+                out.writeInt(t.size());
+                for (NbtTag element : t.elements()) writePayload(element, out);
             }
-            case TAG_Compound:
-                writeCompoundBody(out, (LinkedHashMap<String, Object>) value);
-                break;
-            default:
-                throw new IOException("Unknown Tag Type: " + type);
+            case NbtCompound t -> writeCompoundBody(out, t);
+            case NbtEnd t -> throw new IOException("Cannot write a TAG_End as a value");
         }
-    }
-
-    /**
-     * Maps a Java value back to its NBT tag type ID
-     * Has to stay in sync with Parser.readPayload
-     */
-    private static int typeOf(Object value) {
-        if (value instanceof Byte) return TAG_Byte;
-        if (value instanceof Short) return TAG_Short;
-        if (value instanceof Integer) return TAG_Int;
-        if (value instanceof Long) return TAG_Long;
-        if (value instanceof Float) return TAG_Float;
-        if (value instanceof Double) return TAG_Double;
-        if (value instanceof String) return TAG_String;
-        if (value instanceof byte[]) return TAG_Byte_Array;
-        if (value instanceof int[]) return TAG_Int_Array;
-        if (value instanceof long[]) return TAG_Long_Array;
-        if (value instanceof List) return TAG_List;
-        if (value instanceof LinkedHashMap) return TAG_Compound;
-        throw new IllegalArgumentException("Unsupported Java type for NBT: "
-                + (value == null ? "null" : value.getClass()));
     }
 }

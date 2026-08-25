@@ -18,11 +18,11 @@ public final class NbtCompound implements NbtTag {
     public void putInt(String key, int value)         { put(key, new NbtInt(value)); }
     public void putLong(String key, long value)        { put(key, new NbtLong(value)); }
     public void putByte(String key, byte value)        { put(key, new NbtByte(value)); }
-    public void putBoolean(String key, boolean value)  { put(key, new NbtByte((byte) (value ? 1 : 0))); }
+    public void putBoolean(String key, boolean value)  { put(key, new NbtBoolean(value)); }
     public void putDouble(String key, double value)     { put(key, new NbtDouble(value)); }
     public void putFloat(String key, float value)        { put(key, new NbtFloat(value)); }
     public void putCompound(String key, NbtCompound value) { put(key, value); }
-    public void putList(String key, NbtCompound value) { put(key, value); }
+    public void putList(String key, NbtList value) { put(key, value); }
 
     public Optional<NbtTag> get(String key) {
         return Optional.ofNullable(entries.get(key));
@@ -47,9 +47,12 @@ public final class NbtCompound implements NbtTag {
     }
 
     public boolean getBoolean(String key) {
-        return get(key).filter(NbtByte.class::isInstance)
-                .map(NbtByte.class::cast).map(t -> t.value() != 0)
-                .orElseThrow(() -> new NoSuchElementException("No byte tag: " + key));
+        NbtTag tag = get(key).orElseThrow(() -> new NoSuchElementException("No byte tag: " + key));
+        return switch (tag) {
+            case NbtBoolean b -> b.value();
+            case NbtByte b -> b.value() != 0;
+            default -> throw new NoSuchElementException("No byte tag: " + key);
+        };
     }
 
     public NbtCompound getCompound(String key) {
@@ -58,9 +61,9 @@ public final class NbtCompound implements NbtTag {
                 .orElseThrow(() -> new NoSuchElementException("No compound tag: " + key));
     }
 
-    public NbtCompound getList(String key) {
-        return get(key).filter(NbtCompound.class::isInstance)
-                .map(NbtCompound.class::cast)
+    public NbtList getList(String key) {
+        return get(key).filter(NbtList.class::isInstance)
+                .map(NbtList.class::cast)
                 .orElseThrow(() -> new NoSuchElementException("No list tag: " + key));
     }
 
