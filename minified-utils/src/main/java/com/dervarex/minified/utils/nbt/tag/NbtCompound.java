@@ -14,15 +14,19 @@ public final class NbtCompound implements NbtTag {
         entries.put(key, value);
     }
 
-    public void putString(String key, String value) { put(key, new NbtString(value)); }
-    public void putInt(String key, int value)         { put(key, new NbtInt(value)); }
-    public void putLong(String key, long value)        { put(key, new NbtLong(value)); }
-    public void putByte(String key, byte value)        { put(key, new NbtByte(value)); }
-    public void putBoolean(String key, boolean value)  { put(key, new NbtBoolean(value)); }
-    public void putDouble(String key, double value)     { put(key, new NbtDouble(value)); }
-    public void putFloat(String key, float value)        { put(key, new NbtFloat(value)); }
-    public void putCompound(String key, NbtCompound value) { put(key, value); }
-    public void putList(String key, NbtList value) { put(key, value); }
+    public void setString(String key, String value) { put(key, new NbtString(value)); }
+    public void setInt(String key, int value)         { put(key, new NbtInt(value)); }
+    public void setLong(String key, long value)        { put(key, new NbtLong(value)); }
+    public void setShort(String key, short value)      { put(key, new NbtShort(value)); }
+    public void setByte(String key, byte value)        { put(key, new NbtByte(value)); }
+    public void setBoolean(String key, boolean value)  { put(key, new NbtBoolean(value)); }
+    public void setDouble(String key, double value)     { put(key, new NbtDouble(value)); }
+    public void setFloat(String key, float value)        { put(key, new NbtFloat(value)); }
+    public void setByteArray(String key, byte[] value)  { put(key, new NbtByteArray(value)); }
+    public void setIntArray(String key, int[] value)    { put(key, new NbtIntArray(value)); }
+    public void setLongArray(String key, long[] value)  { put(key, new NbtLongArray(value)); }
+    public void setCompound(String key, NbtCompound value) { put(key, value); }
+    public void setList(String key, NbtList value) { put(key, value); }
 
     public Optional<NbtTag> get(String key) {
         return Optional.ofNullable(entries.get(key));
