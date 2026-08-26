@@ -5,5 +5,5 @@ public enum Difficulty {
     easy,
     normal,
     hard
-    // no hardcore here, since hardcore is hard mode + additional field, not a seperate Difficulty, even if Minecraft sometime treats it as one
+    // no hardcore here, since hardcore is hard mode + additional field, not a separate Difficulty, even if Minecraft sometime treats it as one
 }
