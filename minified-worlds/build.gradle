@@ -23,6 +23,11 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
 
     implementation 'org.apiguardian:apiguardian-api:1.1.2'
+    compileOnly 'org.projectlombok:lombok:1.18.34'
+    annotationProcessor 'org.projectlombok:lombok:1.18.34'
+
+    compileOnly 'org.jetbrains:annotations:24.1.0'
+    implementation project(":minified-utils")
 }
 
 tasks.withType(Test).configureEach {
