@@ -76,6 +76,11 @@ public final class NbtCompound implements NbtTag {
                 .map(NbtIntArray.class::cast)
                 .orElseThrow(() -> new NoSuchElementException("No int array tag: " + key));
     }
+    public byte getByte(String key) {
+        return get(key).filter(NbtByte.class::isInstance)
+                .map(NbtByte.class::cast).map(NbtByte::value)
+                .orElseThrow(() -> new NoSuchElementException("No byte tag: " + key));
+    }
 
     public boolean has(String key) { return entries.containsKey(key); }
 
