@@ -4,7 +4,7 @@ plugins {
 }
 
 group = 'com.dervarex.minified.worlds'
-description = "Utility for Reading and Modifying Minecraft Worlds"
+description = "Utility for Reading and Modifying Minecraft Worlds (26.1+)"
 
 java {
     toolchain {
