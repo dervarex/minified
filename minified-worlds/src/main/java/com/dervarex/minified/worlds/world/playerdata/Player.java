@@ -7,4 +7,6 @@ public class Player {
     UUID uuid;
     Advancements advancements;
     Stats statistics;
+    Abilities abilities;
+    RecipeBook recipeBook;
 }
