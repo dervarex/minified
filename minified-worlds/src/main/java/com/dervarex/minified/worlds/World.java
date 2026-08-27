@@ -1,25 +1,72 @@
 package com.dervarex.minified.worlds;
 
-import com.dervarex.minified.worlds.world.*;
-import com.dervarex.minified.worlds.world.data.*;
+import com.dervarex.minified.utils.nbt.Parser;
+import com.dervarex.minified.utils.nbt.Writer;
+import com.dervarex.minified.utils.nbt.tag.NbtCompound;
+import com.dervarex.minified.worlds.world.data.CustomBossEvents;
+import com.dervarex.minified.worlds.world.data.GameRules;
 import com.dervarex.minified.worlds.world.level.Level;
-import com.dervarex.minified.worlds.world.playerdata.Player;
-import com.dervarex.minified.worlds.world.worlds.End;
-import com.dervarex.minified.worlds.world.worlds.Nether;
-import com.dervarex.minified.worlds.world.worlds.Overworld;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Optional;
 
+import lombok.Getter;
+import org.jetbrains.annotations.Nullable;
+
+/**
+ * Represents a world.
+ * Note: Fields are marked nullable to prevent NullPointerExceptions,
+ * although Minecraft usually generates default Nbt Structures when loading a World.
+ */
 public class World {
-    Level level;
-    SessionLock lock;
-    Icon icon;
-    Raids raids;
-    Map[] maps;
-    IdCounts idCounts;
-    RandomSequences randomSequences;
-    ScoreBoard scoreBoard;
-    CommandStorage commandStorage;
-    Player[] players;
-    Overworld overworld;
-    Nether nether;
-    End end;
+    private final Path worldDirectory;
+    @Getter
+    private final Level level;
+    @Nullable
+    private final CustomBossEvents customBossEvents;
+    @Nullable
+    private final GameRules gameRules;
+
+    public World(Path worldDirectory) {
+        this.worldDirectory = worldDirectory;
+        Path dataDirectory = worldDirectory.resolve("data");
+
+        if (!Files.isDirectory(worldDirectory)) {
+            throw new RuntimeException("World directory does not exist or is not a directory: " + worldDirectory);
+        }
+
+        Path levelDatPath = worldDirectory.resolve("level.dat");
+        Path customBossEventsPath = dataDirectory.resolve("custom_boss_events.dat");
+        Path gameRulesPath = dataDirectory.resolve("game_rules.dat");
+
+        if (!Files.exists(levelDatPath)) {
+            throw new RuntimeException("World directory does not contain level.dat file: " + worldDirectory);
+        }
+
+        try {
+            this.level = Level.fromNbt(Parser.readFile(levelDatPath.toFile()));
+
+            this.customBossEvents = Files.exists(customBossEventsPath)
+                    ? CustomBossEvents.fromNbt(Parser.readFile(customBossEventsPath.toFile()))
+                    : null;
+            this.gameRules = Files.exists(gameRulesPath)
+                    ? GameRules.fromNbt(Parser.readFile(customBossEventsPath.toFile()))
+                    : null;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Optional<CustomBossEvents> getCustomBossEvents() {
+        return Optional.ofNullable(customBossEvents);
+    }
+    public Optional<GameRules> getGameRules() {
+        return Optional.ofNullable(gameRules);
+    }
+
+    public void save() throws IOException {
+        NbtCompound nbt = level.toNbt();
+        Writer.writeFile(worldDirectory.resolve("level.dat").toFile(), nbt);
+    }
 }
