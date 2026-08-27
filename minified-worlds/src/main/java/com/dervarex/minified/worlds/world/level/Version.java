@@ -1,42 +1,49 @@
 package com.dervarex.minified.worlds.world.level;
 
 import com.dervarex.minified.utils.nbt.tag.NbtCompound;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.jetbrains.annotations.Nullable;
 
+@Getter
+@Setter
+@NoArgsConstructor
 public class Version {
     private int id;
+    @Nullable
     private String name;
+    @Nullable
     private String series;
     private boolean snapshot;
 
-    public Version() {}
-
     public static Version fromNbt(NbtCompound versionNbt) {
         Version version = new Version();
-        version.id = versionNbt.getInt("Id");
-        version.name = versionNbt.getString("Name");
-        version.series = versionNbt.getString("Series");
-        version.snapshot = versionNbt.getBoolean("Snapshot");
+        if (versionNbt.has("Id")) {
+            version.id = versionNbt.getInt("Id");
+        }
+        if (versionNbt.has("Name")) {
+            version.name = versionNbt.getString("Name");
+        }
+        if (versionNbt.has("Series")) {
+            version.series = versionNbt.getString("Series");
+        }
+        if (versionNbt.has("Snapshot")) {
+            version.snapshot = versionNbt.getByte("Snapshot") != 0;
+        }
         return version;
     }
 
     public NbtCompound toNbt() {
         NbtCompound nbt = new NbtCompound();
         nbt.setInt("Id", id);
-        nbt.setString("Name", name);
-        nbt.setString("Series", series);
-        nbt.setBoolean("Snapshot", snapshot);
+        if (name != null) {
+            nbt.setString("Name", name);
+        }
+        if (series != null) {
+            nbt.setString("Series", series);
+        }
+        nbt.setByte("Snapshot", (byte) (snapshot ? 1 : 0));
         return nbt;
     }
-
-    public int getId() { return id; }
-    public void setId(int id) { this.id = id; }
-
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-
-    public String getSeries() { return series; }
-    public void setSeries(String series) { this.series = series; }
-
-    public boolean isSnapshot() { return snapshot; }
-    public void setSnapshot(boolean snapshot) { this.snapshot = snapshot; }
 }
