@@ -24,13 +24,13 @@ public class Player {
 
     Attributes attributes;
 
-    ArrayList<Integer> UUID; // todo: find out what it's used for
+    ArrayList<Integer> UUID; // 4 integers -> UUID (most/least significant bits split in halves)
 
     String dimension;
     Double fallDistance;
     Float absorptionAmount;
     Float health;
-    Float XpP; // todo: find out what it is
+    Float XpP; // percent needed to reach the next xp level
 
     Inventory inventory;
 
@@ -44,7 +44,7 @@ public class Player {
     int XPSeed;
     int XPTotal;
 
-    // warden spawn tracker
+    WardenSpawnTracker wardenSpawnTracker;
 
     int foodLevel;
     int foodTickTimer;
