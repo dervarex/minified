@@ -44,6 +44,12 @@ public final class NbtCompound implements NbtTag {
                 .orElseThrow(() -> new NoSuchElementException("No int tag: " + key));
     }
 
+    public float getFloat(String key) {
+        return get(key).filter(NbtFloat.class::isInstance)
+                .map(NbtFloat.class::cast).map(NbtFloat::value)
+                .orElseThrow(() -> new NoSuchElementException("No float tag: " + key));
+    }
+
     public long getLong(String key) {
         return get(key).filter(NbtLong.class::isInstance)
                 .map(NbtLong.class::cast).map(NbtLong::value)
