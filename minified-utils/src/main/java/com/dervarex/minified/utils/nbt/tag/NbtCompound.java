@@ -56,6 +56,12 @@ public final class NbtCompound implements NbtTag {
                 .orElseThrow(() -> new NoSuchElementException("No long tag: " + key));
     }
 
+    public double getDouble(String key) {
+        return get(key).filter(NbtDouble.class::isInstance)
+                .map(NbtDouble.class::cast).map(NbtDouble::value)
+                .orElseThrow(() -> new NoSuchElementException("No double tag: " + key));
+    }
+
     public boolean getBoolean(String key) {
         NbtTag tag = get(key).orElseThrow(() -> new NoSuchElementException("No byte tag: " + key));
         return switch (tag) {
