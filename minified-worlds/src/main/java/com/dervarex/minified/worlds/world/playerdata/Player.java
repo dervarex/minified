@@ -1,12 +1,63 @@
 package com.dervarex.minified.worlds.world.playerdata;
 
+import java.util.ArrayList;
 import java.util.UUID;
 
 // a31ccf30-00e4-4928-a590-e366c90af710.dat (<player-uuid>.dat)
+
 public class Player {
+
     UUID uuid;
+
     Advancements advancements;
+
     Stats statistics;
+
     Abilities abilities;
+
     RecipeBook recipeBook;
+
+    Short hurtTime;
+    ArrayList<Double> motion; // e.g. 0, -0.0784000015258789, 0
+    ArrayList<Double> position; // e.g. 360.1760070593703, 77, 195.91003479668723
+    ArrayList<Double> rotation; // e.g. 155.59056, 49.508533
+
+    Attributes attributes;
+
+    ArrayList<Integer> UUID; // todo: find out what it's used for
+
+    String dimension;
+    Double fallDistance;
+    Float absorptionAmount;
+    Float health;
+    Float XpP; // todo: find out what it is
+
+    Inventory inventory;
+
+    Float foodSaturationLevel;
+    int currentImpulseContextResetGraceTime;
+    int hurtByTimestamp;
+    int portalCooldown;
+    int score;
+    int selectedItemSlot;
+    int XPLevel;
+    int XPSeed;
+    int XPTotal;
+
+    // warden spawn tracker
+
+    int foodLevel;
+    int foodTickTimer;
+    int playerGameType;
+    boolean spawnExtraParticlesOnFall;
+    short deathTime;
+    short fire;
+    short air;
+    short sleepTimer;
+    boolean fallFlying;
+    boolean invulnerable;
+    float foodExhaustionLevel;
+    boolean seenCredits;
+
+    int dataVersion;
 }
