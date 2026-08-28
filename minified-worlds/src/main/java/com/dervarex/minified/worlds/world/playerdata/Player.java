@@ -1,5 +1,7 @@
 package com.dervarex.minified.worlds.world.playerdata;
 
+import com.dervarex.minified.utils.nbt.tag.NbtCompound;
+
 import java.util.ArrayList;
 import java.util.UUID;
 
@@ -60,4 +62,21 @@ public class Player {
     boolean seenCredits;
 
     int dataVersion;
+
+    public static Player fromNbt(NbtCompound nbt) {
+        Player player = new Player();
+
+        if(nbt.has("abilities")) {
+            player.abilities = Abilities.fromNbt(nbt.getCompound("abilities"));
+        }
+        if (nbt.has("recipeBook")) {
+            player.recipeBook = RecipeBook.fromNbt(nbt.getCompound("recipeBook"));
+        }
+        if (nbt.has("HurtTime")) {
+            player.hurtTime = nbt.getShort("HurtTime");
+        }
+
+        player.dataVersion = nbt.getInt("DataVersion");
+        return player;
+    }
 }
