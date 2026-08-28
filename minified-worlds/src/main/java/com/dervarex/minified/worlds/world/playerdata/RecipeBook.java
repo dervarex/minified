@@ -3,7 +3,11 @@ package com.dervarex.minified.worlds.world.playerdata;
 import com.dervarex.minified.utils.nbt.tag.NbtCompound;
 import com.dervarex.minified.utils.nbt.tag.NbtList;
 import com.dervarex.minified.utils.nbt.tag.NbtString;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 public class RecipeBook {
     // maybe not the best solution but it sure is one
     private String[] recipes = new String[0];

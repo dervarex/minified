@@ -141,4 +141,28 @@ public class Scoreboard {
 
         return root;
     }
+
+    public void putDisplaySlot(String key, String value) {
+        displaySlots.put(key, value);
+    }
+
+    public void removeDisplaySlot(String key) {
+        displaySlots.remove(key);
+    }
+
+    public void addObjective(Objective objective) {
+        objectives.add(objective);
+    }
+
+    public void removeObjective(Objective objective) {
+        objectives.remove(objective);
+    }
+
+    public void addPlayerScore(PlayerScore playerScore) {
+        playerScores.add(playerScore);
+    }
+
+    public void removePlayerScore(PlayerScore playerScore) {
+        playerScores.remove(playerScore);
+    }
 }

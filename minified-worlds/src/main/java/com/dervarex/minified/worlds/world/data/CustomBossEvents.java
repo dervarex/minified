@@ -4,7 +4,6 @@ import com.dervarex.minified.utils.nbt.tag.NbtCompound;
 import com.dervarex.minified.utils.nbt.tag.NbtTag;
 import lombok.Getter;
 import lombok.Setter;
-
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -17,7 +16,6 @@ public class CustomBossEvents {
     public static CustomBossEvents fromNbt(NbtCompound nbt) {
         CustomBossEvents result = new CustomBossEvents();
         result.dataVersion = nbt.getInt("DataVersion");
-
         if (nbt.has("data")) {
             NbtCompound data = nbt.getCompound("data");
             for (Map.Entry<String, NbtTag> entry : data.asMap().entrySet()) {
@@ -28,16 +26,21 @@ public class CustomBossEvents {
         }
         return result;
     }
-
     public NbtCompound toNbt() {
         NbtCompound data = new NbtCompound();
         for (Map.Entry<String, BossEvent> entry : events.entrySet()) {
             data.setCompound(entry.getKey(), entry.getValue().toNbt());
         }
-
         NbtCompound root = new NbtCompound();
         root.setCompound("data", data);
         root.setInt("DataVersion", dataVersion);
         return root;
+    }
+
+    public void putEvent(String id, BossEvent event) {
+        events.put(id, event);
+    }
+    public void removeEvent(String id) {
+        events.remove(id);
     }
 }

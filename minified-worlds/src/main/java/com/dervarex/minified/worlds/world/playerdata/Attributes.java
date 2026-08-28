@@ -2,7 +2,11 @@ package com.dervarex.minified.worlds.world.playerdata;
 
 import com.dervarex.minified.utils.nbt.tag.NbtCompound;
 import com.dervarex.minified.utils.nbt.tag.NbtList;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 public class Attributes {
     Attribute[] attributes;
 
