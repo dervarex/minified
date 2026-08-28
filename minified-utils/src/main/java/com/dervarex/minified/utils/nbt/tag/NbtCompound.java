@@ -32,36 +32,6 @@ public final class NbtCompound implements NbtTag {
         return Optional.ofNullable(entries.get(key));
     }
 
-    public String getString(String key) {
-        return get(key).filter(NbtString.class::isInstance)
-                .map(NbtString.class::cast).map(NbtString::value)
-                .orElseThrow(() -> new NoSuchElementException("No string tag: " + key));
-    }
-
-    public int getInt(String key) {
-        return get(key).filter(NbtInt.class::isInstance)
-                .map(NbtInt.class::cast).map(NbtInt::value)
-                .orElseThrow(() -> new NoSuchElementException("No int tag: " + key));
-    }
-
-    public float getFloat(String key) {
-        return get(key).filter(NbtFloat.class::isInstance)
-                .map(NbtFloat.class::cast).map(NbtFloat::value)
-                .orElseThrow(() -> new NoSuchElementException("No float tag: " + key));
-    }
-
-    public long getLong(String key) {
-        return get(key).filter(NbtLong.class::isInstance)
-                .map(NbtLong.class::cast).map(NbtLong::value)
-                .orElseThrow(() -> new NoSuchElementException("No long tag: " + key));
-    }
-
-    public double getDouble(String key) {
-        return get(key).filter(NbtDouble.class::isInstance)
-                .map(NbtDouble.class::cast).map(NbtDouble::value)
-                .orElseThrow(() -> new NoSuchElementException("No double tag: " + key));
-    }
-
     public boolean getBoolean(String key) {
         NbtTag tag = get(key).orElseThrow(() -> new NoSuchElementException("No byte tag: " + key));
         return switch (tag) {
@@ -71,10 +41,46 @@ public final class NbtCompound implements NbtTag {
         };
     }
 
+    public byte getByte(String key) {
+        return get(key).filter(NbtByte.class::isInstance)
+                .map(NbtByte.class::cast).map(NbtByte::value)
+                .orElseThrow(() -> new NoSuchElementException("No byte tag: " + key));
+    }
+
+    public byte[] getByteArray(String key) {
+        return get(key).filter(NbtByteArray.class::isInstance)
+                .map(NbtByteArray.class::cast).map(NbtByteArray::value)
+                .orElseThrow(() -> new NoSuchElementException("No byte array tag: " + key));
+    }
+
     public NbtCompound getCompound(String key) {
         return get(key).filter(NbtCompound.class::isInstance)
                 .map(NbtCompound.class::cast)
                 .orElseThrow(() -> new NoSuchElementException("No compound tag: " + key));
+    }
+
+    public double getDouble(String key) {
+        return get(key).filter(NbtDouble.class::isInstance)
+                .map(NbtDouble.class::cast).map(NbtDouble::value)
+                .orElseThrow(() -> new NoSuchElementException("No double tag: " + key));
+    }
+
+    public float getFloat(String key) {
+        return get(key).filter(NbtFloat.class::isInstance)
+                .map(NbtFloat.class::cast).map(NbtFloat::value)
+                .orElseThrow(() -> new NoSuchElementException("No float tag: " + key));
+    }
+
+    public int getInt(String key) {
+        return get(key).filter(NbtInt.class::isInstance)
+                .map(NbtInt.class::cast).map(NbtInt::value)
+                .orElseThrow(() -> new NoSuchElementException("No int tag: " + key));
+    }
+
+    public NbtIntArray getIntArray(String key) {
+        return get(key).filter(NbtIntArray.class::isInstance)
+                .map(NbtIntArray.class::cast)
+                .orElseThrow(() -> new NoSuchElementException("No int array tag: " + key));
     }
 
     public NbtList getList(String key) {
@@ -83,16 +89,30 @@ public final class NbtCompound implements NbtTag {
                 .orElseThrow(() -> new NoSuchElementException("No list tag: " + key));
     }
 
-    public NbtIntArray getIntArray(String key) {
-        return get(key).filter(NbtIntArray.class::isInstance)
-                .map(NbtIntArray.class::cast)
-                .orElseThrow(() -> new NoSuchElementException("No int array tag: " + key));
+    public long getLong(String key) {
+        return get(key).filter(NbtLong.class::isInstance)
+                .map(NbtLong.class::cast).map(NbtLong::value)
+                .orElseThrow(() -> new NoSuchElementException("No long tag: " + key));
     }
-    public byte getByte(String key) {
-        return get(key).filter(NbtByte.class::isInstance)
-                .map(NbtByte.class::cast).map(NbtByte::value)
-                .orElseThrow(() -> new NoSuchElementException("No byte tag: " + key));
+
+    public long[] getLongArray(String key) {
+        return get(key).filter(NbtLongArray.class::isInstance)
+                .map(NbtLongArray.class::cast).map(NbtLongArray::value)
+                .orElseThrow(() -> new NoSuchElementException("No long array tag: " + key));
     }
+
+    public short getShort(String key) {
+        return get(key).filter(NbtShort.class::isInstance)
+                .map(NbtShort.class::cast).map(NbtShort::value)
+                .orElseThrow(() -> new NoSuchElementException("No short tag: " + key));
+    }
+
+    public String getString(String key) {
+        return get(key).filter(NbtString.class::isInstance)
+                .map(NbtString.class::cast).map(NbtString::value)
+                .orElseThrow(() -> new NoSuchElementException("No string tag: " + key));
+    }
+
 
     public boolean has(String key) { return entries.containsKey(key); }
 
