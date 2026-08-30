@@ -55,7 +55,7 @@ public class Parser {
     /**
      * Reads the content from a compound, until TAG_END has been found
      */
-    private static NbtCompound readCompoundBody(DataInputStream in) throws IOException {
+    static NbtCompound readCompoundBody(DataInputStream in) throws IOException {
         NbtCompound compound = new NbtCompound();
         while (true) {
             int type = in.readUnsignedByte();
