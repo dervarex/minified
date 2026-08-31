@@ -12,13 +12,13 @@ public class ChunkSection {
     private final NbtCompound raw;
     private final byte sectionY;
 
-    private final List<BlockState> palette;
-    private final long[] data; // null if the whole section is just a single block type
-    private final int bitsPerBlock;
+    private List<BlockState> palette;
+    private long[] data; // null if the whole section is just a single block type
+    private int bitsPerBlock;
 
-    private final List<String> biomePalette;
-    private final long[] biomeData; // shared reference, or null for a size-1 palette
-    private final int bitsPerBiome;
+    private List<String> biomePalette;
+    private long[] biomeData; // shared reference, or null for a size 1 palette
+    private int bitsPerBiome;
 
     /** Parses an existing section (read from a chunk's sections list) */
     public ChunkSection(NbtCompound sectionTag) {
@@ -82,6 +82,10 @@ public class ChunkSection {
         return 32 - Integer.numberOfLeadingZeros(paletteSize - 1);
     }
 
+    private static int bitsForBlockPalette(int paletteSize) {
+        return Math.max(4, 32 - Integer.numberOfLeadingZeros(Math.max(1, paletteSize - 1)));
+    }
+
     public byte sectionY() { return sectionY; }
     public NbtCompound raw() { return raw; }
 
@@ -105,9 +109,7 @@ public class ChunkSection {
     public void setBlock(int x, int y, int z, BlockState state) {
         int paletteIndex = palette.indexOf(state);
         if (paletteIndex == -1) {
-            throw new UnsupportedOperationException(
-                    "Block state " + state.name() + " is not yet in this section's palette - " +
-                            "palette growth/repacking is not implemented yet");
+            paletteIndex = growBlockPalette(state);
         }
         if (palette.size() == 1) return; // only one possible block, nothing to write
         writePacked(data, bitsPerBlock, localBlockIndex(x, y, z), paletteIndex);
@@ -123,12 +125,91 @@ public class ChunkSection {
     public void setBiome(int x, int y, int z, String biome) {
         int index = biomePalette.indexOf(biome);
         if (index == -1) {
-            throw new UnsupportedOperationException(
-                    "Biome " + biome + " is not yet in this section's biome palette - " +
-                            "palette repacking is not implemented yet");
+            index = growBiomePalette(biome);
         }
         if (biomePalette.size() == 1) return;
         writePacked(biomeData, bitsPerBiome, localBiomeIndex(x, y, z), index);
+    }
+
+    /**
+     * Add a new block state to this section's palette, repacking the dat array to a
+     * wider bit width if the new palette size requires that. If the section had no
+     * data array, a new one is allocated with every entry defaulting to the old sole
+     * palette index (0), matching the section's previous state.
+     * The raw NBT (palette list + data array) is also updated to match.
+     */
+    private int growBlockPalette(BlockState newState) {
+        int newIndex = palette.size();
+        palette.add(newState);
+
+        NbtCompound blockStatesTag = raw.getCompound("block_states");
+        NbtList newPaletteList = new NbtList((byte) 10); // TAG_Compound
+        for (BlockState paletteState : palette) {
+            NbtCompound entry = new NbtCompound();
+            entry.setString("Name", paletteState.name());
+            if (!paletteState.properties().isEmpty()) {
+                NbtCompound props = new NbtCompound();
+                for (Map.Entry<String, String> e : paletteState.properties().entrySet()) {
+                    props.setString(e.getKey(), e.getValue());
+                }
+                entry.setCompound("Properties", props);
+            }
+            newPaletteList.add(entry);
+        }
+        blockStatesTag.setList("palette", newPaletteList);
+
+        int newBits = bitsForBlockPalette(palette.size());
+        if (data == null) {
+            data = new long[64 * newBits]; // 4096 entries * newBits / 64 bits-per-long
+            bitsPerBlock = newBits;
+        } else if (newBits != bitsPerBlock) {
+            long[] newData = new long[64 * newBits];
+            for (int i = 0; i < 4096; i++) {
+                writePacked(newData, newBits, i, readPacked(data, bitsPerBlock, i));
+            }
+            data = newData;
+            bitsPerBlock = newBits;
+        }
+        blockStatesTag.setLongArray("data", data);
+
+        return newIndex;
+    }
+
+    /**
+     * <pre>
+     * Adds a new biome to this section's biome palette, repacking the biome data array
+     * to a wider bit width if the new palette size requires that. Mirrors {@link #growBlockPalette},
+     * but over a 4x4x4 (64-entry) biome grid instead of the bigger 16x16x16 grid.
+     * </pre>
+     * todo: verify that this solution is working
+     * @return the palette index the new biome was inserted at
+     */
+    private int growBiomePalette(String newBiome) {
+        int newIndex = biomePalette.size();
+        biomePalette.add(newBiome);
+
+        NbtCompound biomesTag = raw.getCompound("biomes");
+        NbtList newPaletteList = new NbtList((byte) 8); // TAG_String
+        for (String paletteBiome : biomePalette) {
+            newPaletteList.add(new NbtString(paletteBiome));
+        }
+        biomesTag.setList("palette", newPaletteList);
+
+        int newBits = bitsFor(biomePalette.size());
+        if (biomeData == null) {
+            biomeData = new long[newBits]; // 64 entries * newBits / 64 bits-per-long = newBits
+            bitsPerBiome = newBits;
+        } else if (newBits != bitsPerBiome) {
+            long[] newData = new long[newBits];
+            for (int i = 0; i < 64; i++) {
+                writePacked(newData, newBits, i, readPacked(biomeData, bitsPerBiome, i));
+            }
+            biomeData = newData;
+            bitsPerBiome = newBits;
+        }
+        biomesTag.setLongArray("data", biomeData);
+
+        return newIndex;
     }
 
     /**
@@ -207,7 +288,7 @@ public class ChunkSection {
         biomes.setList("palette", biomePaletteList);
         raw.setCompound("biomes", biomes);
 
-        List<BlockState> palette = List.of(BlockState.of("minecraft:air"));
+        List<BlockState> palette = new ArrayList<>(List.of(BlockState.of("minecraft:air")));
         List<String> biomePaletteJava = new ArrayList<>(List.of(biome));
 
         return new ChunkSection(raw, sectionY, palette, null, 4, biomePaletteJava, null, 0);
