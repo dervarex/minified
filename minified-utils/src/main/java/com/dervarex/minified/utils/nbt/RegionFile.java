@@ -3,6 +3,7 @@ package com.dervarex.minified.utils.nbt;
 import com.dervarex.minified.utils.nbt.tag.NbtCompound;
 
 import java.io.*;
+import java.util.zip.DeflaterOutputStream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.InflaterInputStream;
 
@@ -30,7 +31,21 @@ public class RegionFile implements Closeable {
     }
 
     public static RegionFile open(File file) throws IOException {
-        RandomAccessFile raf = new RandomAccessFile(file, "r");
+        RandomAccessFile raf = new RandomAccessFile(file, "rw");
+        RegionFile region = new RegionFile(raf);
+        region.readHeader();
+        return region;
+    }
+
+    /**
+     * Creates a new, empty region file (a zeroed 8192-byte header, no chunks)
+     * and opens it. Use this instead of open() if the .mca file doesn't exist yet,
+     * e.g. the first time a chunk is written to a region that was not yet generated
+     */
+    public static RegionFile create(File file) throws IOException {
+        RandomAccessFile raf = new RandomAccessFile(file, "rw");
+        raf.setLength(HEADER_SIZE);
+        raf.write(new byte[HEADER_SIZE]);
         RegionFile region = new RegionFile(raf);
         region.readHeader();
         return region;
@@ -94,6 +109,84 @@ public class RegionFile implements Closeable {
             in.readUTF(); // root name, empty for chunk data
             return Parser.readCompoundBody(in);
         }
+    }
+
+    /**
+     * Writes and serializes NBT data of the chunk into this region file,
+     * at the specified sector position, for the provided chunk coordinates.
+     * If the data is still able to fit in the chunk's previous sectors,
+     * then these sectors are reused. Otherwise, sectors are appended to the end of the
+     * file. Unused sectors, if the chunk is shrunk in size, remain in the file.
+     * (Vanilla Minecraft behavior, defragmentation is not implemented.)
+     * Data is always written with Zlib compression, even if the original chunk was
+     * read with different compression. Updates header fields with location and timestamp.
+     *
+     * @throws IOException if the serialized+compressed chunk needs more than 255 sectors
+     *                      (~1MB compressed), the region file format's own hard limit
+     */
+    public void writeChunk(int chunkX, int chunkZ, NbtCompound chunkData) throws IOException {
+        int idx = chunkIndex(chunkX, chunkZ);
+
+        ByteArrayOutputStream rawBytes = new ByteArrayOutputStream();
+        try (DataOutputStream out = new DataOutputStream(rawBytes)) {
+            out.writeByte(Parser.TAG_Compound);
+            out.writeUTF(""); // root name, empty for chunk data
+            NbtWriter.writeCompound(out, chunkData);
+        }
+
+        ByteArrayOutputStream compressedBytes = new ByteArrayOutputStream();
+        try (DeflaterOutputStream deflater = new DeflaterOutputStream(compressedBytes)) {
+            deflater.write(rawBytes.toByteArray());
+        }
+        byte[] compressed = compressedBytes.toByteArray();
+
+        int payloadLength = compressed.length + 1; // +1 for the compression-type byte
+        int totalLength = 4 + payloadLength;        // + the length-int itself
+        int neededSectors = (totalLength + SECTOR_SIZE - 1) / SECTOR_SIZE;
+
+        if (neededSectors > 255) {
+            throw new IOException("Chunk (" + chunkX + ", " + chunkZ + ") is too large to store: "
+                    + neededSectors + " sectors needed, 255 is the format's maximum");
+        }
+
+        int sectorOffset;
+        if (offsets[idx] != 0 && sectorCounts[idx] >= neededSectors) {
+            sectorOffset = offsets[idx]; // fits into the existing allocation, reuse it
+        } else {
+            long appendAt = raf.length();
+            sectorOffset = (int) Math.max(2, appendAt / SECTOR_SIZE); // never write into the header
+        }
+
+        long byteOffset = sectorOffset * (long) SECTOR_SIZE;
+        raf.seek(byteOffset);
+        raf.writeInt(payloadLength);
+        raf.writeByte(COMPRESSION_ZLIB);
+        raf.write(compressed);
+
+        long written = 4 + payloadLength;
+        long padded = (long) neededSectors * SECTOR_SIZE;
+        long padding = padded - written;
+        if (padding > 0) {
+            raf.write(new byte[(int) padding]);
+        }
+
+        offsets[idx] = sectorOffset;
+        sectorCounts[idx] = neededSectors;
+        writeLocationEntry(idx, sectorOffset, neededSectors);
+        writeTimestampEntry(idx, (int) (System.currentTimeMillis() / 1000));
+    }
+
+    private void writeLocationEntry(int idx, int sectorOffset, int sectorCount) throws IOException {
+        raf.seek(idx * 4L);
+        raf.writeByte((sectorOffset >> 16) & 0xFF);
+        raf.writeByte((sectorOffset >> 8) & 0xFF);
+        raf.writeByte(sectorOffset & 0xFF);
+        raf.writeByte(sectorCount & 0xFF);
+    }
+
+    private void writeTimestampEntry(int idx, int unixTimestamp) throws IOException {
+        raf.seek(SECTOR_SIZE + idx * 4L);
+        raf.writeInt(unixTimestamp);
     }
 
     @Override
