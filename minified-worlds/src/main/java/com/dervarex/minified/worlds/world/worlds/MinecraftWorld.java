@@ -114,6 +114,26 @@ public class MinecraftWorld {
         region.writeChunk(chunk.chunkX(), chunk.chunkZ(), chunk.raw());
     }
 
+    /**
+     * Converts and writes POI (point of interest) data for the given chunk to its
+     * region file, creating the file if it doesn't exist yet.
+     * todo: object model
+     */
+    public void savePoiData(int chunkX, int chunkZ, NbtCompound poiData) throws IOException {
+        RegionFile poi = getOrCreateRegionFile(poiFiles, "poi", chunkX >> 5, chunkZ >> 5);
+        poi.writeChunk(chunkX, chunkZ, poiData);
+    }
+
+    /**
+     * Converts and writes Entity data for the given chunk to its
+     * region file, creating the file if it doesn't exist yet.
+     * todo: object model
+     */
+    public void saveEntityData(int chunkX, int chunkZ, NbtCompound entityData) throws IOException {
+        RegionFile entities = getOrCreateRegionFile(entityFiles, "entities", chunkX >> 5, chunkZ >> 5);
+        entities.writeChunk(chunkX, chunkZ, entityData);
+    }
+
     public void close() throws IOException {
         for (RegionFile r : regionFiles.values()) r.close();
         for (RegionFile r : poiFiles.values()) r.close();
