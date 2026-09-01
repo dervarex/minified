@@ -3,6 +3,8 @@ package com.dervarex.minified.worlds.world.worlds;
 import com.dervarex.minified.utils.nbt.RegionFile;
 import com.dervarex.minified.utils.nbt.tag.NbtCompound;
 import com.dervarex.minified.worlds.chunk.Chunk;
+import com.dervarex.minified.worlds.entity.EntityData;
+import com.dervarex.minified.worlds.poi.PoiData;
 
 import java.io.File;
 import java.io.IOException;
@@ -105,6 +107,33 @@ public class MinecraftWorld {
     }
 
     /**
+     * Like {@link #readChunkData}, but wrapped in a {@link Chunk} for simplified
+     * access compared to raw NBT. Returns null when the Chunk has not been generated yet.
+     */
+    public Chunk readChunk(int chunkX, int chunkZ) throws IOException {
+        NbtCompound raw = readChunkData(chunkX, chunkZ);
+        return raw == null ? null : new Chunk(raw);
+    }
+
+    /**
+     * Like {@link #readPoiData}, but wrapped in a {@link PoiData} for simplified
+     * access compared to raw NBT. Returns null when the Chunk has not been generated yet.
+     */
+    public PoiData readPoi(int chunkX, int chunkZ) throws IOException {
+        NbtCompound raw = readPoiData(chunkX, chunkZ);
+        return raw == null ? null : new PoiData(raw);
+    }
+
+    /**
+     * Like {@link #readEntityData}, but wrapped in an {@link EntityData} for simplified
+     * access compared to raw NBT. Returns null when the Chunk has not been generated yet.
+     */
+    public EntityData readEntities(int chunkX, int chunkZ) throws IOException {
+        NbtCompound raw = readEntityData(chunkX, chunkZ);
+        return raw == null ? null : new EntityData(raw);
+    }
+
+    /**
      * Serializes and writes a chunk's current data to its region file, creating
      * the region file if it doesn't exist. The chunk's coordinates
      * (chunk.chunkX()/chunkZ()) determine where it's written.
@@ -117,7 +146,6 @@ public class MinecraftWorld {
     /**
      * Converts and writes POI (point of interest) data for the given chunk to its
      * region file, creating the file if it doesn't exist yet.
-     * todo: object model
      */
     public void savePoiData(int chunkX, int chunkZ, NbtCompound poiData) throws IOException {
         RegionFile poi = getOrCreateRegionFile(poiFiles, "poi", chunkX >> 5, chunkZ >> 5);
@@ -125,13 +153,28 @@ public class MinecraftWorld {
     }
 
     /**
+     * Like {@link #savePoiData(int, int, NbtCompound)}, but takes a {@link PoiData}
+     * instead of requiring a .raw() call.
+     */
+    public void savePoiData(int chunkX, int chunkZ, PoiData poiData) throws IOException {
+        savePoiData(chunkX, chunkZ, poiData.raw());
+    }
+
+    /**
      * Converts and writes Entity data for the given chunk to its
      * region file, creating the file if it doesn't exist yet.
-     * todo: object model
      */
     public void saveEntityData(int chunkX, int chunkZ, NbtCompound entityData) throws IOException {
         RegionFile entities = getOrCreateRegionFile(entityFiles, "entities", chunkX >> 5, chunkZ >> 5);
         entities.writeChunk(chunkX, chunkZ, entityData);
+    }
+
+    /**
+     * Like {@link #saveEntityData(int, int, NbtCompound)}, but takes an
+     * {@link EntityData} instead of requiring a .raw() call.
+     */
+    public void saveEntityData(int chunkX, int chunkZ, EntityData entityData) throws IOException {
+        saveEntityData(chunkX, chunkZ, entityData.raw());
     }
 
     public void close() throws IOException {
