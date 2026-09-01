@@ -3,6 +3,7 @@ package com.dervarex.minified.worlds;
 import com.dervarex.minified.utils.nbt.Parser;
 import com.dervarex.minified.utils.nbt.Writer;
 import com.dervarex.minified.utils.nbt.tag.NbtCompound;
+import com.dervarex.minified.worlds.world.SessionLock;
 import com.dervarex.minified.worlds.world.data.CustomBossEvents;
 import com.dervarex.minified.worlds.world.data.GameRules;
 import com.dervarex.minified.worlds.world.level.Level;
@@ -20,6 +21,7 @@ import org.jetbrains.annotations.Nullable;
  * although Minecraft usually generates default Nbt Structures when loading a World.
  */
 public class World {
+    @Getter
     private final Path worldDirectory;
     @Getter
     private final Level level;
@@ -27,6 +29,8 @@ public class World {
     private final CustomBossEvents customBossEvents;
     @Nullable
     private final GameRules gameRules;
+    @Getter
+    private final SessionLock lock;
 
     public World(Path worldDirectory) {
         this.worldDirectory = worldDirectory;
@@ -51,8 +55,9 @@ public class World {
                     ? CustomBossEvents.fromNbt(Parser.readFile(customBossEventsPath.toFile()))
                     : null;
             this.gameRules = Files.exists(gameRulesPath)
-                    ? GameRules.fromNbt(Parser.readFile(customBossEventsPath.toFile()))
+                    ? GameRules.fromNbt(Parser.readFile(gameRulesPath.toFile()))
                     : null;
+            this.lock = new SessionLock(worldDirectory.resolve("session.lock"));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
