@@ -61,7 +61,7 @@ public class MinecraftWorld {
     private static long regionKey(int regionX, int regionZ) {
         return ((long) regionX << 32) | (regionZ & 0xFFFFFFFFL);
     }
-    private File dimensionFolder(String category) {
+    protected File dimensionFolder(String category) {
         return new File(
                 new File(new File(new File(worldFolder, "dimensions"), "minecraft"), type.dimensionName),
                 category
