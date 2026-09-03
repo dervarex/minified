@@ -1,4 +1,4 @@
-package com.dervarex.minified.worlds.world.worlds;
+package com.dervarex.minified.worlds.dimension.data;
 
 import com.dervarex.minified.utils.nbt.tag.NbtCompound;
 import com.dervarex.minified.utils.nbt.tag.NbtInt;
