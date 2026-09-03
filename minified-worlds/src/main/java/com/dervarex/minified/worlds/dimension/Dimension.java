@@ -3,6 +3,9 @@ package com.dervarex.minified.worlds.dimension;
 import com.dervarex.minified.utils.nbt.RegionFile;
 import com.dervarex.minified.utils.nbt.tag.NbtCompound;
 import com.dervarex.minified.worlds.chunk.Chunk;
+import com.dervarex.minified.worlds.dimension.data.ChunkTicket;
+import com.dervarex.minified.worlds.dimension.data.Raids;
+import com.dervarex.minified.worlds.dimension.data.WorldBorder;
 import com.dervarex.minified.worlds.entity.EntityData;
 import com.dervarex.minified.worlds.poi.PoiData;
 
@@ -29,26 +32,6 @@ public class Dimension {
         this.type = type;
     }
     public record Versioned<T>(int dataVersion, T data) {}
-    public static class ChunkTicket {
-        int[] chunkPos; // two integers, chunk x and chunk z (there's no chunk y since chunks range from -64 to the height limit)
-        String type; // usually minecraft:forced
-        int level;
-    }
-    public static class WorldBorder {
-        int damagePerBlock;
-        int centerZ;
-        int centerX;
-        int lerpTarget;
-        int safeZone;
-        int size;
-        int lerpTime;
-        int warningBlocks;
-        int warningTime;
-    }
-    public static class Raids {
-        int nextId;
-        int tick;
-    }
     private static long regionKey(int regionX, int regionZ) {
         return ((long) regionX << 32) | (regionZ & 0xFFFFFFFFL);
     }
