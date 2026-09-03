@@ -28,18 +28,14 @@ public class EnderDragonFight {
         dragonFight.respawnTime = data.getInt("respawn_time");
         dragonFight.dragonKilled = data.getBoolean("dragon_killed");
 
-        for (int i = 0; i < data.getList("gateways").size(); ++i) {
-            NbtInt entry = (NbtInt) data.getList("gateways").elements().get(i);
+        NbtList gatewaysList = data.getList("gateways");
+        dragonFight.gateways = new int[gatewaysList.size()];
+        for (int i = 0; i < gatewaysList.size(); ++i) {
+            NbtInt entry = (NbtInt) gatewaysList.elements().get(i);
             dragonFight.gateways[i] = entry.value();
         }
-        for (int i = 0; i < data.getIntArray("dragon_uuid").size(); ++i) {
-            NbtInt entry = (NbtInt) data.getIntArray("dragon_uuid").elements().get(i);
-            dragonFight.dragonUUID[i] = entry.value();
-        }
-        for (int i = 0; i < data.getIntArray("exit_portal_location").size(); ++i) {
-            NbtInt entry = (NbtInt) data.getIntArray("exit_portal_location").elements().get(i);
-            dragonFight.exitPortalLocation[i] = entry.value();
-        }
+        dragonFight.dragonUUID = data.getIntArray("dragon_uuid").value();
+        dragonFight.exitPortalLocation = data.getIntArray("exit_portal_location").value();
 
         return dragonFight;
     }
