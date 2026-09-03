@@ -15,7 +15,7 @@ public class End extends Dimension {
     private final EnderDragonFight enderDragonFight;
 
     public End(File worldFolder) {
-        super(worldFolder, Type.End);
+        super(worldFolder, DimensionType.End);
 
         File fightFile = new File(
                 new File(dimensionFolder("data"), "minecraft"),

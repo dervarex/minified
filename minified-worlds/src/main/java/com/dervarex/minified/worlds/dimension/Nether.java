@@ -4,6 +4,6 @@ import java.io.File;
 
 public class Nether extends Dimension {
     public Nether(File worldFolder) {
-        super(worldFolder, Type.Nether);
+        super(worldFolder, DimensionType.Nether);
     }
 }

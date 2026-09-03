@@ -5,6 +5,6 @@ import java.io.File;
 public class Overworld extends Dimension {
 
     public Overworld(File worldFolder) {
-        super(worldFolder, Type.Overworld);
+        super(worldFolder, DimensionType.Overworld);
     }
 }

@@ -16,7 +16,7 @@ import java.util.Map;
  * Implemented by {@link Overworld}, {@link Nether} and {@link End}
  */
 public class Dimension {
-    private Type type;
+    private DimensionType type;
     private Versioned<ChunkTicket[]> chunkTickets;
     private Raids raids;
     private Versioned<WorldBorder> worldBorder;
@@ -24,20 +24,11 @@ public class Dimension {
     private final Map<Long, RegionFile> regionFiles = new HashMap<>();
     private final Map<Long, RegionFile> poiFiles = new HashMap<>();
     private final Map<Long, RegionFile> entityFiles = new HashMap<>();
-    public Dimension(File worldFolder, Type type) {
+    public Dimension(File worldFolder, DimensionType type) {
         this.worldFolder = worldFolder;
         this.type = type;
     }
     public record Versioned<T>(int dataVersion, T data) {}
-    public enum Type {
-        Overworld("overworld"),
-        Nether("the_nether"),
-        End("the_end");
-        private final String dimensionName;
-        Type(String dimensionName) {
-            this.dimensionName = dimensionName;
-        }
-    }
     public static class ChunkTicket {
         int[] chunkPos; // two integers, chunk x and chunk z (there's no chunk y since chunks range from -64 to the height limit)
         String type; // usually minecraft:forced
