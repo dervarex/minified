@@ -16,7 +16,7 @@ import java.util.Map;
 
 /**
  * Represents a Base Minecraft World.
- * Implemented by {@link Overworld}, {@link Nether} and {@link End}
+ * Extended by {@link Overworld}, {@link Nether} and {@link End}
  */
 public class Dimension {
     private DimensionType type;
@@ -29,9 +29,17 @@ public class Dimension {
     private final Map<Long, RegionFile> entityFiles = new HashMap<>();
     public record Versioned<T>(int dataVersion, T data) {}
 
+
     public Dimension(File worldFolder, DimensionType type) {
         this.worldFolder = worldFolder;
         this.type = type;
+    }
+    /**
+     * Like above, but here we're building the {@link DimensionType} Object ourselves, using the folder name
+     */
+    public Dimension(File worldFolder) {
+        this.worldFolder = worldFolder;
+        this.type = DimensionType.fromFolder(worldFolder);
     }
 
     private static long regionKey(int regionX, int regionZ) {
