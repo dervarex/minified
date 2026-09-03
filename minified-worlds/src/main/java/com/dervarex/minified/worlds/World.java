@@ -6,7 +6,7 @@ import com.dervarex.minified.utils.nbt.tag.NbtCompound;
 import com.dervarex.minified.worlds.world.SessionLock;
 import com.dervarex.minified.worlds.data.CustomBossEvents;
 import com.dervarex.minified.worlds.data.GameRules;
-import com.dervarex.minified.worlds.world.level.Level;
+import com.dervarex.minified.worlds.level.Level;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;

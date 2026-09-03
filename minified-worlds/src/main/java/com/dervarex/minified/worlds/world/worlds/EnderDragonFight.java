@@ -3,12 +3,8 @@ package com.dervarex.minified.worlds.world.worlds;
 import com.dervarex.minified.utils.nbt.tag.NbtCompound;
 import com.dervarex.minified.utils.nbt.tag.NbtInt;
 import com.dervarex.minified.utils.nbt.tag.NbtList;
-import com.dervarex.minified.utils.nbt.tag.NbtTag;
-import com.dervarex.minified.worlds.world.playerdata.Attributes;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.util.Map;
 
 @Getter
 @Setter

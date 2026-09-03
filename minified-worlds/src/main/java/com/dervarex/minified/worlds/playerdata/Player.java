@@ -1,4 +1,4 @@
-package com.dervarex.minified.worlds.world.playerdata;
+package com.dervarex.minified.worlds.playerdata;
 
 import com.dervarex.minified.utils.json.JsonObject;
 import com.dervarex.minified.utils.nbt.tag.*;
