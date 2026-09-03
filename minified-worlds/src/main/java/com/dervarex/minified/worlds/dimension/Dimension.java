@@ -27,20 +27,32 @@ public class Dimension {
     private final Map<Long, RegionFile> regionFiles = new HashMap<>();
     private final Map<Long, RegionFile> poiFiles = new HashMap<>();
     private final Map<Long, RegionFile> entityFiles = new HashMap<>();
+    public record Versioned<T>(int dataVersion, T data) {}
+
     public Dimension(File worldFolder, DimensionType type) {
         this.worldFolder = worldFolder;
         this.type = type;
     }
-    public record Versioned<T>(int dataVersion, T data) {}
+
     private static long regionKey(int regionX, int regionZ) {
         return ((long) regionX << 32) | (regionZ & 0xFFFFFFFFL);
     }
+
     protected File dimensionFolder(String category) {
         return new File(
                 new File(new File(new File(worldFolder, "dimensions"), "minecraft"), type.dimensionName),
                 category
         );
     }
+
+    /**
+     * @param cache cache to grab the RegionFile out of, if the RegionFile isn't cached we'll parse and cache it here
+     * @param category region category, can be entities, poi or region
+     * @param regionX Region X Coordinates
+     * @param regionZ Region Z Coordinates
+     * @return the RegionFile, or null if it does not exist
+     * @throws IOException If any file does not exist, permissions are missing or something else happens that falls under the IOException
+     */
     private RegionFile getRegionFile(Map<Long, RegionFile> cache, String category, int regionX, int regionZ) throws IOException {
         long key = regionKey(regionX, regionZ);
         RegionFile existing = cache.get(key);
