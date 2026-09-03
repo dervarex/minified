@@ -1,9 +1,10 @@
-package com.dervarex.minified.worlds.world.region;
+package com.dervarex.minified.worlds.dimension.region;
 
 public enum RegionCategory {
     REGION("region"),
     POI("poi"),
-    ENTITIES("entities");
+    ENTITIES("entities"),
+    DATA("data");
 
     public final String folderName;
 
