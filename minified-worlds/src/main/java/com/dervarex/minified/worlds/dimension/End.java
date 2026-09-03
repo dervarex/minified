@@ -1,13 +1,15 @@
-package com.dervarex.minified.worlds.world.worlds;
+package com.dervarex.minified.worlds.dimension;
 
 import com.dervarex.minified.utils.nbt.Parser;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Optional;
+
+import com.dervarex.minified.worlds.world.worlds.EnderDragonFight;
 import org.jetbrains.annotations.Nullable;
 
-public class End extends MinecraftWorld {
+public class End extends Dimension {
 
     @Nullable
     private final EnderDragonFight enderDragonFight;

@@ -1,4 +1,4 @@
-package com.dervarex.minified.worlds.world.worlds;
+package com.dervarex.minified.worlds.dimension;
 
 import com.dervarex.minified.utils.nbt.RegionFile;
 import com.dervarex.minified.utils.nbt.tag.NbtCompound;
@@ -15,7 +15,7 @@ import java.util.Map;
  * Represents a Base Minecraft World.
  * Implemented by {@link Overworld}, {@link Nether} and {@link End}
  */
-public class MinecraftWorld {
+public class Dimension {
     private Type type;
     private Versioned<ChunkTicket[]> chunkTickets;
     private Raids raids;
@@ -24,7 +24,7 @@ public class MinecraftWorld {
     private final Map<Long, RegionFile> regionFiles = new HashMap<>();
     private final Map<Long, RegionFile> poiFiles = new HashMap<>();
     private final Map<Long, RegionFile> entityFiles = new HashMap<>();
-    public MinecraftWorld(File worldFolder, Type type) {
+    public Dimension(File worldFolder, Type type) {
         this.worldFolder = worldFolder;
         this.type = type;
     }
