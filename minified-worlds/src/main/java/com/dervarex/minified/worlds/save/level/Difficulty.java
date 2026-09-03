@@ -1,4 +1,4 @@
-package com.dervarex.minified.worlds.level;
+package com.dervarex.minified.worlds.save.level;
 
 public enum Difficulty {
     peaceful,

@@ -1,4 +1,4 @@
-package com.dervarex.minified.worlds.playerdata;
+package com.dervarex.minified.worlds.save.playerdata;
 
 import com.dervarex.minified.utils.nbt.tag.NbtCompound;
 import lombok.Getter;

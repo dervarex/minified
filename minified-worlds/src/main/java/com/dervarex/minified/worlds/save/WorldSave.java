@@ -1,12 +1,11 @@
-package com.dervarex.minified.worlds;
+package com.dervarex.minified.worlds.save;
 
 import com.dervarex.minified.utils.nbt.Parser;
 import com.dervarex.minified.utils.nbt.Writer;
 import com.dervarex.minified.utils.nbt.tag.NbtCompound;
-import com.dervarex.minified.worlds.world.SessionLock;
-import com.dervarex.minified.worlds.data.CustomBossEvents;
-import com.dervarex.minified.worlds.data.GameRules;
-import com.dervarex.minified.worlds.level.Level;
+import com.dervarex.minified.worlds.save.data.CustomBossEvents;
+import com.dervarex.minified.worlds.save.data.GameRules;
+import com.dervarex.minified.worlds.save.level.Level;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -20,7 +19,7 @@ import org.jetbrains.annotations.Nullable;
  * Note: Fields are marked nullable to prevent NullPointerExceptions,
  * although Minecraft usually generates default Nbt Structures when loading a World.
  */
-public class World {
+public class WorldSave {
     @Getter
     private final Path worldDirectory;
     @Getter
@@ -32,7 +31,7 @@ public class World {
     @Getter
     private final SessionLock lock;
 
-    public World(Path worldDirectory) {
+    public WorldSave(Path worldDirectory) {
         this.worldDirectory = worldDirectory;
         Path dataDirectory = worldDirectory.resolve("data");
 

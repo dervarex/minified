@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.util.Optional;
 
 import com.dervarex.minified.worlds.dimension.region.RegionCategory;
-import com.dervarex.minified.worlds.world.worlds.EnderDragonFight;
+import com.dervarex.minified.worlds.dimension.data.EnderDragonFight;
 import org.jetbrains.annotations.Nullable;
 
 public final class End extends Dimension {

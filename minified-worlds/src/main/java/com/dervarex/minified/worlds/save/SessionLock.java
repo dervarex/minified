@@ -1,4 +1,4 @@
-package com.dervarex.minified.worlds.world;
+package com.dervarex.minified.worlds.save;
 
 import lombok.Getter;
 

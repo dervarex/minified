@@ -1,4 +1,4 @@
-package com.dervarex.minified.worlds.playerdata;
+package com.dervarex.minified.worlds.save.playerdata;
 
 import com.dervarex.minified.utils.json.JsonObject;
 import com.dervarex.minified.utils.json.JsonValue;
