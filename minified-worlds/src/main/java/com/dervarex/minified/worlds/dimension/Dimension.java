@@ -63,7 +63,7 @@ public sealed class Dimension permits Overworld, Nether, End {
      * @return the RegionFile, or null if it does not exist
      * @throws IOException If any file does not exist, permissions are missing or something else happens that falls under the IOException
      */
-    private RegionFile getRegionFile(Map<Long, RegionFile> cache, String category, int regionX, int regionZ) throws IOException {
+    private RegionFile getRegionFile(Map<Long, RegionFile> cache, RegionCategory category, int regionX, int regionZ) throws IOException {
         long key = regionKey(regionX, regionZ);
         RegionFile existing = cache.get(key);
         if (existing != null) return existing;
@@ -79,7 +79,7 @@ public sealed class Dimension permits Overworld, Nether, End {
      * (e.g. writing into a not generated region), it's created instead of
      * returning null.
      */
-    private RegionFile getOrCreateRegionFile(Map<Long, RegionFile> cache, String category, int regionX, int regionZ) throws IOException {
+    private RegionFile getOrCreateRegionFile(Map<Long, RegionFile> cache, RegionCategory category, int regionX, int regionZ) throws IOException {
         long key = regionKey(regionX, regionZ);
         RegionFile existing = cache.get(key);
         if (existing != null) return existing;
@@ -90,15 +90,15 @@ public sealed class Dimension permits Overworld, Nether, End {
     }
 
     public NbtCompound readChunkData(int chunkX, int chunkZ) throws IOException {
-        RegionFile region = getRegionFile(regionFiles, "region", chunkX >> 5, chunkZ >> 5);
+        RegionFile region = getRegionFile(regionFiles, RegionCategory.REGION, chunkX >> 5, chunkZ >> 5);
         return region == null ? null : region.readChunk(chunkX, chunkZ);
     }
     public NbtCompound readPoiData(int chunkX, int chunkZ) throws IOException {
-        RegionFile poi = getRegionFile(poiFiles, "poi", chunkX >> 5, chunkZ >> 5);
+        RegionFile poi = getRegionFile(poiFiles, RegionCategory.POI, chunkX >> 5, chunkZ >> 5);
         return poi == null ? null : poi.readChunk(chunkX, chunkZ);
     }
     public NbtCompound readEntityData(int chunkX, int chunkZ) throws IOException {
-        RegionFile entities = getRegionFile(entityFiles, "entities", chunkX >> 5, chunkZ >> 5);
+        RegionFile entities = getRegionFile(entityFiles, RegionCategory.ENTITIES, chunkX >> 5, chunkZ >> 5);
         return entities == null ? null : entities.readChunk(chunkX, chunkZ);
     }
 
@@ -135,7 +135,7 @@ public sealed class Dimension permits Overworld, Nether, End {
      * (chunk.chunkX()/chunkZ()) determine where it's written.
      */
     public void saveChunkData(Chunk chunk) throws IOException {
-        RegionFile region = getOrCreateRegionFile(regionFiles, "region", chunk.chunkX() >> 5, chunk.chunkZ() >> 5);
+        RegionFile region = getOrCreateRegionFile(regionFiles, RegionCategory.REGION, chunk.chunkX() >> 5, chunk.chunkZ() >> 5);
         region.writeChunk(chunk.chunkX(), chunk.chunkZ(), chunk.raw());
     }
 
@@ -144,7 +144,7 @@ public sealed class Dimension permits Overworld, Nether, End {
      * region file, creating the file if it doesn't exist yet.
      */
     public void savePoiData(int chunkX, int chunkZ, NbtCompound poiData) throws IOException {
-        RegionFile poi = getOrCreateRegionFile(poiFiles, "poi", chunkX >> 5, chunkZ >> 5);
+        RegionFile poi = getOrCreateRegionFile(poiFiles, RegionCategory.POI, chunkX >> 5, chunkZ >> 5);
         poi.writeChunk(chunkX, chunkZ, poiData);
     }
 
@@ -161,7 +161,7 @@ public sealed class Dimension permits Overworld, Nether, End {
      * region file, creating the file if it doesn't exist yet.
      */
     public void saveEntityData(int chunkX, int chunkZ, NbtCompound entityData) throws IOException {
-        RegionFile entities = getOrCreateRegionFile(entityFiles, "entities", chunkX >> 5, chunkZ >> 5);
+        RegionFile entities = getOrCreateRegionFile(entityFiles, RegionCategory.ENTITIES, chunkX >> 5, chunkZ >> 5);
         entities.writeChunk(chunkX, chunkZ, entityData);
     }
 
