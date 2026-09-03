@@ -37,19 +37,15 @@ public class StopWatches {
     /**
      * Converts the Stopwatches Object to an NbtCompound
      * @return the created NbtCompound
-     * Throws {@link ArithmeticException} if converting to a Long went wrong.
      */
     public NbtCompound toNbt() {
         NbtCompound data = new NbtCompound();
         NbtCompound stopwatchesCompound = new NbtCompound();
 
         for (Map.Entry<String, Long> entry : stopwatches.entrySet()) {
-            try {
-                data.setInt(entry.getKey(), Math.toIntExact(entry.getValue()));
-            } catch (ArithmeticException e) {
-                throw new ArithmeticException(e.getMessage());
-            }
+            stopwatchesCompound.setLong(entry.getKey(), entry.getValue());
         }
+        data.setCompound("stopwatches", stopwatchesCompound);
 
         NbtCompound root = new NbtCompound();
         root.setCompound("data", data);
