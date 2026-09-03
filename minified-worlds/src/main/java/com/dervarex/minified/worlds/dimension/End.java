@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Optional;
 
+import com.dervarex.minified.worlds.dimension.region.RegionCategory;
 import com.dervarex.minified.worlds.world.worlds.EnderDragonFight;
 import org.jetbrains.annotations.Nullable;
 
@@ -18,7 +19,7 @@ public final class End extends Dimension {
         super(worldFolder, DimensionType.End);
 
         File fightFile = new File(
-                new File(dimensionFolder("data"), "minecraft"),
+                new File(dimensionFolder(RegionCategory.DATA), "minecraft"),
                 "ender_dragon_fight.dat"
         );
 

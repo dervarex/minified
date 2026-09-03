@@ -6,6 +6,7 @@ import com.dervarex.minified.worlds.chunk.Chunk;
 import com.dervarex.minified.worlds.dimension.data.ChunkTicket;
 import com.dervarex.minified.worlds.dimension.data.Raids;
 import com.dervarex.minified.worlds.dimension.data.WorldBorder;
+import com.dervarex.minified.worlds.dimension.region.RegionCategory;
 import com.dervarex.minified.worlds.entity.EntityData;
 import com.dervarex.minified.worlds.poi.PoiData;
 
@@ -47,10 +48,10 @@ public sealed class Dimension permits Overworld, Nether, End {
         return ((long) regionX << 32) | (regionZ & 0xFFFFFFFFL);
     }
 
-    protected File dimensionFolder(String category) {
+    protected File dimensionFolder(RegionCategory category) {
         return new File(
                 new File(new File(new File(worldFolder, "dimensions"), "minecraft"), type.dimensionName),
-                category
+                category.folderName
         );
     }
 
