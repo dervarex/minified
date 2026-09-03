@@ -89,7 +89,7 @@ public class Scoreboard {
         if (data.has("DisplaySlots")) {
             NbtCompound slots = data.getCompound("DisplaySlots");
             for (Map.Entry<String, NbtTag> entry : slots.asMap().entrySet()) {
-                result.displaySlots.put(entry.getKey(), String.valueOf(entry.getValue()));
+                result.displaySlots.put(entry.getKey(), slots.getString(entry.getKey()));
             }
         }
 
