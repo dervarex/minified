@@ -17,8 +17,9 @@ import java.util.Map;
 /**
  * Represents a Base Minecraft World.
  * Extended by {@link Overworld}, {@link Nether} and {@link End}
+ * If anyone would need a CustomDimension (modded worlds maybe?), we could do that, but I'm keeping it simple for now
  */
-public class Dimension {
+public sealed class Dimension permits Overworld, Nether, End {
     private DimensionType type;
     private Versioned<ChunkTicket[]> chunkTickets;
     private Raids raids;
@@ -171,6 +172,9 @@ public class Dimension {
         saveEntityData(chunkX, chunkZ, entityData.raw());
     }
 
+    /**
+     * Closes all RegionFiles
+     */
     public void close() throws IOException {
         for (RegionFile r : regionFiles.values()) r.close();
         for (RegionFile r : poiFiles.values()) r.close();

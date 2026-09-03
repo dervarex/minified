@@ -9,7 +9,7 @@ import java.util.Optional;
 import com.dervarex.minified.worlds.world.worlds.EnderDragonFight;
 import org.jetbrains.annotations.Nullable;
 
-public class End extends Dimension {
+public final class End extends Dimension {
 
     @Nullable
     private final EnderDragonFight enderDragonFight;
