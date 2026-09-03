@@ -36,7 +36,7 @@ public class Weather {
                 result.thunderTime = data.getInt("thunder_time");
             }
             if(data.has("clear_weather_time")) {
-                result.clearWeatherTime = data.getInt("rain_time");
+                result.clearWeatherTime = data.getInt("clear_weather_time");
             }
             if(data.has("thundering")) {
                 result.thundering = data.getBoolean("thundering");
