@@ -30,7 +30,33 @@ dependencies {
     implementation project(":minified-utils")
 }
 
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
 tasks.withType(Test).configureEach {
-    useJUnitPlatform()
-    jvmArgs '--add-modules', 'jdk.httpserver'
+    enabled = true
+    testLogging {
+        showStandardStreams = true
+        events "passed", "failed", "skipped", "standardOut", "standardError"
+    }
+}
+
+test {
+    useJUnitPlatform {
+        excludeTags("manual")
+    }
+
+    failOnNoDiscoveredTests = false
+}
+
+tasks.register("manualTest", Test) {
+    useJUnitPlatform {
+        includeTags("manual")
+    }
+
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+
+    systemProperty "world.folder", System.getProperty("world.folder")
 }

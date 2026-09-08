@@ -1,7 +1,6 @@
 package com.dervarex.minified.worlds.save.data;
 
 import com.dervarex.minified.utils.nbt.tag.NbtCompound;
-import com.dervarex.minified.utils.nbt.tag.NbtIntArray;
 import com.dervarex.minified.utils.nbt.tag.NbtTag;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,19 +13,19 @@ public class RandomSequences {
     private int dataVersion;
     @Setter
     private int salt;
-    private final Map<String, int[]> sequences = new LinkedHashMap<>();
+    private final Map<String, long[]> sequences = new LinkedHashMap<>();
 
     public static RandomSequences fromNbt(NbtCompound nbt) {
         RandomSequences result = new RandomSequences();
         result.dataVersion = nbt.getInt("DataVersion");
         if (nbt.has("data")) {
             NbtCompound data = nbt.getCompound("data");
-            result.salt = data.getInt("Salt");
+            result.salt = data.getInt("salt");
             if (data.has("sequences")) {
                 NbtCompound seqCompound = data.getCompound("sequences");
                 for (Map.Entry<String, NbtTag> entry : seqCompound.asMap().entrySet()) {
-                    if (entry.getValue() instanceof NbtIntArray intArrayTag) {
-                        result.sequences.put(entry.getKey(), intArrayTag.value());
+                    if (entry.getValue() instanceof NbtCompound sequenceCompound && sequenceCompound.has("source")) {
+                        result.sequences.put(entry.getKey(), sequenceCompound.getLongArray("source"));
                     }
                 }
             }
@@ -35,11 +34,13 @@ public class RandomSequences {
     }
     public NbtCompound toNbt() {
         NbtCompound sequencesCompound = new NbtCompound();
-        for (Map.Entry<String, int[]> entry : sequences.entrySet()) {
-            sequencesCompound.setIntArray(entry.getKey(), entry.getValue());
+        for (Map.Entry<String, long[]> entry : sequences.entrySet()) {
+            NbtCompound sequenceCompound = new NbtCompound();
+            sequenceCompound.setLongArray("source", entry.getValue());
+            sequencesCompound.setCompound(entry.getKey(), sequenceCompound);
         }
         NbtCompound data = new NbtCompound();
-        data.setInt("Salt", salt);
+        data.setInt("salt", salt);
         data.setCompound("sequences", sequencesCompound);
         NbtCompound root = new NbtCompound();
         root.setCompound("data", data);
@@ -47,7 +48,7 @@ public class RandomSequences {
         return root;
     }
 
-    public void putSequence(String key, int[] value) {
+    public void putSequence(String key, long[] value) {
         sequences.put(key, value);
     }
     public void removeSequence(String key) {
