@@ -22,6 +22,7 @@ Minified provides a high-level API for authentication, version management, asset
 * Event System
 * Java Manager
 * Modrinth API Integration
+* Full Minecraft World Parser with Terrain Editor
 
 [Roadmap](ROADMAP.md)
 
@@ -35,7 +36,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.dervarex.minified:minified-launch:v2.2.0'
+    implementation 'com.github.dervarex.minified:minified-launch:v3.1.0'
 }
 ```
 
