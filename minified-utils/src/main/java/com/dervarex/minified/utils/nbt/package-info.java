@@ -7,4 +7,7 @@
  * lot of effort, and I do not want to add a library just for this)
  * </pre>
  */
+@API(status = API.Status.STABLE, since = "v3.1.0")
 package com.dervarex.minified.utils.nbt;
+
+import org.apiguardian.api.API;
