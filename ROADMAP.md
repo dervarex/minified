@@ -1,6 +1,5 @@
 ## Roadmap
 
-* minified-worlds
 * Test and document supported Minecraft versions
 * Support older Minecraft versions for all currently supported loaders
 
