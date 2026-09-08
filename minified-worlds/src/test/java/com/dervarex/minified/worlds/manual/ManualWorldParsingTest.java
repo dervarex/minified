@@ -13,7 +13,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-// ./gradlew minified-worlds:manualTest -Dworld.folder="path/to/world"
+// ./gradlew minified-worlds:manualTest -Dworld.folder="/path/to/world"
 @Tag("manual")
 public class ManualWorldParsingTest {
 
@@ -24,7 +24,7 @@ public class ManualWorldParsingTest {
         String folderPath = System.getProperty("world.folder");
 
         assumeTrue(folderPath != null && !folderPath.isBlank(),
-                "Please provide a path using -Dworld.folder=/path/to/folder");
+                "Please provide a path using -Dworld.folder=/path/to/world");
 
         Path worldDirectory = Path.of(folderPath);
         assumeTrue(Files.exists(worldDirectory) && Files.isDirectory(worldDirectory),
