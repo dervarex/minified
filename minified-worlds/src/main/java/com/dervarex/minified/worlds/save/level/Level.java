@@ -26,7 +26,7 @@ public class Level {
     private byte initialized;
     private long lastPlayed;
     private String levelName;
-    private int time;
+    private long time;
     private int nbtVersion;
     private boolean modded;
     private UUID singleplayerUuid;
@@ -59,7 +59,7 @@ public class Level {
         level.initialized = data.getByte("initialized");
         level.lastPlayed = data.getLong("LastPlayed");
         level.levelName = data.getString("LevelName");
-        level.time = data.getInt("Time");
+        level.time = data.getLong("Time");
         level.nbtVersion = data.getInt("version");
         level.modded = data.getBoolean("WasModded");
 
@@ -94,7 +94,7 @@ public class Level {
         data.setByte("initialized", initialized);
         data.setLong("LastPlayed", lastPlayed);
         data.setString("LevelName", levelName);
-        data.setInt("Time", time);
+        data.setLong("Time", time);
         data.setInt("version", nbtVersion);
         data.setBoolean("WasModded", modded);
 
