@@ -57,4 +57,6 @@ tasks.register("manualTest", Test) {
 
     testClassesDirs = sourceSets.test.output.classesDirs
     classpath = sourceSets.test.runtimeClasspath
+
+    systemProperty "world.folder", System.getProperty("world.folder")
 }
