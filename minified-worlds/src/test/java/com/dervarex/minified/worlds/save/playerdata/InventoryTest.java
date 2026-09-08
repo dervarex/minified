@@ -12,7 +12,7 @@ class InventoryTest {
     void testLoadInventory() {
         NbtCompound entry = new NbtCompound();
         entry.setString("id", "minecraft:diamond_sword");
-        entry.setByte("count", (byte) 1);
+        entry.setInt("count", 1);
         entry.setByte("Slot", (byte) 0);
         NbtList list = new NbtList((byte) 10);
         list.add(entry);
@@ -21,7 +21,7 @@ class InventoryTest {
 
         assertEquals(1, inventory.getItems().length);
         assertEquals("minecraft:diamond_sword", inventory.getItems()[0].id);
-        assertEquals((byte) 1, inventory.getItems()[0].count);
+        assertEquals(1, inventory.getItems()[0].count);
         assertEquals((byte) 0, inventory.getItems()[0].slot);
     }
 
@@ -38,7 +38,7 @@ class InventoryTest {
 
         assertEquals(1, parsed.getItems().length);
         assertEquals("minecraft:stone", parsed.getItems()[0].id);
-        assertEquals((byte) 64, parsed.getItems()[0].count);
+        assertEquals(64, parsed.getItems()[0].count);
         assertEquals((byte) 9, parsed.getItems()[0].slot);
     }
 }

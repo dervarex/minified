@@ -17,7 +17,7 @@ public class Inventory {
             NbtCompound entry = (NbtCompound) nbt.elements().get(i);
             InventoryItem item = new InventoryItem();
             item.id = entry.getString("id");
-            item.count = entry.getByte("count");
+            item.count = entry.getInt("count");
             item.slot = entry.getByte("Slot");
             inventory.items[i] = item;
         }
@@ -29,7 +29,7 @@ public class Inventory {
         for (InventoryItem item : items) {
             NbtCompound entry = new NbtCompound();
             entry.setString("id", item.id);
-            entry.setByte("count", item.count);
+            entry.setInt("count", item.count);
             entry.setByte("Slot", item.slot);
             list.add(entry);
         }
@@ -38,7 +38,7 @@ public class Inventory {
 
     public static class InventoryItem {
         String id;
-        byte count;
+        int count;
         byte slot;
     }
 }

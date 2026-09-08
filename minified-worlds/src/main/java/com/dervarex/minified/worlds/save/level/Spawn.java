@@ -69,8 +69,8 @@ public class Spawn {
         if (dimension != null) {
             nbt.setString("dimension", dimension);
         }
-        nbt.setFloat("pitch", pitch);
-        nbt.setFloat("yaw", yaw);
+        nbt.setInt("pitch", (int) pitch);
+        nbt.setInt("yaw", (int) yaw);
         if (pos != null) {
             nbt.setIntArray("pos", pos);
         }

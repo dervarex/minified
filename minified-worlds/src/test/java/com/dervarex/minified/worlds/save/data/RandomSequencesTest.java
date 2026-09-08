@@ -18,9 +18,9 @@ class RandomSequencesTest {
     @Test
     void testAddAndRemoveSequence() {
         RandomSequences sequences = new RandomSequences();
-        sequences.putSequence("minecraft:trial_key", new int[]{1, 2, 3});
+        sequences.putSequence("minecraft:trial_key", new long[]{1, 2, 3});
 
-        assertArrayEquals(new int[]{1, 2, 3}, sequences.getSequences().get("minecraft:trial_key"));
+        assertArrayEquals(new long[]{1, 2, 3}, sequences.getSequences().get("minecraft:trial_key"));
 
         sequences.removeSequence("minecraft:trial_key");
         assertTrue(sequences.getSequences().isEmpty());
@@ -31,7 +31,7 @@ class RandomSequencesTest {
         RandomSequences original = new RandomSequences();
         original.setDataVersion(3953);
         original.setSalt(42);
-        original.putSequence("minecraft:trial_key", new int[]{5, 6, 7});
+        original.putSequence("minecraft:trial_key", new long[]{5, 6, 7});
 
         RandomSequences parsed = RandomSequences.fromNbt(original.toNbt());
 
