@@ -22,6 +22,7 @@ Minified provides a high-level API for authentication, version management, asset
 * Event System
 * Java Manager
 * Modrinth API Integration
+* Object Oriented NBT & MCA Parser
 * Full Minecraft World Parser with Terrain Editor
 
 [Roadmap](ROADMAP.md)
