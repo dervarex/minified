@@ -154,7 +154,7 @@ public class Parser {
 
     // Generate help message
     private void showHelp() {
-        System.out.println("Usage:" + name + "[options]");
+        System.out.println("Usage: " + name + " [options]");
         if (!description.isEmpty()) {
             System.out.println(description);
         }
