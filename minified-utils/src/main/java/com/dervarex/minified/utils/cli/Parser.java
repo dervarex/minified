@@ -3,6 +3,13 @@ package com.dervarex.minified.utils.cli;
 import java.util.*;
 import java.util.function.Consumer;
 
+/**
+ * CLI Parsing Utility.
+ * Usage:
+ * 1. Create an {@link Parser} Object (with or without prefixes as argument)
+ * 2. Register your CLI arguments using {@link Parser#register}
+ * 3. Give the Parser the String[] args object that you get in your main method
+ */
 public class Parser {
 
     private final Map<String, CommandHandler> commands = new LinkedHashMap<>();
@@ -30,6 +37,9 @@ public class Parser {
         void execute(T arg1, U arg2, V arg3);
     }
 
+    /**
+     * More than three arguments.
+     */
     @FunctionalInterface
     public interface VarArgsCommand {
         void execute(String... args);
@@ -41,20 +51,28 @@ public class Parser {
         final String flag;
         final String helpText;
 
-        CommandHandler(String flag, Object handler, int paramCount, String helpText) {
-            this.flag = flag;
+        CommandHandler(String arg, Object handler, int paramCount, String helpText) {
+            this.flag = arg;
             this.handler = handler;
             this.paramCount = paramCount;
             this.helpText = helpText;
         }
     }
 
-    // Default Prefix
+    // -------------------- Constructors --------------------
+
+    /**
+     * Will use default prefix "--"
+     */
     public Parser() {
         this.prefixes.add("--");
     }
 
-    // Constructor with custom prefixes
+    /**
+     * Constructor with custom prefixes
+     * @param prefixes Prefixes that should be used. It's not recommended to use letters or numbers here, since that can mess with the parsing
+     * @return parser object
+     */
     public Parser(String... prefixes) {
         if (prefixes.length == 0) {
             this.prefixes.add("--");
@@ -63,83 +81,178 @@ public class Parser {
         }
     }
 
-    // change prefixes while running
+    // -------------------- setters --------------------
+
+    /**
+     * Overwrites prefixes after creation of object
+     * @param prefixes updated prefixes list
+     * @return parser object
+     */
     public Parser setPrefixes(String... prefixes) {
         this.prefixes.clear();
         this.prefixes.addAll(Arrays.asList(prefixes));
         return this;
     }
 
+    /**
+     * Adds a prefix after creation of object
+     * @param prefix prefix to be added
+     * @return parser object
+     */
     public Parser addPrefix(String prefix) {
         this.prefixes.add(prefix);
         return this;
     }
 
+    /**
+     * Sets Description that will get shown in the help message.
+     * @param description description to be shown
+     * @return parser object
+     */
     public Parser setDescription(String description) {
         this.description = description;
         return this;
     }
 
+    /**
+     * Sets Program "name". Will get shown in the help message.
+     * This should be the command used to launch the program, so either the direct name if registered in the command line or the path to the executable.
+     * @param program program name or path
+     * @return parser object
+     */
     public Parser setProgram(String program) {
         this.program = program;
         return this;
     }
 
-    // register methods with help text
-    public Parser register(String flag, String helpText, NoArgCommand handler) {
-        commands.put(normalizeFlag(flag), new CommandHandler(flag, handler, 0, helpText));
+    // -------------------- with help text --------------------
+
+    /**
+     * Registers a cli argument.
+     * @param arg argument
+     * @param helpText text to be shown in help
+     * @param handler no-arguments callback to be executed once triggered
+     * @return parser object
+     */
+    public Parser register(String arg, String helpText, NoArgCommand handler) {
+        commands.put(normalizeFlag(arg), new CommandHandler(arg, handler, 0, helpText));
         return this;
     }
 
-    public Parser register(String flag, String helpText, Consumer<String> handler) {
-        commands.put(normalizeFlag(flag), new CommandHandler(flag, handler, 1, helpText));
+
+    /**
+     * Registers a cli argument.
+     * @param arg argument
+     * @param helpText text to be shown in help
+     * @param handler single-argument callback to be executed once triggered
+     * @return parser object
+     */
+    public Parser register(String arg, String helpText, Consumer<String> handler) {
+        commands.put(normalizeFlag(arg), new CommandHandler(arg, handler, 1, helpText));
         return this;
     }
 
-    public Parser register(String flag, String helpText, TwoArgCommand<String, String> handler) {
-        commands.put(normalizeFlag(flag), new CommandHandler(flag, handler, 2, helpText));
+
+    /**
+     * Registers a cli argument.
+     * @param arg argument
+     * @param helpText text to be shown in help
+     * @param handler two-arguments callback to be executed once triggered
+     * @return parser object
+     */
+    public Parser register(String arg, String helpText, TwoArgCommand<String, String> handler) {
+        commands.put(normalizeFlag(arg), new CommandHandler(arg, handler, 2, helpText));
         return this;
     }
 
-    public Parser register(String flag, String helpText, ThreeArgCommand<String, String, String> handler) {
-        commands.put(normalizeFlag(flag), new CommandHandler(flag, handler, 3, helpText));
+
+    /**
+     * Registers a cli argument.
+     * @param arg argument
+     * @param helpText text to be shown in help
+     * @param handler three-arguments callback to be executed once triggered
+     * @return parser object
+     */
+    public Parser register(String arg, String helpText, ThreeArgCommand<String, String, String> handler) {
+        commands.put(normalizeFlag(arg), new CommandHandler(arg, handler, 3, helpText));
         return this;
     }
 
-    public Parser registerVarArgs(String flag, String helpText, VarArgsCommand handler) {
-        commands.put(normalizeFlag(flag), new CommandHandler(flag, handler, -1, helpText));
+
+    /**
+     * Registers a cli argument.
+     * @param arg argument
+     * @param helpText text to be shown in help
+     * @param handler multi-arguments callback to be executed once triggered
+     * @return parser object
+     */
+    public Parser registerVarArgs(String arg, String helpText, VarArgsCommand handler) {
+        commands.put(normalizeFlag(arg), new CommandHandler(arg, handler, -1, helpText));
         return this;
     }
 
-    // without help text
-    public Parser register(String flag, NoArgCommand handler) {
-        return register(flag, "", handler);
+    // -------------------- without help text --------------------
+
+    /**
+     * Registers a cli argument.
+     * @param arg argument
+     * @param handler no-arguments callback to be executed once triggered
+     * @return parser object
+     */
+    public Parser register(String arg, NoArgCommand handler) {
+        return register(arg, "", handler);
     }
 
-    public Parser register(String flag, Consumer<String> handler) {
-        return register(flag, "", handler);
+    /**
+     * Registers a cli argument.
+     * @param arg argument
+     * @param handler single-argument callback to be executed once triggered
+     * @return parser object
+     */
+    public Parser register(String arg, Consumer<String> handler) {
+        return register(arg, "", handler);
     }
 
-    public Parser register(String flag, TwoArgCommand<String, String> handler) {
-        return register(flag, "", handler);
+    /**
+     * Registers a cli argument.
+     * @param arg argument
+     * @param handler two-arguments callback to be executed once triggered
+     * @return parser object
+     */
+    public Parser register(String arg, TwoArgCommand<String, String> handler) {
+        return register(arg, "", handler);
     }
 
-    public Parser register(String flag, ThreeArgCommand<String, String, String> handler) {
-        return register(flag, "", handler);
+    /**
+     * Registers a cli argument.
+     * @param arg argument
+     * @param handler three-arguments callback to be executed once triggered
+     * @return parser object
+     */
+    public Parser register(String arg, ThreeArgCommand<String, String, String> handler) {
+        return register(arg, "", handler);
     }
 
-    public Parser registerVarArgs(String flag, VarArgsCommand handler) {
-        return registerVarArgs(flag, "", handler);
+    /**
+     * Registers a cli argument.
+     * @param arg argument
+     * @param handler multi-arguments callback to be executed once triggered
+     * @return parser object
+     */
+    public Parser registerVarArgs(String arg, VarArgsCommand handler) {
+        return registerVarArgs(arg, "", handler);
     }
+
+    // ----------------------------------------------------------------
 
     // normalize flags (remove prefixes)
-    private String normalizeFlag(String flag) {
+    private String normalizeFlag(String arg) {
         for (String prefix : prefixes) {
-            if (flag.startsWith(prefix)) {
-                return flag.substring(prefix.length());
+            if (arg.startsWith(prefix)) {
+                return arg.substring(prefix.length());
             }
         }
-        return flag;
+        return arg;
     }
 
     // check and extract flag names
@@ -277,6 +390,11 @@ public class Parser {
         return sb.toString();
     }
 
+    /**
+     * Parses the given arguments and triggers the registered CLI handlers.
+     *
+     * @param args the raw arguments from your main method
+     */
     public void parse(String[] args) {
         if (args.length == 0) {
             showHelp();
