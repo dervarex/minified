@@ -7,6 +7,7 @@ public class Parser {
 
     private final Map<String, CommandHandler> commands = new LinkedHashMap<>();
     private final Set<String> prefixes = new LinkedHashSet<>();
+    private String name = "program";
     private String description = "";
 
     @FunctionalInterface
@@ -79,6 +80,11 @@ public class Parser {
         return this;
     }
 
+    public Parser setName(String name) {
+        this.name = name;
+        return this;
+    }
+
     // register methods with help text
     public Parser register(String flag, String helpText, NoArgCommand handler) {
         commands.put(normalizeFlag(flag), new CommandHandler(flag, handler, 0, helpText));
@@ -148,7 +154,7 @@ public class Parser {
 
     // Generate help message
     private void showHelp() {
-        System.out.println("Usage: program [options]");
+        System.out.println("Usage:" + name + "[options]");
         if (!description.isEmpty()) {
             System.out.println(description);
         }
