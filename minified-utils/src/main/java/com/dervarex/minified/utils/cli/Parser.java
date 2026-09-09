@@ -155,14 +155,114 @@ public class Parser {
         System.out.println();
         System.out.println("Options:");
 
-        // help argument itself
-        System.out.printf("  %-20s %s%n", formatFlag("help"), "Show this help message");
+        List<String> flagDisplays = new ArrayList<>();
+        List<String> helpTexts = new ArrayList<>();
+        List<String> argDescriptions = new ArrayList<>();
 
+        // help arg
+        flagDisplays.add(formatFlagWithArgs("help", 0));
+        helpTexts.add("Show this help message");
+        argDescriptions.add("");
+
+        // all registered commands
         for (CommandHandler cmd : commands.values()) {
-            String flagDisplay = formatFlag(cmd.flag);
-            String helpText = cmd.helpText.isEmpty() ? "No description" : cmd.helpText;
-            System.out.printf("  %-20s %s%n", flagDisplay, helpText);
+            flagDisplays.add(formatFlagWithArgs(cmd.flag, cmd.paramCount));
+            helpTexts.add(cmd.helpText.isEmpty() ? "No description" : cmd.helpText);
+            argDescriptions.add(getArgDescription(cmd.paramCount));
         }
+
+        // calculate width
+        Map<String, Integer> prefixWidths = calculatePrefixWidths(flagDisplays);
+        int maxFlagWidth = flagDisplays.stream().mapToInt(String::length).max().orElse(20);
+
+        // print
+        for (int i = 0; i < flagDisplays.size(); i++) {
+            String flagDisplay = formatAlignedFlags(flagDisplays.get(i), prefixWidths);
+            String helpText = helpTexts.get(i);
+            String argDesc = argDescriptions.get(i);
+
+            String fullHelp = argDesc.isEmpty() ? helpText : helpText + " " + argDesc;
+
+            System.out.printf("  %-" + maxFlagWidth + "s %s%n", flagDisplay, fullHelp);
+        }
+    }
+
+    private String getArgDescription(int paramCount) {
+        switch (paramCount) {
+            case 0: return "";
+            case 1: return "(requires: <value>)";
+            case 2: return "(requires: <value1> <value2>)";
+            case 3: return "(requires: <value1> <value2> <value3>)";
+            case -1: return "(requires: <value1> [value2] ...)";
+            default: return "";
+        }
+    }
+
+    private String formatFlagWithArgs(String flag, int paramCount) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(formatFlag(flag));
+
+        switch (paramCount) {
+            case 1:
+                sb.append(" <value>");
+                break;
+            case 2:
+                sb.append(" <value1> <value2>");
+                break;
+            case 3:
+                sb.append(" <value1> <value2> <value3>");
+                break;
+            case -1:
+                sb.append(" <value1> [value2] ...");
+                break;
+        }
+        return sb.toString();
+    }
+
+    private Map<String, Integer> calculatePrefixWidths(List<String> flagDisplays) {
+        Map<String, Integer> prefixWidths = new LinkedHashMap<>();
+
+        for (String prefix : prefixes) {
+            int maxWidth = 0;
+            for (String flagDisplay : flagDisplays) {
+                // Extrahiere den Teil für diesen Prefix
+                String[] parts = flagDisplay.split(", ");
+                for (String part : parts) {
+                    if (part.startsWith(prefix)) {
+                        maxWidth = Math.max(maxWidth, part.length());
+                    }
+                }
+            }
+            prefixWidths.put(prefix, maxWidth);
+        }
+
+        return prefixWidths;
+    }
+
+    private String formatAlignedFlags(String flagDisplay, Map<String, Integer> prefixWidths) {
+        String[] parts = flagDisplay.split(", ");
+        StringBuilder aligned = new StringBuilder();
+
+        for (int i = 0; i < parts.length; i++) {
+            String part = parts[i];
+            String prefix = prefixes.stream()
+                    .filter(part::startsWith)
+                    .findFirst()
+                    .orElse("");
+
+            if (i > 0) {
+                aligned.append(" ");
+            }
+
+            // Finde die Position des Prefix-Endes
+            int prefixEnd = prefix.length();
+            String flagPart = part.substring(prefixEnd);
+
+            // Formatiere mit Padding
+            aligned.append(String.format("%-" + prefixWidths.get(prefix) + "s", part));
+        }
+
+        return aligned.toString();
     }
 
     private String formatFlag(String flag) {
