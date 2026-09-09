@@ -225,7 +225,6 @@ public class Parser {
         for (String prefix : prefixes) {
             int maxWidth = 0;
             for (String flagDisplay : flagDisplays) {
-                // Extrahiere den Teil für diesen Prefix
                 String[] parts = flagDisplay.split(", ");
                 for (String part : parts) {
                     if (part.startsWith(prefix)) {
@@ -254,11 +253,9 @@ public class Parser {
                 aligned.append(" ");
             }
 
-            // Finde die Position des Prefix-Endes
             int prefixEnd = prefix.length();
             String flagPart = part.substring(prefixEnd);
 
-            // Formatiere mit Padding
             aligned.append(String.format("%-" + prefixWidths.get(prefix) + "s", part));
         }
 
