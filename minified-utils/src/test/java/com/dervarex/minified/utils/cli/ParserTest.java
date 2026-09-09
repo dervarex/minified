@@ -22,16 +22,16 @@ public class ParserTest {
         System.setErr(new PrintStream(errContent));
 
         parser = new Parser("--", "-", "!");
-        parser.register("hello", () -> {
+        parser.register("hello", "Print hello world", () -> {
             System.out.println("Hello World!");
         });
-        parser.register("onearg", (String arg) -> {
+        parser.register("onearg", "Print a single argument", (String arg) -> {
             System.out.println("Given Argument: " + arg);
         });
 
         parser.setDescription("Test for minified's CLI Parsing Utility");
 
-        parser.addPrefix("1");
+        parser.addPrefix("1"); // I absolutely do not recommend you to use 1 as prefix, since this breaks any numbers starting with 1, but we're testing it anyway
 
         parser.register("add", "Add two numbers together", (String a, String b) -> {
             int result = Integer.parseInt(a) + Integer.parseInt(b);
@@ -120,19 +120,21 @@ public class ParserTest {
 
     @Test
     public void testMultipleCommands() {
-        parser.parse(new String[]{"--hello", "--onearg", "world", "--add", "10", "5"});
+        parser.parse(new String[]{"--hello", "--onearg", "world", "--add", "20", "5"});
 
         String output = outContent.toString();
+        System.out.println("Actual output: " + output); // Debug output
+
         assertTrue(output.contains("Hello World!"), "Should execute hello");
         assertTrue(output.contains("Given Argument: world"), "Should execute onearg");
-        assertTrue(output.contains("10 + 5 = 15"), "Should execute add");
+        assertTrue(output.contains("20 + 5 = 25"), "Should execute add");
 
         // Check order
         String[] lines = output.split("\n");
         assertEquals(3, lines.length, "Should have 3 lines of output");
         assertEquals("Hello World!", lines[0], "Hello should be first");
         assertEquals("Given Argument: world", lines[1], "onearg should be second");
-        assertEquals("10 + 5 = 15", lines[2], "add should be third");
+        assertEquals("20 + 5 = 25", lines[2], "add should be third");
     }
 
     @Test
@@ -147,17 +149,14 @@ public class ParserTest {
 
     @Test
     public void testInvalidNumberFormat() {
-        parser.parse(new String[]{"--add", "abc", "def"});
-
-        String errOutput = errContent.toString();
-        assertTrue(errOutput.contains("NumberFormatException") ||
-                        errOutput.contains("For input string"),
-                "Should show number format exception");
+        assertThrows(NumberFormatException.class, () -> {
+            parser.parse(new String[]{"--add", "abc", "def"});
+        }, "Should throw NumberFormatException for invalid numbers");
     }
 
     @Test
     public void testRegisterReturnsParser() {
-        Parser returnedParser = parser.register("test", () -> {
+        Parser returnedParser = parser.register("test", "Test command", () -> {
             System.out.println("test");
         });
 
@@ -166,9 +165,9 @@ public class ParserTest {
 
     @Test
     public void testChainedRegistration() {
-        parser.register("test1", () -> System.out.println("Test 1"))
-                .register("test2", () -> System.out.println("Test 2"))
-                .register("test3", () -> System.out.println("Test 3"));
+        parser.register("test1", "Test 1", () -> System.out.println("Test 1"))
+                .register("test2", "Test 2", () -> System.out.println("Test 2"))
+                .register("test3", "Test 3", () -> System.out.println("Test 3"));
 
         parser.parse(new String[]{"--test1", "--test2", "--test3"});
 
@@ -180,7 +179,7 @@ public class ParserTest {
 
     @Test
     public void testOverwriteCommand() {
-        parser.register("hello", () -> {
+        parser.register("hello", "Overwritten hello", () -> {
             System.out.println("Overwritten Hello!");
         });
 
@@ -195,5 +194,90 @@ public class ParserTest {
 
         assertEquals("Given Argument: Hello World\n", outContent.toString(),
                 "Should handle spaces in arguments");
+    }
+
+    @Test
+    public void testHelpCommand() {
+        parser.parse(new String[]{"--help"});
+
+        String output = outContent.toString();
+        assertTrue(output.contains("Usage:"), "Should show usage information");
+        assertTrue(output.contains("Test for minified's CLI Parsing Utility"), "Should show description");
+        assertTrue(output.contains("hello"), "Should list hello command");
+        assertTrue(output.contains("onearg"), "Should list onearg command");
+        assertTrue(output.contains("add"), "Should list add command");
+        assertTrue(output.contains("help"), "Should list help command");
+    }
+
+    @Test
+    public void testEmptyArgs() {
+        parser.parse(new String[]{});
+
+        String output = outContent.toString();
+        assertTrue(output.contains("Usage:"), "Should show help when no arguments given");
+    }
+
+    @Test
+    public void testSetProgramName() {
+        parser.setProgram("myprogram");
+        parser.parse(new String[]{"--help"});
+
+        String output = outContent.toString();
+        assertTrue(output.contains("Usage: myprogram"), "Should show custom program name");
+    }
+
+    @Test
+    public void testNoPrefixArgument() {
+        parser.parse(new String[]{"hello"});
+
+        String errOutput = errContent.toString();
+        assertTrue(errOutput.contains("Unknown argument"), "Should show error for argument without prefix");
+        assertTrue(errOutput.contains("missing prefix"), "Should mention missing prefix");
+    }
+
+    @Test
+    public void testVarArgsCommand() {
+        parser.registerVarArgs("echo", "Echo all arguments", args -> {
+            System.out.println(String.join(" ", args));
+        });
+
+        parser.parse(new String[]{"--echo", "Hello", "World", "from", "CLI"});
+
+        assertEquals("Hello World from CLI\n", outContent.toString(), "Should echo all arguments");
+    }
+
+    @Test
+    public void testVarArgsCommandMissingArguments() {
+        parser.registerVarArgs("echo", "Echo all arguments", args -> {
+            System.out.println(String.join(" ", args));
+        });
+
+        parser.parse(new String[]{"--echo"});
+
+        String errOutput = errContent.toString();
+        assertTrue(errOutput.contains("Missing arguments"), "Should show error for missing varargs");
+    }
+
+    @Test
+    public void testThreeArgCommand() {
+        parser.register("concat", "Concatenate three strings", (String a, String b, String c) -> {
+            System.out.println(a + b + c);
+        });
+
+        parser.parse(new String[]{"--concat", "foo", "bar", "baz"});
+
+        assertEquals("foobarbaz\n", outContent.toString(), "Should concatenate three arguments");
+    }
+
+    @Test
+    public void testThreeArgCommandMissingArguments() {
+        parser.register("concat", "Concatenate three strings", (String a, String b, String c) -> {
+            System.out.println(a + b + c);
+        });
+
+        parser.parse(new String[]{"--concat", "foo"});
+
+        String errOutput = errContent.toString();
+        assertTrue(errOutput.contains("Missing arguments"), "Should show error for missing arguments");
     }
 }
