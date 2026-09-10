@@ -10,6 +10,7 @@ module minified.minified.utils.main {
     exports com.dervarex.minified.utils.nbt.tag;
     exports com.dervarex.minified.utils.nbt;
     exports com.dervarex.minified.utils.os;
+    exports com.dervarex.minified.utils.shortcut;
     requires java.net.http;
     requires org.apiguardian.api;
 }
