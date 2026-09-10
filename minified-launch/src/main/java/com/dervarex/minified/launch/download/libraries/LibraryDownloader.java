@@ -12,7 +12,7 @@ import com.dervarex.minified.launch.launch.modding.neoforge.NeoforgeLoader;
 import com.dervarex.minified.launch.launch.modding.quilt.QuiltLoader;
 import com.dervarex.minified.launch.launch.modding.quilt.QuiltLoaderFetcher;
 import com.dervarex.minified.launch.launch.modding.vanilla.VanillaLoader;
-import com.dervarex.minified.utils.os.OSUtil;
+import com.dervarex.minified.utils.os.OS;
 import com.dervarex.minified.utils.download.DownloadHelper;
 import com.dervarex.minified.utils.exceptions.NoConnectionException;
 import com.dervarex.minified.utils.http.HttpUtil;
@@ -638,7 +638,7 @@ public class LibraryDownloader {
      * @return the operating system of the user, in the format that Minecraft uses for library rules
      */
     private String getMinecraftOs() {
-        return OSUtil.getOS().getName();
+        return OS.getCurrentOS().getName();
     }
 
     private Path nativeDownloadDownloadPath(NativeDownload nativeDownload, Path nativeDownloadDir) {

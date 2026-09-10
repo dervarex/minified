@@ -12,11 +12,11 @@ import com.dervarex.minified.launch.launch.modding.neoforge.api.NeoVersionJson;
 import com.dervarex.minified.launch.launch.modding.quilt.QuiltLoader;
 import com.dervarex.minified.launch.launch.modding.quilt.QuiltLoaderFetcher;
 import com.dervarex.minified.launch.launch.modding.vanilla.VanillaLoader;
-import com.dervarex.minified.utils.os.OSUtil;
 import com.dervarex.minified.utils.json.JsonArray;
 import com.dervarex.minified.utils.json.JsonFile;
 import com.dervarex.minified.utils.json.JsonObject;
 import com.dervarex.minified.utils.json.JsonValue;
+import com.dervarex.minified.utils.os.OS;
 import org.apiguardian.api.API;
 import org.jetbrains.annotations.NotNull;
 
@@ -213,7 +213,7 @@ public class ClasspathBuilder {
         }
 
         JsonArray rules = library.get("rules").asArray();
-        String os = OSUtil.getOS().getName();
+        String os = OS.getCurrentOS().getName();
 
         boolean allowed = false;
 

@@ -7,12 +7,12 @@ import com.dervarex.minified.launch.launch.modding.forge.ForgeLoader;
 import com.dervarex.minified.launch.launch.modding.neoforge.NeoforgeLoader;
 import com.dervarex.minified.launch.launch.modding.quilt.QuiltLoader;
 import com.dervarex.minified.launch.launch.modding.vanilla.VanillaLoader;
-import com.dervarex.minified.utils.os.OSUtil;
 import com.dervarex.minified.utils.exceptions.OfflineModeNeedsNetworkException;
 import com.dervarex.minified.utils.json.JsonArray;
 import com.dervarex.minified.utils.json.JsonFile;
 import com.dervarex.minified.utils.json.JsonObject;
 import com.dervarex.minified.utils.json.JsonValue;
+import com.dervarex.minified.utils.os.OS;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -231,7 +231,7 @@ public final class OfflineLibraryValidator {
     }
 
     private static String getMinecraftOs() {
-        return OSUtil.getOS().getName();
+        return OS.getCurrentOS().getName();
     }
 
     private static Path resolveNativesDirectory(Path librariesDir) {
