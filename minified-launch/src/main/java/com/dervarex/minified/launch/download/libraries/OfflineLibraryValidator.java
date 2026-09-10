@@ -7,7 +7,7 @@ import com.dervarex.minified.launch.launch.modding.forge.ForgeLoader;
 import com.dervarex.minified.launch.launch.modding.neoforge.NeoforgeLoader;
 import com.dervarex.minified.launch.launch.modding.quilt.QuiltLoader;
 import com.dervarex.minified.launch.launch.modding.vanilla.VanillaLoader;
-import com.dervarex.minified.launch.utils.OSUtil;
+import com.dervarex.minified.utils.os.OSUtil;
 import com.dervarex.minified.utils.exceptions.OfflineModeNeedsNetworkException;
 import com.dervarex.minified.utils.json.JsonArray;
 import com.dervarex.minified.utils.json.JsonFile;

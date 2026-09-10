@@ -12,7 +12,7 @@ import com.dervarex.minified.launch.launch.modding.neoforge.NeoforgeLoader;
 import com.dervarex.minified.launch.launch.modding.quilt.QuiltLoader;
 import com.dervarex.minified.launch.launch.modding.quilt.QuiltLoaderFetcher;
 import com.dervarex.minified.launch.launch.modding.vanilla.VanillaLoader;
-import com.dervarex.minified.launch.utils.OSUtil;
+import com.dervarex.minified.utils.os.OSUtil;
 import com.dervarex.minified.utils.download.DownloadHelper;
 import com.dervarex.minified.utils.exceptions.NoConnectionException;
 import com.dervarex.minified.utils.http.HttpUtil;

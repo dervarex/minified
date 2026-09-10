@@ -1,4 +1,4 @@
-package com.dervarex.minified.launch.utils;
+package com.dervarex.minified.utils.os;
 
 public class OSUtil {
     public static String getMinecraftOs() {
