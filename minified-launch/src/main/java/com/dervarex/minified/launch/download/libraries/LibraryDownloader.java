@@ -638,7 +638,7 @@ public class LibraryDownloader {
      * @return the operating system of the user, in the format that Minecraft uses for library rules
      */
     private String getMinecraftOs() {
-        return OSUtil.getMinecraftOs();
+        return OSUtil.getOS().getName();
     }
 
     private Path nativeDownloadDownloadPath(NativeDownload nativeDownload, Path nativeDownloadDir) {

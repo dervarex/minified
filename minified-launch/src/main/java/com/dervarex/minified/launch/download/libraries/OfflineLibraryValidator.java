@@ -231,7 +231,7 @@ public final class OfflineLibraryValidator {
     }
 
     private static String getMinecraftOs() {
-        return OSUtil.getMinecraftOs();
+        return OSUtil.getOS().getName();
     }
 
     private static Path resolveNativesDirectory(Path librariesDir) {

@@ -213,7 +213,7 @@ public class ClasspathBuilder {
         }
 
         JsonArray rules = library.get("rules").asArray();
-        String os = OSUtil.getMinecraftOs();
+        String os = OSUtil.getOS().getName();
 
         boolean allowed = false;
 
