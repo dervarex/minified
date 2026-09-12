@@ -3,6 +3,7 @@ package com.dervarex.minified.auth;
 import com.dervarex.minified.auth.encryption.Encryptor;
 import com.dervarex.minified.auth.events.LoginStateChangeListener;
 import com.dervarex.minified.auth.exceptions.LoginFailedException;
+import com.dervarex.minified.auth.user.User;
 import com.dervarex.minified.events.EventBus;
 import com.dervarex.minified.java.JavaManager;
 import com.dervarex.minified.utils.exceptions.NoConnectionException;

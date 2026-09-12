@@ -1,5 +1,6 @@
 module minified.minified.auth.main {
     exports com.dervarex.minified.auth;
+    exports com.dervarex.minified.auth.user;
     exports com.dervarex.minified.auth.events;
     exports com.dervarex.minified.auth.exceptions;
 
@@ -17,4 +18,5 @@ module minified.minified.auth.main {
 
     // Allow GSON to reflect data classes
     opens com.dervarex.minified.auth to com.google.gson;
+    opens com.dervarex.minified.auth.user to com.google.gson;
 }

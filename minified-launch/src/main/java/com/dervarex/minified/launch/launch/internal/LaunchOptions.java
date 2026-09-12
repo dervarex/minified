@@ -1,6 +1,6 @@
 package com.dervarex.minified.launch.launch.internal;
 
-import com.dervarex.minified.auth.User;
+import com.dervarex.minified.auth.user.User;
 import com.dervarex.minified.launch.launch.LaunchConfiguration;
 import com.dervarex.minified.utils.json.JsonFile;
 import lombok.Getter;

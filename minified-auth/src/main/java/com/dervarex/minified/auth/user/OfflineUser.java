@@ -1,4 +1,4 @@
-package com.dervarex.minified.auth;
+package com.dervarex.minified.auth.user;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;

@@ -1,6 +1,6 @@
 package com.dervarex.minified.launch.launch;
 
-import com.dervarex.minified.auth.User;
+import com.dervarex.minified.auth.user.User;
 import com.dervarex.minified.events.type.connection.CheckConnectionEvent;
 import com.dervarex.minified.events.type.connection.OfflineEvent;
 import com.dervarex.minified.java.JavaInstallation;

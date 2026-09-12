@@ -1,4 +1,4 @@
-package com.dervarex.minified.auth;
+package com.dervarex.minified.auth.user;
 
 import com.google.gson.JsonObject;
 
