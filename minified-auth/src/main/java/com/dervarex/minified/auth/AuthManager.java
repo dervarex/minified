@@ -185,7 +185,7 @@ public class AuthManager {
         Encryptor.saveEncryptedSession(serialized, masterKey, SESSION_FILE, eventBus);
 
         StepMCProfile.MCProfile profile = javaSession.getMcProfile();
-        User user = new User(profile.getId().toString(),
+        User user = new User(profile.getId(),
                 profile.getName(),
                 profile.getMcToken().getAccessToken(),
                 serialized);
