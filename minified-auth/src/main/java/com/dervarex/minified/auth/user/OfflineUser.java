@@ -12,7 +12,7 @@ import java.util.UUID;
  * {@link #username} is the display name of the user
  */
 @API(status = API.Status.STABLE, since = "v3.2.0")
-public class OfflineUser {
+public final class OfflineUser implements MinecraftAccount {
     private final MinecraftUUID uuid;
     private final String username;
 
@@ -24,8 +24,14 @@ public class OfflineUser {
     /**
      * @return {@link MinecraftUUID}, contains dashed and non dashed uuid
      */
+    @Override
     public MinecraftUUID getMinecraftUUID() {
         return uuid;
+    }
+
+    @Override
+    public String username() {
+        return username;
     }
 
     @Override
@@ -44,8 +50,8 @@ public class OfflineUser {
 
     @Override
     public String toString() {
-        return "User[" +
+        return "OfflineUser[" +
                 "uuid=" + uuid + ", " +
-                "username=" + username + ", ";
+                "username=" + username + ']';
     }
 }

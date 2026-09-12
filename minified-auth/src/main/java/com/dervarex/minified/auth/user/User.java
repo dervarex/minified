@@ -14,7 +14,7 @@ import java.util.UUID;
  * {@link #serializedSession} is the full session data as returned by the authentication server
  */
 @API(status = API.Status.STABLE)
-public final class User {
+public final class User implements MinecraftAccount {
     private final MinecraftUUID uuid;
     private final String username;
     private final String accessToken;
@@ -30,10 +30,12 @@ public final class User {
     /**
      * @return {@link MinecraftUUID}, contains dashed and non dashed uuid
      */
+    @Override
     public MinecraftUUID getMinecraftUUID() {
         return uuid;
     }
 
+    @Override
     public String username() {
         return username;
     }
