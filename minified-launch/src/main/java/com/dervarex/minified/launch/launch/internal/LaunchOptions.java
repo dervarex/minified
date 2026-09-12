@@ -80,7 +80,7 @@ public final class LaunchOptions {
 
                         .setVariable(
                                 "auth_uuid",
-                                user == null ? getOfflineUuid(launchConfig.getOfflineUsername()) : user.uuid()
+                                user == null ? getOfflineUuid(launchConfig.getOfflineUsername()) : user.getMinecraftUUID().getUndashed()
                         )
 
                         .setVariable(

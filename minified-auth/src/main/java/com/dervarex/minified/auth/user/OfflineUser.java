@@ -1,5 +1,7 @@
 package com.dervarex.minified.auth.user;
 
+import org.apiguardian.api.API;
+
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.UUID;
@@ -9,31 +11,21 @@ import java.util.UUID;
  * {@link #uuid} is the offline uuid for the user (MD5 hash of username, converted to a Version 3 UUID)
  * {@link #username} is the display name of the user
  */
+@API(status = API.Status.STABLE, since = "v3.2.0")
 public class OfflineUser {
-    private final UUID uuid;
+    private final MinecraftUUID uuid;
     private final String username;
 
     public OfflineUser(String username) {
-        this.uuid = UUID.nameUUIDFromBytes(("OfflinePlayer:" + username).getBytes(StandardCharsets.UTF_8));
+        this.uuid = new MinecraftUUID(UUID.nameUUIDFromBytes(("OfflinePlayer:" + username).getBytes(StandardCharsets.UTF_8)));
         this.username = username;
     }
 
     /**
-     * @return player's uuid without dashes, as used in mojang's api
+     * @return {@link MinecraftUUID}, contains dashed and non dashed uuid
      */
-    public String uuid() {
-        return uuid.toString().replace("-", "");
-    }
-
-    /**
-     * @return full uuid with dashes
-     */
-    public UUID dasheduuid() {
+    public MinecraftUUID getMinecraftUUID() {
         return uuid;
-    }
-
-    public String username() {
-        return username;
     }
 
     @Override

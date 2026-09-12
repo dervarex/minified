@@ -190,7 +190,7 @@ public class AuthManager {
                 profile.getName(),
                 profile.getMcToken().getAccessToken(),
                 serialized);
-        session.put(user.uuid(), user);
+        session.put(user.getMinecraftUUID().getDashed().toString(), user);
         return user;
     }
 

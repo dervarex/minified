@@ -76,12 +76,12 @@ class AuthTest {
 
         User reloaded = AuthManager.loginWithSavedSession();
         assertNotNull(reloaded);
-        assertNotNull(reloaded.uuid());
+        assertNotNull(reloaded.getMinecraftUUID());
         assertNotNull(reloaded.username());
         System.out.println("Serialized Session:");
         System.out.println();
         System.out.println(reloaded.serializedSession());
         System.out.println();
-        System.out.println("Reloaded session for " + reloaded.username() + " (" + reloaded.uuid() + ")");
+        System.out.println("Reloaded session for " + reloaded.username() + " (" + reloaded.getMinecraftUUID() + ")");
     }
 }

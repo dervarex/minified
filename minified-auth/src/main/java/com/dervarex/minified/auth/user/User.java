@@ -1,6 +1,7 @@
 package com.dervarex.minified.auth.user;
 
 import com.google.gson.JsonObject;
+import org.apiguardian.api.API;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -12,30 +13,24 @@ import java.util.UUID;
  * {@link #accessToken} is the token used for authenticated requests
  * {@link #serializedSession} is the full session data as returned by the authentication server
  */
+@API(status = API.Status.STABLE)
 public final class User {
-    private final UUID uuid;
+    private final MinecraftUUID uuid;
     private final String username;
     private final String accessToken;
     private final JsonObject serializedSession;
 
     public User(UUID uuid, String username, String accessToken, JsonObject serializedSession) {
-        this.uuid = uuid;
+        this.uuid = new MinecraftUUID(uuid);
         this.username = username;
         this.accessToken = accessToken;
         this.serializedSession = serializedSession;
     }
 
     /**
-     * @return player's uuid without dashes, as used in mojang's api
+     * @return {@link MinecraftUUID}, contains dashed and non dashed uuid
      */
-    public String uuid() {
-        return uuid.toString().replace("-", "");
-    }
-
-    /**
-     * @return full uuid with dashes
-     */
-    public UUID dasheduuid() {
+    public MinecraftUUID getMinecraftUUID() {
         return uuid;
     }
 
