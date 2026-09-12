@@ -145,8 +145,7 @@ Keep unrelated changes in separate commits.
 
 ## Branches and pull requests
 
-1. Fork the repository and create a branch off the main development branch.
-   Suggested naming: `fix/short-description` or `feature/short-description`.
+1. Fork the repository and create a branch off the main branch or where you'd like your PR to be merged into.
 2. Keep the pull request focused on one topic. Large mixed PRs take much longer to
    review and are more likely to be rejected.
 3. In the description, explain **what** changed and **why**, and how you tested it
@@ -157,6 +156,11 @@ Keep unrelated changes in separate commits.
 
 Reformatting or renaming across files that are otherwise untouched will not be
 merged, it's unnecessary and hides the real changes.
+
+### Branch naming
+
+Branches are named after the minified module they focus on - for example, `minified-utils/nbt-parser`.
+This doesn't mean a branch is restricted to that module, you can still commit changes to files in other modules within the same branch.
 
 ---
 
