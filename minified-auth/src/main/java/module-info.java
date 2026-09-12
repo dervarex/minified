@@ -1,6 +1,7 @@
 module minified.minified.auth.main {
     exports com.dervarex.minified.auth;
     exports com.dervarex.minified.auth.user;
+    exports com.dervarex.minified.auth.skin;
     exports com.dervarex.minified.auth.events;
     exports com.dervarex.minified.auth.exceptions;
 
