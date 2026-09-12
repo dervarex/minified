@@ -1,7 +1,6 @@
 package com.dervarex.minified.utils.shortcut;
 
 import com.dervarex.minified.utils.os.OS;
-import com.dervarex.minified.utils.os.OSUtil;
 import com.dervarex.minified.utils.shortcut.writer.ShortcutSupport;
 import com.dervarex.minified.utils.shortcut.writer.ShortcutWriter;
 
@@ -75,7 +74,7 @@ public final class Shortcut {
                 throw new IllegalStateException("execPath is required");
             }
             if (os == null) {
-                os = OSUtil.getOS();
+                os = OS.getCurrentOS();
             }
             if (name == null || name.isBlank()) {
                 name = ShortcutSupport.deriveName(execPath);
