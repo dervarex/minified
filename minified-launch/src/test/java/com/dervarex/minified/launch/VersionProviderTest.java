@@ -17,7 +17,7 @@ class VersionProviderTest {
         assertTrue(ApiEndpoints.VERSION_MANIFEST_URL.contains("version_manifest"));
     }
 
-    @Tag("integration")
+    @Tag("manual")
     @Test
     @EnabledIfEnvironmentVariable(named = "MINIFIED_VERSION_IT", matches = "(?i)1|true|yes")
     void resolvesKnownVersionJsonUrlWhenIntegrationTestsAreEnabled() throws Exception {
