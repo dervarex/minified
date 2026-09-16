@@ -5,4 +5,7 @@
  * Microsoft authentication into your app. The encryption subpackage is implementation detail
  * only and should not be used directly.</p>
  */
+@API(status = API.Status.STABLE)
 package com.dervarex.minified.auth;
+
+import org.apiguardian.api.API;
