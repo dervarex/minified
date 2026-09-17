@@ -18,5 +18,18 @@ dependencies {
 }
 
 test {
-    useJUnitPlatform()
+    useJUnitPlatform {
+        excludeTags("manual")
+    }
+
+    failOnNoDiscoveredTests = false
+}
+
+tasks.register("manualTest", Test) {
+    useJUnitPlatform {
+        includeTags("manual")
+    }
+
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
 }
