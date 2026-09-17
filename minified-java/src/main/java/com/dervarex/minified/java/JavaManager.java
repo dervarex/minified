@@ -71,7 +71,7 @@ public final class JavaManager {
     public static synchronized void init(Path baseDir, EventBus eventBus) {
         Objects.requireNonNull(baseDir, "baseDir");
         JavaManager.baseDir = baseDir.toAbsolutePath();
-        localEventBus = eventBus;
+        localEventBus = eventBus == null ? new EventBus() : eventBus;
     }
     @API(status = API.Status.STABLE)
     public static synchronized void init(Path baseDir) {
