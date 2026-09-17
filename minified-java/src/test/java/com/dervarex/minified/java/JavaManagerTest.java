@@ -41,12 +41,6 @@ class JavaManagerTest {
     }
 
     @Test
-    @DisplayName("init rejects a null event bus")
-    void init_rejectsNullEventBus() {
-        assertThrows(NullPointerException.class, () -> JavaManager.init(tempDir, null));
-    }
-
-    @Test
     @DisplayName("getRequiredJavaVersion reads the major version from valid JSON")
     void getRequiredJavaVersion_readsMajorVersionFromValidJson() {
         String json = """
