@@ -3,8 +3,7 @@
 Thanks for your interest in contributing to Minified.
 
 This document explains how to set up the project, what kind of contributions are
-useful, and what to expect from the review process. Nothing here is meant to be
-bureaucratic: if something is unclear, open an issue and ask.
+useful, and what to expect from the review process. If something is unclear, open an issue and ask.
 
 By contributing, you agree that your contributions are licensed under the same
 license as this project, which in this case is Apache 2.0.
@@ -118,10 +117,9 @@ Before opening a pull request, please verify that:
   Java formatting.
 - No wildcard imports.
 - Public API needs Javadoc: what the method does, what it throws, and whether it
-  performs network or disk I/O.
+  performs network or disk I/O. (yes, I forget that too)
 - Prefer explicit, descriptive names over abbreviations.
-- Do not swallow exceptions. Either handle them meaningfully or let them
-  propagate with context.
+- Do not swallow exceptions.
 - Keep the library free of UI concerns and of assumptions about a specific
   launcher frontend.
 - Avoid adding third-party dependencies. If a change needs one, explain in the
@@ -152,15 +150,37 @@ Keep unrelated changes in separate commits.
    (Minecraft version, mod loader, OS, Java version).
 4. Rebase on the latest main branch before requesting a review, and resolve
    conflicts yourself.
-5. Expect review comments. They are about the code, not about you.
+5. Expect review comments.
 
-Reformatting or renaming across files that are otherwise untouched will not be
-merged, it's unnecessary and hides the real changes.
+Reformatting or renaming across files that are otherwise untouched will not be merged.
+
+### Merging
+
+Pull requests are merged with **squash merges**. All commits of a branch are
+combined into a single commit on the main branch, so the main history stays
+readable and free of "fix typo" or a trillion "add" commits.
+
+The squashed commit is named after this schema:
+
+```
+Merge branch 'branch/name'
+```
+
+That means we afterwards will only see the branch names in the history, so they
+must explain what happened
 
 ### Branch naming
 
 Branches are named after the minified module they focus on - for example, `minified-utils/nbt-parser`.
 This doesn't mean a branch is restricted to that module, you can still commit changes to files in other modules within the same branch.
+
+Additionally, branches may have prefixes instead of the module, though only a handful of prefixes are allowed:
+
+| Prefix  | Description                                    | Example              |
+|---------|------------------------------------------------|----------------------|
+| tests/  | JUnit5 Tests for a minified module may be here | tests/api-client     |
+| build/  | Gradle-related changes or other build scripts  | build/add-dependency |
+| docs/   | Documentation changes only                     | docs/readme          |
 
 ---
 
@@ -177,8 +197,7 @@ Please include:
 - Steps to reproduce, as minimal as you can make them
 - Relevant logs and stack traces, as text, not as screenshots
 
-If the problem only occurs on Windows or macOS, say so explicitly. Those platforms
-are not officially supported yet, so such reports are handled differently.
+If the problem only occurs on Windows or macOS, say so explicitly, since those aren't supported currently.
 
 ---
 
@@ -191,7 +210,7 @@ not implement launcher behavior or user interface logic. Two consequences:
 - CurseForge integration is out of scope. Modrinth is the supported mod platform: it covers most of what's needed, is focused on Minecraft, has a much cleaner API, and is generally considered safer. CurseForge has had a number of malware issues in the past, and popular mods have increasingly been leaving the platform.
 
 Ideas that fit well are things like better crash-report parsing, world/level data
-handling, and improvements to instance and runtime management.
+handling, and improvements to profile and runtime management.
 
 If you are unsure whether something belongs in the library or in the application
 using it, open an issue and ask before writing code.
@@ -214,11 +233,13 @@ When integrating an API:
 - Avoid unnecessary requests; cache where it is safe to do so.
 - Respect the rate limits and terms of the service you are calling.
 
+Just to mention it here, we've got a great `HttpException`, you can that one to save a lot of work.
+
 ---
 
 ## AI
 
-Tools like Claude Code (and other AI coding assistants) are allowed and used in this project. This file itself was generated with the help of Claude - as were parts of the accompanying docs. However, I have reviewed every single line it generated afterwards.
+Tools like Claude Code (and other AI coding assistants) are allowed and partially used in this project. This file itself was originally generated with the help of Claude - same goes for a big part of the docs added in v3. However, I have reviewed every line it generated, that's exactly what you should do too.
 **Important:** fully check and validate the exact logic, structure, and content of the documents before being relied upon.
 
 As another example, Gemini has taught me how to set up a multi module Project using Gradle.
