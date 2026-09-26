@@ -179,7 +179,7 @@ Additionally, branches may have prefixes instead of the module, though only a ha
 | Prefix  | Description                                    | Example              |
 |---------|------------------------------------------------|----------------------|
 | tests/  | JUnit5 Tests for a minified module may be here | tests/api-client     |
-| build/  | Gradle-related changes or other build scripts  | build/add-dependency |
+| build/  | Gradle-related changes or other scripts        | build/add-dependency |
 | docs/   | Documentation changes only                     | docs/readme          |
 
 ---
