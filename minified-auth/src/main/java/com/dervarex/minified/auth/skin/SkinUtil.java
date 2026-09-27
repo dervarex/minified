@@ -1,6 +1,7 @@
 package com.dervarex.minified.auth.skin;
 
 import com.dervarex.minified.auth.user.MinecraftAccount;
+import com.dervarex.minified.utils.ApiEndpoints;
 import com.dervarex.minified.utils.exceptions.HttpException;
 import com.dervarex.minified.utils.http.HttpUtil;
 import com.google.gson.JsonArray;
@@ -19,7 +20,6 @@ import java.util.UUID;
  */
 @API(status = API.Status.STABLE, since = "v3.2.0")
 public final class SkinUtil {
-    private static final String PROFILE_ENDPOINT = "https://sessionserver.mojang.com/session/minecraft/profile/"; // todo move to minified-utils
 
     private SkinUtil() {}
 
@@ -58,7 +58,7 @@ public final class SkinUtil {
      */
     public static Skin fetchSkin(String uuid) throws IOException, HttpException {
         String undashed = uuid.replace("-", "");
-        String json = HttpUtil.get(PROFILE_ENDPOINT + undashed + "?unsigned=false");
+        String json = HttpUtil.get(ApiEndpoints.PROFILE_ENDPOINT + undashed + "?unsigned=false");
         JsonObject profile = JsonParser.parseString(json).getAsJsonObject();
         JsonArray properties = profile.getAsJsonArray("properties");
         if (properties == null) return null;

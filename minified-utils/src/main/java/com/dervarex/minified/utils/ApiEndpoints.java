@@ -31,4 +31,7 @@ public final class ApiEndpoints {
      */
     public static final String ADOPTIUM_ASSET_URL_TEMPLATE =
             "https://api.adoptium.net/v3/assets/feature_releases/%d/ga?architecture=%s&heap_size=normal&image_type=%s&jvm_impl=hotspot&os=%s&vendor=eclipse";
+
+    // Profile
+    public static final String PROFILE_ENDPOINT = "https://sessionserver.mojang.com/session/minecraft/profile/";
 }
