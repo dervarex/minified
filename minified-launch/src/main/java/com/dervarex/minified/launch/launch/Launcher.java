@@ -225,7 +225,9 @@ public class Launcher {
             );
         } else if (!Files.exists(launchConfig.getJarFile())) {
             throw new OfflineModeNeedsNetworkException(
-                    "Missing cached client jar: " + launchConfig.getJarFile()
+                    "Missing cached client jar: " + launchConfig.getJarFile(),
+                    OfflineModeNeedsNetworkException.Reason.MISSING_CLIENT_JAR,
+                    List.of(launchConfig.getJarFile().toString())
             );
         }
     }

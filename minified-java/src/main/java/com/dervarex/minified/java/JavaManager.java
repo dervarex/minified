@@ -7,6 +7,7 @@ import com.dervarex.minified.java.events.extract.ArchiveType;
 import com.dervarex.minified.java.events.extract.ExtractArchiveEvent;
 import com.dervarex.minified.utils.ApiEndpoints;
 import com.dervarex.minified.utils.exceptions.HttpException;
+import com.dervarex.minified.utils.exceptions.OfflineModeNeedsNetworkException;
 import com.dervarex.minified.utils.http.HttpUtil;
 import com.dervarex.minified.utils.json.JsonArray;
 import com.dervarex.minified.utils.json.JsonFile;
@@ -28,6 +29,7 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.time.Duration;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -167,8 +169,11 @@ public final class JavaManager {
                     // continue to error below
                 }
             }
-            throw new com.dervarex.minified.utils.exceptions.OfflineModeNeedsNetworkException(
-                    "Version metadata missing for Minecraft " + minecraftVersion
+            throw new OfflineModeNeedsNetworkException(
+                    "Version metadata missing for Minecraft " + minecraftVersion,
+                    OfflineModeNeedsNetworkException.Reason.MISSING_VERSION_MANIFEST,
+                    List.of(cachedPath.toString()),
+                    e
             );
         }
     }
@@ -448,12 +453,11 @@ public final class JavaManager {
                 return null;
             }
 
-            throw new com.dervarex.minified.utils.exceptions.OfflineModeNeedsNetworkException(
-                    "Java runtime metadata missing for Java "
-                            + majorVersion
-                            + " ("
-                            + imageType
-                            + ")"
+            throw new OfflineModeNeedsNetworkException(
+                    "Java runtime metadata missing for Java " + majorVersion + " (" + imageType + ")",
+                    OfflineModeNeedsNetworkException.Reason.MISSING_JAVA_RUNTIME,
+                    List.of(cachePath.toString()),
+                    e
             );
         } catch (IOException e) {
             if (Files.exists(cachePath)) {
@@ -464,12 +468,11 @@ public final class JavaManager {
                 }
             }
 
-            throw new com.dervarex.minified.utils.exceptions.OfflineModeNeedsNetworkException(
-                    "Java runtime metadata missing for Java "
-                            + majorVersion
-                            + " ("
-                            + imageType
-                            + ")"
+            throw new OfflineModeNeedsNetworkException(
+                    "Java runtime metadata missing for Java " + majorVersion + " (" + imageType + ")",
+                    OfflineModeNeedsNetworkException.Reason.MISSING_JAVA_RUNTIME,
+                    List.of(cachePath.toString()),
+                    e
             );
         }
     }

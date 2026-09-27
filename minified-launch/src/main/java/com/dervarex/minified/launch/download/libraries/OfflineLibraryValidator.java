@@ -32,14 +32,23 @@ public final class OfflineLibraryValidator {
 
         Path versionJsonPath = cacheRoot.resolve("versions").resolve(version + ".json");
         if (!Files.exists(versionJsonPath)) {
-            throw new OfflineModeNeedsNetworkException("Missing cached version JSON: " + versionJsonPath);
+            throw new OfflineModeNeedsNetworkException(
+                    "Missing cached version JSON: " + versionJsonPath,
+                    OfflineModeNeedsNetworkException.Reason.MISSING_VERSION_MANIFEST,
+                    List.of(versionJsonPath.toString())
+            );
         }
 
         JsonFile versionJson;
         try {
             versionJson = new JsonFile(Files.readString(versionJsonPath));
         } catch (Exception e) {
-            throw new OfflineModeNeedsNetworkException("Failed to read cached version JSON: " + versionJsonPath);
+            throw new OfflineModeNeedsNetworkException(
+                    "Failed to read cached version JSON: " + versionJsonPath,
+                    OfflineModeNeedsNetworkException.Reason.MISSING_VERSION_MANIFEST,
+                    List.of(versionJsonPath.toString()),
+                    e
+            );
         }
 
         JsonArray versionLibraries = versionJson.get("libraries").asArray();
@@ -68,7 +77,9 @@ public final class OfflineLibraryValidator {
 
         if (!problems.isEmpty()) {
             throw new OfflineModeNeedsNetworkException(
-                    "Offline launch blocked:\n- " + String.join("\n- ", problems)
+                    "Offline launch blocked: " + problems.size() + " missing or corrupted library file(s)",
+                    OfflineModeNeedsNetworkException.Reason.MISSING_LIBRARIES,
+                    problems
             );
         }
     }

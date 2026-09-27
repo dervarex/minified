@@ -54,7 +54,8 @@ public class CacheManager {
 
         if (!online) {
             throw new OfflineModeNeedsNetworkException(
-                    "Missing cached " + loaderName + " profile: " + cachePath
+                    "Missing cached " + loaderName + " profile: " + cachePath,
+                    OfflineModeNeedsNetworkException.Reason.MISSING_LOADER_PROFILE
             );
         }
 
@@ -79,7 +80,8 @@ public class CacheManager {
 
         if (!online) {
             throw new OfflineModeNeedsNetworkException(
-                    "Missing cached version JSON: " + cachePath
+                    "Missing cached version JSON: " + cachePath,
+                    OfflineModeNeedsNetworkException.Reason.MISSING_VERSION_MANIFEST
             );
         }
 

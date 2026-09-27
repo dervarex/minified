@@ -23,7 +23,9 @@ public final class AssetOfflineValidator {
         Path versionJsonPath = cacheRoot.resolve("versions").resolve(version + ".json");
         if (!Files.exists(versionJsonPath)) {
             throw new OfflineModeNeedsNetworkException(
-                    "Missing cached version JSON: " + versionJsonPath
+                    "Missing cached version JSON: " + versionJsonPath,
+                    OfflineModeNeedsNetworkException.Reason.MISSING_VERSION_MANIFEST,
+                    List.of(versionJsonPath.toString())
             );
         }
 
@@ -32,7 +34,10 @@ public final class AssetOfflineValidator {
             versionJson = new JsonFile(Files.readString(versionJsonPath));
         } catch (Exception e) {
             throw new OfflineModeNeedsNetworkException(
-                    "Failed to read cached version JSON: " + versionJsonPath
+                    "Failed to read cached version JSON: " + versionJsonPath,
+                    OfflineModeNeedsNetworkException.Reason.MISSING_VERSION_MANIFEST,
+                    List.of(versionJsonPath.toString()),
+                    e
             );
         }
 
@@ -41,7 +46,11 @@ public final class AssetOfflineValidator {
 
         Path indexPath = assetsDir.resolve("indexes").resolve(assetIndexId + ".json");
         if (!Files.exists(indexPath)) {
-            problems.add("Missing cached asset index: " + indexPath);
+            throw new OfflineModeNeedsNetworkException(
+                    "Missing cached asset index: " + indexPath,
+                    OfflineModeNeedsNetworkException.Reason.MISSING_ASSETS,
+                    List.of(indexPath.toString())
+            );
         }
 
         JsonFile indexFile;
@@ -49,7 +58,10 @@ public final class AssetOfflineValidator {
             indexFile = new JsonFile(Files.readString(indexPath));
         } catch (Exception e) {
             throw new OfflineModeNeedsNetworkException(
-                    "Failed to read cached asset index: " + indexPath
+                    "Failed to read cached asset index: " + indexPath,
+                    OfflineModeNeedsNetworkException.Reason.MISSING_ASSETS,
+                    List.of(indexPath.toString()),
+                    e
             );
         }
 
@@ -83,7 +95,9 @@ public final class AssetOfflineValidator {
 
         if (!problems.isEmpty()) {
             throw new OfflineModeNeedsNetworkException(
-                    "Offline launch blocked:\n- " + String.join("\n- ", problems)
+                    "Offline launch blocked: " + problems.size() + " missing/corrupted asset(s)",
+                    OfflineModeNeedsNetworkException.Reason.MISSING_ASSETS,
+                    problems
             );
         }
     }
