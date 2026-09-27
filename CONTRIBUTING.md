@@ -156,7 +156,7 @@ Reformatting or renaming across files that are otherwise untouched will not be m
 
 ### Merging
 
-Pull requests are merged with **squash merges**. All commits of a branch are
+Pull requests or branches are merged with **squash merges**. All commits of a branch are
 combined into a single commit on the main branch, so the main history stays
 readable and free of "fix typo" or a trillion "add" commits.
 
@@ -174,13 +174,15 @@ must explain what happened
 Branches are named after the minified module they focus on - for example, `minified-utils/nbt-parser`.
 This doesn't mean a branch is restricted to that module, you can still commit changes to files in other modules within the same branch.
 
-Additionally, branches may have prefixes instead of the module, though only a handful of prefixes are allowed:
+Additionally, branches may have prefixes instead of the module, here are a few good ones:
 
 | Prefix  | Description                                    | Example              |
 |---------|------------------------------------------------|----------------------|
 | tests/  | JUnit5 Tests for a minified module may be here | tests/api-client     |
 | build/  | Gradle-related changes or other scripts        | build/add-dependency |
 | docs/   | Documentation changes only                     | docs/readme          |
+
+That doesn't mean that you can't do your own prefixes though, something like `github/add-xyz-workflow` is allowed too, it just has to make sense.
 
 ---
 
