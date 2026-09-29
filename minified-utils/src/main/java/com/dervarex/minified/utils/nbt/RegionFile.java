@@ -54,6 +54,9 @@ public class RegionFile implements Closeable {
     private void readHeader() throws IOException {
         raf.seek(0);
         byte[] header = new byte[HEADER_SIZE];
+        if (raf.length() < HEADER_SIZE) {
+            return;
+        }
         raf.readFully(header);
 
         for (int i = 0; i < 1024; i++) {
@@ -84,30 +87,34 @@ public class RegionFile implements Closeable {
 
         long sectorOffset = offsets[idx] * (long) SECTOR_SIZE;
 
-        raf.seek(sectorOffset);
-        int length = raf.readInt();
-        int compressionType = raf.readUnsignedByte();
+        try {
+            raf.seek(sectorOffset);
+            int length = raf.readInt();
+            int compressionType = raf.readUnsignedByte();
 
-        byte[] payload = new byte[length - 1];
-        raf.readFully(payload);
+            byte[] payload = new byte[length - 1];
+            raf.readFully(payload);
 
-        InputStream raw = new ByteArrayInputStream(payload);
-        InputStream decompressed = switch (compressionType) {
-            case COMPRESSION_GZIP -> new GZIPInputStream(raw);
-            case COMPRESSION_ZLIB -> new InflaterInputStream(raw);
-            case COMPRESSION_NONE -> raw;
-            default -> throw new IOException(
-                    "Unsupported compression type " + compressionType
-                            + " (LZ4 is not supported!)");
-        };
+            InputStream raw = new ByteArrayInputStream(payload);
+            InputStream decompressed = switch (compressionType) {
+                case COMPRESSION_GZIP -> new GZIPInputStream(raw);
+                case COMPRESSION_ZLIB -> new InflaterInputStream(raw);
+                case COMPRESSION_NONE -> raw;
+                default -> throw new IOException(
+                        "Unsupported compression type " + compressionType
+                                + " (LZ4 is not supported!)");
+            };
 
-        try (DataInputStream in = new DataInputStream(decompressed)) {
-            int rootType = in.readUnsignedByte();
-            if (rootType != Parser.TAG_Compound) {
-                throw new IOException("Chunk root tag isn't a compound (type " + rootType + ")");
+            try (DataInputStream in = new DataInputStream(decompressed)) {
+                int rootType = in.readUnsignedByte();
+                if (rootType != Parser.TAG_Compound) {
+                    throw new IOException("Chunk root tag isn't a compound (type " + rootType + ")");
+                }
+                in.readUTF(); // root name, empty for chunk data
+                return Parser.readCompoundBody(in);
             }
-            in.readUTF(); // root name, empty for chunk data
-            return Parser.readCompoundBody(in);
+        } catch (EOFException e) {
+            return null;
         }
     }
 
