@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       loaders:
-        description: 'Comm separated loaders (empty = all)'
+        description: 'Comma separated loaders (empty = all)'
         default: ''
       mc_versions:
         description: 'Comma separated MC versions (empty = all)'
