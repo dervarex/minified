@@ -46,6 +46,11 @@ public class LaunchConfiguration {
     private final List<String> extraJvmArgs = new ArrayList<>();
     private Loader loader = null;
 
+    // Headless test options
+    private boolean headless = false;
+    private int headlessTimeoutSeconds = 180;
+    private String headlessMarker = null;
+
     // User
     private String offlineUsername = "Player";
 
@@ -152,6 +157,22 @@ public class LaunchConfiguration {
 
         public Builder loader(Loader loader) {
             config.loader = loader;
+            return this;
+        }
+
+        // Headless test options
+        public Builder headless(boolean headless) {
+            config.headless = headless;
+            return this;
+        }
+
+        public Builder headlessTimeoutSeconds(int headlessTimeoutSeconds) {
+            config.headlessTimeoutSeconds = headlessTimeoutSeconds;
+            return this;
+        }
+
+        public Builder headlessMarker(String headlessMarker) {
+            config.headlessMarker = headlessMarker;
             return this;
         }
 

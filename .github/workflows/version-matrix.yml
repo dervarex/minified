@@ -1,0 +1,183 @@
+name: Version Support Matrix
+
+on:
+  workflow_dispatch:
+    inputs:
+      loaders:
+        description: 'Comm separated loaders (empty = all)'
+        default: ''
+      mc_versions:
+        description: 'Comma separated MC versions (empty = all)'
+        default: ''
+  schedule:
+    - cron: '0 3 * * 0'
+
+concurrency:
+  group: version-matrix
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    name: Build matrix
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.build.outputs.matrix }}
+    steps:
+      - id: build
+        env:
+          INPUT_LOADERS: ${{ github.event.inputs.loaders }}
+          INPUT_MC_VERSIONS: ${{ github.event.inputs.mc_versions }}
+        run: |
+          set -euo pipefail
+          LOADERS="${INPUT_LOADERS:-vanilla,fabric,quilt,forge,neoforge}"
+          MC_VERSIONS="${INPUT_MC_VERSIONS:-1.12.2,1.14.4,1.16.5,1.18.2,1.19.2,1.20.1,1.20.4,1.21.1,1.21.4,26.1,26.1.2,26.2,26.3}"
+
+          PAIRS="
+          vanilla:1.12.2
+          vanilla:1.16.5
+          vanilla:1.18.2
+          vanilla:1.20.1
+          vanilla:1.21.1
+          vanilla:1.21.4
+          vanilla:26.1
+          vanilla:26.1.2
+          vanilla:26.2
+          vanilla:26.3
+          fabric:1.14.4
+          fabric:1.16.5
+          fabric:1.18.2
+          fabric:1.19.2
+          fabric:1.20.1
+          fabric:1.21.1
+          fabric:1.21.4
+          fabric:26.1
+          fabric:26.3
+          quilt:1.14.4
+          quilt:1.16.5
+          quilt:1.18.2
+          quilt:1.19.2
+          quilt:1.20.1
+          quilt:1.21.1
+          quilt:1.21.4
+          quilt:26.1
+          quilt:26.3
+          forge:1.12.2
+          forge:1.16.5
+          forge:1.18.2
+          forge:1.19.2
+          forge:1.20.1
+          forge:1.20.4
+          forge:26.1
+          forge:26.2
+          neoforge:1.20.1
+          neoforge:1.21.1
+          neoforge:1.21.4
+          neoforge:26.1
+          neoforge:26.3
+          "
+
+          ENTRIES=""
+          for pair in $PAIRS; do
+            L="${pair%%:*}"
+            M="${pair##*:}"
+            if echo ",$LOADERS," | grep -q ",$L," && echo ",$MC_VERSIONS," | grep -q ",$M,"; then
+              ENTRY="{\"loader\":\"$L\",\"mc_version\":\"$M\"}"
+              if [ -z "$ENTRIES" ]; then ENTRIES="$ENTRY"; else ENTRIES="$ENTRIES,$ENTRY"; fi
+            fi
+          done
+
+          MATRIX="{\"include\":[$ENTRIES]}"
+          echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
+
+  matrix:
+    name: ${{ matrix.loader }} ${{ matrix.mc_version }}
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+
+      - name: Cache MC artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle
+          key: mc-${{ matrix.loader }}-${{ matrix.mc_version }}-${{ hashFiles('**/*.gradle*') }}
+
+      - name: Install Xvfb
+        run: sudo apt-get update && sudo apt-get install -y xvfb
+
+      - name: Run headless launch
+        env:
+          MINIFIED_TEST_LOADER: ${{ matrix.loader }}
+          MINIFIED_TEST_MC_VERSION: ${{ matrix.mc_version }}
+          MINIFIED_TEST_HEADLESS: "true"
+          MINIFIED_TEST_TIMEOUT_SECONDS: "180"
+        run: |
+          xvfb-run -a --server-args="-screen 0 1280x720x24" \
+          ./gradlew :minified-launch:test \
+            --no-daemon \
+            --tests 'com.dervarex.minified.launch.VersionSupportTest' \
+            -Dgroups=version-matrix \
+            -Dmatrix.loader="$MINIFIED_TEST_LOADER" \
+            -Dmatrix.mcVersion="$MINIFIED_TEST_MC_VERSION" \
+            -Dmatrix.headless="$MINIFIED_TEST_HEADLESS" \
+            -Dmatrix.timeoutSeconds="$MINIFIED_TEST_TIMEOUT_SECONDS" \
+            -Dmatrix.resultFile="$PWD/matrix-results/${{ matrix.loader }}-${{ matrix.mc_version }}.json"
+
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: matrix-result-${{ matrix.loader }}-${{ matrix.mc_version }}
+          path: matrix-results/
+          if-no-files-found: warn
+
+      - name: Clean matrix-results
+        if: always()
+        run: rm -rf matrix-results
+
+  aggregate:
+    name: Aggregate SUPPORTED_VERSIONS.md
+    needs: matrix
+    if: always() && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: master
+
+      - name: Download all matrix results
+        uses: actions/download-artifact@v4
+        with:
+          path: matrix-results
+          pattern: matrix-result-*
+          merge-multiple: true
+
+      - name: Generate SUPPORTED_VERSIONS.md
+        run: node scripts/generate-supported-versions.mjs matrix-results SUPPORTED_VERSIONS.md
+
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add SUPPORTED_VERSIONS.md
+          git diff --cached --quiet && echo "no changes" && exit 0
+          git commit -m "chore: update SUPPORTED_VERSIONS.md [skip ci]"
+          git push
+
+      - name: Clean matrix-results
+        if: always()
+        run: rm -rf matrix-results

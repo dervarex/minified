@@ -39,12 +39,15 @@ import com.dervarex.minified.utils.json.JsonValue;
 import com.dervarex.minified.utils.network.NetworkUtil;
 import org.apiguardian.api.API;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class Launcher {
     /**
@@ -177,12 +180,12 @@ public class Launcher {
             command.add(
                     javaInstallation != null ?
                             javaInstallation.executable()
-                            .toAbsolutePath().toString() :
+                                    .toAbsolutePath().toString() :
                             launchConfig.getCustomJavaExecutable()
-                            .toAbsolutePath().toString());                                                  // java
-            command.addAll(jvmArgs);                                                                        // -Dsomearg -cp ...
+                                    .toAbsolutePath().toString());                                                  // java
+            command.addAll(jvmArgs);                                                                                // -Dsomearg -cp ...
             command.add   (getMainClass(versionJson, loader, loader.mcVersion(), launchConfig, context.isOnline()));// net.minecraft.client.main.Main
-            command.addAll(gameArgs);                                                                       // --username ... --accessToken ...
+            command.addAll(gameArgs);                                                                               // --username ... --accessToken ...
 
             launchProcess(command, context);
 
@@ -272,6 +275,8 @@ public class Launcher {
             LaunchContext context
     ) throws IOException, InterruptedException {
 
+        LaunchConfiguration launchConfig = context.getLaunchConfiguration();
+
         ProcessBuilder processBuilder =
                 new ProcessBuilder(command);
         X11Helper.configureGraphicsEnvironment(
@@ -279,7 +284,11 @@ public class Launcher {
                 context
         );
 
-        processBuilder.inheritIO();
+        if (launchConfig.isHeadless()) {
+            processBuilder.redirectErrorStream(true);
+        } else {
+            processBuilder.inheritIO();
+        }
 
         context.getEventBus().post(new GameStartEvent(
                 context.getUser(),
@@ -289,7 +298,10 @@ public class Launcher {
 
         Process process = processBuilder.start();
 
-        int exitCode = process.waitFor();
+        int exitCode = launchConfig.isHeadless()
+                ? waitForHeadlessMarker(process, launchConfig)
+                : process.waitFor();
+
         context.getEventBus().post(new GameStoppedEvent(exitCode, context.getLaunchConfiguration()));
 //        if (exitCode != 0) {
 //            throw new RuntimeException(
@@ -297,6 +309,88 @@ public class Launcher {
 //            );
 //        } todo: NonZeroExitCodeException or NonZeroExitCodeEvent?
     }
+
+    // todo: move into headless maker class
+
+    private static final String DEFAULT_HEADLESS_MARKERS =
+            "Backend library: LWJGL,Sound engine started,LWJGL Version:,Reloading ResourceManager,ModLauncher running"; // mc logs told me these
+
+    private static int waitForHeadlessMarker(
+            Process process,
+            LaunchConfiguration launchConfig
+    ) throws InterruptedException {
+
+        String markersRaw = launchConfig.getHeadlessMarker() != null
+                ? launchConfig.getHeadlessMarker()
+                : DEFAULT_HEADLESS_MARKERS;
+
+        String[] markers = markersRaw.split(",");
+
+        long timeoutSeconds = launchConfig.getHeadlessTimeoutSeconds();
+        long deadline = System.nanoTime() + timeoutSeconds * 1_000_000_000L;
+
+        final boolean[] matched = { false };
+
+        Thread readerThread = new Thread(() -> {
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    System.out.println(line);
+                    if (!matched[0]) {
+                        for (String marker : markers) {
+                            if (line.contains(marker.trim())) {
+                                matched[0] = true;
+                                try {
+                                    Thread.sleep(1500L);
+                                } catch (InterruptedException ignored) {
+                                    Thread.currentThread().interrupt();
+                                }
+                                terminateProcess(process);
+                                return;
+                            }
+                        }
+                    }
+                }
+            } catch (IOException ignored) {
+            }
+        }, "minified-headless-log-reader");
+        readerThread.setDaemon(true);
+        readerThread.start();
+
+        while (process.isAlive()) {
+            if (System.nanoTime() > deadline) {
+                System.err.println("[minified-headless] timeout after "
+                        + timeoutSeconds + "s, killing process");
+                process.destroyForcibly();
+                process.waitFor();
+                return 124;
+            }
+            if (process.waitFor(500, TimeUnit.MILLISECONDS)) {
+                break;
+            }
+        }
+
+        int exitCode = process.exitValue();
+        if (matched[0] && exitCode != 0) {
+            return 0;
+        }
+        return exitCode;
+    }
+
+    private static void terminateProcess(Process process) {
+        process.destroy();
+        try {
+            if (!process.waitFor(5, TimeUnit.SECONDS)) {
+                System.err.println("[minified-headless] graceful stop timed out, forcing kill");
+                process.destroyForcibly();
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            process.destroyForcibly();
+        }
+    }
+
     @API(status = API.Status.INTERNAL, consumers = {"com.dervarex.minified.launch.*"})
     public interface ProfileSupplier {
         JsonObject get();

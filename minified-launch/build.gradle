@@ -46,7 +46,31 @@ dependencies {
 
 test {
     useJUnitPlatform {
-        excludeTags("manual")
+        def include = System.getProperty('groups')
+        def exclude = System.getProperty('excludeGroups')
+        if (include) {
+            includeTags(*include.split(','))
+        } else {
+            excludeTags('manual')
+        }
+        if (exclude) {
+            excludeTags(*exclude.split(','))
+        }
+    }
+
+    [
+            'matrix.loader',
+            'matrix.loaderVersion',
+            'matrix.mcVersion',
+            'matrix.headless',
+            'matrix.timeoutSeconds',
+            'matrix.marker',
+            'matrix.resultFile'
+    ].each { key ->
+        def value = System.getProperty(key)
+        if (value != null) {
+            systemProperty key, value
+        }
     }
 
     failOnNoDiscoveredTests = false

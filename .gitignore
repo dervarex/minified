@@ -8,3 +8,6 @@
 # gradle and build directories
 .gradle/
 **/build/
+
+# test matrix results
+matrix-results/
