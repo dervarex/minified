@@ -1,7 +1,9 @@
 name: CI
 
 on:
-  push: # yes, on every damn push
+  push:
+    branches:
+      - master
   workflow_dispatch:
 
 concurrency:
