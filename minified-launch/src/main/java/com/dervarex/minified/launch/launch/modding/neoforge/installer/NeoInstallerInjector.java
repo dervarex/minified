@@ -60,7 +60,7 @@ public class NeoInstallerInjector {
     ) {
         context.getEventBus().post(new InstallNeoforgeEvent(InstallNeoforgeEvent.Stage.DOWNLOADING_INSTALLER, context.getLaunchConfiguration().getLoader().mcVersion(), context.getLaunchConfiguration().getLoader().loaderVersion()));
         NeoVersionFetcher versionFetcher = new NeoVersionFetcher();
-        String neoForgeVersion = versionFetcher.resolveLoaderVersion(context.getLaunchConfiguration().getLoader().mcVersion());
+        String neoForgeVersion = versionFetcher.resolveLoaderVersion(context.getLaunchConfiguration().getLoader().loaderVersion());
         String url = NeoInstallerFetcher.getInstallerLink(neoForgeVersion);
 
         HttpClient httpClient = HttpClient.newBuilder()

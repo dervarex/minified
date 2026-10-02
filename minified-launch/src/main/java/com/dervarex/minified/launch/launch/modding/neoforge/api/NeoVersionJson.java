@@ -43,6 +43,13 @@ public final class NeoVersionJson {
     private static List<Path> candidatePaths(Path versionsDir, String loaderVersion) {
         List<Path> paths = new ArrayList<>();
 
+        if (NeoVersionFetcher.isLegacyVersion(loaderVersion) && loaderVersion.contains("-")) {
+            // the legacy 1.20.1 installer creates forge style ids, e.g. 1.20.1-forge-47.1.106
+            String[] parts = loaderVersion.split("-", 2);
+            String legacyId = parts[0] + "-forge-" + parts[1];
+            paths.add(versionsDir.resolve(legacyId).resolve(legacyId + ".json"));
+        }
+
         paths.add(
                 versionsDir
                         .resolve(loaderVersion)

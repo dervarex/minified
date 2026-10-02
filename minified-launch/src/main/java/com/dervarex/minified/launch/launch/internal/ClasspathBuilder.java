@@ -4,13 +4,13 @@ import com.dervarex.minified.launch.exceptions.libraries.FailedToLoadLibrariesEx
 import com.dervarex.minified.launch.exceptions.loader.UnexpectedLoaderException;
 import com.dervarex.minified.launch.launch.LaunchConfiguration;
 import com.dervarex.minified.launch.launch.modding.fabric.FabricLoader;
-import com.dervarex.minified.launch.launch.modding.fabric.FabricLoaderFetcher;
+import com.dervarex.minified.launch.launch.modding.fabric.FabricProfileJsonLoader;
 import com.dervarex.minified.launch.launch.modding.forge.ForgeLoader;
+import com.dervarex.minified.launch.launch.modding.forge.api.ForgeVersionJson;
 import com.dervarex.minified.launch.launch.modding.neoforge.NeoforgeLoader;
-import com.dervarex.minified.launch.launch.modding.neoforge.api.NeoVersionFetcher;
 import com.dervarex.minified.launch.launch.modding.neoforge.api.NeoVersionJson;
 import com.dervarex.minified.launch.launch.modding.quilt.QuiltLoader;
-import com.dervarex.minified.launch.launch.modding.quilt.QuiltLoaderFetcher;
+import com.dervarex.minified.launch.launch.modding.quilt.QuiltProfileJsonLoader;
 import com.dervarex.minified.launch.launch.modding.vanilla.VanillaLoader;
 import com.dervarex.minified.utils.json.JsonArray;
 import com.dervarex.minified.utils.json.JsonFile;
@@ -22,26 +22,24 @@ import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @API(status = API.Status.INTERNAL, consumers = {"com.dervarex.minified.launch.*"})
 public class ClasspathBuilder {
-    public static String buildClasspath(JsonFile versionJson, LaunchConfiguration config) {
+    public static String buildClasspath(JsonFile versionJson, LaunchConfiguration config, boolean online) {
         String separator = System.getProperty("os.name").toLowerCase().contains("win") ? ";" : ":";
 
-        ArrayList<String> classpath = new ArrayList<>();
+        // exact duplicates (e.g. commons-lang3 in both the loader and the vanilla profile) crash NeoForge :(
+        Set<String> classpath = new LinkedHashSet<>();
+        Set<String> loaderArtifacts = new HashSet<>();
 
-        classpath.add(
-                config.getJarFile()
-                        .toAbsolutePath()
-                        .toString()
-        );
+        boolean includeClientJar = true;
 
-        JsonArray libraries = versionJson.get("libraries").asArray();
-        for (JsonValue value : libraries) {
-            addLibrary(value.asObject(), classpath, config);
-        }
-
+        // like the official launcher we do loader libs before vanilla libs
+        // Loaders ship newer versions of some vanilla libraries (forge 1.16.5: log4j 2.15.0 instead of 2.8.1),
+        // an older one would be missing stuff
         switch (config.getLoader()) {
             case VanillaLoader ignored:
                 break;
@@ -49,13 +47,16 @@ public class ClasspathBuilder {
             case FabricLoader ignored:
                 try {
                     JsonObject fabricProfile =
-                            FabricLoaderFetcher.getLatestProfile(
-                                    versionJson.get("id").asString()
+                            FabricProfileJsonLoader.loadFabricProfileJson(
+                                    versionJson.get("id").asString(),
+                                    config,
+                                    online
                             );
 
                     addModLoaderLibraries(
                             fabricProfile.get("libraries").asArray(),
                             classpath,
+                            loaderArtifacts,
                             config
                     );
                 } catch (Exception e) {
@@ -70,13 +71,16 @@ public class ClasspathBuilder {
             case QuiltLoader ignored:
                 try {
                     JsonObject quiltProfile =
-                            QuiltLoaderFetcher.getLatestProfile(
-                                    versionJson.get("id").asString()
+                            QuiltProfileJsonLoader.loadQuiltProfileJson(
+                                    versionJson.get("id").asString(),
+                                    config,
+                                    online
                             );
 
                     addModLoaderLibraries(
                             quiltProfile.get("libraries").asArray(),
                             classpath,
+                            loaderArtifacts,
                             config
                     );
                 } catch (Exception e) {
@@ -87,19 +91,22 @@ public class ClasspathBuilder {
                     );
                 }
                 break;
-            case NeoforgeLoader ignored:
+            case NeoforgeLoader neoforgeLoader:
                 try {
                     JsonObject neoForgeProfile =
                             NeoVersionJson.getVersionJson(
                                     config.getJarFile().getParent(),
-                                    new NeoVersionFetcher().getLatest(versionJson.get("id").asString())
+                                    neoforgeLoader.loaderVersion()
                             ).asObject();
 
                     addModLoaderLibraries(
                             neoForgeProfile.get("libraries").asArray(),
                             classpath,
+                            loaderArtifacts,
                             config
                     );
+
+                    includeClientJar = !ignoresVanillaJar(neoForgeProfile);
                 } catch (Exception e) {
                     throw new FailedToLoadLibrariesException(
                             "Failed to load NeoForge libraries",
@@ -108,10 +115,52 @@ public class ClasspathBuilder {
                     );
                 }
                 break;
-            case ForgeLoader ignored:
+            case ForgeLoader forgeLoader:
+                try {
+                    JsonObject forgeProfile =
+                            ForgeVersionJson.getVersionJson(
+                                    config.getJarFile().getParent(),
+                                    forgeLoader.loaderVersion()
+                            ).asObject();
+
+                    addModLoaderLibraries(
+                            forgeProfile.get("libraries").asArray(),
+                            classpath,
+                            loaderArtifacts,
+                            config
+                    );
+
+                    includeClientJar = !ignoresVanillaJar(forgeProfile);
+                } catch (Exception e) {
+                    throw new FailedToLoadLibrariesException(
+                            "Failed to load Forge libraries",
+                            config.getLoader(),
+                            e
+                    );
+                }
                 break;
             default:
                 throw new UnexpectedLoaderException("Unexpected loader: " + config.getLoader());
+        }
+
+        JsonArray libraries = versionJson.get("libraries").asArray();
+        for (JsonValue value : libraries) {
+            JsonObject library = value.asObject();
+            // the loader's version of a library replaces the vanilla one (neoforge 21.4: asm 9.8 instead of 9.6)
+            if (loaderArtifacts.contains(artifactKey(library))) {
+                continue;
+            }
+            addLibrary(library, classpath, config);
+        }
+
+        // like the official launcher, the game jar comes after the libs, loaders that bring their own patched
+        // mc jar as a library (forge 1.21+) use the first one they find, which has to be theirs
+        if (includeClientJar) {
+            classpath.add(
+                    config.getJarFile()
+                            .toAbsolutePath()
+                            .toString()
+            );
         }
 
         return String.join(
@@ -120,9 +169,56 @@ public class ClasspathBuilder {
         );
     }
 
+    /**
+     * BootstrapLauncher (forge 1.17+, neoforge) turns every classpath entry into a module, unless its file name starts
+     * with {@code -DignoreList}. The loader profiles exclude the vanilla jar using {@code ${version_name}.jar},
+     * which does not match our jar file name <br>
+     * If we don't do this, it nukes itself
+     *
+     * @param loaderProfile the version JSON of the mod loader
+     * @return true if the loader does not want the vanilla jar on the classpath
+     */
+    private static boolean ignoresVanillaJar(JsonObject loaderProfile) {
+        JsonValue argumentsValue = loaderProfile.get("arguments");
+        if (argumentsValue == null || argumentsValue.asObject().get("jvm") == null) {
+            return false;
+        }
+
+        for (JsonValue argument : argumentsValue.asObject().get("jvm").asArray()) {
+            if (argument.isString()
+                    && argument.asString().startsWith("-DignoreList=")
+                    && argument.asString().contains("${version_name}.jar")) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param library a library of a version JSON
+     * @return group, artifact and classifier without the version, e.g. {@code org.ow2.asm:asm} for
+     * {@code org.ow2.asm:asm:9.6}, or null if the library has no name
+     */
+    private static String artifactKey(JsonObject library) {
+        JsonValue nameValue = library.get("name");
+        if (nameValue == null) {
+            return null;
+        }
+
+        String[] parts = nameValue.asString().split("@")[0].split(":");
+        if (parts.length < 3) {
+            return null;
+        }
+
+        return parts.length > 3
+                ? parts[0] + ":" + parts[1] + ":" + parts[3]
+                : parts[0] + ":" + parts[1];
+    }
+
     private static void addLibrary(
             JsonObject library,
-            ArrayList<String> classpath,
+            Set<String> classpath,
             LaunchConfiguration config
     ) {
         if (!isAllowed(library)) {
@@ -195,12 +291,18 @@ public class ClasspathBuilder {
 
     private static void addModLoaderLibraries(
             JsonArray libraries,
-            ArrayList<String> classpath,
+            Set<String> classpath,
+            Set<String> loaderArtifacts,
             LaunchConfiguration config
     ) {
         for (JsonValue value : libraries) {
+            JsonObject library = value.asObject();
+            String artifactKey = artifactKey(library);
+            if (artifactKey != null && isAllowed(library)) {
+                loaderArtifacts.add(artifactKey);
+            }
             addLibrary(
-                    value.asObject(),
+                    library,
                     classpath,
                     config
             );

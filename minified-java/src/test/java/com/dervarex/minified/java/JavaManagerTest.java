@@ -134,6 +134,24 @@ class JavaManagerTest {
     }
 
     @Test
+    @DisplayName("ensureExactJavaVersion returns the current JVM when the version matches exactly")
+    void ensureExactJavaVersion_returnsCurrentJvmWhenMatching() throws Exception {
+        int currentMajor = JavaPlatform.majorVersion();
+
+        JavaInstallation result = JavaManager.ensureExactJavaVersion(currentMajor);
+
+        assertEquals(currentMajor, result.majorVersion());
+        assertFalse(result.managed());
+    }
+
+    @Test
+    @DisplayName("ensureExactJavaVersion returns the current JVM for an invalid version")
+    void ensureExactJavaVersion_returnsCurrentJvmForInvalidVersion() throws Exception {
+        JavaInstallation result = JavaManager.ensureExactJavaVersion(-1);
+        assertEquals(JavaPlatform.majorVersion(), result.majorVersion());
+    }
+
+    @Test
     @DisplayName("ensureJavaExecutable returns the current JVM executable when sufficient")
     void ensureJavaExecutable_returnsCurrentJvmExecutableWhenSufficient() throws Exception {
         int currentMajor = JavaPlatform.majorVersion();

@@ -6,6 +6,7 @@ import com.dervarex.minified.utils.json.JsonFile;
 import lombok.Getter;
 import org.apiguardian.api.API;
 
+import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
@@ -140,13 +141,13 @@ public final class LaunchOptions {
                         )
 
                         .setVariable(
+                                "classpath_separator",
+                                File.pathSeparator
+                        )
+
+                        .setVariable(
                                 "natives_directory",
-                                launchConfig.getNativesDirectory() != null ?
-                                        launchConfig.getNativesDirectory().toAbsolutePath().toString() :
-                                        launchConfig.getJarFile().getParent()
-                                        .resolve("natives")
-                                        .toAbsolutePath()
-                                        .toString()
+                                launchConfig.resolveNativesDirectory().toString()
                         )
 //                        .setVariable(
 //                                "xuid",

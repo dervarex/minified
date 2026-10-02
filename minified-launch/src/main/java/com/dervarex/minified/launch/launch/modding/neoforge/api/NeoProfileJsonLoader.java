@@ -18,12 +18,13 @@ public class NeoProfileJsonLoader {
         return CacheManager.loadProfileJson(
                 version,
                 "neoforge",
+                launchConfig.getLoader().loaderVersion(),
                 online,
                 () -> {
                     try {
                         Path parent = launchConfig.getJarFile().getParent().toAbsolutePath();
-                        String latest = new NeoVersionFetcher().getLatest(version);
-                        JsonFile neoVersionJson = NeoVersionJson.getVersionJson(parent, latest);
+                        // the version the installer installed
+                        JsonFile neoVersionJson = NeoVersionJson.getVersionJson(parent, launchConfig.getLoader().loaderVersion());
                         return neoVersionJson.asObject();
                     } catch (Exception e) {
                         throw new RuntimeException(e);

@@ -23,6 +23,12 @@ public final class ApiEndpoints {
     // NeoForge
     public static final String NEOFORGE_INSTALLER_BASE_URL = "https://maven.neoforged.net/releases/net/neoforged/neoforge/";
     public static final String NEOFORGE_MAVEN_METADATA_URL = "https://maven.neoforged.net/releases/net/neoforged/neoforge/maven-metadata.xml";
+    // NeoForge for 1.20.1 was published as net.neoforged:forge, with versions like 1.20.1-47.1.106
+    public static final String NEOFORGE_LEGACY_INSTALLER_BASE_URL = "https://maven.neoforged.net/releases/net/neoforged/forge/";
+    public static final String NEOFORGE_LEGACY_MAVEN_METADATA_URL = "https://maven.neoforged.net/releases/net/neoforged/forge/maven-metadata.xml";
+    // fallback when the CDN serves us shit
+    public static final String NEOFORGE_VERSIONS_API_URL = "https://maven.neoforged.net/api/maven/versions/releases/net/neoforged/neoforge";
+    public static final String NEOFORGE_LEGACY_VERSIONS_API_URL = "https://maven.neoforged.net/api/maven/versions/releases/net/neoforged/forge";
 
     // Java
     /**

@@ -1,5 +1,7 @@
 package com.dervarex.minified.launch;
 
+import com.dervarex.minified.launch.events.launch.GameStoppedEvent;
+import com.dervarex.minified.launch.launch.LaunchConfiguration;
 import com.dervarex.minified.launch.launch.Launcher;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -9,6 +11,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -29,18 +32,40 @@ class VersionSupportTest {
         String status;
         String message;
         try {
-            Launcher.launchMinecraft(null, TestEnvironment.config(tempDir));
-            status = "pass";
-            message = "Reached main menu";
+            LaunchConfiguration config = TestEnvironment.config(tempDir);
+            AtomicInteger exitCode = new AtomicInteger(Integer.MIN_VALUE);
+            config.getEventBus().subscribe(GameStoppedEvent.class, event -> exitCode.set(event.exitCode()));
+
+            Launcher.launchMinecraft(null, config);
+
+            if (exitCode.get() == 0) {
+                status = "pass";
+                message = "Reached main menu";
+            } else {
+                status = "fail";
+                message = "Game did not reach the main menu (exit code " + exitCode.get() + ")";
+            }
         } catch (Throwable t) {
+            t.printStackTrace();
             status = "fail";
-            message = t.getClass().getSimpleName()
-                    + (t.getMessage() != null ? ": " + t.getMessage() : "");
+            message = describe(t);
+            Throwable root = t;
+            while (root.getCause() != null && root.getCause() != root) {
+                root = root.getCause();
+            }
+            if (root != t) {
+                message += " (caused by " + describe(root) + ")";
+            }
         }
 
         writeResult(resultFile, loader, mcVersion, status, message);
 
         assertEquals("pass", status, message);
+    }
+
+    private static String describe(Throwable t) {
+        return t.getClass().getSimpleName()
+                + (t.getMessage() != null ? ": " + t.getMessage() : "");
     }
 
     private Path resolveResultFile(String loader, String mcVersion) throws IOException {
@@ -73,7 +98,8 @@ class VersionSupportTest {
                 loader,
                 mcVersion,
                 status,
-                message.replace("\\", "\\\\").replace("\"", "\\\""),
+                message.replace("\\", "\\\\").replace("\"", "\\\"")
+                        .replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t"),
                 Instant.now().toString()
         );
         Files.writeString(file, json);

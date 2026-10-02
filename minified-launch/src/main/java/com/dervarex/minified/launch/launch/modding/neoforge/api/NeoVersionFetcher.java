@@ -1,8 +1,11 @@
 package com.dervarex.minified.launch.launch.modding.neoforge.api;
 
+import com.dervarex.minified.launch.exceptions.loader.NoLoadersFoundException;
 import com.dervarex.minified.launch.exceptions.loader.neoforge.FailedToReadMetadataException;
 import com.dervarex.minified.launch.exceptions.loader.neoforge.MalformedMetadataException;
 import com.dervarex.minified.utils.ApiEndpoints;
+import com.dervarex.minified.utils.json.JsonParser;
+import com.dervarex.minified.utils.json.JsonValue;
 import org.apiguardian.api.API;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
@@ -53,8 +56,10 @@ public final class NeoVersionFetcher {
             return matchingBranch.getFirst();
         }
 
-        return allVersions.stream().max(VERSION_ORDER)
-                .orElseThrow(() -> new IllegalStateException("No NeoForge versions found in metadata"));
+        throw new NoLoadersFoundException(
+                "No NeoForge version found for " + versionOrMinecraftVersion,
+                "NEOFORGE" // todo replace that uppercase string with an enum
+        );
     }
 
     @API(status = API.Status.STABLE)
@@ -70,24 +75,70 @@ public final class NeoVersionFetcher {
     }
 
     private List<String> fetchVersions() {
-        try {
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(ApiEndpoints.NEOFORGE_MAVEN_METADATA_URL))
-                    .timeout(Duration.ofSeconds(15))
-                    .GET()
-                    .build();
+        List<String> versions = new ArrayList<>(
+                fetchVersions(ApiEndpoints.NEOFORGE_MAVEN_METADATA_URL, ApiEndpoints.NEOFORGE_VERSIONS_API_URL)
+        );
+        versions.addAll(
+                fetchVersions(ApiEndpoints.NEOFORGE_LEGACY_MAVEN_METADATA_URL, ApiEndpoints.NEOFORGE_LEGACY_VERSIONS_API_URL)
+        );
+        return List.copyOf(versions);
+    }
 
-            HttpResponse<String> response = HTTP.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() != 200) {
-                throw new FailedToReadMetadataException("Failed to fetch NeoForge metadata: HTTP " + response.statusCode());
+    private List<String> fetchVersions(String metadataUrl, String apiUrl) {
+        try {
+            return fetchVersionsFromMetadata(metadataUrl);
+        } catch (FailedToReadMetadataException metadataException) {
+            // the NeoForge CDN sometimes for some reason serves a cached 404 for the metadata file for about a minute
+            try {
+                return fetchVersionsFromApi(apiUrl);
+            } catch (FailedToReadMetadataException apiException) {
+                apiException.addSuppressed(metadataException);
+                throw apiException;
             }
+        }
+    }
+
+    private List<String> fetchVersionsFromApi(String apiUrl) {
+        try {
+            JsonValue versionsValue = JsonParser.parse(fetch(apiUrl)).asObject().get("versions");
+            if (versionsValue == null || versionsValue.asArray().size() == 0) {
+                throw new MalformedMetadataException("NeoForge version API did not return any versions: " + apiUrl);
+            }
+
+            List<String> versions = new ArrayList<>();
+            for (JsonValue version : versionsValue.asArray()) {
+                versions.add(version.asString());
+            }
+            return versions;
+        } catch (Exception e) {
+            throw new FailedToReadMetadataException("Failed to read NeoForge versions from " + apiUrl, e);
+        }
+    }
+
+    private static String fetch(String url) throws Exception {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .timeout(Duration.ofSeconds(15))
+                .GET()
+                .build();
+
+        HttpResponse<String> response = HTTP.send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() != 200) {
+            throw new FailedToReadMetadataException("Failed to fetch " + url + ": HTTP " + response.statusCode());
+        }
+        return response.body();
+    }
+
+    private List<String> fetchVersionsFromMetadata(String metadataUrl) {
+        try {
+            String body = fetch(metadataUrl);
 
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             factory.setNamespaceAware(false);
             factory.setExpandEntityReferences(false);
             factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
 
-            Document document = factory.newDocumentBuilder().parse(new InputSource(new StringReader(response.body())));
+            Document document = factory.newDocumentBuilder().parse(new InputSource(new StringReader(body)));
             NodeList nodes = document.getElementsByTagName("version");
             List<String> versions = new ArrayList<>(nodes.getLength());
             for (int i = 0; i < nodes.getLength(); i++) {
@@ -97,18 +148,47 @@ public final class NeoVersionFetcher {
                 }
             }
             if (versions.isEmpty()) {
-                throw new MalformedMetadataException("NeoForge metadata did not contain any versions");
+                throw new MalformedMetadataException("NeoForge metadata did not contain any versions: " + metadataUrl);
             }
-            return List.copyOf(versions);
+            return versions;
         } catch (Exception e) {
-            throw new FailedToReadMetadataException("Failed to read NeoForge metadata", e);
+            throw new FailedToReadMetadataException("Failed to read NeoForge metadata from " + metadataUrl, e);
         }
     }
 
     private static boolean matchesMinecraftBranch(String neoForgeVersion, String minecraftVersion) {
-        return neoForgeVersion.equals(minecraftVersion)
-                || neoForgeVersion.startsWith(minecraftVersion + ".")
-                || neoForgeVersion.startsWith(minecraftVersion + "-");
+        return neoForgeVersion.startsWith(minecraftVersion + "-") // legacy 1.20.1 versions, e.g. 1.20.1-47.1.106
+                || neoForgeVersion.startsWith(toNeoForgeVersionPrefix(minecraftVersion));
+    }
+
+    /**
+     * NeoForge versions encode the Minecraft version without the leading "1.", e.g. 1.21.1 -> 21.1.x and 1.21 -> 21.0.x.
+     * Since Minecraft 26.1 they contain the full version, e.g. 26.1 -> 26.1.0.x and 26.1.2 -> 26.1.2.x.
+     *
+     * @param minecraftVersion the Minecraft version, for example {@code 1.21.1}
+     * @return the prefix all NeoForge versions for that Minecraft version start with, for example {@code 21.1.}
+     */
+    @API(status = API.Status.INTERNAL, consumers = {"com.dervarex.minified.launch.*"})
+    public static String toNeoForgeVersionPrefix(String minecraftVersion) {
+        List<String> parts = new ArrayList<>(List.of(minecraftVersion.split("\\.")));
+        int length = 3;
+        if (parts.getFirst().equals("1")) {
+            parts.removeFirst();
+            length = 2;
+        }
+        while (parts.size() < length) {
+            parts.add("0");
+        }
+        return String.join(".", parts) + ".";
+    }
+
+    /**
+     * @param neoForgeVersion a NeoForge version
+     * @return true if the version was published as {@code net.neoforged:forge} (only used for Minecraft 1.20.1)
+     */
+    @API(status = API.Status.INTERNAL, consumers = {"com.dervarex.minified.launch.*"})
+    public static boolean isLegacyVersion(String neoForgeVersion) {
+        return neoForgeVersion.startsWith("1.");
     }
 
     private static final Comparator<String> VERSION_ORDER = NeoVersionFetcher::compareVersions;

@@ -18,12 +18,13 @@ public class ForgeProfileJsonLoader {
         return CacheManager.loadProfileJson(
                 version,
                 "forge",
+                launchConfig.getLoader().loaderVersion(),
                 online,
                 () -> {
                     try {
                         Path parent = launchConfig.getJarFile().getParent().toAbsolutePath();
-                        String latest = new ForgeVersionFetcher().getLatest(version);
-                        JsonFile forgeVersionJson = ForgeVersionJson.getVersionJson(parent, latest);
+                        // the version the installer installed
+                        JsonFile forgeVersionJson = ForgeVersionJson.getVersionJson(parent, launchConfig.getLoader().loaderVersion());
                         return forgeVersionJson.asObject();
                     } catch (Exception e) {
                         throw new RuntimeException(e);

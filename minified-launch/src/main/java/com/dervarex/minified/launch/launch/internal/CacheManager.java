@@ -24,11 +24,12 @@ public class CacheManager {
         Files.createDirectories(path.getParent());
         Files.writeString(path, content);
     }
-    private static Path cachedProfileJsonPath(String loaderName, String version) {
+    private static Path cachedProfileJsonPath(String loaderName, String version, String loaderVersion) {
         return CacheManager.cacheRoot()
                 .resolve("profiles")
                 .resolve(loaderName)
-                .resolve(version + ".json");
+                .resolve(version)
+                .resolve(loaderVersion + ".json");
     }
 
     private static Path cachedVersionJsonPath(String version) {
@@ -36,13 +37,17 @@ public class CacheManager {
                 .resolve("versions")
                 .resolve(version + ".json");
     }
+    /**
+     * Loads a loader profile from the cache or from the {@link com.dervarex.minified.launch.launch.Launcher.ProfileSupplier} if it ain't cached yet
+     */
     public static JsonObject loadProfileJson(
             String version,
             String loaderName,
+            String loaderVersion,
             boolean online,
             Launcher.ProfileSupplier supplier
     ) {
-        Path cachePath = cachedProfileJsonPath(loaderName, version);
+        Path cachePath = cachedProfileJsonPath(loaderName, version, loaderVersion);
 
         if (Files.exists(cachePath)) {
             try {

@@ -80,6 +80,8 @@ public class DownloadHelper {
         return downloadInternal(url, path, expectedSha1, client, progressConsumer);
     }
 
+    private static final int MAX_ATTEMPTS = 3;
+
     private static boolean downloadInternal(
             String url,
             Path path,
@@ -87,6 +89,33 @@ public class DownloadHelper {
             HttpClient client,
             LongConsumer progressConsumer
     ) {
+        // network errors like "Connection reset" are retried, we don't want one to cancel the launch just because some network reset happened
+        for (int attempt = 1; ; attempt++) {
+            try {
+                return downloadOnce(url, path, expectedSha1, client, progressConsumer);
+            } catch (IOException e) {
+                if (attempt >= MAX_ATTEMPTS) {
+                    throw new RuntimeException("Failed to download " + path, e);
+                }
+                try {
+                    Thread.sleep(1000L * attempt);
+                } catch (InterruptedException interrupted) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException("Interrupted while downloading " + path, interrupted);
+                }
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to download " + path, e);
+            }
+        }
+    }
+
+    private static boolean downloadOnce(
+            String url,
+            Path path,
+            String expectedSha1,
+            HttpClient client,
+            LongConsumer progressConsumer
+    ) throws Exception {
         Path tempFile = Path.of(path + ".tmp");
 
         try {
@@ -159,10 +188,7 @@ public class DownloadHelper {
             } catch (Exception ignored) {
             }
 
-            throw new RuntimeException(
-                    "Failed to download " + path,
-                    e
-            );
+            throw e;
         }
     }
 

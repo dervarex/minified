@@ -65,6 +65,18 @@ public class LaunchConfiguration {
         return Collections.unmodifiableList(extraJvmArgs);
     }
 
+    /**
+     * Resolves the directory native libraries are extracted to and loaded from
+     *
+     * @return the configured natives directory, or {@code <jarFile's parent directory>/natives} if none was set
+     */
+    public Path resolveNativesDirectory() {
+        if (nativesDirectory != null) {
+            return nativesDirectory.toAbsolutePath();
+        }
+        return jarFile.toAbsolutePath().getParent().resolve("natives");
+    }
+
     public static class Builder {
 
         private final LaunchConfiguration config;

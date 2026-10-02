@@ -48,6 +48,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class Launcher {
     /**
@@ -103,10 +105,10 @@ public class Launcher {
 
             JavaInstallation javaInstallation;
             if (launchConfig.getCustomJavaExecutable() == null) {
-                javaInstallation =
-                        JavaManager.ensureJavaVersion(
-                                JavaManager.getRequiredJavaVersion(versionJson)
-                        );
+                int requiredJavaVersion = JavaManager.getRequiredJavaVersion(versionJson);
+                javaInstallation = requiredJavaVersion == 8
+                        ? JavaManager.ensureExactJavaVersion(requiredJavaVersion)
+                        : JavaManager.ensureJavaVersion(requiredJavaVersion);
             } else {
                 javaInstallation = null;
             }
@@ -119,7 +121,8 @@ public class Launcher {
             String classpath =
                     ClasspathBuilder.buildClasspath(
                             versionJson,
-                            launchConfig
+                            launchConfig,
+                            context.isOnline()
                     );
             if (loader instanceof CustomLoader customLoader && customLoader.customClasspathEntries() != null) {
                 StringBuilder cpBuilder = new StringBuilder(classpath);
@@ -150,11 +153,7 @@ public class Launcher {
                             loader.mcVersion(),
                             context.isOnline()
                     ); // includes the classpath
-            Path nativesDir =
-                    launchConfig.getLibrariesDirectory()
-                            .toAbsolutePath()
-                            .getParent()
-                            .resolve("natives");
+            Path nativesDir = launchConfig.resolveNativesDirectory();
 
             jvmArgs.add(
                     "-Djava.library.path=" + nativesDir
@@ -211,7 +210,10 @@ public class Launcher {
 
         libDownloader.downloadLibraries(
                 launchConfig.getLoader(),
-                launchConfig.getLibrariesDirectory()
+                launchConfig.getLibrariesDirectory(),
+                launchConfig.resolveNativesDirectory(),
+                progress -> {},
+                null
         );
 
         assetDownloader.downloadAssets(
@@ -252,8 +254,8 @@ public class Launcher {
 
         JsonValue mainClassValue = switch (loader) {
             case VanillaLoader ignored -> versionJson.get("mainClass");
-            case FabricLoader ignored -> FabricProfileJsonLoader.loadFabricProfileJson(version, online).get("mainClass");
-            case QuiltLoader ignored -> QuiltProfileJsonLoader.loadQuiltProfileJson(version, online).get("mainClass");
+            case FabricLoader ignored -> FabricProfileJsonLoader.loadFabricProfileJson(version, launchConfig, online).get("mainClass");
+            case QuiltLoader ignored -> QuiltProfileJsonLoader.loadQuiltProfileJson(version, launchConfig, online).get("mainClass");
             case ForgeLoader ignored -> ForgeProfileJsonLoader.loadForgeProfileJson(version, launchConfig, online).get("mainClass");
             case NeoforgeLoader ignored -> NeoProfileJsonLoader.loadNeoforgeProfileJson(version, launchConfig, online).get("mainClass");
             default -> throw new UnexpectedLoaderException("Unexpected loader: " + loader);
@@ -312,9 +314,23 @@ public class Launcher {
 
     // todo: move into headless maker class
 
+    // only logged once the game window exists, stuff like "Backend library: LWJGL" also show up in crash reports
     private static final String DEFAULT_HEADLESS_MARKERS =
-            "Backend library: LWJGL,Sound engine started,LWJGL Version:,Reloading ResourceManager,ModLauncher running"; // mc logs told me these
+            "Reloading ResourceManager,Sound engine started"; // mc logs told me these
 
+    private static final List<String> HEADLESS_CRASH_MARKERS = List.of(
+            "---- Minecraft Crash Report ----",
+            "#@!@# Game crashed!",
+            "Exception in thread \"main\""
+    );
+
+    private static final long HEADLESS_GRACE_PERIOD_NANOS = TimeUnit.SECONDS.toNanos(3);
+
+    /**
+     * Waits until the game logs one of the headless markers, then stops it
+     *
+     * @return 0 if a marker was reached without the game crashing, 124 on timeout, otherwise a non-zero exit code
+     */
     private static int waitForHeadlessMarker(
             Process process,
             LaunchConfiguration launchConfig
@@ -329,7 +345,8 @@ public class Launcher {
         long timeoutSeconds = launchConfig.getHeadlessTimeoutSeconds();
         long deadline = System.nanoTime() + timeoutSeconds * 1_000_000_000L;
 
-        final boolean[] matched = { false };
+        AtomicLong matchedAt = new AtomicLong(-1);
+        AtomicBoolean crashed = new AtomicBoolean(false);
 
         Thread readerThread = new Thread(() -> {
             try (BufferedReader reader = new BufferedReader(
@@ -337,17 +354,16 @@ public class Launcher {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     System.out.println(line);
-                    if (!matched[0]) {
+                    for (String crashMarker : HEADLESS_CRASH_MARKERS) {
+                        if (line.contains(crashMarker)) {
+                            crashed.set(true);
+                        }
+                    }
+                    if (matchedAt.get() < 0 && !crashed.get()) {
                         for (String marker : markers) {
                             if (line.contains(marker.trim())) {
-                                matched[0] = true;
-                                try {
-                                    Thread.sleep(1500L);
-                                } catch (InterruptedException ignored) {
-                                    Thread.currentThread().interrupt();
-                                }
-                                terminateProcess(process);
-                                return;
+                                matchedAt.set(System.nanoTime());
+                                break;
                             }
                         }
                     }
@@ -359,6 +375,17 @@ public class Launcher {
         readerThread.start();
 
         while (process.isAlive()) {
+            if (crashed.get()) {
+                System.err.println("[minified-headless] game crashed, stopping process");
+                terminateProcess(process);
+                break;
+            }
+            long matched = matchedAt.get();
+            // keep watching for a crash for a moment after the marker, then stop the game
+            if (matched >= 0 && System.nanoTime() - matched > HEADLESS_GRACE_PERIOD_NANOS) {
+                terminateProcess(process);
+                break;
+            }
             if (System.nanoTime() > deadline) {
                 System.err.println("[minified-headless] timeout after "
                         + timeoutSeconds + "s, killing process");
@@ -366,16 +393,21 @@ public class Launcher {
                 process.waitFor();
                 return 124;
             }
-            if (process.waitFor(500, TimeUnit.MILLISECONDS)) {
-                break;
-            }
+            process.waitFor(500, TimeUnit.MILLISECONDS);
         }
 
+        process.waitFor();
+        readerThread.join(TimeUnit.SECONDS.toMillis(5));
+
         int exitCode = process.exitValue();
-        if (matched[0] && exitCode != 0) {
+        if (crashed.get()) {
+            return exitCode != 0 ? exitCode : 1;
+        }
+        if (matchedAt.get() >= 0) {
             return 0;
         }
-        return exitCode;
+        System.err.println("[minified-headless] game exited before reaching a marker");
+        return exitCode != 0 ? exitCode : 1;
     }
 
     private static void terminateProcess(Process process) {

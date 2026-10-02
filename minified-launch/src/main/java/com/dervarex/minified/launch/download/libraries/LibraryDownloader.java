@@ -35,8 +35,10 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -71,6 +73,18 @@ public class LibraryDownloader {
      * @param librariesDir the directory the libraries should be downloaded to
      */
     public void downloadLibraries(Loader loader, Path librariesDir, Consumer<Double> progressConsumer, LaunchContext context) {
+        downloadLibraries(loader, librariesDir, resolveNativesDirectory(librariesDir), progressConsumer, context);
+    }
+
+    /**
+     * Downloads the libraries and extracts native libraries
+     *
+     * @param loader the loader to use
+     * @param librariesDir the directory the libraries should be downloaded to
+     * @param nativesDir the directory native libraries should be extracted to, has to match the directory the game loads them from
+     * @throws LibraryDownloadException if a library could not be downloaded or extracted
+     */
+    public void downloadLibraries(Loader loader, Path librariesDir, Path nativesDir, Consumer<Double> progressConsumer, LaunchContext context) {
         try {
             boolean online = true;
             try {
@@ -86,10 +100,10 @@ public class LibraryDownloader {
 
             librariesDir.toFile().mkdirs();
 
-            Path nativesDir = resolveNativesDirectory(librariesDir);
             Files.createDirectories(nativesDir);
 
-            Path nativeDownloadDir = nativesDir.resolve(".downloads");
+            // the archives stay next to the libraries, the offline validator expects them there
+            Path nativeDownloadDir = resolveNativesDirectory(librariesDir).resolve(".downloads");
             Files.createDirectories(nativeDownloadDir);
 
             JsonObject versionEntry = Objects.requireNonNull(
@@ -162,7 +176,7 @@ public class LibraryDownloader {
                     break;
 
                 case FabricLoader ignored:
-                    JsonObject fabricProfile = FabricLoaderFetcher.getLatestProfile(loader.mcVersion());
+                    JsonObject fabricProfile = FabricLoaderFetcher.getProfileJson(loader.mcVersion(), loader.loaderVersion());
 
                     Path fabricCachePath = resolveCacheRoot(librariesDir)
                             .resolve("profiles")
@@ -180,7 +194,7 @@ public class LibraryDownloader {
                     break;
 
                 case QuiltLoader ignored:
-                    JsonObject quiltProfile = QuiltLoaderFetcher.getLatestProfile(loader.mcVersion());
+                    JsonObject quiltProfile = QuiltLoaderFetcher.getProfileJson(loader.mcVersion(), loader.loaderVersion());
 
                     Path quiltCachePath = resolveCacheRoot(librariesDir)
                             .resolve("profiles")
@@ -205,6 +219,11 @@ public class LibraryDownloader {
                 default:
                     throw new UnexpectedLoaderException("Unexpected loader: " + loader);
             }
+
+            // Some version JSONs list the same artifact more than once (e.g. text2speech in 1.14 - 1.18, mojang messed up here),
+            // downloading it twice in parallel would make both downloads race on the same temp file and explode the whole thing
+            Set<Path> queuedPaths = new HashSet<>();
+            targets.removeIf(target -> !queuedPaths.add(target.path().toAbsolutePath().normalize()));
 
             AtomicLong totalBytes = new AtomicLong();
             for (DownloadTarget target : targets) {

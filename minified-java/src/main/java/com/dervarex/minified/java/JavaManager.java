@@ -225,6 +225,30 @@ public final class JavaManager {
         if (requiredMajorVersion <= 0 || current.majorVersion() >= requiredMajorVersion) {
             return current;
         }
+        return ensureManagedJavaVersion(requiredMajorVersion);
+    }
+
+    /**
+     * Ensures that a Java runtime of exactly the given feature version is available.
+     * Unlike {@link #ensureJavaVersion(int)}, a newer current JVM is not accepted,
+     * which is needed for Minecraft mod loaders relying on the Java 8 class loader
+     * May download and extract a runtime (network and disk I/O)
+     *
+     * @param requiredMajorVersion the required Java feature version
+     * @return the current JVM if it has exactly the required feature version, otherwise a managed Java installation
+     * @throws HttpException if the runtime manifest request fails
+     * @throws IOException if a runtime download or extraction fails
+     */
+    @API(status = API.Status.EXPERIMENTAL)
+    public static JavaInstallation ensureExactJavaVersion(int requiredMajorVersion) throws HttpException, IOException {
+        JavaInstallation current = currentRuntime();
+        if (requiredMajorVersion <= 0 || current.majorVersion() == requiredMajorVersion) {
+            return current;
+        }
+        return ensureManagedJavaVersion(requiredMajorVersion);
+    }
+
+    private static JavaInstallation ensureManagedJavaVersion(int requiredMajorVersion) throws HttpException, IOException {
         localEventBus.post(new EnsureJavaVersionEvent(requiredMajorVersion));
 
         Path runtimeRoot = runtimeInstallRoot()

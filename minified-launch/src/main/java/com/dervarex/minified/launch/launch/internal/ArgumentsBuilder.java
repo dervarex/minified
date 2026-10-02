@@ -60,6 +60,12 @@ public class ArgumentsBuilder {
                 launchConfig.getMaxRam()
         );
 
+        if (argumentsValue == null) {
+            // pre 1.13 version JSONs (legacy "minecraftArguments") contain no jvm arguments, not even the classpath
+            jvmArgs.add("-cp");
+            jvmArgs.add("${classpath}");
+        }
+
         jvmArgs.addAll(launchConfig.getExtraJvmArgs());
         jvmArgs.removeIf(arg -> arg.equals("-XX:+UseCompactObjectHeaders")); // I don't know if we should do it like that, but it seems to work fine
         jvmArgs.removeIf(arg ->
@@ -70,26 +76,7 @@ public class ArgumentsBuilder {
                 jvmArgs.addAll(customLoader.customJvmArgs());
             }
         } else {
-            JsonObject loaderProfileJson = null;
-
-            switch (loader) {
-                case VanillaLoader ignored:
-                    break;
-                case FabricLoader ignored:
-                    loaderProfileJson = FabricProfileJsonLoader.loadFabricProfileJson(version, online);
-                    break;
-                case ForgeLoader ignored:
-                    loaderProfileJson = ForgeProfileJsonLoader.loadForgeProfileJson(version, launchConfig, online);
-                    break;
-                case NeoforgeLoader ignored:
-                    loaderProfileJson = NeoProfileJsonLoader.loadNeoforgeProfileJson(version, launchConfig, online);
-                    break;
-                case QuiltLoader ignored:
-                    loaderProfileJson = QuiltProfileJsonLoader.loadQuiltProfileJson(version, online);
-                    break;
-                default:
-                    throw new UnexpectedLoaderException("Unexpected loader: " + loader);
-            }
+            JsonObject loaderProfileJson = loadLoaderProfileJson(loader, version, launchConfig, online);
 
             if (loaderProfileJson != null) {
                 JsonValue fabricArguments = loaderProfileJson.get("arguments");
@@ -114,7 +101,15 @@ public class ArgumentsBuilder {
         JsonValue argumentsValue = versionJson.get("arguments");
 
         if (argumentsValue == null) {
-            JsonValue minecraftArguments = versionJson.get("minecraftArguments");
+            // for pre 1.13 versions, a loader profile replaces the whole argument string (forge adds its --tweakClass there)
+            JsonObject loaderProfileJson = loader instanceof CustomLoader
+                    ? null
+                    : loadLoaderProfileJson(loader, version, launchConfig, online);
+
+            JsonValue minecraftArguments =
+                    loaderProfileJson != null && loaderProfileJson.get("minecraftArguments") != null
+                            ? loaderProfileJson.get("minecraftArguments")
+                            : versionJson.get("minecraftArguments");
             if (minecraftArguments == null) {
                 throw new MalformedVersionJsonException("No arguments or minecraftArguments found in version JSON");
             }
@@ -137,26 +132,7 @@ public class ArgumentsBuilder {
                 }
             }
         } else {
-            JsonObject loaderProfileJson = null;
-
-            switch (loader) {
-                case VanillaLoader ignored:
-                    break;
-                case FabricLoader ignored:
-                    loaderProfileJson = FabricProfileJsonLoader.loadFabricProfileJson(version, online);
-                    break;
-                case QuiltLoader ignored:
-                    loaderProfileJson = QuiltProfileJsonLoader.loadQuiltProfileJson(version, online);
-                    break;
-                case ForgeLoader ignored:
-                    loaderProfileJson = ForgeProfileJsonLoader.loadForgeProfileJson(version, launchConfig, online);
-                    break;
-                case NeoforgeLoader ignored:
-                    loaderProfileJson = NeoProfileJsonLoader.loadNeoforgeProfileJson(version, launchConfig, online);
-                    break;
-                default:
-                    throw new UnexpectedLoaderException("Unexpected loader: " + loader);
-            }
+            JsonObject loaderProfileJson = loadLoaderProfileJson(loader, version, launchConfig, online);
 
             if (loaderProfileJson != null) {
                 JsonValue loaderArguments = loaderProfileJson.get("arguments");
@@ -176,5 +152,24 @@ public class ArgumentsBuilder {
                 options.getVariables(),
                 options.getFeatures()
         );
+    }
+
+    /**
+     * @return the version JSON of the mod loader, or null for vanilla
+     */
+    private static JsonObject loadLoaderProfileJson(
+            Loader loader,
+            String version,
+            LaunchConfiguration launchConfig,
+            boolean online
+    ) {
+        return switch (loader) {
+            case VanillaLoader ignored -> null;
+            case FabricLoader ignored -> FabricProfileJsonLoader.loadFabricProfileJson(version, launchConfig, online);
+            case QuiltLoader ignored -> QuiltProfileJsonLoader.loadQuiltProfileJson(version, launchConfig, online);
+            case ForgeLoader ignored -> ForgeProfileJsonLoader.loadForgeProfileJson(version, launchConfig, online);
+            case NeoforgeLoader ignored -> NeoProfileJsonLoader.loadNeoforgeProfileJson(version, launchConfig, online);
+            default -> throw new UnexpectedLoaderException("Unexpected loader: " + loader);
+        };
     }
 }
