@@ -4,6 +4,7 @@ import com.dervarex.minified.launch.exceptions.loader.NoLoadersFoundException;
 import com.dervarex.minified.launch.exceptions.loader.neoforge.FailedToReadMetadataException;
 import com.dervarex.minified.launch.exceptions.loader.neoforge.MalformedMetadataException;
 import com.dervarex.minified.utils.ApiEndpoints;
+import com.dervarex.minified.utils.json.JsonObject;
 import com.dervarex.minified.utils.json.JsonParser;
 import com.dervarex.minified.utils.json.JsonValue;
 import org.apiguardian.api.API;
@@ -33,6 +34,7 @@ public final class NeoVersionFetcher {
             .build();
 
     private final AtomicReference<List<String>> cachedVersions = new AtomicReference<>();
+    private final AtomicReference<List<String>> cachedDirectoryVersions = new AtomicReference<>();
 
     @API(status = API.Status.STABLE)
     public String getLatest(String minecraftVersion) {
@@ -41,25 +43,30 @@ public final class NeoVersionFetcher {
 
     @API(status = API.Status.STABLE)
     public String resolveLoaderVersion(String versionOrMinecraftVersion) {
-        List<String> allVersions = getAllVersions();
-
-        if (allVersions.contains(versionOrMinecraftVersion)) {
-            return versionOrMinecraftVersion;
+        String resolved = resolveFrom(getAllVersions(), versionOrMinecraftVersion);
+        if (resolved == null) {
+            // NeoForge sometimes regenerates maven-metadata.xml (and the version API with it) with only the newest
+            // versions in it, the directory listing still has all of them
+            resolved = resolveFrom(getDirectoryVersions(), versionOrMinecraftVersion);
         }
-
-        List<String> matchingBranch = allVersions.stream()
-                .filter(version -> matchesMinecraftBranch(version, versionOrMinecraftVersion))
-                .sorted(VERSION_ORDER.reversed())
-                .toList();
-
-        if (!matchingBranch.isEmpty()) {
-            return matchingBranch.getFirst();
+        if (resolved != null) {
+            return resolved;
         }
 
         throw new NoLoadersFoundException(
                 "No NeoForge version found for " + versionOrMinecraftVersion,
                 "NEOFORGE" // todo replace that uppercase string with an enum
         );
+    }
+
+    private static String resolveFrom(List<String> versions, String versionOrMinecraftVersion) {
+        if (versions.contains(versionOrMinecraftVersion)) {
+            return versionOrMinecraftVersion;
+        }
+        return versions.stream()
+                .filter(version -> matchesMinecraftBranch(version, versionOrMinecraftVersion))
+                .max(VERSION_ORDER)
+                .orElse(null);
     }
 
     @API(status = API.Status.STABLE)
@@ -82,6 +89,38 @@ public final class NeoVersionFetcher {
                 fetchVersions(ApiEndpoints.NEOFORGE_LEGACY_MAVEN_METADATA_URL, ApiEndpoints.NEOFORGE_LEGACY_VERSIONS_API_URL)
         );
         return List.copyOf(versions);
+    }
+
+    private List<String> getDirectoryVersions() {
+        List<String> cached = cachedDirectoryVersions.get();
+        if (cached != null) {
+            return cached;
+        }
+
+        List<String> versions = new ArrayList<>(fetchVersionsFromDirectory(ApiEndpoints.NEOFORGE_DIRECTORY_API_URL));
+        versions.addAll(fetchVersionsFromDirectory(ApiEndpoints.NEOFORGE_LEGACY_DIRECTORY_API_URL));
+        cachedDirectoryVersions.compareAndSet(null, List.copyOf(versions));
+        return cachedDirectoryVersions.get();
+    }
+
+    private List<String> fetchVersionsFromDirectory(String directoryUrl) {
+        try {
+            JsonValue files = JsonParser.parse(fetch(directoryUrl)).asObject().get("files");
+            if (files == null) {
+                throw new MalformedMetadataException("NeoForge directory listing did not contain any files: " + directoryUrl);
+            }
+
+            List<String> versions = new ArrayList<>();
+            for (JsonValue file : files.asArray()) {
+                JsonObject entry = file.asObject();
+                if ("DIRECTORY".equals(entry.getString("type"))) {
+                    versions.add(entry.getString("name"));
+                }
+            }
+            return versions;
+        } catch (Exception e) {
+            throw new FailedToReadMetadataException("Failed to read NeoForge directory listing from " + directoryUrl, e);
+        }
     }
 
     private List<String> fetchVersions(String metadataUrl, String apiUrl) {

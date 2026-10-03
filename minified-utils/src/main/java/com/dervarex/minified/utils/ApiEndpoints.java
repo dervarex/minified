@@ -31,6 +31,9 @@ public final class ApiEndpoints {
     // fallback when the CDN serves us shit
     public static final String NEOFORGE_VERSIONS_API_URL = "https://maven.neoforged.net/api/maven/versions/releases/net/neoforged/neoforge";
     public static final String NEOFORGE_LEGACY_VERSIONS_API_URL = "https://maven.neoforged.net/api/maven/versions/releases/net/neoforged/forge";
+    // the folders that exist on the maven, for when both of the above only list the newest versions
+    public static final String NEOFORGE_DIRECTORY_API_URL = "https://maven.neoforged.net/api/maven/details/releases/net/neoforged/neoforge";
+    public static final String NEOFORGE_LEGACY_DIRECTORY_API_URL = "https://maven.neoforged.net/api/maven/details/releases/net/neoforged/forge";
 
     // Java
     /**
