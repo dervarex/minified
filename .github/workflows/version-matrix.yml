@@ -23,42 +23,13 @@ jobs:
     outputs:
       matrix: ${{ steps.build.outputs.matrix }}
     steps:
+      - uses: actions/checkout@v4
       - id: build
         env:
           INPUT_LOADERS: ${{ github.event.inputs.loaders }}
           INPUT_MC_VERSIONS: ${{ github.event.inputs.mc_versions }}
         run: |
-          set -euo pipefail
-          INPUT_LOADERS="${INPUT_LOADERS// /}"
-          INPUT_MC_VERSIONS="${INPUT_MC_VERSIONS// /}"
-
-          # only versions each loader exists for, oldest first
-          MODDED="1.14.4,1.15.2,1.16.5,1.17.1,1.18.2,1.19.2,1.19.4,1.20.1,1.20.4,1.20.6,1.21.1,1.21.4,1.21.8,1.21.11,26.1,26.1.2,26.2,26.3"
-          PAIRS="
-          vanilla=rd-132211,c0.30_01c,inf-20100618,a1.2.6,b1.7.3,1.0,1.2.5,1.4.7,1.5.2,1.6.4,1.7.10,1.8.9,1.9.4,1.10.2,1.11.2,1.12.2,1.13.2,$MODDED
-          fabric=$MODDED
-          quilt=$MODDED
-          forge=1.2.5,1.3.2,1.4.7,1.5.2,1.6.4,1.7.10,1.8.9,1.9.4,1.10.2,1.11.2,1.12.2,1.13.2,$MODDED
-          neoforge=1.20.1,1.20.4,1.20.6,1.21.1,1.21.4,1.21.8,1.21.11,26.1,26.1.2,26.2,26.3
-          "
-
-          ENTRIES=""
-          for line in $PAIRS; do
-            L="${line%%=*}"
-            if [ -n "$INPUT_LOADERS" ] && ! echo ",$INPUT_LOADERS," | grep -q ",$L,"; then
-              continue
-            fi
-            IFS=',' read -ra VERSIONS <<< "${line#*=}"
-            for M in "${VERSIONS[@]}"; do
-              if [ -n "$INPUT_MC_VERSIONS" ] && ! echo ",$INPUT_MC_VERSIONS," | grep -q ",$M,"; then
-                continue
-              fi
-              ENTRY="{\"loader\":\"$L\",\"mc_version\":\"$M\"}"
-              if [ -z "$ENTRIES" ]; then ENTRIES="$ENTRY"; else ENTRIES="$ENTRIES,$ENTRY"; fi
-            done
-          done
-
-          MATRIX="{\"include\":[$ENTRIES]}"
+          MATRIX=$(python3 scripts/version-matrix/matrix.py jobs --loaders "$INPUT_LOADERS" --versions "$INPUT_MC_VERSIONS")
           echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
 
   matrix:
@@ -143,14 +114,17 @@ jobs:
           pattern: matrix-result-*
           merge-multiple: true
 
-      - name: Generate SUPPORTED_VERSIONS.svg
-        run: python3 scripts/render.py matrix-results SUPPORTED_VERSIONS.svg scripts/template.svg
+      # results.json keeps the results of earlier runs, so runs of only some loaders/versions don't lose the others
+      - name: Update results and SUPPORTED_VERSIONS.svg
+        run: |
+          python3 scripts/version-matrix/matrix.py merge matrix-results
+          python3 scripts/version-matrix/matrix.py render -o SUPPORTED_VERSIONS.svg
 
       - name: Commit if changed
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add SUPPORTED_VERSIONS.svg
+          git add SUPPORTED_VERSIONS.svg scripts/version-matrix/results.json
           git diff --cached --quiet && echo "no changes" && exit 0
           git commit -m "update SUPPORTED_VERSIONS.svg"
           git push
