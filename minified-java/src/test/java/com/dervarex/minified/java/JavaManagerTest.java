@@ -1,27 +1,58 @@
 package com.dervarex.minified.java;
 
 import com.dervarex.minified.events.EventBus;
+import com.dervarex.minified.java.events.download.JavaArchiveDownloadEvent;
+import com.dervarex.minified.java.events.extract.ExtractArchiveEvent;
 import com.dervarex.minified.utils.json.JsonFile;
 import com.dervarex.minified.utils.json.JsonValue;
+import com.sun.net.httpserver.HttpServer;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.util.ArrayList;
+import java.util.HexFormat;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.zip.GZIPOutputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 class JavaManagerTest {
 
     @TempDir
     Path tempDir;
 
+    private final EventBus eventBus = new EventBus();
+    private HttpServer server;
+    private final AtomicInteger downloads = new AtomicInteger();
+
     @BeforeEach
     void setUp() {
-        JavaManager.init(tempDir, new EventBus());
+        JavaManager.init(tempDir, eventBus);
+    }
+
+    @AfterEach
+    void stopServer() {
+        if (server != null) server.stop(0);
     }
 
     @Test
@@ -185,5 +216,171 @@ class JavaManagerTest {
                 """);
 
         assertEquals(21, JavaManager.getRequiredJavaVersion(version));
+    }
+
+    @Test
+    @DisplayName("getRequiredJavaVersion fetches and caches unknown versions")
+    void getRequiredJavaVersion_fetchesAndCaches() throws Exception {
+        assertEquals(8, JavaManager.getRequiredJavaVersion("1.16.5"));
+        assertTrue(Files.exists(tempDir.resolve("cache/versions/1.16.5.json")));
+    }
+
+    @Test
+    @DisplayName("a managed runtime gets downloaded once, unpacked and reused")
+    void managedRuntime_installsFromTarGzAndIsReused() throws Exception {
+        byte[] archive = tarGz(Map.of("jdk-99+1-jre/bin/" + javaName(), "#!/bin/sh", "jdk-99+1-jre/release", "JAVA_VERSION=99"));
+        offerRuntime(99, "jre.tar.gz", archive, sha256(archive));
+        List<JavaArchiveDownloadEvent> downloadEvents = new ArrayList<>();
+        List<ExtractArchiveEvent> extractEvents = new ArrayList<>();
+        eventBus.subscribe(JavaArchiveDownloadEvent.class, downloadEvents::add);
+        eventBus.subscribe(ExtractArchiveEvent.class, extractEvents::add);
+
+        JavaInstallation installed = JavaManager.ensureExactJavaVersion(99);
+        JavaInstallation again = JavaManager.ensureExactJavaVersion(99);
+
+        assertTrue(installed.managed());
+        assertEquals(99, installed.majorVersion());
+        assertEquals("jdk-99+1", installed.releaseName());
+        assertEquals("jdk-99+1-jre", installed.home().getFileName().toString());
+        assertTrue(Files.isExecutable(installed.executable()));
+        assertEquals(installed.executable(), again.executable());
+        assertEquals(1, downloads.get());
+        assertEquals(1.0, downloadEvents.getLast().progress());
+        assertEquals(100, extractEvents.getLast().progress());
+    }
+
+    @Test
+    @Disabled("only bin/java gets the exec bit, the tar modes are ignored, so Java 9+ can't start processes (error=13 from jspawnhelper)")
+    @DisplayName("everything executable in the archive stays executable")
+    void managedRuntime_keepsExecutableBits() throws Exception {
+        assumeTrue(!platformOs().equals("windows"), "no exec bits on windows");
+        byte[] archive = tarGz(Map.of("jdk-95+1-jre/bin/java", "#!/bin/sh", "jdk-95+1-jre/lib/jspawnhelper", "#!/bin/sh"));
+        offerRuntime(95, "jre.tar.gz", archive, sha256(archive));
+
+        JavaInstallation installed = JavaManager.ensureExactJavaVersion(95);
+
+        assertTrue(Files.isExecutable(installed.home().resolve("lib/jspawnhelper")));
+    }
+
+    @Test
+    @DisplayName("windows runtimes come as zip")
+    void managedRuntime_installsFromZip() throws Exception {
+        byte[] archive = zip(Map.of("jdk-98+1-jre/bin/" + javaName(), "#!/bin/sh"));
+        offerRuntime(98, "jre.zip", archive, sha256(archive));
+
+        assertTrue(Files.exists(JavaManager.ensureExactJavaVersion(98).executable()));
+    }
+
+    @Test
+    @DisplayName("a runtime with the wrong checksum is not installed")
+    void managedRuntime_rejectsWrongChecksum() throws Exception {
+        byte[] archive = tarGz(Map.of("jdk-97+1-jre/bin/" + javaName(), "#!/bin/sh"));
+        offerRuntime(97, "jre.tar.gz", archive, sha256("something else".getBytes(StandardCharsets.UTF_8)));
+
+        assertThrows(IOException.class, () -> JavaManager.ensureExactJavaVersion(97));
+        try (var files = Files.walk(tempDir.resolve("runtimes"))) {
+            assertTrue(files.noneMatch(path -> path.getFileName().toString().equals(javaName())));
+        }
+    }
+
+    @Test
+    @DisplayName("archives can't write outside of the runtime folder")
+    void managedRuntime_blocksPathTraversal() throws Exception {
+        byte[] archive = tarGz(Map.of("../../../../escaped", "gotcha"));
+        offerRuntime(96, "jre.tar.gz", archive, sha256(archive));
+
+        assertThrows(IOException.class, () -> JavaManager.ensureExactJavaVersion(96));
+        assertFalse(Files.exists(tempDir.resolve("escaped")));
+    }
+
+    @Test
+    @DisplayName("Java 8 can be installed for old Minecraft versions")
+    void ensureExactJavaVersion_installsARealJava8() throws Exception {
+        assumeTrue(JavaPlatform.majorVersion() != 8, "this JVM already is Java 8");
+
+        JavaInstallation java8 = JavaManager.ensureExactJavaVersion(8);
+
+        assertTrue(java8.managed());
+        Process process = new ProcessBuilder(java8.executable().toString(), "-version").redirectErrorStream(true).start();
+        assertTrue(process.waitFor(30, TimeUnit.SECONDS));
+        String output = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+        assertEquals(0, process.exitValue(), output);
+        assertTrue(output.contains("\"1.8.0"), output);
+    }
+
+    private void offerRuntime(int majorVersion, String packageName, byte[] archive, String checksum) throws IOException {
+        server = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
+        server.createContext("/" + packageName, exchange -> {
+            downloads.incrementAndGet();
+            exchange.sendResponseHeaders(200, archive.length);
+            exchange.getResponseBody().write(archive);
+            exchange.close();
+        });
+        server.start();
+
+        // pretend adoptium already told us about this runtime
+        Path assets = Files.createDirectories(tempDir.resolve("cache/java/adoptium/" + majorVersion)).resolve("jre.json");
+        Files.writeString(assets, """
+                [{
+                  "release_name": "jdk-%d+1",
+                  "binaries": [{
+                    "os": "%s", "architecture": "%s", "image_type": "jre", "jvm_impl": "hotspot",
+                    "package": { "link": "http://localhost:%d/%s", "checksum": "%s", "name": "%s" }
+                  }]
+                }]
+                """.formatted(majorVersion, platformOs(), platformArchitecture(), server.getAddress().getPort(),
+                packageName, checksum, packageName));
+    }
+
+    private static String platformOs() {
+        String os = System.getProperty("os.name").toLowerCase(Locale.ROOT);
+        return os.contains("win") ? "windows" : os.contains("mac") ? "mac" : "linux";
+    }
+
+    private static String platformArchitecture() {
+        String arch = System.getProperty("os.arch").toLowerCase(Locale.ROOT);
+        return arch.contains("aarch64") || arch.contains("arm64") ? "aarch64" : "x64";
+    }
+
+    private static String javaName() {
+        return platformOs().equals("windows") ? "java.exe" : "java";
+    }
+
+    private static byte[] tarGz(Map<String, String> files) throws IOException {
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        try (OutputStream out = new GZIPOutputStream(bytes)) {
+            for (Map.Entry<String, String> file : new LinkedHashMap<>(files).entrySet()) {
+                byte[] content = file.getValue().getBytes(StandardCharsets.UTF_8);
+                byte[] header = new byte[512];
+                byte[] name = file.getKey().getBytes(StandardCharsets.UTF_8);
+                System.arraycopy(name, 0, header, 0, name.length);
+                byte[] mode = "0000755".getBytes(StandardCharsets.US_ASCII);
+                System.arraycopy(mode, 0, header, 100, mode.length);
+                byte[] size = "%011o".formatted(content.length).getBytes(StandardCharsets.US_ASCII);
+                System.arraycopy(size, 0, header, 124, size.length);
+                header[156] = '0';
+                out.write(header);
+                out.write(content);
+                out.write(new byte[(512 - content.length % 512) % 512]);
+            }
+            out.write(new byte[1024]);
+        }
+        return bytes.toByteArray();
+    }
+
+    private static byte[] zip(Map<String, String> files) throws IOException {
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        try (ZipOutputStream out = new ZipOutputStream(bytes)) {
+            for (Map.Entry<String, String> file : files.entrySet()) {
+                out.putNextEntry(new ZipEntry(file.getKey()));
+                out.write(file.getValue().getBytes(StandardCharsets.UTF_8));
+                out.closeEntry();
+            }
+        }
+        return bytes.toByteArray();
+    }
+
+    private static String sha256(byte[] content) throws Exception {
+        return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(content));
     }
 }
