@@ -137,7 +137,7 @@ public class ArgumentsBuilder {
         if (loader instanceof CustomLoader customLoader) {
             if (customLoader.customGameArgs() != null) {
                 for (String arg : customLoader.customGameArgs()) {
-                    gameArray.add(JsonParser.parse(arg));
+                    gameArray.add(arg);
                 }
             }
         } else {
