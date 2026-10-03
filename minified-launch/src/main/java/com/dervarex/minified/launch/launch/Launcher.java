@@ -7,6 +7,7 @@ import com.dervarex.minified.java.JavaInstallation;
 import com.dervarex.minified.java.JavaManager;
 import com.dervarex.minified.launch.download.ClientDownloader;
 import com.dervarex.minified.launch.download.assets.AssetDownloader;
+import com.dervarex.minified.launch.download.assets.LegacyAssets;
 import com.dervarex.minified.launch.download.libraries.LibraryDownloader;
 import com.dervarex.minified.launch.events.launch.GameStartEvent;
 import com.dervarex.minified.launch.events.launch.GameStoppedEvent;
@@ -22,7 +23,9 @@ import com.dervarex.minified.launch.launch.modding.fabric.FabricLoader;
 import com.dervarex.minified.launch.launch.modding.fabric.FabricProfileJsonLoader;
 import com.dervarex.minified.launch.launch.modding.forge.ForgeLoader;
 import com.dervarex.minified.launch.launch.modding.forge.api.ForgeProfileJsonLoader;
+import com.dervarex.minified.launch.launch.modding.forge.api.ForgeVersionJson;
 import com.dervarex.minified.launch.launch.modding.forge.installer.ForgeInstallerInjector;
+import com.dervarex.minified.launch.launch.modding.forge.installer.LegacyForgeGameJar;
 import com.dervarex.minified.launch.launch.modding.neoforge.NeoforgeLoader;
 import com.dervarex.minified.launch.launch.modding.neoforge.api.NeoProfileJsonLoader;
 import com.dervarex.minified.launch.launch.modding.neoforge.installer.NeoInstallerInjector;
@@ -106,6 +109,11 @@ public class Launcher {
             JavaInstallation javaInstallation;
             if (launchConfig.getCustomJavaExecutable() == null) {
                 int requiredJavaVersion = JavaManager.getRequiredJavaVersion(versionJson);
+                if (requiredJavaVersion <= 0 && versionJson.get("arguments") == null) {
+                    // the 1.6.x version JSONs have no javaVersion, everything with legacy arguments wants Java 8,
+                    // if you give it java 21 it cries
+                    requiredJavaVersion = 8;
+                }
                 javaInstallation = requiredJavaVersion == 8
                         ? JavaManager.ensureExactJavaVersion(requiredJavaVersion)
                         : JavaManager.ensureJavaVersion(requiredJavaVersion);
@@ -117,6 +125,13 @@ public class Launcher {
                     loader.mcVersion(),
                     context
             );
+            LegacyAssets.reconstruct(versionJson, launchConfig);
+            if (loader instanceof ForgeLoader) {
+                LegacyForgeGameJar.prepare(
+                        ForgeVersionJson.getVersionJson(launchConfig.getJarFile().getParent(), loader.loaderVersion()).asObject(),
+                        launchConfig
+                );
+            }
 
             String classpath =
                     ClasspathBuilder.buildClasspath(
@@ -163,6 +178,20 @@ public class Launcher {
                     "-Dorg.lwjgl.librarypath=" + nativesDir
             );
 
+            boolean logsNoMarkers = isPreOneSix(versionJson);
+            if (logsNoMarkers) {
+                // versions before 1.6 find their folder through user.home (~/.minecraft), LaunchWrapper only redirects
+                // part of it to the game directory. The rest (output-client.log, options.txt, ...) stays in the instance this way.
+                // FML up to 1.5.2 reads the old applet launcher's property instead
+                Path gameDir = launchConfig.getJarFile().toAbsolutePath().getParent();
+                jvmArgs.add("-Duser.home=" + gameDir);
+                jvmArgs.add("-Dminecraft.applet.TargetDirectory=" + gameDir);
+            }
+            if (launchConfig.isHeadless() && launchConfig.getHeadlessMarker() == null && logsNoMarkers) {
+                // makes LWJGL 2 log when it creates the window, see LEGACY_HEADLESS_MARKER
+                jvmArgs.add("-Dorg.lwjgl.util.Debug=true");
+            }
+
             List<String> gameArgs =
                     ArgumentsBuilder.buildGameArguments(
                             versionJson,
@@ -186,7 +215,7 @@ public class Launcher {
             command.add   (getMainClass(versionJson, loader, loader.mcVersion(), launchConfig, context.isOnline()));// net.minecraft.client.main.Main
             command.addAll(gameArgs);                                                                               // --username ... --accessToken ...
 
-            launchProcess(command, context);
+            launchProcess(command, context, logsNoMarkers);
 
         } catch (HttpException | IOException e) {
             throw new RuntimeException(e);
@@ -272,15 +301,30 @@ public class Launcher {
 
 
 
+    /**
+     * @return true for versions before 1.6, they log next to nothing (classic and rubydung don't even a sound system,
+     * like what should we use as a marker here?)
+     */
+    private static boolean isPreOneSix(JsonFile versionJson) {
+        JsonValue assets = versionJson.get("assets");
+        return assets != null && assets.isString() && assets.asString().equals("pre-1.6");
+    }
+
     private static void launchProcess(
             List<String> command,
-            LaunchContext context
+            LaunchContext context,
+            boolean logsNoMarkers
     ) throws IOException, InterruptedException {
 
         LaunchConfiguration launchConfig = context.getLaunchConfiguration();
 
         ProcessBuilder processBuilder =
                 new ProcessBuilder(command);
+        // like the official launcher, the game runs in its game directory. Things like the log4j logs/ folder and rubydung's
+        // level.dat use relative paths and would end up wherever the launcher was started from
+        Path gameDir = launchConfig.getJarFile().toAbsolutePath().getParent();
+        Files.createDirectories(gameDir);
+        processBuilder.directory(gameDir.toFile());
         X11Helper.configureGraphicsEnvironment(
                 processBuilder,
                 context
@@ -301,7 +345,7 @@ public class Launcher {
         Process process = processBuilder.start();
 
         int exitCode = launchConfig.isHeadless()
-                ? waitForHeadlessMarker(process, launchConfig)
+                ? waitForHeadlessMarker(process, launchConfig, logsNoMarkers)
                 : process.waitFor();
 
         context.getEventBus().post(new GameStoppedEvent(exitCode, context.getLaunchConfiguration()));
@@ -315,16 +359,32 @@ public class Launcher {
     // todo: move into headless maker class
 
     // only logged once the game window exists, stuff like "Backend library: LWJGL" also show up in crash reports
+    // 1.13 - 1.15 don't log the resource reload, and without a sound device there is no sound engine either,
+    // the texture atlases get built in every version, that seems usable
     private static final String DEFAULT_HEADLESS_MARKERS =
-            "Reloading ResourceManager,Sound engine started"; // mc logs told me these
+            "Reloading ResourceManager,Sound engine started,textures-atlas,.png-atlas";
+
+    private static final String CRASH_REPORT_HEADER = "---- Minecraft Crash Report ----";
+
+    // forge 1.7.10 - 1.11 print a crash report on purpose to log the computer specs ("THIS IS NOT A ERROR")
+    private static final String FAKE_CRASH_REPORT_DESCRIPTION = "Description: Loading screen debug info";
+
+    // the description comes a few lines after the header (header, joke, empty line, time, description)
+    private static final int CRASH_REPORT_DESCRIPTION_LINES = 6;
 
     private static final List<String> HEADLESS_CRASH_MARKERS = List.of(
-            "---- Minecraft Crash Report ----",
+            CRASH_REPORT_HEADER,
             "#@!@# Game crashed!",
             "Exception in thread \"main\""
     );
 
+    // logged by LWJGL 2 (with org.lwjgl.util.Debug) when it creates the window, the only thing we get from a pre 1.6
+    private static final String LEGACY_HEADLESS_MARKER = "[LWJGL] Pixel format info";
+
     private static final long HEADLESS_GRACE_PERIOD_NANOS = TimeUnit.SECONDS.toNanos(3);
+
+    // the window marker comes before the game loaded anything, so it has to survive a while after it
+    private static final long LEGACY_HEADLESS_GRACE_PERIOD_NANOS = TimeUnit.SECONDS.toNanos(10);
 
     /**
      * Waits until the game logs one of the headless markers, then stops it
@@ -333,12 +393,15 @@ public class Launcher {
      */
     private static int waitForHeadlessMarker(
             Process process,
-            LaunchConfiguration launchConfig
+            LaunchConfiguration launchConfig,
+            boolean logsNoMarkers
     ) throws InterruptedException {
 
+        boolean legacyMarker = launchConfig.getHeadlessMarker() == null && logsNoMarkers;
         String markersRaw = launchConfig.getHeadlessMarker() != null
                 ? launchConfig.getHeadlessMarker()
-                : DEFAULT_HEADLESS_MARKERS;
+                : legacyMarker ? LEGACY_HEADLESS_MARKER : DEFAULT_HEADLESS_MARKERS;
+        long gracePeriod = legacyMarker ? LEGACY_HEADLESS_GRACE_PERIOD_NANOS : HEADLESS_GRACE_PERIOD_NANOS;
 
         String[] markers = markersRaw.split(",");
 
@@ -352,10 +415,24 @@ public class Launcher {
             try (BufferedReader reader = new BufferedReader(
                     new InputStreamReader(process.getInputStream()))) {
                 String line;
+                // lines left until we know if a crash report header belongs to a real crash or ist just forge pretending again
+                int crashReportLinesLeft = -1;
                 while ((line = reader.readLine()) != null) {
                     System.out.println(line);
+                    if (crashReportLinesLeft >= 0) {
+                        if (line.contains(FAKE_CRASH_REPORT_DESCRIPTION)) {
+                            crashReportLinesLeft = -1;
+                        } else if (crashReportLinesLeft-- == 0) {
+                            crashed.set(true);
+                        }
+                    }
                     for (String crashMarker : HEADLESS_CRASH_MARKERS) {
-                        if (line.contains(crashMarker)) {
+                        if (!line.contains(crashMarker)) {
+                            continue;
+                        }
+                        if (crashMarker.equals(CRASH_REPORT_HEADER)) {
+                            crashReportLinesLeft = CRASH_REPORT_DESCRIPTION_LINES;
+                        } else {
                             crashed.set(true);
                         }
                     }
@@ -368,12 +445,16 @@ public class Launcher {
                         }
                     }
                 }
+                if (crashReportLinesLeft >= 0) {
+                    crashed.set(true);
+                }
             } catch (IOException ignored) {
             }
         }, "minified-headless-log-reader");
         readerThread.setDaemon(true);
         readerThread.start();
 
+        boolean stoppedByUs = false;
         while (process.isAlive()) {
             if (crashed.get()) {
                 System.err.println("[minified-headless] game crashed, stopping process");
@@ -382,11 +463,12 @@ public class Launcher {
             }
             long matched = matchedAt.get();
             // keep watching for a crash for a moment after the marker, then stop the game
-            if (matched >= 0 && System.nanoTime() - matched > HEADLESS_GRACE_PERIOD_NANOS) {
+            if (matched >= 0 && System.nanoTime() - matched > gracePeriod) {
+                stoppedByUs = true;
                 terminateProcess(process);
                 break;
             }
-            if (System.nanoTime() > deadline) {
+            if (matched < 0 && System.nanoTime() > deadline) {
                 System.err.println("[minified-headless] timeout after "
                         + timeoutSeconds + "s, killing process");
                 process.destroyForcibly();
@@ -404,7 +486,12 @@ public class Launcher {
             return exitCode != 0 ? exitCode : 1;
         }
         if (matchedAt.get() >= 0) {
-            return 0;
+            if (stoppedByUs) {
+                return 0;
+            }
+            // nothing closes the game in headless mode, so it died during the grace period
+            System.err.println("[minified-headless] game exited right after reaching a marker");
+            return exitCode != 0 ? exitCode : 1;
         }
         System.err.println("[minified-headless] game exited before reaching a marker");
         return exitCode != 0 ? exitCode : 1;

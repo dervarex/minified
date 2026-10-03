@@ -7,6 +7,7 @@ import com.dervarex.minified.launch.launch.modding.fabric.FabricLoader;
 import com.dervarex.minified.launch.launch.modding.fabric.FabricProfileJsonLoader;
 import com.dervarex.minified.launch.launch.modding.forge.ForgeLoader;
 import com.dervarex.minified.launch.launch.modding.forge.api.ForgeVersionJson;
+import com.dervarex.minified.launch.launch.modding.forge.installer.LegacyForgeGameJar;
 import com.dervarex.minified.launch.launch.modding.neoforge.NeoforgeLoader;
 import com.dervarex.minified.launch.launch.modding.neoforge.api.NeoVersionJson;
 import com.dervarex.minified.launch.launch.modding.quilt.QuiltLoader;
@@ -36,6 +37,7 @@ public class ClasspathBuilder {
         Set<String> loaderArtifacts = new HashSet<>();
 
         boolean includeClientJar = true;
+        Path gameJar = config.getJarFile().toAbsolutePath();
 
         // like the official launcher we do loader libs before vanilla libs
         // Loaders ship newer versions of some vanilla libraries (forge 1.16.5: log4j 2.15.0 instead of 2.8.1),
@@ -131,6 +133,11 @@ public class ClasspathBuilder {
                     );
 
                     includeClientJar = !ignoresVanillaJar(forgeProfile);
+
+                    Path legacyGameJar = LegacyForgeGameJar.resolve(forgeProfile, config);
+                    if (legacyGameJar != null) {
+                        gameJar = legacyGameJar;
+                    }
                 } catch (Exception e) {
                     throw new FailedToLoadLibrariesException(
                             "Failed to load Forge libraries",
@@ -156,11 +163,7 @@ public class ClasspathBuilder {
         // like the official launcher, the game jar comes after the libs, loaders that bring their own patched
         // mc jar as a library (forge 1.21+) use the first one they find, which has to be theirs
         if (includeClientJar) {
-            classpath.add(
-                    config.getJarFile()
-                            .toAbsolutePath()
-                            .toString()
-            );
+            classpath.add(gameJar.toString());
         }
 
         return String.join(
@@ -310,6 +313,12 @@ public class ClasspathBuilder {
     }
 
     private static boolean isAllowed(JsonObject library) {
+        // old forge version JSONs (installer v1) mark server only libraries like this
+        Boolean clientreq = library.getBoolean("clientreq");
+        if (clientreq != null && !clientreq) {
+            return false;
+        }
+
         if (!library.has("rules")) {
             return true;
         }

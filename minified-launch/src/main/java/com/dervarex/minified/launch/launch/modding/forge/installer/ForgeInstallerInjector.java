@@ -7,6 +7,8 @@ import com.dervarex.minified.launch.launch.LaunchConfiguration;
 import com.dervarex.minified.launch.launch.LaunchContext;
 import com.dervarex.minified.launch.launch.modding.forge.api.ForgeInstallerFetcher;
 import com.dervarex.minified.utils.download.DownloadHelper;
+import com.dervarex.minified.utils.exceptions.HttpException;
+import com.dervarex.minified.utils.http.HttpUtil;
 import org.apiguardian.api.API;
 
 import java.io.File;
@@ -147,10 +149,44 @@ public class ForgeInstallerInjector {
         }
     }
 
+    /**
+     * @return false for Forge up to 1.5.1, those only have a zip that goes into the game jar
+     */
+    private static boolean hasInstaller(String loaderVersion) {
+        try {
+            HttpUtil.get(ForgeInstallerFetcher.getInstallerLink(loaderVersion) + ".sha1");
+            return true;
+        } catch (HttpException e) {
+            if (e.getStatusCode() == 404) {
+                return false;
+            }
+            throw new ForgePreparationException(e);
+        } catch (IOException e) {
+            throw new ForgePreparationException(e);
+        }
+    }
+
     public void install(LaunchContext context) {
         LaunchConfiguration config = context.getLaunchConfiguration();
         prepare(context);
+
+        if (!hasInstaller(config.getLoader().loaderVersion())) {
+            context.getEventBus().post(new InstallForgeEvent(InstallForgeEvent.Stage.RUNNING_INSTALLER, config.getLoader().mcVersion(), config.getLoader().loaderVersion()));
+            JarModForgeInstaller.install(config);
+            context.getEventBus().post(new InstallForgeEvent(InstallForgeEvent.Stage.FINISHED, config.getLoader().mcVersion(), config.getLoader().loaderVersion()));
+            return;
+        }
+
         downloadInstaller(context);
+
+        Path installerPath = config.getJarFile().getParent().resolve("forge-installer.jar");
+        if (LegacyForgeInstaller.isLegacyInstaller(installerPath)) {
+            context.getEventBus().post(new InstallForgeEvent(InstallForgeEvent.Stage.RUNNING_INSTALLER, config.getLoader().mcVersion(), config.getLoader().loaderVersion()));
+            LegacyForgeInstaller.install(installerPath, config);
+            context.getEventBus().post(new InstallForgeEvent(InstallForgeEvent.Stage.FINISHED, config.getLoader().mcVersion(), config.getLoader().loaderVersion()));
+            return;
+        }
+
         try {
             install(
                     new URLClassLoader(new java.net.URL[]{

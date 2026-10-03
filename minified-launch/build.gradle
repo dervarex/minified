@@ -74,6 +74,12 @@ test {
     }
 
     failOnNoDiscoveredTests = false
+
+    if (System.getProperty('matrix.loader') != null) {
+        testLogging {
+            showStandardStreams = true
+        }
+    }
 }
 
 tasks.register("manualTest", Test) {

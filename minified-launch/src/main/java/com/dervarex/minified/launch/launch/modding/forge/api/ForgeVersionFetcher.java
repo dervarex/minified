@@ -67,7 +67,7 @@ public class ForgeVersionFetcher {
                 .get(minecraftVersion + "-latest")
                 .asString();
 
-        return minecraftVersion + "-" + forgeVersion;
+        return toMavenVersion(minecraftVersion, forgeVersion);
     }
 
     @API(status = API.Status.STABLE)
@@ -82,7 +82,33 @@ public class ForgeVersionFetcher {
                 .get(minecraftVersion + "-recommended")
                 .asString();
 
-        return minecraftVersion + "-" + forgeVersion;
+        return toMavenVersion(minecraftVersion, forgeVersion);
+    }
+
+    /**
+     * Some old builds have a branch suffix in the maven version that the promotions are missing,
+     * e.g. 10.13.4.1614 for 1.7.10 is published as {@code 1.7.10-10.13.4.1614-1.7.10}
+     *
+     * @return the maven version of the forge build
+     */
+    private String toMavenVersion(String minecraftVersion, String forgeVersion) {
+        String version = minecraftVersion + "-" + forgeVersion;
+        List<String> versions;
+        try {
+            versions = getAvailableVersions();
+        } catch (FailedToFetchVersionsException e) {
+            return version;
+        }
+
+        if (versions.contains(version)) {
+            return version;
+        }
+        for (String mavenVersion : versions) {
+            if (mavenVersion.startsWith(version + "-")) {
+                return mavenVersion;
+            }
+        }
+        return version;
     }
 
     private JsonObject getPromotions() {

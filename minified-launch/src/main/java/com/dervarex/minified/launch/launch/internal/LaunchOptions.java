@@ -1,13 +1,17 @@
 package com.dervarex.minified.launch.launch.internal;
 
 import com.dervarex.minified.auth.user.User;
+import com.dervarex.minified.launch.download.assets.LegacyAssets;
 import com.dervarex.minified.launch.launch.LaunchConfiguration;
+import com.dervarex.minified.launch.launch.modding.forge.ForgeLoader;
+import com.dervarex.minified.launch.launch.modding.neoforge.NeoforgeLoader;
 import com.dervarex.minified.utils.json.JsonFile;
 import lombok.Getter;
 import org.apiguardian.api.API;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -89,6 +93,12 @@ public final class LaunchOptions {
                                 user == null ? "0" : user.accessToken()
                         )
                         .setVariable(
+                                "auth_session",
+                                // what pre 1.7 versions take instead of the access token, the official launcher sends this format, so do we now
+                                user == null ? "-" : "token:" + user.accessToken() + ":" + user.getMinecraftUUID().getUndashed()
+                        )
+
+                        .setVariable(
                                 "user_properties",
                                 "{}"
                         )
@@ -99,8 +109,7 @@ public final class LaunchOptions {
                         )
                         .setVariable(
                                 "game_assets",
-                                launchConfig.getAssetsDirectory()
-                                        .toAbsolutePath()
+                                LegacyAssets.resolveGameAssetsDirectory(versionJson, launchConfig)
                                         .toString()
                         )
 
@@ -120,9 +129,7 @@ public final class LaunchOptions {
                         )
                         .setVariable(
                                 "library_directory",
-                                launchConfig.getLibrariesDirectory()
-                                        .toAbsolutePath()
-                                        .toString()
+                                resolveLibraryDirectory(launchConfig).toString()
                         )
 
                         .setVariable(
@@ -164,6 +171,18 @@ public final class LaunchOptions {
                                 launchConfig.isDemoUser()
                         );
     }
+    /**
+     * The Forge and NeoForge installers put their libraries into {@code <game directory>/libraries}.
+     * Their JVM args build the module path from {@code ${library_directory}},
+     * so it has to point there
+     */
+    private static Path resolveLibraryDirectory(LaunchConfiguration launchConfig) {
+        if (launchConfig.getLoader() instanceof ForgeLoader || launchConfig.getLoader() instanceof NeoforgeLoader) {
+            return launchConfig.getJarFile().toAbsolutePath().getParent().resolve("libraries");
+        }
+        return launchConfig.getLibrariesDirectory().toAbsolutePath();
+    }
+
     private static String getOfflineUuid(String username) {
         return UUID.nameUUIDFromBytes(
                 ("OfflinePlayer:" + username)

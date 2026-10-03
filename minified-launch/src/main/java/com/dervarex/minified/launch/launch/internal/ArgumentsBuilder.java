@@ -18,6 +18,7 @@ import com.dervarex.minified.launch.launch.modding.quilt.QuiltLoader;
 import com.dervarex.minified.launch.launch.modding.quilt.QuiltProfileJsonLoader;
 import com.dervarex.minified.launch.launch.modding.vanilla.VanillaLoader;
 import com.dervarex.minified.launch.utils.X11Helper;
+import com.dervarex.minified.utils.ApiEndpoints;
 import com.dervarex.minified.utils.json.*;
 import org.apiguardian.api.API;
 
@@ -84,6 +85,14 @@ public class ArgumentsBuilder {
                     for (JsonValue e : fabricArguments.asObject().get("jvm").asArray()) {
                         jvmArgs.add(e.asString());
                     }
+                }
+
+                if (loader instanceof ForgeLoader && fabricArguments == null) {
+                    // FML checks the signature of the vanilla jar, but Mojang re-signed the old jars
+                    jvmArgs.add("-Dfml.ignoreInvalidMinecraftCertificates=true");
+                    jvmArgs.add("-Dfml.ignorePatchDiscrepancies=true");
+                    // FML up to 1.5.2 downloads libraries from files.minecraftforge.net/fmllibs, which is gone
+                    jvmArgs.add("-Dfml.core.libraries.mirror=" + ApiEndpoints.FML_LIBRARIES_MIRROR_URL);
                 }
             }
         }

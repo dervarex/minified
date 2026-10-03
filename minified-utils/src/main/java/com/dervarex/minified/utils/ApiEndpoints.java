@@ -19,6 +19,8 @@ public final class ApiEndpoints {
     public static final String FORGE_INSTALLER_BASE_URL = "https://maven.minecraftforge.net/net/minecraftforge/forge/";
     public static final String FORGE_MAVEN_METADATA_URL = "https://maven.minecraftforge.net/net/minecraftforge/forge/maven-metadata.xml";
     public static final String FORGE_PROMOTIONS_URL = "https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json";
+    // the libraries FML up to 1.5.2 downloads at startup, Forge doesn't host them anymore. %s is the file name. thanks to prismlauncher here
+    public static final String FML_LIBRARIES_MIRROR_URL = "https://files.prismlauncher.org/fmllibs/%s";
 
     // NeoForge
     public static final String NEOFORGE_INSTALLER_BASE_URL = "https://maven.neoforged.net/releases/net/neoforged/neoforge/";

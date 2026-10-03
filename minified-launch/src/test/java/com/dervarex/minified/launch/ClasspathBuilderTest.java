@@ -62,7 +62,8 @@ class ClasspathBuilderTest {
                   "libraries": [
                     { "name": "net.minecraftforge:forge:1.21.4-54.1.0:client", "downloads": { "artifact": { "path": "net/minecraftforge/forge/1.21.4-54.1.0/forge-1.21.4-54.1.0-client.jar" } } },
                     { "name": "org.ow2.asm:asm:9.8", "downloads": { "artifact": { "path": "org/ow2/asm/asm/9.8/asm-9.8.jar" } } },
-                    { "name": "org.apache.commons:commons-lang3:3.17.0", "downloads": { "artifact": { "path": "org/apache/commons/commons-lang3/3.17.0/commons-lang3-3.17.0.jar" } } }
+                    { "name": "org.apache.commons:commons-lang3:3.17.0", "downloads": { "artifact": { "path": "org/apache/commons/commons-lang3/3.17.0/commons-lang3-3.17.0.jar" } } },
+                    { "name": "org.scala-lang:scala-compiler:2.11.1", "serverreq": true, "clientreq": false }
                   ]
                 }
                 """.formatted(jvmArguments));

@@ -109,6 +109,10 @@ public class DownloadHelper {
         }
     }
 
+    private static boolean isTransient(int statusCode) {
+        return statusCode == 304 || statusCode == 408 || statusCode == 429 || statusCode >= 500;
+    }
+
     private static boolean downloadOnce(
             String url,
             Path path,
@@ -148,9 +152,13 @@ public class DownloadHelper {
             );
 
             if (response.statusCode() != 200) {
-                throw new RuntimeException(
-                        "HTTP " + response.statusCode() + " for " + url
-                );
+                response.body().close();
+                String message = "HTTP " + response.statusCode() + " for " + url;
+                // CDN hiccups, the minecraft resources CDN sometimes answers with a 304
+                if (isTransient(response.statusCode())) {
+                    throw new IOException(message);
+                }
+                throw new RuntimeException(message);
             }
 
             try (

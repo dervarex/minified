@@ -21,8 +21,14 @@ for (const file of readdirSync(inputDir)) {
 }
 
 const cmp = (a, b) => a.localeCompare(b, undefined, { numeric: true });
+// pre-release versions are before 1.0: rubydung, classic, indev/infdev, alpha, beta
+const ERAS = [/^rd-/, /^c\d/, /^in(f)?-/, /^a\d/, /^b\d/];
+const eraOf = v => { const i = ERAS.findIndex(e => e.test(v)); return i < 0 ? ERAS.length : i; };
+const cmpVersion = (a, b) => eraOf(a) - eraOf(b) || cmp(a, b);
+// rd-132211, inf-20100618, c0.30_01c don't fit in a cell
+const label = v => v.length > 7 ? v.split(/[-_]/)[0] : v;
 const loaders  = [...new Set(results.map(r => r.loader))].sort(cmp);
-const versions = [...new Set(results.map(r => r.mcVersion))].sort(cmp);
+const versions = [...new Set(results.map(r => r.mcVersion))].sort(cmpVersion);
 
 const lookup = new Map();
 for (const r of results) lookup.set(`${r.loader}\u0000${r.mcVersion}`, r);
@@ -129,7 +135,7 @@ const gridY = innerY + HEADER_H;
 
 for (let c = 0; c < versions.length; c++) {
     const cx = gridX + c * (CELL_W + GAP_X) + CELL_W / 2;
-    parts.push(`<text x="${cx}" y="${innerY + HEADER_H - 12}" font-size="12" font-weight="700" fill="${TEXT_DIM}" text-anchor="middle" letter-spacing="0.2">${esc(versions[c])}</text>`);
+    parts.push(`<text x="${cx}" y="${innerY + HEADER_H - 12}" font-size="12" font-weight="700" fill="${TEXT_DIM}" text-anchor="middle" letter-spacing="0.2">${esc(label(versions[c]))}</text>`);
 }
 
 for (let r = 0; r < loaders.length; r++) {
