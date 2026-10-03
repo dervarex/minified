@@ -86,9 +86,10 @@ jobs:
             ~/.gradle
           key: mc-${{ matrix.loader }}-${{ matrix.mc_version }}-${{ hashFiles('**/*.gradle*') }}
 
-      # LWJGL 2 (Minecraft 1.12.2 and older) runs the xrandr command to list the display modes and crashes without it
-      - name: Install Xvfb and xrandr
-        run: sudo apt-get update && sudo apt-get install -y xvfb x11-xserver-utils
+      # LWJGL 2 (Minecraft 1.12.2 and older) runs the xrandr command to list the display modes and crashes without it.
+      # 26.3+ need Mesa's EGL, see SDL_VIDEO_FORCE_EGL below
+      - name: Install Xvfb, xrandr and EGL
+        run: sudo apt-get update && sudo apt-get install -y xvfb x11-xserver-utils libegl1 libegl-mesa0 libgl1-mesa-dri
 
       - name: Run headless launch
         env:

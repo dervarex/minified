@@ -33,6 +33,9 @@ class VersionSupportTest {
         String message;
         try {
             LaunchConfiguration config = TestEnvironment.config(tempDir);
+            if (loader.equalsIgnoreCase("forge")) {
+                disableForgeEarlyWindow(config.getJarFile().toAbsolutePath().getParent());
+            }
             AtomicInteger exitCode = new AtomicInteger(Integer.MIN_VALUE);
             config.getEventBus().subscribe(GameStoppedEvent.class, event -> exitCode.set(event.exitCode()));
 
@@ -66,6 +69,16 @@ class VersionSupportTest {
     private static String describe(Throwable t) {
         return t.getClass().getSimpleName()
                 + (t.getMessage() != null ? ": " + t.getMessage() : "");
+    }
+
+    /**
+     * Forge's early loading window (26.2+) times out creating its OpenGL context with software rendering on C
+     * It's only the loading screen, the game window opens anyway
+     */
+    private static void disableForgeEarlyWindow(Path gameDir) throws IOException {
+        Path fmlConfig = gameDir.resolve("config").resolve("fml.toml");
+        Files.createDirectories(fmlConfig.getParent());
+        Files.writeString(fmlConfig, "earlyWindowControl = false\n");
     }
 
     private Path resolveResultFile(String loader, String mcVersion) throws IOException {
