@@ -160,14 +160,11 @@ Pull requests or branches are merged with **squash merges**. All commits of a br
 combined into a single commit on the main branch, so the main history stays
 readable and free of "fix typo" or a trillion "add" commits.
 
-The squashed commit is named after this schema:
+Since only one commit per branch ends up in the history, its message must clearly describe what changed. Branch names should therefore be descriptive, and the squashed commit should be named after the branch, for example:
 
 ```
-Merge branch 'branch/name'
+Add Forum implementation
 ```
-
-That means we afterwards will only see the branch names in the history, so they
-must explain what happened
 
 ### Branch naming
 
