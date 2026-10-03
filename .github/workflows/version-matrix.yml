@@ -144,7 +144,7 @@ jobs:
           merge-multiple: true
 
       - name: Generate SUPPORTED_VERSIONS.svg
-        run: node scripts/generate-supported-versions.mjs matrix-results SUPPORTED_VERSIONS.svg
+        run: python3 scripts/render.py matrix-results SUPPORTED_VERSIONS.svg scripts/template.svg
 
       - name: Commit if changed
         run: |
