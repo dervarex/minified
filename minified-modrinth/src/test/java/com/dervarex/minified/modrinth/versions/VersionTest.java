@@ -1,13 +1,33 @@
 package com.dervarex.minified.modrinth.versions;
 
+import com.dervarex.minified.modrinth.Modrinth;
+import com.dervarex.minified.modrinth.exceptions.ModrinthStateException;
 import com.dervarex.minified.modrinth.loaders.ModLoader;
+import com.sun.net.httpserver.HttpServer;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class VersionTest {
+
+    private final List<HttpServer> servers = new ArrayList<>();
+
+    @AfterEach
+    void stopServers() {
+        servers.forEach(server -> server.stop(0));
+    }
 
     @Test
     void getters_returnSetValues() {
@@ -132,5 +152,83 @@ class VersionTest {
     void supportsVersion_returnsFalse_whenNull() {
         Version version = new Version();
         assertFalse(version.supportsVersion(null));
+    }
+
+    @Test
+    void resolveDependencies_followsRequiredOnesAndSkipsOptionalOnes() throws IOException {
+        Modrinth modrinth = fakeModrinth(Map.of(
+                "root", version("root", "required:a", "optional:c"),
+                "a", version("a", "required:b"),
+                "b", version("b"),
+                "c", version("c")));
+        Version root = modrinth.versions().get("root");
+
+        assertEquals(List.of("a", "b"), ids(root.resolveDependencies()));
+        assertEquals(List.of("a", "b", "c"), ids(root.resolveDependencies(true, true)));
+        assertEquals(List.of("a"), ids(root.resolveDependencies(false, false)));
+    }
+
+    @Test
+    @Disabled("only optional ones get skipped, incompatible and embedded mods get resolved (and downloaded) as dependencies")
+    void resolveDependencies_ignoresIncompatibleAndEmbeddedOnes() throws IOException {
+        Modrinth modrinth = fakeModrinth(Map.of(
+                "root", version("root", "required:a", "incompatible:enemy", "embedded:inside"),
+                "a", version("a"),
+                "enemy", version("enemy"),
+                "inside", version("inside")));
+
+        assertEquals(List.of("a"), ids(modrinth.versions().get("root").resolveDependencies()));
+    }
+
+    @Test
+    @Disabled("with a -> b -> a the starting version ends up in its own dependency list")
+    void resolveDependencies_survivesCyclesWithoutListingItself() throws IOException {
+        Modrinth modrinth = fakeModrinth(Map.of(
+                "root", version("root", "required:a"),
+                "a", version("a", "required:root")));
+
+        assertEquals(List.of("a"), ids(modrinth.versions().get("root").resolveDependencies()));
+    }
+
+    @Test
+    void resolveDependencies_needsAClient() {
+        assertThrows(ModrinthStateException.class, () -> new Version().resolveDependencies());
+    }
+
+    @Test
+    void realIrisNeedsSodiumAndCanBeDownloaded(@TempDir Path tempDir) {
+        Version iris = Modrinth.connect().versions().get("ZnhzDm36");
+
+        assertTrue(ids(iris.resolveDependencies()).contains("joBzVWtR"));
+        Path jar = iris.download(tempDir);
+        assertEquals(2665879L, jar.toFile().length());
+    }
+
+    private Modrinth fakeModrinth(Map<String, String> versions) throws IOException {
+        HttpServer server = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
+        server.createContext("/version/", exchange -> {
+            String json = versions.get(exchange.getRequestURI().getPath().substring("/version/".length()));
+            byte[] body = (json == null ? "{}" : json).getBytes(StandardCharsets.UTF_8);
+            exchange.sendResponseHeaders(json == null ? 404 : 200, body.length);
+            exchange.getResponseBody().write(body);
+            exchange.close();
+        });
+        server.start();
+        servers.add(server);
+        return new Modrinth("http://localhost:" + server.getAddress().getPort());
+    }
+
+    private static String version(String id, String... dependencies) {
+        StringBuilder deps = new StringBuilder();
+        for (String dependency : dependencies) {
+            String[] parts = dependency.split(":");
+            if (!deps.isEmpty()) deps.append(',');
+            deps.append("{\"version_id\":\"").append(parts[1]).append("\",\"dependency_type\":\"").append(parts[0]).append("\"}");
+        }
+        return "{\"id\":\"" + id + "\",\"project_id\":\"p-" + id + "\",\"dependencies\":[" + deps + "]}";
+    }
+
+    private static List<String> ids(List<Version> versions) {
+        return versions.stream().map(Version::getId).toList();
     }
 }
