@@ -1,6 +1,5 @@
-package com.dervarex.minified.launch;
+package com.dervarex.minified.launch.launch.modding.neoforge.api;
 
-import com.dervarex.minified.launch.launch.modding.neoforge.api.NeoVersionFetcher;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

@@ -1,10 +1,9 @@
-package com.dervarex.minified.launch;
+package com.dervarex.minified.launch.launch;
 
 import com.dervarex.minified.events.EventBus;
+import com.dervarex.minified.launch.TestEnvironment;
 import com.dervarex.minified.launch.events.download.assets.DownloadAssetsEvent;
 import com.dervarex.minified.launch.events.download.client.DownloadClientJarEvent;
-import com.dervarex.minified.launch.launch.LaunchConfiguration;
-import com.dervarex.minified.launch.launch.Launcher;
 import com.dervarex.minified.launch.launch.modding.fabric.FabricLoader;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -13,12 +12,20 @@ import org.junit.jupiter.api.io.TempDir;
 import java.nio.file.Path;
 
 @Tag("manual")
-public class EventTest {
+class LauncherTest {
     @TempDir
-    public Path tempDir;
+    Path tempDir;
 
     @Test
     void launch() {
+        Launcher.launchMinecraft(
+                null,
+                TestEnvironment.config(tempDir)
+        );
+    }
+
+    @Test
+    void launchWithProgressOutput() {
         EventBus eventBus = new EventBus();
         LaunchConfiguration launchConfiguration = new LaunchConfiguration.Builder()
                 .downloadThreads(10)

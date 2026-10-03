@@ -1,7 +1,6 @@
-package com.dervarex.minified.launch;
+package com.dervarex.minified.utils.version;
 
 import com.dervarex.minified.utils.ApiEndpoints;
-import com.dervarex.minified.utils.version.VersionMetadataProvider;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
@@ -9,7 +8,7 @@ import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class VersionProviderTest {
+class VersionMetadataProviderTest {
 
     @Test
     void versionManifestEndpointLooksValid() {

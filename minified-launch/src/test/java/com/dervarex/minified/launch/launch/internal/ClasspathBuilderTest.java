@@ -1,9 +1,10 @@
-package com.dervarex.minified.launch;
+package com.dervarex.minified.launch.launch.internal;
 
 import com.dervarex.minified.launch.launch.LaunchConfiguration;
-import com.dervarex.minified.launch.launch.internal.ClasspathBuilder;
 import com.dervarex.minified.launch.launch.modding.forge.ForgeLoader;
+import com.dervarex.minified.launch.launch.modding.vanilla.VanillaLoader;
 import com.dervarex.minified.utils.json.JsonFile;
+import com.dervarex.minified.utils.os.OS;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -50,6 +51,47 @@ class ClasspathBuilderTest {
         List<String> classpath = buildForgeClasspath("[\"-DignoreList=client-extra,${version_name}.jar\"]");
 
         assertFalse(classpath.contains(tempDir.resolve("jar/client.jar").toAbsolutePath().toString()));
+    }
+
+    @Test
+    void vanillaOnlyTakesLibrariesItCanUse() {
+        String versionJson = """
+                {
+                  "id": "1.21.11",
+                  "libraries": [
+                    { "name": "org.ow2.asm:asm:9.6", "downloads": { "artifact": { "path": "org/ow2/asm/asm/9.6/asm-9.6.jar" } } },
+                    { "name": "org.lwjgl:lwjgl:3.3.3:natives-linux" },
+                    { "name": "org.lwjgl.lwjgl:lwjgl-platform:2.9.4", "natives": { "linux": "natives-linux" } },
+                    { "name": "some:other-os-only:1.0", "rules": [{ "action": "allow", "os": { "name": "%s" } }] },
+                    { "name": "some:server-only:1.0", "clientreq": false }
+                  ]
+                }
+                """.formatted(OS.getCurrentOS() == OS.WINDOWS ? "linux" : "windows");
+
+        assertEquals(List.of(
+                tempDir.resolve("libraries/org/ow2/asm/asm/9.6/asm-9.6.jar").toString(),
+                tempDir.resolve("libraries/org/lwjgl/lwjgl/3.3.3/lwjgl-3.3.3-natives-linux.jar").toString(),
+                tempDir.resolve("jar/client.jar").toString()
+        ), buildVanillaClasspath(versionJson));
+    }
+
+    @Test
+    void prefersLibrariesTheInstallerPutIntoTheGameDirectory() throws IOException {
+        Path installed = Files.createDirectories(tempDir.resolve("jar/libraries/org/ow2/asm/asm/9.6")).resolve("asm-9.6.jar");
+        Files.createFile(installed);
+
+        assertEquals(installed.toString(), buildVanillaClasspath(VANILLA_JSON).getFirst());
+    }
+
+    private List<String> buildVanillaClasspath(String versionJson) {
+        LaunchConfiguration config = new LaunchConfiguration.Builder()
+                .assetsDirectory(tempDir.resolve("assets"))
+                .librariesDirectory(tempDir.resolve("libraries"))
+                .jarFile(tempDir.resolve("jar/client.jar"))
+                .loader(new VanillaLoader("1.21.11"))
+                .build();
+
+        return List.of(ClasspathBuilder.buildClasspath(new JsonFile(versionJson), config, false).split(File.pathSeparator));
     }
 
     private List<String> buildForgeClasspath(String jvmArguments) throws IOException {

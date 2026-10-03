@@ -1,6 +1,5 @@
-package com.dervarex.minified.launch;
+package com.dervarex.minified.launch.download.assets;
 
-import com.dervarex.minified.launch.download.assets.LegacyAssets;
 import com.dervarex.minified.launch.launch.LaunchConfiguration;
 import com.dervarex.minified.launch.launch.modding.vanilla.VanillaLoader;
 import com.dervarex.minified.utils.json.JsonFile;
@@ -52,6 +51,19 @@ class LegacyAssetsTest {
         assertEquals(tempDir.resolve("assets"), LegacyAssets.resolveGameAssetsDirectory(versionJson("1.12"), config));
         assertFalse(Files.exists(tempDir.resolve("assets/virtual")));
         assertFalse(Files.exists(tempDir.resolve("jar/resources")));
+    }
+
+    @Test
+    void doesNotWriteOutsideTheAssetsFolder() throws IOException {
+        LaunchConfiguration config = setUp("legacy", "\"virtual\": true,");
+        // in case the cdn sends us an index with funny names
+        Files.writeString(tempDir.resolve("assets/indexes/legacy.json"), """
+                { "virtual": true, "objects": { "../../../escaped.png": { "hash": "%s", "size": 4 } } }
+                """.formatted(HASH));
+
+        LegacyAssets.reconstruct(versionJson("legacy"), config);
+
+        assertFalse(Files.exists(tempDir.resolve("escaped.png")));
     }
 
     private LaunchConfiguration setUp(String indexId, String flags) throws IOException {

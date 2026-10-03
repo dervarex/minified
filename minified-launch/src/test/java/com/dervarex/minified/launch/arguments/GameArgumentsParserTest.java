@@ -1,11 +1,11 @@
 package com.dervarex.minified.launch.arguments;
 
-import com.dervarex.minified.utils.json.JsonArray;
-import com.dervarex.minified.utils.json.JsonBoolean;
-import com.dervarex.minified.utils.json.JsonObject;
-import com.dervarex.minified.utils.json.JsonString;
+import com.dervarex.minified.utils.json.*;
+import com.dervarex.minified.utils.json.JsonFile;
+import com.dervarex.minified.utils.os.OS;
 import org.junit.jupiter.api.Test;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -83,7 +83,7 @@ class GameArgumentsParserTest {
         JsonArray rules = new JsonArray();
         rules.add(new JsonObject(Map.of(
                 "action", new JsonString("allow"),
-                "os", new JsonObject(Map.of("name", new JsonString(currentOsToken())))
+                "os", new JsonObject(Map.of("name", new JsonString(OS.getCurrentOS().getName())))
         )));
 
         JsonArray arguments = new JsonArray();
@@ -97,18 +97,42 @@ class GameArgumentsParserTest {
         assertEquals(List.of("--supported-os"), parsed);
     }
 
-    private static String currentOsToken() {
-        String osName = System.getProperty("os.name", "").toLowerCase();
-        if (osName.contains("win")) {
-            return "windows";
-        }
-        if (osName.contains("mac")) {
-            return "osx";
-        }
-        if (osName.contains("linux")) {
-            return "linux";
-        }
-        return "unknown";
+    @Test
+    void parseDropsClientIdAndXuidTogetherWithTheirValues() {
+        List<String> parsed = GameArgumentsParser.parse(
+                json("[\"--clientId\", \"${clientid}\", \"--xuid\", \"${auth_xuid}\", \"--version\", \"1.21.11\"]"),
+                Map.of("clientid", "secret", "auth_xuid", "also-secret"),
+                Map.of()
+        );
+
+        assertEquals(List.of("--version", "1.21.11"), parsed);
+    }
+
+    @Test
+    void parseReplacesMissingValuesWithNothing() {
+        Map<String, String> variables = new HashMap<>();
+        variables.put("auth_session", null);
+
+        assertEquals(List.of("--session", ""), GameArgumentsParser.parse(json("[\"--session\", \"${auth_session}\"]"), variables, Map.of()));
+    }
+
+    @Test
+    void parseLetsDisallowOverrideAnEarlierAllow() {
+        JsonArray arguments = json("""
+                [{
+                  "rules": [
+                    { "action": "allow" },
+                    { "action": "disallow", "os": { "name": "%s" } }
+                  ],
+                  "value": "--not-on-this-os"
+                }]
+                """.formatted(OS.getCurrentOS().getName()));
+
+        assertEquals(List.of(), GameArgumentsParser.parse(arguments, Map.of(), Map.of()));
+    }
+
+    private static JsonArray json(String content) {
+        return new JsonFile(content).asArray();
     }
 }
 

@@ -1,9 +1,11 @@
 package com.dervarex.minified.launch.arguments;
 
 import com.dervarex.minified.utils.json.JsonArray;
+import com.dervarex.minified.utils.json.JsonFile;
 import com.dervarex.minified.utils.json.JsonNumber;
 import com.dervarex.minified.utils.json.JsonObject;
 import com.dervarex.minified.utils.json.JsonString;
+import com.dervarex.minified.utils.os.OS;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -31,7 +33,7 @@ class JvmArgumentsParserTest {
         JsonArray rules = new JsonArray();
         rules.add(new JsonObject(Map.of(
                 "action", new JsonString("allow"),
-                "os", new JsonObject(Map.of("name", new JsonString(currentOsToken())))
+                "os", new JsonObject(Map.of("name", new JsonString(OS.getCurrentOS().getName())))
         )));
 
         JsonObject conditionalArg = new JsonObject(Map.of(
@@ -79,26 +81,41 @@ class JvmArgumentsParserTest {
         assertEquals(List.of("-Dvalid=true"), parsed);
     }
 
-    private static String currentOsToken() {
-        String osName = System.getProperty("os.name", "").toLowerCase();
-        if (osName.contains("win")) {
-            return "windows";
-        }
-        if (osName.contains("mac")) {
-            return "osx";
-        }
-        if (osName.contains("linux")) {
-            return "linux";
-        }
-        return "unknown";
+    @Test
+    void parseFlattensArrayValues() {
+        JsonArray jvm = json("""
+                [{ "value": ["-Xss1M", "-Dfoo=bar"] }]
+                """);
+
+        assertEquals(List.of("-Xss1M", "-Dfoo=bar"), JvmArgumentsParser.parse(jvm, 256, 1024));
+    }
+
+    @Test
+    void parseRespectsOsVersionRanges() {
+        JsonArray jvm = json("""
+                [
+                  { "rules": [{ "action": "allow", "os": { "versionRange": { "min": "0" } } }], "value": "-Dold.enough=true" },
+                  { "rules": [{ "action": "allow", "os": { "versionRange": { "min": "99999" } } }], "value": "-Dfrom.the.future=true" }
+                ]
+                """);
+
+        assertEquals(List.of("-Dold.enough=true"), JvmArgumentsParser.parse(jvm, 256, 1024));
+    }
+
+    @Test
+    void parseReadsDefaultUserJvmFromObjects() {
+        JsonObject arguments = new JsonFile("""
+                { "default-user-jvm": [{ "value": ["-Xmx2G", "-XX:+UseZGC"] }] }
+                """).asObject();
+
+        assertEquals(List.of("-Xmx4096M", "-XX:+UseZGC"), JvmArgumentsParser.parse(arguments, 512, 4096));
+    }
+
+    private static JsonArray json(String content) {
+        return new JsonFile(content).asArray();
     }
 
     private static String nonCurrentOsToken() {
-        String current = currentOsToken();
-        if (!"windows".equals(current)) {
-            return "windows";
-        }
-        return "linux";
+        return OS.getCurrentOS() == OS.WINDOWS ? "linux" : "windows";
     }
 }
-

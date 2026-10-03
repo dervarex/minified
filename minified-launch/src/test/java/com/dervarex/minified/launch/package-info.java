@@ -1,5 +1,4 @@
 /**
- * Tests for launcher behavior and environment handling.
+ * Shared test setup and the version matrix.
  */
 package com.dervarex.minified.launch;
-

@@ -1,6 +1,5 @@
-package com.dervarex.minified.launch;
+package com.dervarex.minified.launch.launch.modding.quilt;
 
-import com.dervarex.minified.launch.launch.modding.quilt.QuiltLoaderFetcher;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

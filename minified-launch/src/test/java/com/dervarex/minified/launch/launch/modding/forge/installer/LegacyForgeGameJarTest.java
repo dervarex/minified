@@ -1,10 +1,7 @@
-package com.dervarex.minified.launch;
+package com.dervarex.minified.launch.launch.modding.forge.installer;
 
 import com.dervarex.minified.launch.launch.LaunchConfiguration;
 import com.dervarex.minified.launch.launch.modding.forge.ForgeLoader;
-import com.dervarex.minified.launch.launch.modding.forge.api.ForgeVersionJson;
-import com.dervarex.minified.launch.launch.modding.forge.installer.LegacyForgeGameJar;
-import com.dervarex.minified.launch.launch.modding.forge.installer.LegacyForgeInstaller;
 import com.dervarex.minified.utils.json.JsonFile;
 import com.dervarex.minified.utils.json.JsonObject;
 import org.junit.jupiter.api.Test;
@@ -24,16 +21,10 @@ import java.util.zip.ZipOutputStream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-class LegacyForgeTest {
+class LegacyForgeGameJarTest {
 
     @TempDir
     Path tempDir;
-
-    @Test
-    void versionIdKeepsTheBranchSuffix() {
-        assertEquals("1.7.10-forge-10.13.4.1614-1.7.10", ForgeVersionJson.getVersionId("1.7.10-10.13.4.1614-1.7.10"));
-        assertEquals("1.21.11-forge-61.1.8", ForgeVersionJson.getVersionId("1.21.11-61.1.8"));
-    }
 
     @Test
     void newerForgeUsesTheVanillaJar() {
