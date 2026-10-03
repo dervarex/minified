@@ -32,6 +32,19 @@ public class HttpUtilTest {
             exchange.getResponseBody().write(body);
             exchange.close();
         });
+        server.createContext("/echo", exchange -> {
+            byte[] body = (exchange.getRequestMethod() + " " + exchange.getRequestHeaders().getFirst("Content-Type") + " "
+                    + new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8)).getBytes(StandardCharsets.UTF_8);
+            exchange.sendResponseHeaders(200, body.length);
+            exchange.getResponseBody().write(body);
+            exchange.close();
+        });
+        server.createContext("/busy", exchange -> {
+            byte[] body = "come back later".getBytes(StandardCharsets.UTF_8);
+            exchange.sendResponseHeaders(503, body.length);
+            exchange.getResponseBody().write(body);
+            exchange.close();
+        });
         server.start();
         baseUrl = "http://localhost:" + server.getAddress().getPort();
     }
@@ -53,5 +66,22 @@ public class HttpUtilTest {
         assertNotNull(ex);
         assertEquals(500, ex.getStatusCode());
     }
-}
 
+    @Test
+    void requestJsonSendsTheBodyAsJson() throws Exception {
+        HttpResponse response = HttpUtil.requestJson("POST", baseUrl + "/echo", "{\"hello\":true}");
+
+        assertEquals(200, response.statusCode());
+        assertEquals("POST application/json {\"hello\":true}", response.getBodyAsString());
+    }
+
+    @Test
+    void errorsKeepWhatTheServerSaid() {
+        HttpException ex = assertThrows(HttpException.class, () -> HttpUtil.get(baseUrl + "/busy"));
+
+        assertTrue(ex.isTransientFailure());
+        assertEquals(HttpException.Method.GET, ex.getMethod());
+        assertEquals(baseUrl + "/busy", ex.getUrl());
+        assertEquals("come back later", ex.responseSnippet(100));
+    }
+}

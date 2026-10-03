@@ -280,4 +280,28 @@ public class ParserTest {
         String errOutput = errContent.toString();
         assertTrue(errOutput.contains("Missing arguments"), "Should show error for missing arguments");
     }
+
+    @Test
+    public void testDefaultPrefixWithoutHelpText() {
+        Parser plain = new Parser();
+        plain.register("ping", () -> System.out.println("pong"));
+
+        plain.parse(new String[]{"--ping"});
+        plain.parse(new String[]{"--help"});
+
+        String output = outContent.toString();
+        assertTrue(output.startsWith("pong"), "Should use -- when no prefix is given");
+        assertTrue(output.contains("No description"), "Should say so when there is no help text");
+    }
+
+    @Test
+    public void testVarArgsStopAtTheNextFlag() {
+        parser.registerVarArgs("echo", "Echo all arguments", args -> {
+            System.out.println(String.join(" ", args));
+        });
+
+        parser.parse(new String[]{"--echo", "Hello", "there", "--hello"});
+
+        assertEquals("Hello there\nHello World!\n", outContent.toString(), "Should hand the next flag to its own command");
+    }
 }
