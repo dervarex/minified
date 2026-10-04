@@ -19,7 +19,7 @@ class HeadlessWatcherTest {
 
     @Test
     void stopsTheGameOnceItReachedTheMenu() throws Exception {
-        Process game = game("echo Loading; echo 'Sound engine started'; sleep 30");
+        Process game = game("echo Loading; echo 'Sound engine started'; exec sleep 30");
 
         assertEquals(0, watcher.watch(game));
         assertFalse(game.isAlive());
@@ -27,7 +27,7 @@ class HeadlessWatcherTest {
 
     @Test
     void crashesAreFailures() throws Exception {
-        assertNotEquals(0, watcher.watch(game("echo '#@!@# Game crashed!'; sleep 30")));
+        assertNotEquals(0, watcher.watch(game("echo '#@!@# Game crashed!'; exec sleep 30")));
     }
 
     @Test
@@ -39,7 +39,7 @@ class HeadlessWatcherTest {
                 echo 'Time: today'
                 echo 'Description: Loading screen debug info'
                 echo 'Sound engine started'
-                sleep 30
+                exec sleep 30
                 """);
 
         assertEquals(0, watcher.watch(game));
@@ -55,7 +55,7 @@ class HeadlessWatcherTest {
                 echo 'Description: Rendering overlay'
                 echo 'java.lang.NullPointerException'
                 echo 'Sound engine started'
-                sleep 30
+                exec sleep 30
                 """);
 
         assertNotEquals(0, watcher.watch(game));
@@ -65,7 +65,7 @@ class HeadlessWatcherTest {
     void givesUpAfterTheTimeout() throws Exception {
         HeadlessWatcher impatient = new HeadlessWatcher(new String[]{"Sound engine started"}, 1, TimeUnit.MILLISECONDS.toNanos(200));
 
-        assertEquals(124, impatient.watch(game("echo 'still loading'; sleep 30")));
+        assertEquals(124, impatient.watch(game("echo 'still loading'; exec sleep 30")));
     }
 
     @Test

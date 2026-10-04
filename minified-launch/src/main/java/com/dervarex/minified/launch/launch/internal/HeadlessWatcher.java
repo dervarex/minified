@@ -88,8 +88,10 @@ public final class HeadlessWatcher {
                     if (crashReportLinesLeft >= 0) {
                         if (line.contains(FAKE_CRASH_REPORT_DESCRIPTION)) {
                             crashReportLinesLeft = -1;
-                        } else if (crashReportLinesLeft-- == 0) {
+                        } else if (line.contains("Description: ") || crashReportLinesLeft-- == 0) {
+                            // any other description means it's real
                             crashed.set(true);
+                            crashReportLinesLeft = -1;
                         }
                     }
                     for (String crashMarker : HEADLESS_CRASH_MARKERS) {
