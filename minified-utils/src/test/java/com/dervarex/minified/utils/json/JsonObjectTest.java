@@ -44,4 +44,9 @@ class JsonObjectTest {
         assertThrows(IllegalStateException.class, () -> json.getString("number"));
         assertThrows(IllegalStateException.class, () -> json.getObject("number"));
     }
+
+    @Test
+    void sameContentMeansEqual() {
+        assertEquals(JsonParser.parse("{\"a\": [1, {\"b\": true}]}"), JsonParser.parse("{ \"a\" : [ 1, { \"b\" : true } ] }"));
+    }
 }

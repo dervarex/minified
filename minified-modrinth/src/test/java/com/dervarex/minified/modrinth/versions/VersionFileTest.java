@@ -40,6 +40,12 @@ class VersionFileTest {
             exchange.getResponseBody().write(JAR);
             exchange.close();
         });
+        server.createContext("/cut.jar", exchange -> {
+            // promises 1000 bytes, delivers 10, then the connection is gone
+            exchange.sendResponseHeaders(200, 1000);
+            exchange.getResponseBody().write(JAR, 0, 10);
+            exchange.close();
+        });
         server.createContext("/gone.jar", exchange -> {
             exchange.sendResponseHeaders(404, -1);
             exchange.close();
@@ -74,6 +80,15 @@ class VersionFileTest {
     @Test
     void leavesNothingBehindWhenTheHashIsWrong() throws IOException {
         assertThrows(ModrinthDownloadException.class, () -> file("/mod.jar", Map.of("sha1", "0".repeat(40))).download(tempDir));
+
+        try (var files = Files.list(tempDir)) {
+            assertEquals(0, files.count());
+        }
+    }
+
+    @Test
+    void brokenTransfersLeaveNothingBehindEither() throws IOException {
+        assertThrows(ModrinthDownloadException.class, () -> file("/cut.jar", Map.of()).download(tempDir));
 
         try (var files = Files.list(tempDir)) {
             assertEquals(0, files.count());

@@ -669,7 +669,7 @@ public class LibraryDownloader {
         if (parent == null) {
             return librariesDir.toAbsolutePath().resolve("natives");
         }
-        return parent.resolve("jar").resolve("natives").toAbsolutePath();
+        return parent.resolve("natives").toAbsolutePath();
     }
 
     private record DownloadTarget(String url, Path path, String sha1, long size, boolean useSha1) {

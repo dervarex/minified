@@ -1,5 +1,6 @@
 package com.dervarex.minified.utils.exceptions;
 
+import com.dervarex.minified.utils.json.JsonString;
 import org.apiguardian.api.API;
 
 import java.time.Instant;
@@ -85,8 +86,7 @@ public class StopException extends RuntimeException {
     }
 
     private static String escape(String s) {
-        if (s == null) return "null";
-        return '"' + s.replace("\\", "\\\\").replace("\"", "\\\"") + '"';
+        return s == null ? "null" : new JsonString(s).toJson();
     }
 
     // Convenience factories

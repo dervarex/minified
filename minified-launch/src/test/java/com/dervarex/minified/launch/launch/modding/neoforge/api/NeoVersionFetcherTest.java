@@ -36,4 +36,14 @@ class NeoVersionFetcherTest {
         assertFalse(NeoVersionFetcher.isLegacyVersion("21.1.252"));
         assertFalse(NeoVersionFetcher.isLegacyVersion("26.1.0.20"));
     }
+
+    @Test
+    void ordersVersionsLikeHumansWould() {
+        assertTrue(NeoVersionFetcher.compareVersions("21.1.252", "21.1.9") > 0);
+        assertTrue(NeoVersionFetcher.compareVersions("21.4.0-beta", "21.4.0") < 0);
+        assertTrue(NeoVersionFetcher.compareVersions("21.4.0-beta", "21.4.1") < 0);
+        assertTrue(NeoVersionFetcher.compareVersions("26.1.0.20", "26.1.0") > 0);
+        assertTrue(NeoVersionFetcher.compareVersions("21.0.0-alpha.2", "21.0.0-alpha.10") < 0);
+        assertEquals(0, NeoVersionFetcher.compareVersions("21.1.1", "21.1.1"));
+    }
 }

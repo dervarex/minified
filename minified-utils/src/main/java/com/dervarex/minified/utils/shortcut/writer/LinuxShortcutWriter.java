@@ -41,7 +41,7 @@ final class LinuxShortcutWriter implements ShortcutWriter {
 
     private String buildExecLine(Shortcut s) {
         StringBuilder sb = new StringBuilder();
-        sb.append('"').append(s.execPath().toAbsolutePath()).append('"');
+        sb.append(ShortcutSupport.desktopExecQuote(s.execPath().toAbsolutePath().toString()));
         if (s.arguments() != null && !s.arguments().isBlank()) {
             sb.append(' ').append(s.arguments());
         }

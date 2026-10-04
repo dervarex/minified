@@ -178,11 +178,15 @@ public class Version {
             if (dependency == null) {
                 continue;
             }
-            if (dependency.dependencyType == DependencyType.OPTIONAL && !includeOptional) {
+            // incompatible ones are mods that must NOT be there, embedded ones already are inside the jar
+            boolean wanted = dependency.dependencyType == DependencyType.REQUIRED
+                    || (dependency.dependencyType == DependencyType.OPTIONAL && includeOptional);
+            if (!wanted) {
                 continue;
             }
             Version resolvedDependency = resolveDependency(dependency);
-            if (resolvedDependency == null || resolvedDependency.id == null) {
+            // already on the way down here (a -> b -> a), that includes the version we started with
+            if (resolvedDependency == null || resolvedDependency.id == null || visiting.contains(resolvedDependency.id)) {
                 continue;
             }
             if (resolved.putIfAbsent(resolvedDependency.id, resolvedDependency) == null && recursive && visiting.add(resolvedDependency.id)) {

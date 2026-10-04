@@ -42,7 +42,13 @@ public final class EventBus {
     @API(status = API.Status.STABLE)
     public <T extends Event> void post(T event) {
         for (EventListener<?> listener : listeners.getOrDefault(event.getClass(), List.of())) {
-            ((EventListener<T>) listener).onEvent(event);
+            // one broken listener shouldn't take down the others or whoever posted (like a running download)
+            try {
+                ((EventListener<T>) listener).onEvent(event);
+            } catch (RuntimeException e) {
+                System.err.println("Listener for " + event.getClass().getSimpleName() + " threw:");
+                e.printStackTrace();
+            }
         }
     }
 

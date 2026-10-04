@@ -2,7 +2,6 @@ package com.dervarex.minified.utils.exceptions;
 
 import com.dervarex.minified.utils.json.JsonObject;
 import com.dervarex.minified.utils.json.JsonParser;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -35,7 +34,6 @@ class HttpExceptionTest {
     }
 
     @Test
-    @Disabled("escape() only handles \\ and \", a line break in the body ends up raw in the JSON")
     void toJsonSurvivesUglyResponses() {
         HttpException e = new HttpException.Builder()
                 .status(502)

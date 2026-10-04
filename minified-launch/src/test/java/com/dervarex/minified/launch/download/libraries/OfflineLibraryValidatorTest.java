@@ -104,4 +104,25 @@ class OfflineLibraryValidatorTest {
             throw new IllegalStateException(e);
         }
     }
+
+    @Test
+    void fabricLibrariesAreCheckedToo() throws IOException {
+        cacheVersionJson();
+        writeLibrary("org/ow2/asm/asm/9.8/asm-9.8.jar", "asm");
+        writeLibrary("com/mojang/brigadier/1.3.10/brigadier-1.3.10.jar", "brigadier");
+        Path profile = Files.createDirectories(tempDir.resolve("jar/cache/profiles/fabric")).resolve("1.21.11.json");
+        Files.writeString(profile, """
+                { "libraries": [
+                    { "name": "net.fabricmc:fabric-loader:0.16.14", "url": "https://maven.fabricmc.net/" },
+                    { "name": "net.fabricmc:intermediary:1.21.11", "url": "https://maven.fabricmc.net/", "sha1": "%s" }
+                ] }
+                """.formatted(sha1("intermediary")));
+        writeLibrary("net/fabricmc/intermediary/1.21.11/intermediary-1.21.11.jar", "not intermediary");
+
+        OfflineModeNeedsNetworkException e = assertThrows(OfflineModeNeedsNetworkException.class,
+                () -> OfflineLibraryValidator.validate("1.21.11", new FabricLoader("1.21.11", "0.16.14"), librariesDir()));
+
+        // the loader is missing, intermediary is there but broken
+        assertEquals(2, e.getMissingResources().size());
+    }
 }

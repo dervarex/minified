@@ -29,4 +29,10 @@ class ShortcutSupportTest {
         assertEquals("'it'\\''s'", ShortcutSupport.shellQuote("it's"));
         assertEquals("'it''s'", ShortcutSupport.psQuote("it's"));
     }
+
+    @Test
+    void desktopExecPathsSurviveSpecialCharacters() {
+        assertEquals("\"/home/a \\\\$HOME \\\\` \\\\\" \\\\\\\\ 100%%\"",
+                ShortcutSupport.desktopExecQuote("/home/a $HOME ` \" \\ 100%"));
+    }
 }

@@ -11,6 +11,7 @@ class OSTest {
     @CsvSource({
             "Windows 11, WINDOWS",
             "Mac OS X, MACOS",
+            "Darwin, MACOS",
             "Linux, LINUX",
             "FreeBSD, UNKNOWN"
     })

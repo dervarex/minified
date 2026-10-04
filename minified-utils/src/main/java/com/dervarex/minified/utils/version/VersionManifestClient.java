@@ -2,7 +2,6 @@ package com.dervarex.minified.utils.version;
 
 import com.dervarex.minified.utils.ApiEndpoints;
 import com.dervarex.minified.utils.exceptions.HttpException;
-import com.dervarex.minified.utils.http.HttpUtil;
 import com.dervarex.minified.utils.json.JsonFile;
 import com.dervarex.minified.utils.json.JsonValue;
 import org.apiguardian.api.API;
@@ -11,6 +10,9 @@ import java.io.IOException;
 
 @API(status = API.Status.INTERNAL)
 public final class VersionManifestClient {
+    // everything in here asks for the manifest, once every few minutes is plenty
+    static final RecentResponses CACHE = new RecentResponses();
+
     private VersionManifestClient() {
     }
 
@@ -20,7 +22,7 @@ public final class VersionManifestClient {
      * @throws IOException if there is an error reading the response
      */
     public static JsonFile getManifest() throws HttpException, IOException {
-        return new JsonFile(HttpUtil.get(ApiEndpoints.VERSION_MANIFEST_URL));
+        return new JsonFile(CACHE.get(ApiEndpoints.VERSION_MANIFEST_URL));
     }
 
     /**

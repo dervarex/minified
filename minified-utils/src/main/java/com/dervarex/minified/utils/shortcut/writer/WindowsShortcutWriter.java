@@ -3,6 +3,7 @@ package com.dervarex.minified.utils.shortcut.writer;
 import com.dervarex.minified.utils.shortcut.Shortcut;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -48,9 +49,11 @@ final class WindowsShortcutWriter implements ShortcutWriter {
         pb.redirectErrorStream(true);
 
         Process process = pb.start();
+        // read it, or a chatty powershell fills the pipe and waits forever
+        String output = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8).trim();
         try {
             if (process.waitFor() != 0) {
-                throw new IOException("PowerShell shortcut creation failed");
+                throw new IOException("PowerShell shortcut creation failed: " + output);
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

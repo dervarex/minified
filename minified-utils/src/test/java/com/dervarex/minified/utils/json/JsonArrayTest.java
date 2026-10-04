@@ -33,4 +33,12 @@ class JsonArrayTest {
 
         assertThrows(UnsupportedOperationException.class, () -> array.values().add(new JsonString("b")));
     }
+
+    @Test
+    void nullsComeBackAsNullForEveryGetter() {
+        JsonArray array = JsonParser.parse("[null]").asArray();
+
+        assertNull(array.getObject(0));
+        assertNull(array.getArray(0));
+    }
 }

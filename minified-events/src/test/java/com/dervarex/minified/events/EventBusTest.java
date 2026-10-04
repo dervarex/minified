@@ -2,7 +2,6 @@ package com.dervarex.minified.events;
 
 import com.dervarex.minified.events.type.connection.CheckConnectionEvent;
 import com.dervarex.minified.events.type.connection.OfflineEvent;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -64,7 +63,6 @@ class EventBusTest {
     }
 
     @Test
-    @Disabled("post() has no try/catch, a throwing listener skips everyone after it and blows up whoever posted")
     void oneBrokenListenerDoesNotRuinItForTheOthers() {
         eventBus.subscribe(OfflineEvent.class, event -> {
             throw new IllegalStateException("some gui listener having a bad day");

@@ -1,8 +1,10 @@
 package com.dervarex.minified.utils.nbt.tag;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Optional;
 
 public final class NbtCompound implements NbtTag {
@@ -11,7 +13,8 @@ public final class NbtCompound implements NbtTag {
     public byte id() { return 10; }
 
     public void put(String key, NbtTag value) {
-        entries.put(key, value);
+        // crashing here beats crashing on save, where nobody knows which key it was
+        entries.put(key, Objects.requireNonNull(value, () -> "NBT can't store null (key: " + key + ")"));
     }
 
     public void setString(String key, String value) { put(key, new NbtString(value)); }
@@ -77,9 +80,9 @@ public final class NbtCompound implements NbtTag {
                 .orElseThrow(() -> new NoSuchElementException("No int tag: " + key));
     }
 
-    public NbtIntArray getIntArray(String key) {
+    public int[] getIntArray(String key) {
         return get(key).filter(NbtIntArray.class::isInstance)
-                .map(NbtIntArray.class::cast)
+                .map(NbtIntArray.class::cast).map(NbtIntArray::value)
                 .orElseThrow(() -> new NoSuchElementException("No int array tag: " + key));
     }
 
@@ -117,6 +120,6 @@ public final class NbtCompound implements NbtTag {
     public boolean has(String key) { return entries.containsKey(key); }
 
     public Map<String, NbtTag> asMap() {
-        return Map.copyOf(entries); // read only snapshot for the public
+        return Collections.unmodifiableMap(new LinkedHashMap<>(entries)); // read only snapshot for the public, keeps the order
     }
 }

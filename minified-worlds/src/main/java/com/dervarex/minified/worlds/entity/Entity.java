@@ -21,7 +21,7 @@ public class Entity {
     public String id() { return raw.getString("id"); }
 
     public UUID uuid() {
-        int[] parts = raw.getIntArray("UUID").value();
+        int[] parts = raw.getIntArray("UUID");
         long most = ((long) parts[0] << 32) | (parts[1] & 0xFFFFFFFFL);
         long least = ((long) parts[2] << 32) | (parts[3] & 0xFFFFFFFFL);
         return new UUID(most, least);

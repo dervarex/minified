@@ -63,7 +63,7 @@ public class Level {
         level.nbtVersion = data.getInt("version");
         level.modded = data.getBoolean("WasModded");
 
-        level.singleplayerUuid = intArrayToUuid(data.getIntArray("singleplayer_uuid").value());
+        level.singleplayerUuid = intArrayToUuid(data.getIntArray("singleplayer_uuid"));
 
         return level;
     }

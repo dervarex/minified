@@ -67,28 +67,36 @@ public class VersionFile {
             }
 
             Path temp = Files.createTempFile(directory, "modrinth-", ".download");
-            HttpClient client = HttpClient.newHttpClient();
-            HttpRequest request = HttpRequest.newBuilder(URI.create(url)).GET().build();
-            java.net.http.HttpResponse<InputStream> response = client.send(request, BodyHandlers.ofInputStream());
-            if (response.statusCode() < 200 || response.statusCode() >= 300) {
+            try {
+                return downloadTo(temp, destination, hashName);
+            } finally {
                 Files.deleteIfExists(temp);
-                throw new ModrinthDownloadException("Failed to download " + resolveFilename() + " (HTTP " + response.statusCode() + ")");
             }
-            try (InputStream in = response.body(); OutputStream out = Files.newOutputStream(temp)) {
-                in.transferTo(out);
-            }
-            if (hashName != null && !hashMatches(temp, hashName, hashes.get(hashName))) {
-                Files.deleteIfExists(temp);
-                throw new ModrinthDownloadException("Hash verification failed for " + resolveFilename() + " using " + hashName);
-            }
-            Files.move(temp, destination, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-            return destination;
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
             throw new ModrinthDownloadException("Failed to download " + resolveFilename(), ex);
         } catch (IOException ex) {
             throw new ModrinthDownloadException("Failed to download " + resolveFilename(), ex);
         }
+    }
+
+    // the temp file gets cleaned up by the caller, whatever happens in here
+    private Path downloadTo(Path temp, Path destination, String hashName) throws IOException, InterruptedException {
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest.newBuilder(URI.create(url)).GET().build();
+        java.net.http.HttpResponse<InputStream> response = client.send(request, BodyHandlers.ofInputStream());
+        if (response.statusCode() < 200 || response.statusCode() >= 300) {
+            response.body().close();
+            throw new ModrinthDownloadException("Failed to download " + resolveFilename() + " (HTTP " + response.statusCode() + ")");
+        }
+        try (InputStream in = response.body(); OutputStream out = Files.newOutputStream(temp)) {
+            in.transferTo(out);
+        }
+        if (hashName != null && !hashMatches(temp, hashName, hashes.get(hashName))) {
+            throw new ModrinthDownloadException("Hash verification failed for " + resolveFilename() + " using " + hashName);
+        }
+        Files.move(temp, destination, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        return destination;
     }
 
     public boolean hasHash(String name) {

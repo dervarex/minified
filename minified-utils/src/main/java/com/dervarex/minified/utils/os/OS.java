@@ -23,10 +23,11 @@ public enum OS {
 
     public static OS getCurrentOS() {
         String os = System.getProperty("os.name").toLowerCase();
-        if (os.contains("win")) {
-            return OS.WINDOWS;
-        } else if (os.contains("mac") || os.contains("darwin")) {
+        // "darwin" contains "win", so mac has to come first
+        if (os.contains("mac") || os.contains("darwin")) {
             return OS.MACOS;
+        } else if (os.contains("win")) {
+            return OS.WINDOWS;
         } else if (os.contains("nix") || os.contains("nux")) {
             return OS.LINUX;
         }

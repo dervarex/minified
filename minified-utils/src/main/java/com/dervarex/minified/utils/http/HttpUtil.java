@@ -99,8 +99,7 @@ public final class HttpUtil {
         HttpException.Method httpMethod = HttpException.Method.valueOf(method.toUpperCase());
         int code = response.statusCode();
         boolean transientFailure = code == 429 || code == 502 || code == 503 || code == 504;
-        String requestId = response.headers().getOrDefault("x-request-id",
-                response.headers().getOrDefault("X-Request-Id", ""));
+        String requestId = response.headers().getOrDefault("X-Request-Id", "");
         return new HttpException.Builder()
                 .status(code)
                 .statusMessage(response.statusMessage())
