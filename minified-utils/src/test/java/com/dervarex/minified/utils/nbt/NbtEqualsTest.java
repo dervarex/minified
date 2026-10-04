@@ -21,7 +21,7 @@ class NbtEqualsTest {
     @Test
     void sameValueDifferentTypeIsNotEqual() {
         assertFalse(NbtEquals.deepEquals(new NbtInt(1), new NbtLong(1)));
-        assertFalse(NbtEquals.deepEquals(new NbtByte((byte) 1), new NbtBoolean(true)));
+        assertFalse(NbtEquals.deepEquals(new NbtByte((byte) 0), new NbtBoolean(true)));
     }
 
     private static NbtCompound compoundWith(long[] value) {
@@ -30,5 +30,11 @@ class NbtEqualsTest {
         NbtCompound outer = new NbtCompound();
         outer.setCompound("section", inner);
         return outer;
+    }
+
+    @Test
+    void booleansEqualTheBytesTheyAreStoredAs() {
+        assertTrue(NbtEquals.deepEquals(new NbtBoolean(true), new NbtByte((byte) 1)));
+        assertTrue(NbtEquals.deepEquals(new NbtByte((byte) 0), new NbtBoolean(false)));
     }
 }

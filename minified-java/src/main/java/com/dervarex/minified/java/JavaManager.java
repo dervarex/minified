@@ -26,12 +26,15 @@ import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.time.Duration;
+import java.util.EnumSet;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
@@ -336,6 +339,24 @@ public final class JavaManager {
             } finally {
                 installLocks.remove(lockKey, lock);
             }
+        }
+    }
+
+    private static void applyMode(Path file, int mode) {
+        if (isWindows() || (mode & 0111) == 0) {
+            return;
+        }
+        try {
+            Set<PosixFilePermission> permissions = EnumSet.noneOf(PosixFilePermission.class);
+            PosixFilePermission[] bits = PosixFilePermission.values(); // OWNER_READ ... OTHERS_EXECUTE, same order as the mode bits
+            for (int i = 0; i < bits.length; i++) {
+                if ((mode & (0400 >> i)) != 0) {
+                    permissions.add(bits[i]);
+                }
+            }
+            Files.setPosixFilePermissions(file, permissions);
+        } catch (Exception ignored) {
+            file.toFile().setExecutable(true, false);
         }
     }
 
@@ -711,6 +732,7 @@ public final class JavaManager {
                     name = prefix + "/" + name;
                 }
                 long size = readTarSize(header, 124, 12);
+                int mode = readTarMode(header);
                 char typeFlag = (char) header[156];
                 Path target = resolveExtractionTarget(destination, name);
                 if (typeFlag == '5') {
@@ -720,6 +742,8 @@ public final class JavaManager {
                     try (OutputStream out = Files.newOutputStream(target)) {
                         copyFixedSize(gzipInputStream, out, size);
                     }
+                    // without this only bin/java would be executable and java 9+ can't start processes (lib/jspawnhelper)
+                    applyMode(target, mode);
                 } else {
                     skipFully(gzipInputStream, size);
                 }
@@ -845,11 +869,12 @@ public final class JavaManager {
 
     private static String platformOs() {
         String os = System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
-        if (os.contains("win")) {
-            return "windows";
-        }
+        // "darwin" contains "win", so mac has to come first
         if (os.contains("mac") || os.contains("darwin")) {
             return "mac";
+        }
+        if (os.contains("win")) {
+            return "windows";
         }
         return "linux";
     }
@@ -871,15 +896,15 @@ public final class JavaManager {
 
     private static Path defaultBaseDir() {
         String os = System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
+        if (os.contains("mac") || os.contains("darwin")) {
+            return Path.of(System.getProperty("user.home"), "Library", "Application Support", "Minified", "java").toAbsolutePath();
+        }
         if (os.contains("win")) {
             String appData = System.getenv("APPDATA");
             if (appData != null && !appData.isBlank()) {
                 return Path.of(appData, "Minified", "java").toAbsolutePath();
             }
             return Path.of(System.getProperty("user.home"), "AppData", "Roaming", "Minified", "java").toAbsolutePath();
-        }
-        if (os.contains("mac") || os.contains("darwin")) {
-            return Path.of(System.getProperty("user.home"), "Library", "Application Support", "Minified", "java").toAbsolutePath();
         }
         return Path.of(System.getProperty("user.home"), ".local", "share", "Minified", "java").toAbsolutePath();
     }
@@ -952,6 +977,14 @@ public final class JavaManager {
             end++;
         }
         return new String(header, offset, end - offset).trim();
+    }
+
+    private static int readTarMode(byte[] header) {
+        try {
+            return (int) readTarSize(header, 100, 8);
+        } catch (NumberFormatException e) {
+            return 0; // a weird mode isn't worth failing the whole install over
+        }
     }
 
     private static long readTarSize(byte[] header, int offset, int length) {

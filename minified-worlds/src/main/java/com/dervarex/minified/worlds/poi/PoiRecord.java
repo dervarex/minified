@@ -14,7 +14,7 @@ public class PoiRecord {
 
     public NbtCompound raw() { return raw; }
 
-    public int[] pos() { return raw.getIntArray("pos").value(); }
+    public int[] pos() { return raw.getIntArray("pos"); }
     public void setPos(int x, int y, int z) { raw.setIntArray("pos", new int[]{x, y, z}); }
 
     public String type() { return raw.getString("type"); }

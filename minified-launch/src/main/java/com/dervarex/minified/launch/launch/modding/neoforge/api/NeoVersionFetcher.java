@@ -232,17 +232,19 @@ public final class NeoVersionFetcher {
 
     private static final Comparator<String> VERSION_ORDER = NeoVersionFetcher::compareVersions;
 
-    private static int compareVersions(String left, String right) {
+    // package-private for the tests
+    static int compareVersions(String left, String right) {
         List<Token> a = tokenize(left);
         List<Token> b = tokenize(right);
         int max = Math.max(a.size(), b.size());
 
         for (int i = 0; i < max; i++) {
+            // one ran out: more numbers means newer (26.1.0.20 > 26.1.0), only text means pre-release (21.4.0-beta < 21.4.0)
             if (i >= a.size()) {
-                return rightHasOnlyPreReleaseTail(b, i) ? 1 : -1;
+                return hasNumberFrom(b, i) ? -1 : 1;
             }
             if (i >= b.size()) {
-                return leftHasOnlyPreReleaseTail(a, i) ? -1 : 1;
+                return hasNumberFrom(a, i) ? 1 : -1;
             }
 
             Token ta = a.get(i);
@@ -256,16 +258,7 @@ public final class NeoVersionFetcher {
         return 0;
     }
 
-    private static boolean leftHasOnlyPreReleaseTail(List<Token> tokens, int start) {
-        for (int i = start; i < tokens.size(); i++) {
-            if (tokens.get(i).kind == Kind.NUMBER) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static boolean rightHasOnlyPreReleaseTail(List<Token> tokens, int start) {
+    private static boolean hasNumberFrom(List<Token> tokens, int start) {
         for (int i = start; i < tokens.size(); i++) {
             if (tokens.get(i).kind == Kind.NUMBER) {
                 return true;

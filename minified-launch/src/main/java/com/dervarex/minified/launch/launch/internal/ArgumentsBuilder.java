@@ -132,7 +132,8 @@ public class ArgumentsBuilder {
         JsonObject arguments = argumentsValue.asObject();
 
         JsonValue gameValue = arguments.get("game");
-        JsonArray gameArray = gameValue != null ? gameValue.asArray() : new JsonArray();
+        // a copy, the loader args would end up in the caller's version JSON otherwise
+        JsonArray gameArray = new JsonArray(gameValue != null ? gameValue.asArray().values() : null);
 
         if (loader instanceof CustomLoader customLoader) {
             if (customLoader.customGameArgs() != null) {

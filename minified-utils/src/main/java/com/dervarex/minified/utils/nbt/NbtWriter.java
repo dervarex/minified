@@ -49,7 +49,7 @@ public class NbtWriter {
                 out.writeInt(t.value().length);
                 for (long v : t.value()) out.writeLong(v);
             }
-            case NbtEnd ignored -> { /* never occurs as a value */ }
+            case NbtEnd ignored -> throw new IOException("Cannot write a TAG_End as a value");
         }
     }
 }

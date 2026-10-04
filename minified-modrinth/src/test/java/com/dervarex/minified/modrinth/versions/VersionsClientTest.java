@@ -3,7 +3,6 @@ package com.dervarex.minified.modrinth.versions;
 import com.dervarex.minified.modrinth.Modrinth;
 import com.dervarex.minified.modrinth.VersionSearchOptions;
 import com.dervarex.minified.modrinth.loaders.ModLoader;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -49,31 +48,34 @@ class VersionsClientTest {
     }
 
     @Test
-    @Disabled("getByProject sends the default limit of 10, so only the newest 10 versions get searched (iris has 243)")
     void findsAVersionByItsNumber() {
         assertEquals(IRIS, versions.getVersionByNumber("iris", "1.8.2+1.21.4-fabric").getId());
     }
 
     @Test
-    @Disabled("calls /version/{hash}, modrinth wants /version_file/{hash}, answers 400")
     void findsAVersionByFileHash() {
         assertEquals(IRIS, versions.fromHash(IRIS_SHA1).getId());
     }
 
     @Test
-    @Disabled("calls /versions?hashes=, that route only takes ids (400), modrinth wants POST /version_files")
     void findsVersionsByFileHashes() {
         assertEquals(IRIS, versions.fromHashes(IRIS_SHA1).getFirst().getId());
     }
 
     @Test
-    @Disabled("calls /version_files/<hashes>, doesn't exist (404), modrinth wants POST /version_files/update")
     void findsTheNewestVersionsForFileHashes() {
         assertFalse(versions.latestFromHashes(IRIS_SHA1).isEmpty());
     }
 
     @Test
-    @Disabled("calls /version/{id}/dependencies, doesn't exist (404), modrinth only has /project/{id}/dependencies")
+    void findsTheNewestVersionForTheSameLoaderAndGameVersion() {
+        Version newest = versions.latestFromHashes(VersionSearchOptions.builder().loaders(ModLoader.FABRIC).gameVersions("1.21.4").build(), IRIS_SHA1).getFirst();
+
+        assertTrue(newest.hasLoader(ModLoader.FABRIC));
+        assertTrue(newest.supportsVersion("1.21.4"));
+    }
+
+    @Test
     void listsTheDependenciesOfAVersion() {
         assertEquals(SODIUM, versions.dependencies(IRIS).getFirst().getVersionId());
     }

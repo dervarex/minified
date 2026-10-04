@@ -35,6 +35,18 @@ public final class ShortcutSupport {
         return s.replace("\\", "\\\\").replace("\n", " ");
     }
 
+    /**
+     * Quotes an argument for the Exec= key of a .desktop file, see the freedesktop spec
+     */
+    public static String desktopExecQuote(String s) {
+        String quoted = s.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("`", "\\`")
+                .replace("$", "\\$");
+        // the string-level escaping runs before the quoting, so every backslash has to be doubled once more
+        return '"' + quoted.replace("\\", "\\\\").replace("%", "%%") + '"';
+    }
+
     public static String shellQuote(String s) {
         return "'" + s.replace("'", "'\\''") + "'";
     }

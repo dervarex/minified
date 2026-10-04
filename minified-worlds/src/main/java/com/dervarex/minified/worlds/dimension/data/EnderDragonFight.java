@@ -34,8 +34,8 @@ public class EnderDragonFight {
             NbtInt entry = (NbtInt) gatewaysList.elements().get(i);
             dragonFight.gateways[i] = entry.value();
         }
-        dragonFight.dragonUUID = data.getIntArray("dragon_uuid").value();
-        dragonFight.exitPortalLocation = data.getIntArray("exit_portal_location").value();
+        dragonFight.dragonUUID = data.getIntArray("dragon_uuid");
+        dragonFight.exitPortalLocation = data.getIntArray("exit_portal_location");
 
         return dragonFight;
     }

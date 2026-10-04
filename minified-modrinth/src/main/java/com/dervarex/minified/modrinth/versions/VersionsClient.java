@@ -10,6 +10,7 @@ import com.dervarex.minified.utils.json.JsonArray;
 import com.dervarex.minified.utils.json.JsonObject;
 import com.dervarex.minified.utils.json.JsonValue;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,8 +31,11 @@ public final class VersionsClient extends AbstractModrinthClient {
         return getList("/versions", query, this::parseAndAttach);
     }
 
+    /**
+     * @return every version of the project, newest first
+     */
     public List<Version> getByProject(String projectIdOrSlug) {
-        return getByProject(projectIdOrSlug, new VersionSearchOptions());
+        return getByProject(projectIdOrSlug, null);
     }
 
     public List<Version> getByProject(String projectIdOrSlug, VersionSearchOptions options) {
@@ -46,8 +50,13 @@ public final class VersionsClient extends AbstractModrinthClient {
             if (options.featured != null) {
                 query.put("featured", String.valueOf(options.featured));
             }
-            query.put("limit", String.valueOf(Math.max(0, options.limit)));
-            query.put("offset", String.valueOf(Math.max(0, options.offset)));
+            // modrinth answers limit=0 with nothing at all, so 0 means no limit here
+            if (options.limit > 0) {
+                query.put("limit", String.valueOf(options.limit));
+            }
+            if (options.offset > 0) {
+                query.put("offset", String.valueOf(options.offset));
+            }
         }
         return getList("/project/" + encode(projectIdOrSlug) + "/version", query, this::parseAndAttach);
     }
@@ -67,33 +76,73 @@ public final class VersionsClient extends AbstractModrinthClient {
         return versions.isEmpty() ? null : versions.getFirst();
     }
 
+    /**
+     * @return the versions the files with these hashes belong to, in the order of the hashes, unknown ones are left out
+     */
     public List<Version> fromHashes(String... hashes) {
-        Map<String, String> query = query("hashes", toJsonArray(hashes));
-        return getList("/versions", query, this::parseAndAttach);
+        return inHashOrder(postObject("/version_files", hashBody(hashes, null)), hashes);
     }
 
+    /**
+     * @param hash sha1 or sha512 of a file
+     * @return the version the file belongs to
+     */
     public Version fromHash(String hash) {
         if (hash == null || hash.isBlank()) {
             return null;
         }
-        return parseAndAttach(getObject("/version/" + encode(hash)));
+        return parseAndAttach(getObject("/version_file/" + encode(hash), query("algorithm", algorithmOf(hash))));
     }
 
+    /**
+     * @return the newest version of the project each file belongs to, no matter the loader or game version
+     */
     public List<Version> latestFromHashes(String... hashes) {
-        Map<String, String> query = query("hashes", toJsonArray(hashes));
-        JsonArray array = getArray("/version_files/" + encode(String.join(",", hashes)), query);
-        return array.values().stream()
-                .map(JsonValue::asObject)
-                .map(this::parseAndAttach)
-                .toList();
+        return latestFromHashes(null, hashes);
     }
 
+    /**
+     * @param options only the game versions and loaders are used
+     * @return the newest version matching the options of the project each file belongs to
+     */
+    public List<Version> latestFromHashes(VersionSearchOptions options, String... hashes) {
+        return inHashOrder(postObject("/version_files/update", hashBody(hashes, options)), hashes);
+    }
+
+    /**
+     * @return the dependencies of the version, modrinth has no extra route for that, they come with the version
+     */
     public List<VersionDependency> dependencies(String versionId) {
-        JsonArray array = getArray("/version/" + encode(versionId) + "/dependencies");
-        return array.values().stream()
-                .map(JsonValue::asObject)
-                .map(this::parseDependency)
-                .toList();
+        VersionDependency[] dependencies = get(versionId).dependencies;
+        return dependencies == null ? List.of() : List.of(dependencies);
+    }
+
+    private static String hashBody(String[] hashes, VersionSearchOptions options) {
+        StringBuilder body = new StringBuilder("{\"hashes\":").append(toJsonArray(hashes))
+                .append(",\"algorithm\":\"").append(hashes.length == 0 ? "sha1" : algorithmOf(hashes[0])).append('"');
+        if (options != null && options.loaders != null) {
+            body.append(",\"loaders\":").append(toJsonArray(options.loaders));
+        }
+        if (options != null && options.gameVersions != null) {
+            body.append(",\"game_versions\":").append(toJsonArray(options.gameVersions));
+        }
+        return body.append('}').toString();
+    }
+
+    // sha512 is 128 hex characters, sha1 40
+    private static String algorithmOf(String hash) {
+        return hash.length() > 40 ? "sha512" : "sha1";
+    }
+
+    private List<Version> inHashOrder(JsonObject byHash, String... hashes) {
+        List<Version> result = new ArrayList<>();
+        for (String hash : hashes) {
+            JsonObject version = ModrinthJson.object(byHash, hash);
+            if (version != null) {
+                result.add(parseAndAttach(version));
+            }
+        }
+        return result;
     }
 
     private Version parseAndAttach(JsonObject object) {

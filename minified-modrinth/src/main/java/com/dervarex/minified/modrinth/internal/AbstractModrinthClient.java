@@ -70,6 +70,17 @@ public abstract class AbstractModrinthClient {
         }
     }
 
+    protected JsonObject postObject(String path, String jsonBody) {
+        String url = buildUrl(path, Map.of());
+        try {
+            return readJsonObject(HttpUtil.requestJson("POST", url, jsonBody).getBodyAsString());
+        } catch (HttpException ex) {
+            throw translateHttpException(url, ex);
+        } catch (IOException ex) {
+            throw new ModrinthApiException("Failed to contact Modrinth at " + url, -1, url, ex);
+        }
+    }
+
     protected JsonObject readJsonObject(String json) {
         try {
             return JsonParser.parse(json).asObject();

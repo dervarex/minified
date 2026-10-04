@@ -16,6 +16,9 @@ public class NbtEquals {
     public static boolean deepEquals(NbtTag a, NbtTag b) {
         if (a == b) return true;
         if (a == null || b == null) return false;
+        // there's no boolean in the file format, a boolean comes back as a byte
+        if (a instanceof NbtBoolean bool && b instanceof NbtByte byteTag) return byteTag.value() == (bool.value() ? 1 : 0);
+        if (a instanceof NbtByte byteTag && b instanceof NbtBoolean bool) return byteTag.value() == (bool.value() ? 1 : 0);
         if (!a.getClass().equals(b.getClass())) return false;
 
         if (a instanceof NbtByteArray) return Arrays.equals(((NbtByteArray) a).value(), ((NbtByteArray) b).value());

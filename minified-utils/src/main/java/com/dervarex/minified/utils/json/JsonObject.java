@@ -119,6 +119,14 @@ public final class JsonObject implements JsonValue {
     }
 
     @Override
+    public boolean equals(Object o) {
+        return o instanceof JsonObject other && values.equals(other.values);
+    }
+
+    @Override
+    public int hashCode() { return values.hashCode(); }
+
+    @Override
     public String toString() { return toJson(); }
 }
 

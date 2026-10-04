@@ -41,6 +41,7 @@ public class HttpUtilTest {
         });
         server.createContext("/busy", exchange -> {
             byte[] body = "come back later".getBytes(StandardCharsets.UTF_8);
+            exchange.getResponseHeaders().add("X-Request-Id", "abc-123");
             exchange.sendResponseHeaders(503, body.length);
             exchange.getResponseBody().write(body);
             exchange.close();
@@ -83,5 +84,7 @@ public class HttpUtilTest {
         assertEquals(HttpException.Method.GET, ex.getMethod());
         assertEquals(baseUrl + "/busy", ex.getUrl());
         assertEquals("come back later", ex.responseSnippet(100));
+        // the test server sends it as "X-request-id", real ones send whatever they like
+        assertEquals("abc-123", ex.getRequestId());
     }
 }

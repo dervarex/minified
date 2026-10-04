@@ -1,7 +1,6 @@
 package com.dervarex.minified.utils.version;
 
 import com.dervarex.minified.utils.exceptions.HttpException;
-import com.dervarex.minified.utils.http.HttpUtil;
 import com.dervarex.minified.utils.json.JsonFile;
 import com.dervarex.minified.utils.json.JsonValue;
 
@@ -24,7 +23,7 @@ public final class VersionMetadataProvider {
         if (url == null) {
             return null;
         }
-        JsonFile json = new JsonFile(HttpUtil.get(url));
+        JsonFile json = new JsonFile(VersionManifestClient.CACHE.get(url));
         return json.get("mainClass").asString();
     }
     public static String getVersionType(String version) throws HttpException, IOException {
@@ -32,7 +31,7 @@ public final class VersionMetadataProvider {
         if (url == null) {
             return null;
         }
-        JsonFile json = new JsonFile(HttpUtil.get(url));
+        JsonFile json = new JsonFile(VersionManifestClient.CACHE.get(url));
         return json.get("type").asString();
     }
     public static String getReleaseTime(String version) throws HttpException, IOException {
@@ -40,7 +39,7 @@ public final class VersionMetadataProvider {
         if (url == null) {
             return null;
         }
-        JsonFile json = new JsonFile(HttpUtil.get(url));
+        JsonFile json = new JsonFile(VersionManifestClient.CACHE.get(url));
         return json.get("releaseTime").asString();
     }
     public static String getClientSha1(String version) throws HttpException, IOException {
@@ -49,7 +48,7 @@ public final class VersionMetadataProvider {
             return null;
         }
 
-        JsonFile json = new JsonFile(HttpUtil.get(url));
+        JsonFile json = new JsonFile(VersionManifestClient.CACHE.get(url));
 
         return json.get("downloads")
                 .asObject()
@@ -66,7 +65,7 @@ public final class VersionMetadataProvider {
             return null;
         }
 
-        JsonFile json = new JsonFile(HttpUtil.get(url));
+        JsonFile json = new JsonFile(VersionManifestClient.CACHE.get(url));
 
         return json.get("downloads")
                 .asObject()
@@ -81,7 +80,7 @@ public final class VersionMetadataProvider {
         if (url == null) {
             return null;
         }
-        JsonFile json = new JsonFile(HttpUtil.get(url));
+        JsonFile json = new JsonFile(VersionManifestClient.CACHE.get(url));
         return json.get("downloads")
                 .asObject()
                 .get("server")
@@ -96,7 +95,7 @@ public final class VersionMetadataProvider {
         if (url == null) {
             return null;
         }
-        JsonFile json = new JsonFile(HttpUtil.get(url));
+        JsonFile json = new JsonFile(VersionManifestClient.CACHE.get(url));
         return json.get("downloads")
                 .asObject()
                 .get("server")

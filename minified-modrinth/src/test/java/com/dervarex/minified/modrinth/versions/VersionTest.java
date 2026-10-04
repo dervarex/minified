@@ -5,7 +5,6 @@ import com.dervarex.minified.modrinth.exceptions.ModrinthStateException;
 import com.dervarex.minified.modrinth.loaders.ModLoader;
 import com.sun.net.httpserver.HttpServer;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -169,7 +168,6 @@ class VersionTest {
     }
 
     @Test
-    @Disabled("only optional ones get skipped, incompatible and embedded mods get resolved (and downloaded) as dependencies")
     void resolveDependencies_ignoresIncompatibleAndEmbeddedOnes() throws IOException {
         Modrinth modrinth = fakeModrinth(Map.of(
                 "root", version("root", "required:a", "incompatible:enemy", "embedded:inside"),
@@ -181,7 +179,6 @@ class VersionTest {
     }
 
     @Test
-    @Disabled("with a -> b -> a the starting version ends up in its own dependency list")
     void resolveDependencies_survivesCyclesWithoutListingItself() throws IOException {
         Modrinth modrinth = fakeModrinth(Map.of(
                 "root", version("root", "required:a"),

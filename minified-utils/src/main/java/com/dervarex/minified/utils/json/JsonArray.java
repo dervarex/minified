@@ -34,12 +34,12 @@ public record JsonArray(List<JsonValue> values) implements JsonValue, Iterable<J
 
     public JsonObject getObject(int index) {
         JsonValue value = values.get(index);
-        return value == null ? null : value.asObject();
+        return value == null || value.isNull() ? null : value.asObject();
     }
 
     public JsonArray getArray(int index) {
         JsonValue value = values.get(index);
-        return value == null ? null : value.asArray();
+        return value == null || value.isNull() ? null : value.asArray();
     }
 
     public String getString(int index) {

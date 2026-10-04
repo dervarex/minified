@@ -1,5 +1,6 @@
 package com.dervarex.minified.utils.exceptions;
 
+import com.dervarex.minified.utils.json.JsonString;
 import org.apiguardian.api.API;
 
 import java.nio.charset.StandardCharsets;
@@ -32,7 +33,9 @@ public class HttpException extends Exception {
         this.statusMessage = nvl(b.statusMessage);
         this.method = b.method;
         this.url = nvl(b.url);
-        this.responseHeaders = Collections.unmodifiableMap(new LinkedHashMap<>(b.responseHeaders));
+        Map<String, String> headers = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        headers.putAll(b.responseHeaders);
+        this.responseHeaders = Collections.unmodifiableMap(headers);
         this.responseBody = b.responseBody == null ? new byte[0] : b.responseBody.clone();
         this.requestId = nvl(b.requestId);
         this.transientFailure = b.transientFailure;
@@ -75,7 +78,7 @@ public class HttpException extends Exception {
         if (!requestId.isBlank()) sb.append("Request-Id: ").append(requestId).append('\n');
         String retry = transientFailure ? " (temporary, please try again later)" : "";
         sb.append("Time: ").append(getTimestampInstant()).append(retry).append('\n');
-        String ct = responseHeaders.getOrDefault("content-type", responseHeaders.getOrDefault("Content-Type", ""));
+        String ct = responseHeaders.getOrDefault("Content-Type", "");
         if (!ct.isBlank()) sb.append("Content-Type: ").append(ct).append('\n');
         String body = responseSnippet(600);
         if (!body.isBlank()) sb.append("Response: ").append(body);
@@ -105,8 +108,7 @@ public class HttpException extends Exception {
     }
 
     private static String escape(String s) {
-        if (s == null) return "null";
-        return '"' + s.replace("\\", "\\\\").replace("\"", "\\\"") + '"';
+        return s == null ? "null" : new JsonString(s).toJson();
     }
 
     public static class Builder {

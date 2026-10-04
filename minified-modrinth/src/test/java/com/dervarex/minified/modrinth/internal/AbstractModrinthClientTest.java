@@ -1,11 +1,16 @@
 package com.dervarex.minified.modrinth.internal;
 
 import com.dervarex.minified.modrinth.Modrinth;
+import com.dervarex.minified.modrinth.exceptions.ModrinthApiException;
+import com.dervarex.minified.modrinth.exceptions.ModrinthRateLimitedException;
 import com.dervarex.minified.modrinth.exceptions.ModrinthSerializationException;
 import com.dervarex.minified.utils.json.JsonArray;
 import com.dervarex.minified.utils.json.JsonObject;
+import com.sun.net.httpserver.HttpServer;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Map;
 
@@ -177,5 +182,30 @@ class AbstractModrinthClientTest {
         TestClient client = new TestClient(modrinth(), "[{\"x\":1},null,{\"x\":2}]");
         List<JsonObject> list = client.getList("/path", Map.of(), obj -> obj);
         assertEquals(2, list.size());
+    }
+
+    @Test
+    void rateLimitsSayHowLongToWait() throws IOException {
+        HttpServer server = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
+        server.createContext("/project/", exchange -> {
+            // the test server turns this into "Retry-after", real servers send whatever case they like
+            exchange.getResponseHeaders().add("Retry-After", "30");
+            exchange.sendResponseHeaders(429, -1);
+            exchange.close();
+        });
+        server.createContext("/version/", exchange -> {
+            exchange.sendResponseHeaders(500, -1);
+            exchange.close();
+        });
+        server.start();
+        try {
+            Modrinth modrinth = new Modrinth("http://localhost:" + server.getAddress().getPort());
+
+            ModrinthRateLimitedException limited = assertThrows(ModrinthRateLimitedException.class, () -> modrinth.projects().get("iris"));
+            assertEquals(30, limited.getRetryAfterSeconds());
+            assertEquals(500, assertThrows(ModrinthApiException.class, () -> modrinth.versions().get("x")).getStatusCode());
+        } finally {
+            server.stop(0);
+        }
     }
 }

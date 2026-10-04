@@ -112,6 +112,8 @@ public final class OfflineLibraryValidator {
 
             JsonValue downloadsValue = library.get("downloads");
             if (downloadsValue == null) {
+                // fabric and quilt only give us name + url, the downloader puts those at their maven path
+                validateMavenLibrary(library, librariesDir, problems);
                 continue;
             }
 
@@ -144,6 +146,20 @@ public final class OfflineLibraryValidator {
                 );
             }
         }
+    }
+
+    private static void validateMavenLibrary(JsonObject library, Path librariesDir, List<String> problems) {
+        JsonValue nameValue = library.get("name");
+        if (nameValue == null || library.get("url") == null) {
+            return;
+        }
+        String[] parts = nameValue.asString().split(":");
+        if (parts.length != 3) {
+            return;
+        }
+        Path path = librariesDir.resolve(parts[0].replace('.', '/') + "/" + parts[1] + "/" + parts[2] + "/" + parts[1] + "-" + parts[2] + ".jar");
+        String expectedSha1 = library.has("sha1") ? library.get("sha1").asString() : null;
+        validateFile(path, expectedSha1, "Missing or broken library: " + path, problems);
     }
 
     private static void validateFile(
@@ -250,7 +266,7 @@ public final class OfflineLibraryValidator {
         if (parent == null) {
             return librariesDir.toAbsolutePath().resolve("natives");
         }
-        return parent.resolve("jar").resolve("natives").toAbsolutePath();
+        return parent.resolve("natives").toAbsolutePath();
     }
 
     private record NativeDownload(String relativePath, String sha1) {

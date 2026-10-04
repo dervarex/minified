@@ -8,7 +8,6 @@ import com.dervarex.minified.utils.json.JsonValue;
 import com.sun.net.httpserver.HttpServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -250,7 +249,6 @@ class JavaManagerTest {
     }
 
     @Test
-    @Disabled("only bin/java gets the exec bit, the tar modes are ignored, so Java 9+ can't start processes (error=13 from jspawnhelper)")
     @DisplayName("everything executable in the archive stays executable")
     void managedRuntime_keepsExecutableBits() throws Exception {
         assumeTrue(!platformOs().equals("windows"), "no exec bits on windows");

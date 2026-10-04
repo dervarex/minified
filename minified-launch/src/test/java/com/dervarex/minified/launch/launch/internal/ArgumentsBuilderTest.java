@@ -92,4 +92,17 @@ class ArgumentsBuilderTest {
                 .loader(loader)
                 .build();
     }
+
+    @Test
+    void leavesTheVersionJsonAlone() {
+        CustomLoader loader = new CustomLoader("Homebrew", "1.21.11", "0.0.1", null, "net.example.Main",
+                List.of(), List.of("--brew"), List.of());
+        JsonFile versionJson = new JsonFile("{ \"arguments\": { \"game\": [\"--demo\"] } }");
+
+        ArgumentsBuilder.buildGameArguments(versionJson, OPTIONS, loader, "1.21.11", config(loader), false);
+        List<String> second = ArgumentsBuilder.buildGameArguments(versionJson, OPTIONS, loader, "1.21.11", config(loader), false);
+
+        assertEquals(List.of("--demo", "--brew"), second);
+        assertEquals("{\"arguments\":{\"game\":[\"--demo\"]}}", versionJson.toJson());
+    }
 }

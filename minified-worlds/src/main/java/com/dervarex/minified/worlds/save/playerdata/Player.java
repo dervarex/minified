@@ -148,7 +148,7 @@ public class Player {
         }
         if (nbt.has("UUID")) {
             player.UUID = new ArrayList<>();
-            for (int part : nbt.getIntArray("UUID").value()) {
+            for (int part : nbt.getIntArray("UUID")) {
                 player.UUID.add(part);
             }
         }

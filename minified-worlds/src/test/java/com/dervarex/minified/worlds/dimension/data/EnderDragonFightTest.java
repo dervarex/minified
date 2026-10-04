@@ -67,8 +67,8 @@ class EnderDragonFightTest {
         NbtCompound data = nbt.getCompound("data");
 
         assertEquals(3953, nbt.getInt("DataVersion"));
-        assertArrayEquals(new int[]{1, 2, 3, 4}, data.getIntArray("dragon_uuid").value());
-        assertArrayEquals(new int[]{0, 64, 0}, data.getIntArray("exit_portal_location").value());
+        assertArrayEquals(new int[]{1, 2, 3, 4}, data.getIntArray("dragon_uuid"));
+        assertArrayEquals(new int[]{0, 64, 0}, data.getIntArray("exit_portal_location"));
         assertEquals(3, data.getList("gateways").size());
         assertTrue(data.getBoolean("dragon_killed"));
     }
