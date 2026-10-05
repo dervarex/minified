@@ -18,7 +18,8 @@ def pomValue = { String propName, String envName, String fallback ->
     return propOrEnv(propName, envName) ?: fallback
 }
 
-subprojects {
+// docs is the documentation generator, not a published library
+configure(subprojects.findAll { it.name != 'docs' }) {
     apply plugin: 'java-library'
     apply plugin: 'maven-publish'
     apply plugin: 'signing'

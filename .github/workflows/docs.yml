@@ -1,0 +1,116 @@
+name: Docs
+
+# Builds the documentation site and publishes it to the gh-pages branch. Every library version gets its own
+# directory (/3.1.0/, /3.2.0/, ...), versions.json lists them for the version picker and the site root
+# redirects to the latest one. A push to master rebuilds the directory of the version in build.gradle.
+
+on:
+  push:
+    branches:
+      - master
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: docs-pages
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Build & publish documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
+
+      # strict: stale guide references and broken links fail the build instead of being published
+      - name: Generate site
+        run: ./gradlew :docs:docs -PdocsRef=${{ github.sha }} -PdocsStrict=true --no-daemon
+
+      - name: Check out gh-pages
+        run: |
+          if git fetch origin gh-pages:gh-pages; then
+            git worktree add pages gh-pages
+          else
+            git worktree add --orphan -b gh-pages pages
+          fi
+
+      - name: Add this version
+        run: |
+          VERSION="$(cat docs/build/site/VERSION)"
+          rm -rf "pages/$VERSION"
+          cp -r docs/build/site "pages/$VERSION"
+          touch pages/.nojekyll
+
+          VERSIONS="$(find pages -mindepth 1 -maxdepth 1 -type d -name '[0-9]*' -printf '%f\n' | sort -rV)"
+          LATEST="$(echo "$VERSIONS" | head -n 1)"
+          echo "$VERSIONS" | jq -R . | jq -s --arg latest "$LATEST" '{latest: $latest, versions: .}' > pages/versions.json
+
+          cat > pages/index.html <<EOF
+          <!doctype html>
+          <html lang="en">
+          <head>
+          <meta charset="utf-8">
+          <title>Minified</title>
+          <meta http-equiv="refresh" content="0; url=./$LATEST/">
+          <link rel="canonical" href="./$LATEST/">
+          </head>
+          <body><a href="./$LATEST/">Minified documentation</a></body>
+          </html>
+          EOF
+
+          # /latest/<page> links keep working across releases, GitHub Pages serves 404.html for them
+          cat > pages/404.html <<'EOF'
+          <!doctype html>
+          <html lang="en">
+          <head>
+          <meta charset="utf-8">
+          <title>Page not found | Minified</title>
+          <script>
+          (function () {
+            var path = location.pathname;
+            addEventListener('DOMContentLoaded', function () {
+              // project pages live below /<repository>/
+              document.querySelector('a').href = '/' + path.split('/')[1] + '/';
+            });
+            var index = path.indexOf('/latest/');
+            if (index < 0) return;
+            fetch(path.slice(0, index) + '/versions.json')
+              .then(function (r) { return r.json(); })
+              .then(function (data) {
+                location.replace(path.slice(0, index) + '/' + data.latest + '/' + path.slice(index + 8) + location.hash);
+              });
+          })();
+          </script>
+          </head>
+          <body style="font-family: system-ui, sans-serif; background: #17181c; color: #c1c3c8; padding: 3rem;">
+          <h1 style="color: #fff;">Page not found</h1>
+          <p><a style="color: #b3c7ff;" href="./">Go to the documentation</a></p>
+          </body>
+          </html>
+          EOF
+
+      - name: Push gh-pages
+        working-directory: pages
+        run: |
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Documentation unchanged"
+            exit 0
+          fi
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+            commit -m "Docs for $(cat ../docs/build/site/VERSION) at ${GITHUB_SHA::7}"
+          git push origin gh-pages
