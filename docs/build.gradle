@@ -1,0 +1,80 @@
+plugins {
+    id 'java'
+}
+
+description = 'Documentation site generator'
+
+repositories {
+    mavenCentral()
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+def libraryProjects = rootProject.subprojects.findAll { it != project }
+libraryProjects.each { evaluationDependsOn(it.path) }
+
+tasks.register('docs', JavaExec) {
+    group = 'documentation'
+    description = 'Generates the documentation site into docs/build/site'
+
+    def siteDir = layout.buildDirectory.dir('site')
+    def contentDir = layout.projectDirectory.dir('content')
+    def themeDir = layout.projectDirectory.dir('theme')
+    def sourceDirs = libraryProjects.collect { it.sourceSets.main.java.srcDirs }.flatten()
+    // jars of external dependencies only, the library sources themselves are documented from source
+    def libraryBuildDirs = libraryProjects.collect { it.layout.buildDirectory.get().asFile.toPath() }
+    def externalClasspath = files(libraryProjects.collect { it.sourceSets.main.compileClasspath })
+            .filter { file -> !libraryBuildDirs.any { file.toPath().startsWith(it) } }
+
+    inputs.files(sourceDirs)
+    inputs.dir(contentDir)
+    inputs.dir(themeDir)
+    inputs.files(externalClasspath)
+    inputs.property('version', rootProject.version.toString())
+    outputs.dir(siteDir)
+
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.dervarex.minified.docs.Main'
+    javaLauncher = javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+
+    doFirst {
+        delete siteDir
+        def moduleArgs = libraryProjects.collectMany { p ->
+            p.sourceSets.main.java.srcDirs.findAll { it.exists() }.collect { dir ->
+                ['--module', "${p.name}|${dir}|${p.description ?: ''}"]
+            }.flatten()
+        }
+        args = [
+                '--out', siteDir.get().asFile.path,
+                '--content', contentDir.asFile.path,
+                '--root', rootDir.path,
+                '--version', rootProject.version.toString(),
+                '--repo', findProperty('docsRepo') ?: 'https://github.com/dervarex/minified',
+                '--ref', findProperty('docsRef') ?: 'master',
+                '--classpath', externalClasspath.asPath,
+        ] + moduleArgs + ((findProperty('docsStrict') ?: 'false').toString() != 'false' ? ['--strict'] : [])
+    }
+}
+
+tasks.register('docsServe', Exec) {
+    group = 'documentation'
+    description = 'Serves the generated documentation on http://localhost:8000'
+    dependsOn 'docs'
+    def launcher = javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+    doFirst {
+        def jwebserver = launcher.get().metadata.installationPath.file('bin/jwebserver').asFile
+        commandLine jwebserver.path, '-p', '8000', '-d', layout.buildDirectory.dir('site').get().asFile.path
+    }
+}

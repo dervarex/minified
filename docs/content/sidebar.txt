@@ -1,0 +1,43 @@
+# Left navigation of the documentation site.
+#
+#   Label -> page/path     links a page, the path is the markdown file path below docs/content
+#   Label                  starts a group, the indented lines below it are its entries
+#   @events                inserts the generated event pages
+#   @api                   inserts the generated API reference
+#
+# Pages that are not listed here are still generated, they are only reachable through links.
+
+Getting Started -> guides/getting-started
+@events
+Modules
+  Auth -> guides/minified-auth/authentication
+  Java -> guides/minified-java/java
+  Launch
+    Basics -> guides/minified-launch/basics
+    Configuration -> guides/minified-launch/configuration
+    Modding -> guides/minified-launch/modding/loader
+    Versions -> guides/minified-launch/versions/versions
+  Utils
+    JSON -> guides/minified-utils/json/json
+    HTTP -> guides/minified-utils/http/http
+    Network -> guides/minified-utils/network/network
+    Downloads & Hashing -> guides/minified-utils/downloads/downloads
+    Exceptions -> guides/minified-utils/exceptions/exceptions
+    API Endpoints -> guides/minified-utils/api-endpoints/api-endpoints
+  Modrinth
+    Modrinth -> guides/minified-modrinth/modrinth
+    Loaders -> guides/minified-modrinth/loaders/loaders
+    Projects
+      Project -> guides/minified-modrinth/projects/project
+      Projects Client -> guides/minified-modrinth/projects/projectsclient
+    Tags -> guides/minified-modrinth/tags/tag
+    Teams -> guides/minified-modrinth/teams/teamsclient
+    Users -> guides/minified-modrinth/users/usersclient
+    Versions -> guides/minified-modrinth/versions/versionsclient
+    Exceptions -> guides/minified-modrinth/exceptions/exceptions
+  Worlds
+    Introduction -> guides/minified-worlds/introduction
+    Opening a World -> guides/minified-worlds/opening-a-world
+    Dimensions and Chunks -> guides/minified-worlds/dimensions-and-chunks
+    Entities and Points of Interest -> guides/minified-worlds/entities-and-poi
+@api
