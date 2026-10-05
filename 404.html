@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Page not found | Minified</title>
+<script>
+(function () {
+  var path = location.pathname;
+  addEventListener('DOMContentLoaded', function () {
+    // project pages live below /<repository>/
+    document.querySelector('a').href = '/' + path.split('/')[1] + '/';
+  });
+  var index = path.indexOf('/latest/');
+  if (index < 0) return;
+  fetch(path.slice(0, index) + '/versions.json')
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      location.replace(path.slice(0, index) + '/' + data.latest + '/' + path.slice(index + 8) + location.hash);
+    });
+})();
+</script>
+</head>
+<body style="font-family: system-ui, sans-serif; background: #17181c; color: #c1c3c8; padding: 3rem;">
+<h1 style="color: #fff;">Page not found</h1>
+<p><a style="color: #b3c7ff;" href="./">Go to the documentation</a></p>
+</body>
+</html>
