@@ -59,10 +59,8 @@ public class Parser {
         }
     }
 
-    // -------------------- Constructors --------------------
-
     /**
-     * Will use default prefix "--"
+     * Will use the default prefix "--"
      */
     public Parser() {
         this.prefixes.add("--");
@@ -71,7 +69,6 @@ public class Parser {
     /**
      * Constructor with custom prefixes
      * @param prefixes Prefixes that should be used. It's not recommended to use letters or numbers here, since that can mess with the parsing
-     * @return parser object
      */
     public Parser(String... prefixes) {
         if (prefixes.length == 0) {
@@ -80,8 +77,6 @@ public class Parser {
             this.prefixes.addAll(Arrays.asList(prefixes));
         }
     }
-
-    // -------------------- setters --------------------
 
     /**
      * Overwrites prefixes after creation of object
@@ -124,8 +119,6 @@ public class Parser {
         this.program = program;
         return this;
     }
-
-    // -------------------- with help text --------------------
 
     /**
      * Registers a cli argument.
