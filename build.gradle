@@ -4,7 +4,7 @@ plugins {
 
 allprojects {
     group = 'com.dervarex.minified'
-    version = '3.1.0'
+    version = '3.2.0'
 }
 
 def propOrEnv = { String propName, String envName ->
