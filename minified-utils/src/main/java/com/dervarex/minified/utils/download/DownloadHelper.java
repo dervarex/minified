@@ -26,7 +26,7 @@ import java.util.function.LongConsumer;
  * Download helper for downloading files and verifying SHA-1 checksums.
  * Recently moved over from the Launch module, be careful.
  */
-@API(status = API.Status.EXPERIMENTAL)
+@API(status = API.Status.STABLE)
 public class DownloadHelper {
     /**
      * Downloads a file asynchronously and verifies its SHA-1 checksum.
@@ -111,6 +111,7 @@ public class DownloadHelper {
      * @param progressConsumer receives the number of bytes read for each chunk
      * @throws RuntimeException if the download fails; when the server does not answer with HTTP 200 the cause is an {@link HttpException}
      */
+    @API(status = API.Status.STABLE, since = "v3.2.1")
     public static void downloadWithoutSha1(String url, Path path, HttpClient client, LongConsumer progressConsumer) {
         Path tempFile = Path.of(path + ".tmp");
 
