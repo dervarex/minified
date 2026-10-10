@@ -26,7 +26,7 @@ import java.util.function.LongConsumer;
  * Download helper for downloading files and verifying SHA-1 checksums.
  * Recently moved over from the Launch module, be careful.
  */
-@API(status = API.Status.EXPERIMENTAL)
+@API(status = API.Status.STABLE)
 public class DownloadHelper {
     /**
      * Downloads a file asynchronously and verifies its SHA-1 checksum.
@@ -78,6 +78,96 @@ public class DownloadHelper {
             LongConsumer progressConsumer
     ) {
         return downloadInternal(url, path, expectedSha1, client, progressConsumer);
+    }
+
+    /**
+     * Downloads a file async without checksum verification, for files that come without a SHA-1
+     * Existing not empty files are skipped
+     *
+     * @param url the download URL
+     * @param path target file path
+     * @param pool executor service used for the download task
+     * @param client HTTP client used for the request
+     * @param progressConsumer receives the number of bytes read for each chunk
+     * @return a Future representing the download task
+     */
+    public static Future<?> downloadWithoutSha1(
+            String url,
+            Path path,
+            ExecutorService pool,
+            HttpClient client,
+            LongConsumer progressConsumer
+    ) {
+        return pool.submit(() -> downloadWithoutSha1(url, path, client, progressConsumer));
+    }
+
+    /**
+     * Downloads a single file without checksum verification, for files that come without a SHA-1
+     * Existing not empty files are skipped
+     *
+     * @param url the url to download from
+     * @param path the path to save the file to
+     * @param client HTTP client used for the request
+     * @param progressConsumer receives the number of bytes read for each chunk
+     * @throws RuntimeException if the download fails; when the server does not answer with HTTP 200 the cause is an {@link HttpException}
+     */
+    @API(status = API.Status.STABLE, since = "v3.2.1")
+    public static void downloadWithoutSha1(String url, Path path, HttpClient client, LongConsumer progressConsumer) {
+        Path tempFile = Path.of(path + ".tmp");
+
+        try {
+            if (Files.exists(path) && Files.size(path) > 0) {
+                return;
+            }
+
+            Path parent = path.getParent();
+            if (parent != null) {
+                Files.createDirectories(parent);
+            }
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .timeout(Duration.ofSeconds(30))
+                    .GET()
+                    .build();
+
+            HttpResponse<InputStream> response =
+                    client.send(request, HttpResponse.BodyHandlers.ofInputStream());
+
+            if (response.statusCode() != 200) {
+                response.body().close();
+                throw new HttpException.Builder()
+                        .status(response.statusCode())
+                        .method(HttpException.Method.GET)
+                        .url(url)
+                        .transientFailure(isTransient(response.statusCode()))
+                        .build();
+            }
+
+            try (
+                    InputStream in = response.body();
+                    var out = Files.newOutputStream(tempFile)
+            ) {
+                byte[] buffer = new byte[8192];
+                int read;
+
+                while ((read = in.read(buffer)) != -1) {
+                    out.write(buffer, 0, read);
+                    progressConsumer.accept(read);
+                }
+            }
+
+            Files.move(tempFile, path, StandardCopyOption.REPLACE_EXISTING);
+        } catch (Exception e) {
+            try {
+                Files.deleteIfExists(tempFile);
+            } catch (Exception ignored) {
+            }
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+            throw new RuntimeException("Failed to download " + url, e);
+        }
     }
 
     private static final int MAX_ATTEMPTS = 3;

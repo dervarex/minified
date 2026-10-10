@@ -1,5 +1,6 @@
 package com.dervarex.minified.utils.download;
 
+import com.dervarex.minified.utils.exceptions.HttpException;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import org.junit.jupiter.api.AfterEach;
@@ -24,6 +25,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -128,6 +130,55 @@ class DownloadHelperTest {
         ExecutorService pool = Executors.newSingleThreadExecutor();
         try {
             DownloadHelper.download(baseUrl + "/file", target, SHA1, pool, client).get();
+        } finally {
+            pool.shutdown();
+        }
+
+        assertEquals(CONTENT, Files.readString(target));
+    }
+
+    @Test
+    void downloadsWithoutAChecksum() throws IOException {
+        Path target = tempDir.resolve("some/folder/file.txt");
+        AtomicLong progress = new AtomicLong();
+
+        DownloadHelper.downloadWithoutSha1(baseUrl + "/file", target, client, progress::addAndGet);
+
+        assertEquals(CONTENT, Files.readString(target));
+        assertEquals(CONTENT.length(), progress.get());
+        assertFalse(Files.exists(tempDir.resolve("some/folder/file.txt.tmp")));
+    }
+
+    @Test
+    void skipsExistingFilesWithoutAChecksum() throws IOException {
+        Path target = Files.writeString(tempDir.resolve("file.txt"), "already here");
+
+        DownloadHelper.downloadWithoutSha1(baseUrl + "/file", target, client, bytes -> {});
+
+        assertEquals(0, requests.get());
+        assertEquals("already here", Files.readString(target));
+    }
+
+    @Test
+    void failsOnMissingFilesWithoutAChecksum() {
+        Path target = tempDir.resolve("file.txt");
+
+        RuntimeException e = assertThrows(RuntimeException.class,
+                () -> DownloadHelper.downloadWithoutSha1(baseUrl + "/missing", target, client, bytes -> {}));
+
+        HttpException http = assertInstanceOf(HttpException.class, e.getCause());
+        assertEquals(404, http.getStatusCode());
+
+        assertFalse(Files.exists(target));
+        assertFalse(Files.exists(tempDir.resolve("file.txt.tmp")));
+    }
+
+    @Test
+    void downloadsWithoutAChecksumInThePool() throws Exception {
+        Path target = tempDir.resolve("file.txt");
+        ExecutorService pool = Executors.newSingleThreadExecutor();
+        try {
+            DownloadHelper.downloadWithoutSha1(baseUrl + "/file", target, pool, client, bytes -> {}).get();
         } finally {
             pool.shutdown();
         }

@@ -14,6 +14,7 @@ import com.dervarex.minified.launch.launch.modding.quilt.QuiltLoaderFetcher;
 import com.dervarex.minified.launch.launch.modding.vanilla.VanillaLoader;
 import com.dervarex.minified.utils.os.OS;
 import com.dervarex.minified.utils.download.DownloadHelper;
+import com.dervarex.minified.utils.exceptions.HttpException;
 import com.dervarex.minified.utils.exceptions.NoConnectionException;
 import com.dervarex.minified.utils.http.HttpUtil;
 import com.dervarex.minified.utils.json.JsonArray;
@@ -25,7 +26,6 @@ import com.dervarex.minified.utils.sha.Hasher;
 import com.dervarex.minified.utils.version.VersionManifestClient;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -402,55 +402,14 @@ public class LibraryDownloader {
                 + ".jar";
     }
 
-    private void downloadWithoutSha1(String url, Path path, LongConsumer progressConsumer) { //todo move to different file
-        Path tempFile = Path.of(path + ".tmp");
-
+    private void downloadWithoutSha1(String url, Path path, LongConsumer progressConsumer) {
         try {
-            if (Files.exists(path) && Files.size(path) > 0) {
-                return;
-            }
-
-            Path parent = path.getParent();
-            if (parent != null) {
-                Files.createDirectories(parent);
-            }
-
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(url))
-                    .timeout(Duration.ofSeconds(30))
-                    .GET()
-                    .build();
-
-            HttpResponse<InputStream> response =
-                    client.send(request, HttpResponse.BodyHandlers.ofInputStream());
-
-            if (response.statusCode() != 200) {
-                throw new HttpDownloadException(
-                        "Failed to download " + url + " (HTTP " + response.statusCode() + ")",
-                        response.statusCode()
-                );
-            }
-
-            try (
-                    InputStream in = response.body();
-                    var out = Files.newOutputStream(tempFile)
-            ) {
-                byte[] buffer = new byte[8192];
-                int read;
-
-                while ((read = in.read(buffer)) != -1) {
-                    out.write(buffer, 0, read);
-                    progressConsumer.accept(read);
-                }
-            }
-
-            Files.move(tempFile, path, StandardCopyOption.REPLACE_EXISTING);
-        } catch (Exception e) {
-            try {
-                Files.deleteIfExists(tempFile);
-            } catch (Exception ignored) {
-            }
-            throw new DownloadException("Failed to download Fabric library from " + url, e);
+            DownloadHelper.downloadWithoutSha1(url, path, client, progressConsumer);
+        } catch (RuntimeException e) {
+            Throwable cause = e.getCause() instanceof HttpException http
+                    ? new HttpDownloadException(http.getMessage(), http.getStatusCode(), http)
+                    : e;
+            throw new DownloadException("Failed to download library from " + url, cause);
         }
     }
 
