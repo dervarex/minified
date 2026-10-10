@@ -64,8 +64,7 @@ public final class LaunchOptions {
 
                         .setVariable(
                                 "game_directory",
-                                launchConfig.getJarFile().getParent()
-                                        .toAbsolutePath()
+                                launchConfig.resolveGameDirectory()
                                         .toString()
                         )
 

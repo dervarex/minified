@@ -39,12 +39,16 @@ public class LaunchConfiguration {
     private Path librariesDirectory; // required
     private Path assetsDirectory;    // required
     private Path nativesDirectory;   // optional, defaults to <jarFile's parent directory>/natives
+    private Path gameDirectory;      // optional, defaults to <jarFile's parent directory>
     private Path customJavaExecutable;
 
     // Launch options
     @Getter(AccessLevel.NONE)
     private final List<String> extraJvmArgs = new ArrayList<>();
     private Loader loader = null;
+
+    // Game output
+    private boolean captureGameOutput = false;
 
     // Headless test options
     private boolean headless = false;
@@ -75,6 +79,18 @@ public class LaunchConfiguration {
             return nativesDirectory.toAbsolutePath();
         }
         return jarFile.toAbsolutePath().getParent().resolve("natives");
+    }
+
+    /**
+     * Resolves the directory the game runs in, where saves, mods, options and logs end up
+     *
+     * @return the configured game directory, or {@code <jarFile's parent directory>} if none was set
+     */
+    public Path resolveGameDirectory() {
+        if (gameDirectory != null) {
+            return gameDirectory.toAbsolutePath();
+        }
+        return jarFile.toAbsolutePath().getParent();
     }
 
     public static class Builder {
@@ -149,6 +165,17 @@ public class LaunchConfiguration {
             return this;
         }
 
+        /**
+         * Lets the game run somewhere else than next to its jar, so several instances can share one client jar
+         * and the loader files installed next to it.
+         *
+         * @param gameDirectory where saves, mods, options and logs go, defaults to the jar's parent directory
+         */
+        public Builder gameDirectory(Path gameDirectory) {
+            config.gameDirectory = gameDirectory;
+            return this;
+        }
+
         public Builder customJavaExecutable(Path customJavaExecutable) {
             config.customJavaExecutable = customJavaExecutable;
             return this;
@@ -169,6 +196,19 @@ public class LaunchConfiguration {
 
         public Builder loader(Loader loader) {
             config.loader = loader;
+            return this;
+        }
+
+        // Game output
+
+        /**
+         * Reads the game's stdout and stderr instead of handing them to the launcher's console, every line
+         * gets posted as a {@code GameOutputEvent}
+         *
+         * @param captureGameOutput whether to capture the output, false by default
+         */
+        public Builder captureGameOutput(boolean captureGameOutput) {
+            config.captureGameOutput = captureGameOutput;
             return this;
         }
 

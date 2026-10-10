@@ -51,7 +51,8 @@ public final class JarModForgeInstaller {
 
         try {
             Path jarMod = downloadJarMod(loaderVersion, gameDir, client);
-            downloadFmlLibraries(jarMod, gameDir.resolve("lib"), client);
+            // FML looks for these in the folder the game runs in, not next to the jar
+            downloadFmlLibraries(jarMod, config.resolveGameDirectory().resolve("lib"), client);
             writeProfile(config, gameDir, jarMod);
         } catch (IOException e) {
             throw new ForgePreparationException(e);
