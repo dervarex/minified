@@ -9,6 +9,8 @@ import com.dervarex.minified.launch.download.ClientDownloader;
 import com.dervarex.minified.launch.download.assets.AssetDownloader;
 import com.dervarex.minified.launch.download.assets.LegacyAssets;
 import com.dervarex.minified.launch.download.libraries.LibraryDownloader;
+import com.dervarex.minified.launch.events.launch.GameOutputEvent;
+import com.dervarex.minified.launch.events.launch.GameProcessStartedEvent;
 import com.dervarex.minified.launch.events.launch.GameStartEvent;
 import com.dervarex.minified.launch.events.launch.GameStoppedEvent;
 import com.dervarex.minified.launch.exceptions.loader.UnexpectedLoaderException;
@@ -43,8 +45,13 @@ import com.dervarex.minified.utils.json.JsonValue;
 import com.dervarex.minified.utils.network.NetworkUtil;
 import org.apiguardian.api.API;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.UncheckedIOException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -179,7 +186,7 @@ public class Launcher {
                 // versions before 1.6 find their folder through user.home (~/.minecraft), LaunchWrapper only redirects
                 // part of it to the game directory. The rest (output-client.log, options.txt, ...) stays in the instance this way.
                 // FML up to 1.5.2 reads the old applet launcher's property instead
-                Path gameDir = launchConfig.getJarFile().toAbsolutePath().getParent();
+                Path gameDir = launchConfig.resolveGameDirectory();
                 jvmArgs.add("-Duser.home=" + gameDir);
                 jvmArgs.add("-Dminecraft.applet.TargetDirectory=" + gameDir);
             }
@@ -238,7 +245,7 @@ public class Launcher {
                 launchConfig.getLibrariesDirectory(),
                 launchConfig.resolveNativesDirectory(),
                 progress -> {},
-                null
+                context
         );
 
         assetDownloader.downloadAssets(
@@ -318,7 +325,7 @@ public class Launcher {
                 new ProcessBuilder(command);
         // like the official launcher, the game runs in its game directory. Things like the log4j logs/ folder and rubydung's
         // level.dat use relative paths and would end up wherever the launcher was started from
-        Path gameDir = launchConfig.getJarFile().toAbsolutePath().getParent();
+        Path gameDir = launchConfig.resolveGameDirectory();
         Files.createDirectories(gameDir);
         processBuilder.directory(gameDir.toFile());
         X11Helper.configureGraphicsEnvironment(
@@ -326,9 +333,10 @@ public class Launcher {
                 context
         );
 
+        boolean capture = launchConfig.isCaptureGameOutput() && !launchConfig.isHeadless();
         if (launchConfig.isHeadless()) {
             processBuilder.redirectErrorStream(true);
-        } else {
+        } else if (!capture) {
             processBuilder.inheritIO();
         }
 
@@ -339,10 +347,22 @@ public class Launcher {
         ));
 
         Process process = processBuilder.start();
+        context.getEventBus().post(new GameProcessStartedEvent(process, launchConfig));
+
+        List<Thread> outputReaders = capture
+                ? List.of(
+                        forwardOutput(process.getInputStream(), GameOutputEvent.Stream.STDOUT, context),
+                        forwardOutput(process.getErrorStream(), GameOutputEvent.Stream.STDERR, context))
+                : List.of();
 
         int exitCode = launchConfig.isHeadless()
                 ? HeadlessWatcher.forLaunch(launchConfig, logsNoMarkers).watch(process)
                 : process.waitFor();
+
+        // the last lines (the crash report, usually) should arrive before anyone hears that the game stopped
+        for (Thread reader : outputReaders) {
+            reader.join();
+        }
 
         context.getEventBus().post(new GameStoppedEvent(exitCode, context.getLaunchConfiguration()));
 //        if (exitCode != 0) {
@@ -350,6 +370,22 @@ public class Launcher {
 //                    "Minecraft exited with code " + exitCode
 //            );
 //        } todo: NonZeroExitCodeException or NonZeroExitCodeEvent?
+    }
+
+    private static Thread forwardOutput(InputStream stream, GameOutputEvent.Stream type, LaunchContext context) {
+        Thread reader = new Thread(() -> {
+            try (BufferedReader lines = new BufferedReader(new InputStreamReader(stream, Charset.defaultCharset()))) {
+                String line;
+                while ((line = lines.readLine()) != null) {
+                    context.getEventBus().post(new GameOutputEvent(line, type));
+                }
+            } catch (IOException e) {
+                throw new UncheckedIOException("Lost the game's " + type.name().toLowerCase() + " stream", e);
+            }
+        }, "GameOutput-" + type.name().toLowerCase());
+        reader.setDaemon(true);
+        reader.start();
+        return reader;
     }
 
     @API(status = API.Status.INTERNAL, consumers = {"com.dervarex.minified.launch.*"})

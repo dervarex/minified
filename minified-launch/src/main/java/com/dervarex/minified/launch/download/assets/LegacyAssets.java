@@ -84,7 +84,7 @@ public final class LegacyAssets {
     }
 
     private static Path resourcesDirectory(LaunchConfiguration config) {
-        return config.getJarFile().toAbsolutePath().getParent().resolve("resources");
+        return config.resolveGameDirectory().resolve("resources");
     }
 
     private static String assetIndexId(JsonFile versionJson) {

@@ -80,6 +80,10 @@ public class ProfileFactory {
             paths.put("nativesDirectory", profile.getNativesDirectory().toString());
         }
 
+        if (profile.getGameDirectory() != null) {
+            paths.put("gameDirectory", profile.getGameDirectory().toString());
+        }
+        
         if (profile.getCustomJavaExecutable() != null) {
             paths.put("customJavaExecutable", profile.getCustomJavaExecutable().toString());
         }
@@ -94,6 +98,7 @@ public class ProfileFactory {
             jvmArgs.add(arg);
         }
         launch.put("extraJvmArgs", jvmArgs);
+        launch.put("captureGameOutput", profile.isCaptureGameOutput());
 
         if (profile.getLoader() != null) {
             launch.put("loader", serializeLoader(profile.getLoader()));
@@ -158,6 +163,10 @@ public class ProfileFactory {
                 builder.extraJvmArgs(readStringList(launch.getArray("extraJvmArgs")));
             }
 
+            if (launch.has("captureGameOutput")) {
+                builder.captureGameOutput(launch.get("captureGameOutput").asBoolean());
+            }
+
             if (loader != null) {
                 builder.loader(loader);
             }
@@ -185,6 +194,10 @@ public class ProfileFactory {
 
         if (paths.has("nativesDirectory")) {
             builder.nativesDirectory(Path.of(paths.get("nativesDirectory").asString()));
+        }
+
+        if (paths.has("gameDirectory")) {
+            builder.gameDirectory(Path.of(paths.get("gameDirectory").asString()));
         }
 
         if (paths.has("customJavaExecutable")) {

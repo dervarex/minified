@@ -18,16 +18,20 @@ import net.raphimc.minecraftauth.step.msa.StepMsaDeviceCode;
 import org.apiguardian.api.API;
 
 import javax.crypto.SecretKey;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 public class AuthManager {
 
@@ -37,6 +41,7 @@ public class AuthManager {
     private static Path BASE_DIR;
     private static Path KEY_FILE;
     private static Path SESSION_FILE;
+    private static Path SESSIONS_DIR;
     private static EventBus eventBus;
     private static SecretKey masterKey;
     private static volatile LoginState loginState = new LoginState();
@@ -53,6 +58,7 @@ public class AuthManager {
         AuthManager.eventBus = eventBus;
         BASE_DIR = baseDir;
         SESSION_FILE = BASE_DIR.resolve("session.enc");
+        SESSIONS_DIR = BASE_DIR.resolve("sessions");
         KEY_FILE = BASE_DIR.resolve("master.key");
         prepareKeyDirectories();
         JavaManager.init(BASE_DIR.resolve("java"));
@@ -85,6 +91,7 @@ public class AuthManager {
         }
         BASE_DIR = BASE_DIR.resolve(launcherName);
         SESSION_FILE = BASE_DIR.resolve("session.enc");
+        SESSIONS_DIR = BASE_DIR.resolve("sessions");
         KEY_FILE = BASE_DIR.resolve("master.key");
         prepareKeyDirectories();
         JavaManager.init(BASE_DIR.resolve("java"));
@@ -183,15 +190,26 @@ public class AuthManager {
      */
     private static User persistSession(StepFullJavaSession.FullJavaSession javaSession) throws Exception {
         JsonObject serialized = MinecraftAuth.JAVA_DEVICE_CODE_LOGIN.toJson(javaSession);
+        // session.enc is the most recent login, so we don't break the backwards compatibility of v3.2.0 and before
         Encryptor.saveEncryptedSession(serialized, masterKey, SESSION_FILE, eventBus);
 
+        User user = toUser(javaSession, serialized);
+        Files.createDirectories(SESSIONS_DIR);
+        Encryptor.saveEncryptedSession(serialized, masterKey, sessionFile(user.getMinecraftUUID().getDashed()), eventBus);
+        session.put(user.getMinecraftUUID().getDashed().toString(), user);
+        return user;
+    }
+
+    private static User toUser(StepFullJavaSession.FullJavaSession javaSession, JsonObject serialized) {
         StepMCProfile.MCProfile profile = javaSession.getMcProfile();
-        User user = new User(profile.getId(),
+        return new User(profile.getId(),
                 profile.getName(),
                 profile.getMcToken().getAccessToken(),
                 serialized);
-        session.put(user.getMinecraftUUID().getDashed().toString(), user);
-        return user;
+    }
+
+    private static Path sessionFile(UUID uuid) {
+        return SESSIONS_DIR.resolve(uuid.toString().replace("-", "") + ".enc");
     }
 
     /**
@@ -342,6 +360,110 @@ public class AuthManager {
             System.out.println("Login/Refresh failed: " + sw);
             return null;
         }
+    }
+
+    /**
+     * Lists every account that has a saved session. Every successful login saves one, next to the
+     * single session used by {@link #loginWithSavedSession()}
+     *
+     * @return the UUIDs of all accounts with a saved session, no order
+     * @throws IOException if the session directory exists but can't be read
+     */
+    @API(status = API.Status.EXPERIMENTAL, since = "v3.2.1")
+    public static List<UUID> getSavedAccounts() throws IOException {
+        List<UUID> accounts = new ArrayList<>();
+        if (!Files.isDirectory(SESSIONS_DIR)) return accounts;
+        try (Stream<Path> files = Files.list(SESSIONS_DIR)) {
+            for (Path file : files.toList()) {
+                String name = file.getFileName().toString();
+                if (!name.endsWith(".enc")) continue;
+                accounts.add(parseUndashed(name.substring(0, name.length() - ".enc".length())));
+            }
+        }
+        return accounts;
+    }
+
+    /**
+     * Loads the saved session of one account and refreshes it, like {@link #loginWithSavedSession()} does
+     * for the most recent one
+     *
+     * @param uuid the account to log in with
+     * @return the logged in user, or null if there is no saved session for it or it could not be refreshed
+     */
+    @API(status = API.Status.EXPERIMENTAL, since = "v3.2.1")
+    public static User loginWithSavedSession(UUID uuid) {
+        try {
+            JsonObject saved = Encryptor.loadEncryptedSession(sessionFile(uuid), masterKey, eventBus);
+            if (saved == null) return null;
+
+            HttpClient httpClient = MinecraftAuth.createHttpClient();
+            StepFullJavaSession.FullJavaSession refreshed = MinecraftAuth.JAVA_DEVICE_CODE_LOGIN.refresh(
+                    httpClient,
+                    MinecraftAuth.JAVA_DEVICE_CODE_LOGIN.fromJson(saved)
+            );
+            User user = persistSession(refreshed);
+            System.out.println("Saved session OK for " + user.username());
+            return user;
+        } catch (Exception e) {
+            StringWriter sw = new StringWriter();
+            e.printStackTrace(new PrintWriter(sw));
+            System.out.println("Login/Refresh failed for " + uuid + ": " + sw);
+            return null;
+        }
+    }
+
+    /**
+     * Loads the saved session of one account without refreshing it, for when there is no network
+     * The access token may have expired, that's fine for singleplayer but online servers will refuse it
+     * Will not work if disk is on fire, though we're already working on a fire extinguisher
+     *
+     * @param uuid the account to load
+     * @return the user from the saved session, or null if there is none
+     * @throws LoginFailedException if the session file exists but can't be decrypted or read
+     */
+    @API(status = API.Status.EXPERIMENTAL, since = "v3.2.1")
+    public static User loadSavedSession(UUID uuid) {
+        try {
+            JsonObject saved = Encryptor.loadEncryptedSession(sessionFile(uuid), masterKey, eventBus);
+            if (saved == null) return null;
+            User user = toUser(MinecraftAuth.JAVA_DEVICE_CODE_LOGIN.fromJson(saved), saved);
+            session.put(user.getMinecraftUUID().getDashed().toString(), user);
+            return user;
+        } catch (Exception e) {
+            throw new LoginFailedException("Failed to read the saved session of " + uuid, e);
+        }
+    }
+
+    /**
+     * Forgets an account: deletes its saved session, and {@code session.enc} too if that one belongs to it
+     *
+     * @param uuid the account to remove
+     * @return true if a saved session was deleted
+     * @throws IOException if a session file can't be deleted
+     */
+    @API(status = API.Status.EXPERIMENTAL, since = "v3.2.1")
+    public static boolean removeSavedSession(UUID uuid) throws IOException {
+        session.remove(uuid.toString());
+        boolean removed = Files.deleteIfExists(sessionFile(uuid));
+        if (Files.exists(SESSION_FILE)) {
+            try {
+                JsonObject latest = Encryptor.loadEncryptedSession(SESSION_FILE, masterKey, eventBus);
+                if (latest != null && uuid.equals(MinecraftAuth.JAVA_DEVICE_CODE_LOGIN.fromJson(latest).getMcProfile().getId())) {
+                    removed |= Files.deleteIfExists(SESSION_FILE);
+                }
+            } catch (IOException e) {
+                throw e;
+            } catch (Exception e) {
+                throw new IOException("Failed to read " + SESSION_FILE, e);
+            }
+        }
+        return removed;
+    }
+
+    private static UUID parseUndashed(String undashed) {
+        return UUID.fromString(undashed.replaceFirst(
+                "(\\p{XDigit}{8})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}+)",
+                "$1-$2-$3-$4-$5"));
     }
 
     /**
