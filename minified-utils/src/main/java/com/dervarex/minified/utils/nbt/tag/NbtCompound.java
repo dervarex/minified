@@ -119,7 +119,25 @@ public final class NbtCompound implements NbtTag {
 
     public boolean has(String key) { return entries.containsKey(key); }
 
+    /**
+     * Removes a key
+     * @return the tag that was stored under it, empty if there was none
+     */
+    public Optional<NbtTag> remove(String key) {
+        return Optional.ofNullable(entries.remove(key));
+    }
+
     public Map<String, NbtTag> asMap() {
         return Collections.unmodifiableMap(new LinkedHashMap<>(entries)); // read only snapshot for the public, keeps the order
+    }
+
+    /**
+     * Deep copy, nested stuff included, same key order
+     */
+    @Override
+    public NbtCompound copy() {
+        NbtCompound copy = new NbtCompound();
+        entries.forEach((key, value) -> copy.entries.put(key, value.copy()));
+        return copy;
     }
 }

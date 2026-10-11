@@ -10,4 +10,11 @@ public sealed interface NbtTag
 
     byte id();
 
+    /**
+     * Deep copy, tags that can't change anyway just return themselves
+     */
+    default NbtTag copy() {
+        return this;
+    }
+
 }

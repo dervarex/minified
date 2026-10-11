@@ -46,4 +46,39 @@ class SessionLockTest {
         SessionLock lock = new SessionLock(missing);
         assertFalse(lock.isLocked());
     }
+
+    @Test
+    void acquireKeepsEveryoneElseOut(@TempDir Path world) throws IOException {
+        Path lockFile = world.resolve("session.lock");
+
+        try (SessionLock.Handle handle = SessionLock.acquire(world)) {
+            assertTrue(new SessionLock(lockFile).isLocked());
+        }
+        assertFalse(new SessionLock(lockFile).isLocked());
+    }
+
+    @Test
+    void acquireCanBeNested(@TempDir Path world) throws IOException {
+        Path lockFile = world.resolve("session.lock");
+        SessionLock.Handle outer = SessionLock.acquire(world);
+        SessionLock.Handle inner = SessionLock.acquire(world);
+
+        inner.close();
+        inner.close(); // closing twice must not steal the outer one's lock
+        assertTrue(new SessionLock(lockFile).isLocked());
+
+        outer.close();
+        assertFalse(new SessionLock(lockFile).isLocked());
+    }
+
+    @Test
+    void acquireFailsWhileTheGameHasTheWorld(@TempDir Path world) throws IOException {
+        Path lockFile = world.resolve("session.lock");
+        Files.write(lockFile, new byte[0]);
+
+        try (FileChannel game = FileChannel.open(lockFile, StandardOpenOption.WRITE); FileLock held = game.lock()) {
+            assertThrows(IOException.class, () -> SessionLock.acquire(world));
+        }
+        SessionLock.acquire(world).close();
+    }
 }

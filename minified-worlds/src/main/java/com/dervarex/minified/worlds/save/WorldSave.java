@@ -1,6 +1,8 @@
 package com.dervarex.minified.worlds.save;
 
 import com.dervarex.minified.utils.json.JsonFile;
+import com.dervarex.minified.utils.json.JsonObject;
+import com.dervarex.minified.utils.nbt.NbtEquals;
 import com.dervarex.minified.utils.nbt.Parser;
 import com.dervarex.minified.utils.nbt.Writer;
 import com.dervarex.minified.utils.nbt.tag.NbtCompound;
@@ -14,14 +16,21 @@ import com.dervarex.minified.worlds.save.data.Weather;
 import com.dervarex.minified.worlds.save.data.WorldClocks;
 import com.dervarex.minified.worlds.save.data.WorldGenSettings;
 import com.dervarex.minified.worlds.save.level.Level;
+import com.dervarex.minified.worlds.save.playerdata.Advancements;
 import com.dervarex.minified.worlds.save.playerdata.Player;
+import com.dervarex.minified.worlds.save.playerdata.Stats;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
@@ -59,6 +68,10 @@ public class WorldSave {
     @Getter
     private final SessionLock lock;
 
+    // what each file looked like the last time we touched it, save() only writes what changed since
+    private final List<NbtFile> nbtFiles = new ArrayList<>();
+    private final List<JsonFileState> jsonFiles = new ArrayList<>();
+
     public WorldSave(Path worldDirectory) {
         this.worldDirectory = worldDirectory;
         Path dataDirectory = worldDirectory.resolve("data").resolve("minecraft");
@@ -68,15 +81,6 @@ public class WorldSave {
         }
 
         Path levelDatPath = worldDirectory.resolve("level.dat");
-        Path customBossEventsPath = dataDirectory.resolve("custom_boss_events.dat");
-        Path gameRulesPath = dataDirectory.resolve("game_rules.dat");
-        Path randomSequencesPath = dataDirectory.resolve("random_sequences.dat");
-        Path scoreboardPath = dataDirectory.resolve("scoreboard.dat");
-        Path stopWatchesPath = dataDirectory.resolve("stopwatches.dat");
-        Path wanderingTraderPath = dataDirectory.resolve("wandering_trader.dat");
-        Path weatherPath = dataDirectory.resolve("weather.dat");
-        Path worldClocksPath = dataDirectory.resolve("world_clocks.dat");
-        Path worldGenSettingsPath = dataDirectory.resolve("world_gen_settings.dat");
 
         if (!Files.exists(levelDatPath)) {
             throw new RuntimeException("World directory does not contain level.dat file: " + worldDirectory);
@@ -84,34 +88,17 @@ public class WorldSave {
 
         try {
             this.level = Level.fromNbt(Parser.readFile(levelDatPath.toFile()));
+            track(levelDatPath, worldDirectory.resolve("level.dat_old"), level::toNbt);
 
-            this.customBossEvents = Files.exists(customBossEventsPath)
-                    ? CustomBossEvents.fromNbt(Parser.readFile(customBossEventsPath.toFile()))
-                    : null;
-            this.gameRules = Files.exists(gameRulesPath)
-                    ? GameRules.fromNbt(Parser.readFile(gameRulesPath.toFile()))
-                    : null;
-            this.randomSequences = Files.exists(randomSequencesPath)
-                    ? RandomSequences.fromNbt(Parser.readFile(randomSequencesPath.toFile()))
-                    : null;
-            this.scoreboard = Files.exists(scoreboardPath)
-                    ? Scoreboard.fromNbt(Parser.readFile(scoreboardPath.toFile()))
-                    : null;
-            this.stopWatches = Files.exists(stopWatchesPath)
-                    ? StopWatches.fromNbt(Parser.readFile(stopWatchesPath.toFile()))
-                    : null;
-            this.wanderingTrader = Files.exists(wanderingTraderPath)
-                    ? WanderingTrader.fromNbt(Parser.readFile(wanderingTraderPath.toFile()))
-                    : null;
-            this.weather = Files.exists(weatherPath)
-                    ? Weather.fromNbt(Parser.readFile(weatherPath.toFile()))
-                    : null;
-            this.worldClocks = Files.exists(worldClocksPath)
-                    ? WorldClocks.fromNbt(Parser.readFile(worldClocksPath.toFile()))
-                    : null;
-            this.worldGenSettings = Files.exists(worldGenSettingsPath)
-                    ? WorldGenSettings.fromNbt(Parser.readFile(worldGenSettingsPath.toFile()))
-                    : null;
+            this.customBossEvents = load(dataDirectory.resolve("custom_boss_events.dat"), CustomBossEvents::fromNbt, CustomBossEvents::toNbt);
+            this.gameRules = load(dataDirectory.resolve("game_rules.dat"), GameRules::fromNbt, GameRules::toNbt);
+            this.randomSequences = load(dataDirectory.resolve("random_sequences.dat"), RandomSequences::fromNbt, RandomSequences::toNbt);
+            this.scoreboard = load(dataDirectory.resolve("scoreboard.dat"), Scoreboard::fromNbt, Scoreboard::toNbt);
+            this.stopWatches = load(dataDirectory.resolve("stopwatches.dat"), StopWatches::fromNbt, StopWatches::toNbt);
+            this.wanderingTrader = load(dataDirectory.resolve("wandering_trader.dat"), WanderingTrader::fromNbt, WanderingTrader::toNbt);
+            this.weather = load(dataDirectory.resolve("weather.dat"), Weather::fromNbt, Weather::toNbt);
+            this.worldClocks = load(dataDirectory.resolve("world_clocks.dat"), WorldClocks::fromNbt, WorldClocks::toNbt);
+            this.worldGenSettings = load(dataDirectory.resolve("world_gen_settings.dat"), WorldGenSettings::fromNbt, WorldGenSettings::toNbt);
             this.players = readPlayers(worldDirectory);
             this.lock = new SessionLock(worldDirectory.resolve("session.lock"));
         } catch (IOException e) {
@@ -119,7 +106,18 @@ public class WorldSave {
         }
     }
 
-    private static List<Player> readPlayers(Path worldDirectory) throws IOException {
+    private <T> T load(Path file, Function<NbtCompound, T> parse, Function<T, NbtCompound> write) throws IOException {
+        if (!Files.exists(file)) return null;
+        T value = parse.apply(Parser.readFile(file.toFile()));
+        track(file, null, () -> write.apply(value));
+        return value;
+    }
+
+    private void track(Path file, Path backup, Supplier<NbtCompound> content) {
+        nbtFiles.add(new NbtFile(file, backup, content, content.get().copy()));
+    }
+
+    private List<Player> readPlayers(Path worldDirectory) throws IOException {
         Path playersDirectory = worldDirectory.resolve("players");
         Path playerDataDirectory = playersDirectory.resolve("data");
         if (!Files.isDirectory(playerDataDirectory)) {
@@ -152,10 +150,21 @@ public class WorldSave {
                     ? new JsonFile(statsFile).asObject()
                     : null;
 
-            result.add(Player.fromNbt(nbt, advancements, stats));
+            Player player = Player.fromNbt(nbt, advancements, stats);
+            result.add(player);
+
+            // <uuid>.dat_old, mojang does that too
+            track(playerFile, playerDataDirectory.resolve(uuid + ".dat_old"), player::toNbt);
+            trackJson(advancementsFile, () -> Optional.ofNullable(player.getAdvancements()).map(Advancements::toJson).orElse(null));
+            trackJson(statsFile, () -> Optional.ofNullable(player.getStatistics()).map(Stats::toJson).orElse(null));
         }
 
         return result;
+    }
+
+    private void trackJson(Path file, Supplier<JsonObject> content) {
+        JsonObject json = content.get();
+        jsonFiles.add(new JsonFileState(file, content, json == null ? null : json.toJson()));
     }
 
     public Optional<CustomBossEvents> getCustomBossEvents() {
@@ -186,8 +195,72 @@ public class WorldSave {
         return Optional.ofNullable(worldGenSettings);
     }
 
+    /**
+     * Writes whatever changed since loading (or the last save): level.dat, data/minecraft and the players.
+     * level.dat and the player files keep a .dat_old, like Minecraft does. Chunks go through
+     * {@link com.dervarex.minified.worlds.dimension.Dimension#saveChunkData} instead
+     * @throws IOException if writing fails, or Minecraft has the world open right now
+     */
     public void save() throws IOException {
-        NbtCompound nbt = level.toNbt();
-        Writer.writeFile(worldDirectory.resolve("level.dat").toFile(), nbt);
+        try (SessionLock.Handle handle = SessionLock.acquire(worldDirectory)) {
+            for (NbtFile file : nbtFiles) {
+                NbtCompound current = file.content.get();
+                if (NbtEquals.deepEquals(file.saved, current)) continue;
+                if (file.backup != null) {
+                    Writer.writeFile(file.path.toFile(), current, file.backup.toFile());
+                } else {
+                    Writer.writeFile(file.path.toFile(), current);
+                }
+                file.saved = current.copy();
+            }
+            for (JsonFileState file : jsonFiles) {
+                JsonObject current = file.content.get();
+                String json = current == null ? null : current.toJson();
+                if (json == null || json.equals(file.saved)) continue;
+                writeJson(file.path, json);
+                file.saved = json;
+            }
+        }
+    }
+
+    private static void writeJson(Path file, String json) throws IOException {
+        Files.createDirectories(file.getParent());
+        Path temp = file.resolveSibling(file.getFileName() + ".tmp");
+        try {
+            Files.writeString(temp, json, StandardCharsets.UTF_8);
+            try {
+                Files.move(temp, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            } catch (AtomicMoveNotSupportedException e) {
+                Files.move(temp, file, StandardCopyOption.REPLACE_EXISTING);
+            }
+        } finally {
+            Files.deleteIfExists(temp);
+        }
+    }
+
+    private static final class NbtFile {
+        private final Path path;
+        private final Path backup; // null if mojang doesn't bother with one either
+        private final Supplier<NbtCompound> content;
+        private NbtCompound saved;
+
+        private NbtFile(Path path, Path backup, Supplier<NbtCompound> content, NbtCompound saved) {
+            this.path = path;
+            this.backup = backup;
+            this.content = content;
+            this.saved = saved;
+        }
+    }
+
+    private static final class JsonFileState {
+        private final Path path;
+        private final Supplier<JsonObject> content;
+        private String saved; // null if there was no file
+
+        private JsonFileState(Path path, Supplier<JsonObject> content, String saved) {
+            this.path = path;
+            this.content = content;
+            this.saved = saved;
+        }
     }
 }

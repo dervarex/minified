@@ -43,8 +43,22 @@ class SpawnTest {
 
         assertFalse(nbt.has("dimension"));
         assertFalse(nbt.has("pos"));
-        assertEquals(1, nbt.getInt("pitch"));
-        assertEquals(2, nbt.getInt("yaw"));
+        assertEquals(1, nbt.getFloat("pitch"));
+        assertEquals(2, nbt.getFloat("yaw"));
+    }
+
+    @Test
+    void anglesStayFloats() {
+        NbtCompound nbt = new NbtCompound();
+        nbt.setFloat("pitch", 12.5f);
+        nbt.setFloat("yaw", -90.75f);
+        nbt.setString("some_mod:extra", "keep me");
+
+        NbtCompound written = Spawn.fromNbt(nbt).toNbt();
+
+        assertEquals(12.5f, written.getFloat("pitch"));
+        assertEquals(-90.75f, written.getFloat("yaw"));
+        assertEquals("keep me", written.getString("some_mod:extra"));
     }
 
     @Test

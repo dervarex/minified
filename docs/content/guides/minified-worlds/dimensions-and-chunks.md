@@ -173,13 +173,17 @@ chunk.setBlock(10, 64, 10, state)
   </TabItem>
 </Tabs>
 
+Since DataVersion 5006, Minecraft leaves out the properties of a block's default state and only stores its name. So in such a world, a block in its default state (an upright oak log, still water, ...) comes back without any properties, and `BlockState.of("minecraft:oak_log")` means exactly that when you set one. You don't have to care which format a chunk uses, `minified-worlds` reads both and writes new blocks the way the chunk's DataVersion expects.
+
 If you set a block in a section that doesn't exist yet (say, you're building far above the existing terrain), the chunk quietly creates that section for you as air first, so you never have to create sections manually just to place a block.
+
+`setBlock` also takes care of whatever depends on the block. The chunk's light and heightmaps are thrown away, Minecraft recalculates both the next time it loads the chunk. And if a block is replaced by a different one (not just turned around), its block entity goes with it, so turning a chest into stone takes the chest's items along, like it would in game. What `setBlock` can't do is create block entities: a chest or sign you place gets no block entity data, Minecraft only makes an empty one later, once something in the game asks for it.
 
 ### Why blocks aren't stored as one id per block
 
 It's worth knowing this, even if the library hides it from you. Minecraft doesn't store a block id for every single one of the 4096 blocks in a section. Most sections only use a handful of different block types (stone, dirt, air, and maybe one or two ores), so storing a full id for every block would waste a lot of space.
 
-Instead, each section keeps a **palette**: a small list of the block states actually used in that section. Every block position then just stores an index into that palette, packed as tightly as possible (using only as many bits as needed to cover the palette's size). If a whole section is just one block, like a section of pure stone, the palette has a single entry and no index data is stored at all, since there's nothing to choose between.
+Instead, each section keeps a **palette**: a small list of the block states actually used in that section. Every block position then just stores an index into that palette, packed as tightly as possible (using only as many bits as needed to cover the palette's size, at least 4 for blocks). An index never spans two longs though, the bits left over at the top of each long just stay unused. If a whole section is just one block, like a section of pure stone, the palette has a single entry and no index data is stored at all, since there's nothing to choose between.
 
 This is also why adding a brand new block type to a section can be a bit of work behind the scenes: the palette grows, and if it crosses a size that needs one more bit per entry, the whole packed array has to be rebuilt with the wider bit width. `minified-worlds` does all of that for you inside `setBlock`.
 
@@ -212,6 +216,8 @@ overworld.saveChunkData(chunk)
 </Tabs>
 
 This writes into the chunk's region file, creating that file if it didn't exist yet (useful if you're generating brand new chunks rather than editing existing ones).
+
+`saveChunkData` holds the world's session lock while it writes, so it throws an `IOException` if Minecraft has the world open. It also marks the points of interest (beds, job sites, ...) of every section you changed blocks in, so Minecraft rebuilds them from the blocks the next time it loads the chunk.
 
 ## 7. Closing the dimension
 

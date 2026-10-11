@@ -3,6 +3,7 @@ package com.dervarex.minified.worlds.save.playerdata;
 import com.dervarex.minified.utils.nbt.tag.NbtCompound;
 import com.dervarex.minified.utils.nbt.tag.NbtList;
 import com.dervarex.minified.utils.nbt.tag.NbtString;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -13,8 +14,13 @@ public class RecipeBook {
     private String[] recipes = new String[0];
     private String[] toBeDisplayed = new String[0];
 
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    private NbtCompound raw;
+
     public static RecipeBook fromNbt(NbtCompound nbt) {
         RecipeBook recipeBook = new RecipeBook();
+        recipeBook.raw = nbt.copy();
 
         if (nbt.has("recipes")) {
             NbtList recipesList = nbt.getList("recipes");
@@ -38,7 +44,7 @@ public class RecipeBook {
     }
 
     public NbtCompound toNbt() {
-        NbtCompound nbt = new NbtCompound();
+        NbtCompound nbt = raw != null ? raw.copy() : new NbtCompound();
 
         NbtList recipesList = new NbtList((byte) 8);
         for (String recipe : recipes) {

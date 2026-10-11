@@ -26,4 +26,11 @@ public final class NbtList implements NbtTag {
     }
 
     public int size() { return elements.size(); }
+
+    @Override
+    public NbtList copy() {
+        NbtList copy = new NbtList(elementId);
+        for (NbtTag element : elements) copy.elements.add(element.copy());
+        return copy;
+    }
 }

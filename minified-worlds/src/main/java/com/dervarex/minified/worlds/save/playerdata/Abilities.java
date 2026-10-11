@@ -1,6 +1,7 @@
 package com.dervarex.minified.worlds.save.playerdata;
 
 import com.dervarex.minified.utils.nbt.tag.NbtCompound;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -15,8 +16,13 @@ public class Abilities {
     private boolean mayBuild = true;
     private boolean instabuild;
 
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    private NbtCompound raw;
+
     public static Abilities fromNbt(NbtCompound nbt) {
         Abilities abilities = new Abilities();
+        abilities.raw = nbt.copy();
         if (nbt.has("walkSpeed")) {
             abilities.walkSpeed = nbt.getFloat("walkSpeed");
         }
@@ -42,7 +48,7 @@ public class Abilities {
     }
 
     public NbtCompound toNbt() {
-        NbtCompound nbt = new NbtCompound();
+        NbtCompound nbt = raw != null ? raw.copy() : new NbtCompound();
         nbt.setFloat("walkSpeed", walkSpeed);
         nbt.setFloat("flySpeed", flySpeed);
         nbt.setByte("mayfly", (byte) (mayfly ? 1 : 0));

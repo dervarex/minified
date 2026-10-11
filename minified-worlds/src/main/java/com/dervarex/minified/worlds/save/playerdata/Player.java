@@ -2,6 +2,7 @@ package com.dervarex.minified.worlds.save.playerdata;
 
 import com.dervarex.minified.utils.json.JsonObject;
 import com.dervarex.minified.utils.nbt.tag.*;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
@@ -106,8 +107,13 @@ public class Player {
 
     Integer dataVersion;
 
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    NbtCompound raw; // EnderItems and everything else we don't model live in here, nobody wants to lose their ender chest
+
     public static Player fromNbt(@NotNull NbtCompound nbt, @Nullable JsonObject advancements, @Nullable JsonObject statistics) {
         Player player = new Player();
+        player.raw = nbt.copy();
 
         if(advancements != null) {
             player.advancements = Advancements.fromJson(advancements);
@@ -242,16 +248,22 @@ public class Player {
     }
 
     public NbtCompound toNbt() {
-        NbtCompound nbt = new NbtCompound();
+        NbtCompound nbt = raw != null ? raw.copy() : new NbtCompound();
 
         if (abilities != null) {
             nbt.setCompound("abilities", abilities.toNbt());
+        } else {
+            nbt.remove("abilities");
         }
         if (recipeBook != null) {
             nbt.setCompound("recipeBook", recipeBook.toNbt());
+        } else {
+            nbt.remove("recipeBook");
         }
         if (hurtTime != null) {
             nbt.setShort("HurtTime", hurtTime);
+        } else {
+            nbt.remove("HurtTime");
         }
         if (motion != null) {
             NbtList list = new NbtList((byte) 6); // NbtDouble
@@ -259,6 +271,8 @@ public class Player {
                 list.add(new NbtDouble(d));
             }
             nbt.setList("Motion", list);
+        } else {
+            nbt.remove("Motion");
         }
         if (position != null) {
             NbtList list = new NbtList((byte) 6); // NbtDouble
@@ -266,6 +280,8 @@ public class Player {
                 list.add(new NbtDouble(d));
             }
             nbt.setList("Pos", list);
+        } else {
+            nbt.remove("Pos");
         }
         if (rotation != null) {
             NbtList list = new NbtList((byte) 5); // NbtFloat
@@ -273,9 +289,13 @@ public class Player {
                 list.add(new NbtFloat((float) d));
             }
             nbt.setList("Rotation", list);
+        } else {
+            nbt.remove("Rotation");
         }
         if (attributes != null) {
             nbt.setList("attributes", attributes.toNbtList());
+        } else {
+            nbt.remove("attributes");
         }
         if (UUID != null) {
             int[] arr = new int[UUID.size()];
@@ -283,93 +303,153 @@ public class Player {
                 arr[i] = UUID.get(i);
             }
             nbt.setIntArray("UUID", arr);
+        } else {
+            nbt.remove("UUID");
         }
         if (dimension != null) {
             nbt.setString("Dimension", dimension);
+        } else {
+            nbt.remove("Dimension");
         }
         if (fallDistance != null) {
             nbt.setDouble("fall_distance", fallDistance);
+        } else {
+            nbt.remove("fall_distance");
         }
         if (absorptionAmount != null) {
             nbt.setFloat("AbsorptionAmount", absorptionAmount);
+        } else {
+            nbt.remove("AbsorptionAmount");
         }
         if (health != null) {
             nbt.setFloat("Health", health);
+        } else {
+            nbt.remove("Health");
         }
         if (XpP != null) {
             nbt.setFloat("XpP", XpP);
+        } else {
+            nbt.remove("XpP");
         }
         if (inventory != null) {
             nbt.setList("Inventory", inventory.toNbtList());
+        } else {
+            nbt.remove("Inventory");
         }
         if (foodSaturationLevel != null) {
             nbt.setFloat("foodSaturationLevel", foodSaturationLevel);
+        } else {
+            nbt.remove("foodSaturationLevel");
         }
         if (currentImpulseContextResetGraceTime != null) {
             nbt.setInt("current_impulse_context_reset_grace_time", currentImpulseContextResetGraceTime);
+        } else {
+            nbt.remove("current_impulse_context_reset_grace_time");
         }
         if (hurtByTimestamp != null) {
             nbt.setInt("HurtByTimestamp", hurtByTimestamp);
+        } else {
+            nbt.remove("HurtByTimestamp");
         }
         if (portalCooldown != null) {
             nbt.setInt("PortalCooldown", portalCooldown);
+        } else {
+            nbt.remove("PortalCooldown");
         }
         if (score != null) {
             nbt.setInt("Score", score);
+        } else {
+            nbt.remove("Score");
         }
         if (selectedItemSlot != null) {
             nbt.setInt("SelectedItemSlot", selectedItemSlot);
+        } else {
+            nbt.remove("SelectedItemSlot");
         }
         if (XPLevel != null) {
             nbt.setInt("XpLevel", XPLevel);
+        } else {
+            nbt.remove("XpLevel");
         }
         if (XPSeed != null) {
             nbt.setInt("XpSeed", XPSeed);
+        } else {
+            nbt.remove("XpSeed");
         }
         if (XPTotal != null) {
             nbt.setInt("XpTotal", XPTotal);
+        } else {
+            nbt.remove("XpTotal");
         }
         if (wardenSpawnTracker != null) {
             nbt.setCompound("warden_spawn_tracker", wardenSpawnTracker.toNbt());
+        } else {
+            nbt.remove("warden_spawn_tracker");
         }
         if (foodLevel != null) {
             nbt.setInt("foodLevel", foodLevel);
+        } else {
+            nbt.remove("foodLevel");
         }
         if (foodTickTimer != null) {
             nbt.setInt("foodTickTimer", foodTickTimer);
+        } else {
+            nbt.remove("foodTickTimer");
         }
         if (playerGameType != null) {
             nbt.setInt("playerGameType", playerGameType);
+        } else {
+            nbt.remove("playerGameType");
         }
         if (spawnExtraParticlesOnFall != null) {
             nbt.setBoolean("spawn_extra_particles_on_fall", spawnExtraParticlesOnFall);
+        } else {
+            nbt.remove("spawn_extra_particles_on_fall");
         }
         if (deathTime != null) {
             nbt.setShort("DeathTime", deathTime);
+        } else {
+            nbt.remove("DeathTime");
         }
         if (fire != null) {
             nbt.setShort("Fire", fire);
+        } else {
+            nbt.remove("Fire");
         }
         if (air != null) {
             nbt.setShort("Air", air);
+        } else {
+            nbt.remove("Air");
         }
         if (sleepTimer != null) {
             nbt.setShort("SleepTimer", sleepTimer);
+        } else {
+            nbt.remove("SleepTimer");
         }
         if (fallFlying != null) {
             nbt.setBoolean("FallFlying", fallFlying);
+        } else {
+            nbt.remove("FallFlying");
         }
         if (invulnerable != null) {
             nbt.setBoolean("Invulnerable", invulnerable);
+        } else {
+            nbt.remove("Invulnerable");
         }
         if (foodExhaustionLevel != null) {
             nbt.setFloat("foodExhaustionLevel", foodExhaustionLevel);
+        } else {
+            nbt.remove("foodExhaustionLevel");
         }
         if (seenCredits != null) {
             nbt.setBoolean("seenCredits", seenCredits);
+        } else {
+            nbt.remove("seenCredits");
         }
         if (dataVersion != null) {
             nbt.setInt("DataVersion", dataVersion);
+        } else {
+            nbt.remove("DataVersion");
         }
 
         return nbt;
