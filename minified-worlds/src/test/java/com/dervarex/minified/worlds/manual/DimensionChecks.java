@@ -61,7 +61,8 @@ final class DimensionChecks {
             return "";
         });
         if (scan == null) return;
-        if (scan.chunks == 0) {
+        // chunks that fail to read don't count as chunks, so this used to say "no chunks" instead of failing. sneaky
+        if (scan.chunks == 0 && scan.problems(ChunkScan.CHUNKS).isEmpty()) {
             report.skip("chunk reads", "no chunks found in " + scan.regions + " region files");
             report.fact(name, regionSummary + ", no chunks");
             return;
@@ -88,6 +89,10 @@ final class DimensionChecks {
                 + scan.blockNames.size() + " block types, " + scan.biomeNames.size() + " biomes, "
                 + scan.entities + " entities, " + scan.pois + " pois");
 
+        if (scan.readableChunks.isEmpty()) {
+            report.skip("chunk writes", "none of the sampled chunks could be read");
+            return;
+        }
         new ChunkWriteChecks(report, scratch, relativeFolder, open).run(scan);
     }
 

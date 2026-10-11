@@ -9,6 +9,7 @@ import com.dervarex.minified.worlds.dimension.data.WorldBorder;
 import com.dervarex.minified.worlds.dimension.region.RegionCategory;
 import com.dervarex.minified.worlds.entity.EntityData;
 import com.dervarex.minified.worlds.poi.PoiData;
+import com.dervarex.minified.worlds.save.SessionLock;
 
 import java.io.File;
 import java.io.IOException;
@@ -133,19 +134,46 @@ public sealed class Dimension permits Overworld, Nether, End {
      * Serializes and writes a chunk's current data to its region file, creating
      * the region file if it doesn't exist. The chunk's coordinates
      * (chunk.chunkX()/chunkZ()) determine where it's written.
+     * Also makes Minecraft rebuild the pois (beds, job sites, ...) of every section {@link Chunk#setBlock} touched
+     * Takes the world's {@link SessionLock} while writing
+     * @throws IOException if writing fails, or Minecraft has the world open right now
      */
     public void saveChunkData(Chunk chunk) throws IOException {
-        RegionFile region = getOrCreateRegionFile(regionFiles, RegionCategory.REGION, chunk.chunkX() >> 5, chunk.chunkZ() >> 5);
-        region.writeChunk(chunk.chunkX(), chunk.chunkZ(), chunk.raw());
+        try (SessionLock.Handle lock = SessionLock.acquire(worldFolder.toPath())) {
+            RegionFile region = getOrCreateRegionFile(regionFiles, RegionCategory.REGION, chunk.chunkX() >> 5, chunk.chunkZ() >> 5);
+            region.writeChunk(chunk.chunkX(), chunk.chunkZ(), chunk.raw());
+            invalidatePoi(chunk);
+        }
+    }
+
+    // Minecraft blindly trusts poi sections marked as valid, so we tell it they aren't anymore
+    private void invalidatePoi(Chunk chunk) throws IOException {
+        if (chunk.editedSections().isEmpty()) return;
+        NbtCompound poi = readPoiData(chunk.chunkX(), chunk.chunkZ());
+        if (poi == null || !poi.has("Sections")) return;
+
+        NbtCompound poiSections = poi.getCompound("Sections");
+        boolean changed = false;
+        for (int sectionY : chunk.editedSections()) {
+            if (poiSections.get(String.valueOf(sectionY)).orElse(null) instanceof NbtCompound section) {
+                section.setBoolean("Valid", false);
+                changed = true;
+            }
+        }
+        if (changed) savePoiData(chunk.chunkX(), chunk.chunkZ(), poi);
     }
 
     /**
      * Converts and writes POI (point of interest) data for the given chunk to its
      * region file, creating the file if it doesn't exist yet.
+     * Takes the world's {@link SessionLock} while writing
+     * @throws IOException if writing fails, or Minecraft has the world open right now
      */
     public void savePoiData(int chunkX, int chunkZ, NbtCompound poiData) throws IOException {
-        RegionFile poi = getOrCreateRegionFile(poiFiles, RegionCategory.POI, chunkX >> 5, chunkZ >> 5);
-        poi.writeChunk(chunkX, chunkZ, poiData);
+        try (SessionLock.Handle lock = SessionLock.acquire(worldFolder.toPath())) {
+            RegionFile poi = getOrCreateRegionFile(poiFiles, RegionCategory.POI, chunkX >> 5, chunkZ >> 5);
+            poi.writeChunk(chunkX, chunkZ, poiData);
+        }
     }
 
     /**
@@ -159,10 +187,14 @@ public sealed class Dimension permits Overworld, Nether, End {
     /**
      * Converts and writes Entity data for the given chunk to its
      * region file, creating the file if it doesn't exist yet.
+     * Takes the world's {@link SessionLock} while writing
+     * @throws IOException if writing fails, or Minecraft has the world open right now
      */
     public void saveEntityData(int chunkX, int chunkZ, NbtCompound entityData) throws IOException {
-        RegionFile entities = getOrCreateRegionFile(entityFiles, RegionCategory.ENTITIES, chunkX >> 5, chunkZ >> 5);
-        entities.writeChunk(chunkX, chunkZ, entityData);
+        try (SessionLock.Handle lock = SessionLock.acquire(worldFolder.toPath())) {
+            RegionFile entities = getOrCreateRegionFile(entityFiles, RegionCategory.ENTITIES, chunkX >> 5, chunkZ >> 5);
+            entities.writeChunk(chunkX, chunkZ, entityData);
+        }
     }
 
     /**

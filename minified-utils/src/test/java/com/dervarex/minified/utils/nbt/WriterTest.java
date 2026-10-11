@@ -14,8 +14,15 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.PosixFileAttributeView;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 public class WriterTest {
     @TempDir
@@ -95,5 +102,55 @@ public class WriterTest {
         nbt.put("end", NbtEnd.INSTANCE);
 
         assertThrows(IOException.class, () -> Writer.writeFile(tempDir.resolve("end.dat").toFile(), nbt));
+    }
+
+    @Test
+    void keepsThePreviousFileAsBackup() throws IOException {
+        Path folder = Files.createDirectories(tempDir.resolve("backup"));
+        Path file = folder.resolve("level.dat");
+        Path backup = folder.resolve("level.dat_old");
+        NbtCompound first = new NbtCompound();
+        first.setInt("Time", 1);
+        NbtCompound second = new NbtCompound();
+        second.setInt("Time", 2);
+
+        Writer.writeFile(file.toFile(), first, backup.toFile());
+        assertFalse(Files.exists(backup), "there was nothing to back up yet");
+        Writer.writeFile(file.toFile(), second, backup.toFile());
+
+        assertEquals(2, Parser.readFile(file.toFile()).getInt("Time"));
+        assertEquals(1, Parser.readFile(backup.toFile()).getInt("Time"));
+    }
+
+    @Test
+    void failingHalfwayLeavesTheOldFileAlone() throws IOException {
+        Path folder = Files.createDirectories(tempDir.resolve("failing"));
+        Path file = folder.resolve("level.dat");
+        NbtCompound good = new NbtCompound();
+        good.setInt("Time", 1);
+        Writer.writeFile(file.toFile(), good);
+
+        NbtCompound broken = new NbtCompound();
+        broken.setInt("Time", 2);
+        broken.put("end", NbtEnd.INSTANCE); // can't be written, so this blows up halfway through
+        assertThrows(IOException.class, () -> Writer.writeFile(file.toFile(), broken));
+
+        assertEquals(1, Parser.readFile(file.toFile()).getInt("Time"));
+        try (Stream<Path> files = Files.list(folder)) {
+            assertEquals(List.of(file), files.toList(), "the temporary file should be gone");
+        }
+    }
+
+    @Test
+    void replacedFilesKeepTheirPermissions() throws IOException {
+        Path file = tempDir.resolve("permissions.dat");
+        Writer.writeFile(file.toFile(), new NbtCompound());
+        assumeTrue(Files.getFileAttributeView(file, PosixFileAttributeView.class) != null, "no POSIX permissions on this file system");
+        Set<PosixFilePermission> readableByEveryone = PosixFilePermissions.fromString("rw-r--r--");
+        Files.setPosixFilePermissions(file, readableByEveryone);
+
+        Writer.writeFile(file.toFile(), new NbtCompound());
+
+        assertEquals(readableByEveryone, Files.getPosixFilePermissions(file));
     }
 }

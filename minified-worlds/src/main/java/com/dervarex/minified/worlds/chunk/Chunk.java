@@ -4,9 +4,13 @@ import com.dervarex.minified.utils.nbt.tag.NbtCompound;
 import com.dervarex.minified.utils.nbt.tag.NbtList;
 import com.dervarex.minified.utils.nbt.tag.NbtTag;
 import com.dervarex.minified.worlds.block.BlockState;
+import com.dervarex.minified.worlds.block.BlockStateFormat;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 public class Chunk {
     private static final String DEFAULT_FALLBACK_BIOME = "minecraft:plains";
@@ -15,25 +19,47 @@ public class Chunk {
     private final NbtList sectionsList;
     private final int chunkX;
     private final int chunkZ;
+    private final BlockStateFormat blockStateFormat;
     private final Map<Byte, ChunkSection> sections = new HashMap<>();
+    private final Set<Integer> editedSections = new TreeSet<>();
+    private boolean lightReset;
 
+    /**
+     * Wraps a chunk's NBT as it comes out of a region file
+     * @throws IllegalArgumentException if a section's palette and data don't add up
+     */
     public Chunk(NbtCompound root) {
         this.root = root;
         this.chunkX = root.getInt("xPos");
         this.chunkZ = root.getInt("zPos");
         this.sectionsList = root.getList("sections");
+        BlockStateFormat dataVersionFormat = root.has("DataVersion") ? BlockStateFormat.forDataVersion(root.getInt("DataVersion")) : null;
 
         for (NbtTag tag : sectionsList.elements()) {
             NbtCompound sectionTag = (NbtCompound) tag;
             if (!sectionTag.has("block_states")) continue;
-            ChunkSection section = new ChunkSection(sectionTag);
+            ChunkSection section = new ChunkSection(sectionTag, dataVersionFormat);
             sections.put(section.sectionY(), section);
         }
+        this.blockStateFormat = dataVersionFormat != null ? dataVersionFormat : sections.values().stream()
+                .map(ChunkSection::blockStateFormat)
+                .findFirst()
+                .orElse(BlockStateFormat.ID_PROPERTIES);
     }
 
     public int chunkX() { return chunkX; }
     public int chunkZ() { return chunkZ; }
     public NbtCompound raw() { return root; }
+
+    /**
+     * @return how this chunk's palettes store blocks
+     */
+    public BlockStateFormat blockStateFormat() { return blockStateFormat; }
+
+    /**
+     * @return the Y of every section {@link #setBlock} changed something in
+     */
+    public Set<Integer> editedSections() { return Collections.unmodifiableSet(editedSections); }
 
     public BlockState getBlock(int x, int y, int z) {
         ChunkSection section = sections.get((byte) (y >> 4));
@@ -43,6 +69,8 @@ public class Chunk {
     /**
      * Sets a block and automatically creates the target section
      * (as air, with a resolved biome) if it doesn't exist yet
+     * Light and heightmaps get thrown out, Minecraft redoes them on load. A chest that turns into stone takes its
+     * items with it, a chest you place gets no block entity though, the game makes one once it needs it
      */
     public void setBlock(int x, int y, int z, BlockState state) {
         byte sectionY = (byte) (y >> 4);
@@ -50,7 +78,40 @@ public class Chunk {
         if (section == null) {
             section = createSection(sectionY, null);
         }
+        BlockState previous = section.getBlock(x, y, z);
+        if (previous.equals(state)) return;
         section.setBlock(x, y, z, state);
+        blockChanged(x, y, z, previous, state);
+    }
+
+    private void blockChanged(int x, int y, int z, BlockState previous, BlockState state) {
+        editedSections.add(y >> 4);
+        if (!lightReset) {
+            root.setBoolean("isLightOn", false);
+            for (NbtTag tag : sectionsList.elements()) {
+                NbtCompound sectionTag = (NbtCompound) tag;
+                sectionTag.remove("BlockLight");
+                sectionTag.remove("SkyLight");
+            }
+            if (root.has("Heightmaps")) root.setCompound("Heightmaps", new NbtCompound());
+            lightReset = true;
+        }
+        if (!previous.name().equals(state.name())) removeBlockEntity(x, y, z);
+    }
+
+    private void removeBlockEntity(int x, int y, int z) {
+        if (!root.has("block_entities")) return;
+        int worldX = (chunkX << 4) | (x & 15);
+        int worldZ = (chunkZ << 4) | (z & 15);
+
+        NbtList blockEntities = root.getList("block_entities");
+        NbtList kept = new NbtList(blockEntities.elementId());
+        for (NbtTag tag : blockEntities.elements()) {
+            boolean here = tag instanceof NbtCompound blockEntity
+                    && blockEntity.getInt("x") == worldX && blockEntity.getInt("y") == y && blockEntity.getInt("z") == worldZ;
+            if (!here) kept.add(tag);
+        }
+        if (kept.size() != blockEntities.size()) root.setList("block_entities", kept);
     }
 
     /**
@@ -74,7 +135,7 @@ public class Chunk {
 
         String resolvedBiome = biome != null ? biome : resolveNeighborBiome(y);
 
-        ChunkSection section = ChunkSection.createEmpty(y, resolvedBiome);
+        ChunkSection section = ChunkSection.createEmpty(y, resolvedBiome, blockStateFormat);
         sections.put(y, section);
         sectionsList.add(section.raw());
         return section;

@@ -1,6 +1,7 @@
 package com.dervarex.minified.worlds.save.level;
 
 import com.dervarex.minified.utils.nbt.tag.*;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -16,6 +17,10 @@ public class Spawn {
     private float yaw;
     @Nullable
     private int[] pos;
+
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    private NbtCompound raw;
 
     private static float getFloatValue(NbtTag tag) {
         if (tag instanceof NbtFloat) {
@@ -36,6 +41,7 @@ public class Spawn {
 
     public static Spawn fromNbt(NbtCompound spawnNbt) {
         Spawn spawn = new Spawn();
+        spawn.raw = spawnNbt.copy();
 
         if (spawnNbt.has("dimension")) {
             spawn.dimension = spawnNbt.getString("dimension");
@@ -65,14 +71,18 @@ public class Spawn {
     }
 
     public NbtCompound toNbt() {
-        NbtCompound nbt = new NbtCompound();
+        NbtCompound nbt = raw != null ? raw.copy() : new NbtCompound();
         if (dimension != null) {
             nbt.setString("dimension", dimension);
+        } else {
+            nbt.remove("dimension");
         }
-        nbt.setInt("pitch", (int) pitch);
-        nbt.setInt("yaw", (int) yaw);
+        nbt.setFloat("pitch", pitch);
+        nbt.setFloat("yaw", yaw);
         if (pos != null) {
             nbt.setIntArray("pos", pos);
+        } else {
+            nbt.remove("pos");
         }
         return nbt;
     }

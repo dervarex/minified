@@ -2,6 +2,7 @@ package com.dervarex.minified.worlds.save.playerdata;
 
 import com.dervarex.minified.utils.json.JsonObject;
 import com.dervarex.minified.utils.nbt.tag.NbtCompound;
+import com.dervarex.minified.utils.nbt.tag.NbtList;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -142,5 +143,67 @@ class PlayerTest {
     void testSaveWithoutDataVersion() {
         Player player = new Player();
         assertFalse(player.toNbt().has("DataVersion"));
+    }
+
+    private static NbtCompound item(int slot, String id, int count) {
+        NbtCompound item = new NbtCompound();
+        item.setByte("Slot", (byte) slot);
+        item.setString("id", id);
+        item.setInt("count", count);
+        return item;
+    }
+
+    @Test
+    void keepsWhatMinifiedDoesntKnow() {
+        NbtList enderItems = new NbtList((byte) 10);
+        enderItems.add(item(0, "minecraft:diamond", 64));
+        NbtCompound components = new NbtCompound();
+        components.setString("minecraft:custom_name", "Excalibur");
+        NbtCompound sword = item(0, "minecraft:diamond_sword", 1);
+        sword.setCompound("components", components);
+        NbtList inventory = new NbtList((byte) 10);
+        inventory.add(sword);
+        NbtCompound nbt = minimalNbt();
+        nbt.setList("EnderItems", enderItems);
+        nbt.setList("Inventory", inventory);
+        nbt.setCompound("Brain", new NbtCompound());
+        nbt.setByte("OnGround", (byte) 1);
+        nbt.setFloat("Health", 20f);
+
+        Player player = Player.fromNbt(nbt, null, null);
+        player.setHealth(5f);
+        player.getInventory().getItems()[0].setSlot((byte) 3);
+        NbtCompound written = player.toNbt();
+
+        assertEquals(5f, written.getFloat("Health"));
+        assertEquals(1, written.getList("EnderItems").size());
+        assertTrue(written.has("Brain"));
+        assertTrue(written.getBoolean("OnGround"));
+        NbtCompound writtenSword = (NbtCompound) written.getList("Inventory").elements().getFirst();
+        assertEquals(3, writtenSword.getByte("Slot"));
+        assertEquals("Excalibur", writtenSword.getCompound("components").getString("minecraft:custom_name"));
+    }
+
+    @Test
+    void itemsWithoutACountAreOne() {
+        NbtCompound torch = item(0, "minecraft:torch", 1);
+        torch.remove("count");
+        NbtList inventory = new NbtList((byte) 10);
+        inventory.add(torch);
+        NbtCompound nbt = minimalNbt();
+        nbt.setList("Inventory", inventory);
+
+        assertEquals(1, Player.fromNbt(nbt, null, null).getInventory().getItems()[0].getCount());
+    }
+
+    @Test
+    void clearedFieldsAreRemoved() {
+        NbtCompound nbt = minimalNbt();
+        nbt.setFloat("Health", 20f);
+        Player player = Player.fromNbt(nbt, null, null);
+
+        player.setHealth(null);
+
+        assertFalse(player.toNbt().has("Health"));
     }
 }

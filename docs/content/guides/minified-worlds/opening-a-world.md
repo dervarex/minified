@@ -235,7 +235,7 @@ A few of the fields you'll find on `Level`:
 
 ## 5. Saving your changes
 
-`WorldSave` has a `save()` method that writes the `Level` object back to `level.dat`.
+`WorldSave` has a `save()` method that writes everything you changed back to disk: `level.dat`, the files in `data/minecraft` and the players, including their advancements and stats.
 
 <Tabs>
   <TabItem label="Java">
@@ -257,7 +257,14 @@ world.save()
   </TabItem>
 </Tabs>
 
-Keep in mind that `save()` only writes `level.dat`. It doesn't touch chunks, entities or point of interest data, since those live in their own region files per dimension. We'll get to saving those in the next guide.
+A few things `save()` takes care of for you:
+
+* Only files whose data actually changed get written, everything else stays exactly as it is.
+* Each file is written to a temporary file first and then swapped in, so a crash or a full disk can't leave half a `level.dat` behind. Like Minecraft, it keeps the previous `level.dat` as `level.dat_old`, and the previous player files as `<uuid>.dat_old`.
+* Whatever `minified-worlds` doesn't know about (data added by mods, `version_history`, a player's ender chest, ...) is written back untouched.
+* It refuses to write while Minecraft has the world open and throws an `IOException` instead, more on that below.
+
+`save()` doesn't touch chunks, entities or point of interest data, since those live in their own region files per dimension. We'll get to saving those in the next guide.
 
 ## 6. Checking the session lock
 
@@ -286,6 +293,32 @@ if (world.lock.locked) {
 </Tabs>
 
 It's a good habit to check this before writing to a world your tool didn't open itself, editing a world while Minecraft has it loaded is a great way to lose progress.
+
+Everything in `minified-worlds` that writes to a world takes the lock on its own, so writing while Minecraft has the world open fails with an `IOException` instead of corrupting it. `isLocked()` is just a snapshot though, Minecraft could still open the world right after you checked. If your tool keeps a world open for a while (an editor, for example), take the lock yourself for that time, Minecraft then refuses to open the world until you let go of it:
+
+<Tabs>
+  <TabItem label="Java">
+
+```java
+try (SessionLock.Handle lock = SessionLock.acquire(worldDirectory)) {
+    // load, edit and save in peace
+}
+```
+
+  </TabItem>
+
+  <TabItem label="Kotlin">
+
+```kotlin
+SessionLock.acquire(worldDirectory).use {
+    // load, edit and save in peace
+}
+```
+
+  </TabItem>
+</Tabs>
+
+Saving while you hold it works just fine, `save()` sees that this program already has the lock.
 
 ## 7. Optional data
 
