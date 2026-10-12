@@ -129,7 +129,7 @@ final class ApiPages {
 
         b.append("<h2 id=\"installation\">Installation</h2>");
         toc.add(new TocEntry(2, "installation", "Installation"));
-        String coordinate = "com.github.dervarex.minified:" + module.name() + ":" + site.config.version();
+        String coordinate = site.config.group() + ":" + module.name() + ":" + site.config.version();
         b.append(Layout.tabs(List.of(
                 new String[]{"Gradle (Groovy)", Layout.codeFrame(Highlighter.highlight(
                         "implementation '" + coordinate + "'", "groovy"), "groovy", "build.gradle")},

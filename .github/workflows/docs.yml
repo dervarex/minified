@@ -2,7 +2,7 @@ name: Docs
 
 # Builds the documentation site and publishes it to the gh-pages branch. Every library version gets its own
 # directory (/3.1.0/, /3.2.0/, ...), versions.json lists them for the version picker and the site root
-# redirects to the latest one. A push to master rebuilds the directory of the version in build.gradle.
+# redirects to the latest release. A published release writes its version's dir
 
 on:
   push:
@@ -38,7 +38,9 @@ jobs:
 
       # strict: stale guide references and broken links fail the build instead of being published
       - name: Generate site
-        run: ./gradlew :docs:docs -PdocsRef=${{ github.sha }} -PdocsStrict=true --no-daemon
+        run: ./gradlew :docs:docs -PdocsRef=${{ github.sha }} -PdocsStrict=true -PdocsRelease=${{ env.RELEASE }} --no-daemon
+        env:
+          RELEASE: ${{ github.event_name == 'release' || startsWith(github.ref, 'refs/tags/') }}
 
       - name: Check out gh-pages
         run: |
@@ -51,12 +53,23 @@ jobs:
       - name: Add this version
         run: |
           VERSION="$(cat docs/build/site/VERSION)"
+          RELEASE="${VERSION%-SNAPSHOT}"
+          if [ "$VERSION" != "$RELEASE" ] && [ -d "pages/$RELEASE" ]; then
+            echo "::notice::$RELEASE is already released and its documentation is locked, bump the version in build.gradle to publish a new snapshot"
+            exit 0
+          fi
           rm -rf "pages/$VERSION"
           cp -r docs/build/site "pages/$VERSION"
+          # the snapshot of a version is replaced by its release
+          if [ "$VERSION" = "$RELEASE" ]; then
+            rm -rf "pages/$VERSION-SNAPSHOT"
+          fi
           touch pages/.nojekyll
 
           VERSIONS="$(find pages -mindepth 1 -maxdepth 1 -type d -name '[0-9]*' -printf '%f\n' | sort -rV)"
-          LATEST="$(echo "$VERSIONS" | head -n 1)"
+          # latest is the newest release, a snapshot only while nothing has been released yet
+          LATEST="$(echo "$VERSIONS" | grep -v -- '-SNAPSHOT$' | head -n 1 || true)"
+          LATEST="${LATEST:-$(echo "$VERSIONS" | head -n 1)}"
           echo "$VERSIONS" | jq -R . | jq -s --arg latest "$LATEST" '{latest: $latest, versions: .}' > pages/versions.json
 
           cat > pages/index.html <<EOF
