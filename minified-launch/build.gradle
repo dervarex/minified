@@ -7,15 +7,6 @@ group = 'com.dervarex.minified.launch'
 
 description = 'Launch/runtime utilities'
 
-repositories {
-    mavenCentral()
-    mavenLocal()
-
-    maven {
-        url = 'https://repo.opencollab.dev/main/'
-    }
-}
-
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)

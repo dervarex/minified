@@ -4,10 +4,6 @@ plugins {
 
 description = 'Documentation site generator'
 
-repositories {
-    mavenCentral()
-}
-
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)

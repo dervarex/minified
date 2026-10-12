@@ -26,10 +26,6 @@ configure(subprojects.findAll { it.name != 'docs' }) {
     apply plugin: 'org.gradlex.extra-java-module-info'
     apply plugin: 'jacoco'
 
-    repositories {
-        mavenCentral()
-    }
-
     extraJavaModuleInfo {
         failOnMissingModuleInfo = false
         automaticModule('net.raphimc:MinecraftAuth', 'MinecraftAuth')
