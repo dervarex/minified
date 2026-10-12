@@ -326,8 +326,10 @@
         }
         if (data.latest && data.latest !== currentVersion) {
           const banner = document.querySelector('.version-banner');
+          const snapshot = currentVersion.endsWith('-SNAPSHOT');
           banner.innerHTML = 'You are reading the documentation of Minified v' + escapeHtml(currentVersion)
-            + '. The latest version is <a href="' + root + '../' + encodeURIComponent(data.latest) + '/' + currentPath + '" data-version-link="'
+            + (snapshot ? ', which is not released yet and may still change' : '')
+            + '. The latest ' + (snapshot ? 'release' : 'version') + ' is <a href="' + root + '../' + encodeURIComponent(data.latest) + '/' + currentPath + '" data-version-link="'
             + escapeHtml(data.latest) + '">v' + escapeHtml(data.latest) + '</a>.';
           banner.hidden = false;
           banner.querySelector('a').addEventListener('click', (e) => {

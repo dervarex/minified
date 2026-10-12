@@ -10,6 +10,7 @@ import java.util.List;
  * @param out      directory the site is written to
  * @param content  directory holding the hand-written guides and the sidebar
  * @param root     repository root, used to make source paths relative
+ * @param group    maven group id of the library modules
  * @param version  library version the site documents
  * @param repo     repository url, used for source links
  * @param ref      git ref source links point at
@@ -17,7 +18,7 @@ import java.util.List;
  * @param modules  documented modules
  * @param strict   whether warnings fail the build
  */
-record Config(Path out, Path content, Path root, String version, String repo, String ref,
+record Config(Path out, Path content, Path root, String group, String version, String repo, String ref,
               String classpath, List<ModuleSource> modules, boolean strict) {
 
     /**
@@ -32,7 +33,7 @@ record Config(Path out, Path content, Path root, String version, String repo, St
 
     static Config parse(String[] args) {
         Path out = null, content = null, root = null;
-        String version = "dev", repo = "", ref = "master", classpath = "";
+        String group = "io.github.dervarex.minified", version = "dev", repo = "", ref = "master", classpath = "";
         boolean strict = false;
         List<ModuleSource> modules = new ArrayList<>();
         for (int i = 0; i < args.length; i++) {
@@ -40,6 +41,7 @@ record Config(Path out, Path content, Path root, String version, String repo, St
                 case "--out" -> out = Path.of(args[++i]);
                 case "--content" -> content = Path.of(args[++i]);
                 case "--root" -> root = Path.of(args[++i]);
+                case "--group" -> group = args[++i];
                 case "--version" -> version = args[++i];
                 case "--repo" -> repo = args[++i];
                 case "--ref" -> ref = args[++i];
@@ -55,6 +57,6 @@ record Config(Path out, Path content, Path root, String version, String repo, St
         if (out == null || content == null || root == null || modules.isEmpty()) {
             throw new IllegalArgumentException("--out, --content, --root and at least one --module are required");
         }
-        return new Config(out, content, root, version, repo, ref, classpath, List.copyOf(modules), strict);
+        return new Config(out, content, root, group, version, repo, ref, classpath, List.copyOf(modules), strict);
     }
 }

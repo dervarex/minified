@@ -21,6 +21,13 @@ tasks.withType(JavaCompile).configureEach {
 def libraryProjects = rootProject.subprojects.findAll { it != project }
 libraryProjects.each { evaluationDependsOn(it.path) }
 
+def releaseTagged = providers.exec {
+    commandLine 'git', 'tag', '--points-at', 'HEAD'
+    workingDir rootDir
+    ignoreExitValue = true
+}.standardOutput.asText.get().readLines().contains('v' + rootProject.version)
+def docsVersion = rootProject.version.toString() + (releaseTagged ? '' : '-SNAPSHOT')
+
 tasks.register('docs', JavaExec) {
     group = 'documentation'
     description = 'Generates the documentation site into docs/build/site'
@@ -38,7 +45,8 @@ tasks.register('docs', JavaExec) {
     inputs.dir(contentDir)
     inputs.dir(themeDir)
     inputs.files(externalClasspath)
-    inputs.property('version', rootProject.version.toString())
+    inputs.property('group', rootProject.group.toString())
+    inputs.property('version', docsVersion)
     outputs.dir(siteDir)
 
     classpath = sourceSets.main.runtimeClasspath
@@ -58,7 +66,8 @@ tasks.register('docs', JavaExec) {
                 '--out', siteDir.get().asFile.path,
                 '--content', contentDir.asFile.path,
                 '--root', rootDir.path,
-                '--version', rootProject.version.toString(),
+                '--group', rootProject.group.toString(),
+                '--version', docsVersion,
                 '--repo', findProperty('docsRepo') ?: 'https://github.com/dervarex/minified',
                 '--ref', findProperty('docsRef') ?: 'master',
                 '--classpath', externalClasspath.asPath,

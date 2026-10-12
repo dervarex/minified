@@ -50,5 +50,5 @@ them there instead of in the Markdown so the javadoc jar has them too.
 
 The `Docs` workflow publishes every version to its own directory on the `gh-pages` branch (`/3.1.0/`, ...),
 keeps `versions.json` for the version picker in the header and redirects the site root to the latest version.
-`/latest/<page>` links resolve to the latest version as well. A push to `master` rebuilds the directory of the
-version currently set in the root `build.gradle`.
+`/latest/<page>` links resolve to the latest version as well. A push to `master` rebuilds `/<version>-SNAPSHOT/` for the
+version currently set in the root `build.gradle`
