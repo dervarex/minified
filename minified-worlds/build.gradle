@@ -3,16 +3,12 @@ plugins {
     id 'maven-publish'
 }
 
-group = 'com.dervarex.minified.worlds'
 description = "Utility for Reading and Modifying Minecraft Worlds (26.1+)"
 
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
     }
-
-    withSourcesJar()
-    withJavadocJar()
 }
 
 tasks.withType(JavaCompile).configureEach {

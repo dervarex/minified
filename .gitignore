@@ -11,3 +11,5 @@
 
 # test matrix results
 matrix-results/
+# local credentials
+.env

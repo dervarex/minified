@@ -3,17 +3,12 @@ plugins {
     id 'maven-publish'
 }
 
-group = 'com.dervarex.minified.utils'
-
 description = 'General utilities'
 
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
     }
-
-    withSourcesJar()
-    withJavadocJar()
 }
 
 tasks.withType(JavaCompile).configureEach {

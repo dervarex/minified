@@ -29,17 +29,19 @@ Minified provides a high-level API for authentication, version management, asset
 
 ## Quick Start
 
-### JitPack
+### Maven Central
 
 ```gradle
 repositories {
-    maven { url 'https://jitpack.io' }
+    mavenCentral()
 }
 
 dependencies {
-    implementation 'com.github.dervarex.minified:minified-launch:v3.2.0'
+    implementation 'io.github.dervarex.minified:minified-launch:3.3.0'
 }
 ```
+
+Releases up to v3.2.3 are only on JitPack, as `com.github.dervarex.minified:<module>:v<version>`.
 
 ### Launch Minecraft
 

@@ -3,8 +3,6 @@ plugins {
     id 'maven-publish'
 }
 
-group = 'com.dervarex.minified.auth'
-
 description = 'Authentication utilities'
 
 repositories {
@@ -36,9 +34,6 @@ java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
     }
-
-    withSourcesJar()
-    withJavadocJar()
 }
 
 tasks.withType(JavaCompile).configureEach {

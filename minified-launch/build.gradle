@@ -3,8 +3,6 @@ plugins {
     id 'maven-publish'
 }
 
-group = 'com.dervarex.minified.launch'
-
 description = 'Launch/runtime utilities'
 
 repositories {
@@ -20,9 +18,6 @@ java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
     }
-
-    withSourcesJar()
-    withJavadocJar()
 }
 
 tasks.withType(JavaCompile).configureEach {

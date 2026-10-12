@@ -25,12 +25,11 @@ For now, think of a world as two things:
 ```groovy
 repositories {
     mavenCentral()
-    maven { url 'https://jitpack.io' }
 }
 
 dependencies {
-    // Replace 3.1.0 with your preferred version
-    implementation 'com.github.dervarex.minified:minified-worlds:3.1.0'
+    // Replace {{version}} with your preferred version
+    implementation 'io.github.dervarex.minified:minified-worlds:{{version}}'
 }
 ```
 
@@ -41,12 +40,11 @@ dependencies {
 ```kotlin
 repositories {
     mavenCentral()
-    maven { url = uri("https://jitpack.io") }
 }
 
 dependencies {
-    // Replace 3.1.0 with your preferred version
-    implementation("com.github.dervarex.minified:minified-worlds:3.1.0")
+    // Replace {{version}} with your preferred version
+    implementation("io.github.dervarex.minified:minified-worlds:{{version}}")
 }
 ```
 

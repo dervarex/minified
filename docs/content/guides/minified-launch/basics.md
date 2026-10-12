@@ -22,12 +22,11 @@ Open your `build.gradle` file and add the repository and dependency:
 ```groovy
 repositories {
     mavenCentral()
-    maven { url 'https://jitpack.io' }
 }
 
 dependencies {
-    // Replace 3.0.0 with your preferred version
-    implementation 'com.github.dervarex.minified:minified-launch:3.0.0'
+    // Replace {{version}} with your preferred version
+    implementation 'io.github.dervarex.minified:minified-launch:{{version}}'
 }
 ```
 
