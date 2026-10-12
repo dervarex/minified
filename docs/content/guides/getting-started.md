@@ -18,12 +18,11 @@ Open your `build.gradle` file and add the repository and dependency:
 ```groovy
 repositories {
     mavenCentral()
-    maven { url 'https://jitpack.io' }
 }
 
 dependencies {
     // Replace {{version}} with your preferred version
-    implementation 'com.github.dervarex.minified:minified-launch:{{version}}'
+    implementation 'io.github.dervarex.minified:minified-launch:{{version}}'
 }
 ```
 Now, reload the Gradle project to download the dependencies.

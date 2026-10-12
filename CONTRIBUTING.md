@@ -236,6 +236,25 @@ Just to mention it here, we've got a great `HttpException`, you can that one to 
 
 ---
 
+## Releases
+
+Releases are published to Maven Central as `io.github.dervarex.minified:<module>:<version>`
+by the `Release` workflow (`.github/workflows/release.yml`)
+Releases may only be done by the maintainer:
+
+1. Bump `version` in the main `build.gradle` and merge that into `master`
+2. Tag the commit with the same version prefixed by `v` and push the tag
+
+We need these repository secrets:
+
+- `MAVEN_CENTRAL_USERNAME` / `MAVEN_CENTRAL_PASSWORD` - a user token from the Central Portal
+- `SIGNING_KEY` - the private GPG key (`gpg --export-secret-keys --armor <key id>`)
+- `SIGNING_KEY_PASSWORD` - its passphrase
+
+`./gradlew publishToMavenLocal` works without any of these, the artifacts are just not signed then, locally that doesn't matter
+
+---
+
 ## AI
 
 Tools like Claude Code (and other AI coding assistants) are allowed and partially used in this project. This file itself was originally generated with the help of Claude - same goes for a big part of the docs added in v3. However, I have reviewed every line it generated, that's exactly what you should do too.

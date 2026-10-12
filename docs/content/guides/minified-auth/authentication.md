@@ -11,11 +11,10 @@ Add `minified-auth` to your `build.gradle` file:
 ```groovy
 repositories {
     mavenCentral()
-    maven { url 'https://jitpack.io' }
 }
 
 dependencies {
-    implementation 'com.github.dervarex.minified:minified-auth:3.0.0'
+    implementation 'io.github.dervarex.minified:minified-auth:{{version}}'
 }
 ````
 

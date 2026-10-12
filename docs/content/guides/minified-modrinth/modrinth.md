@@ -11,11 +11,10 @@ Add `minified-modrinth` to your `build.gradle` file:
 ```groovy
 repositories {
     mavenCentral()
-    maven { url 'https://jitpack.io' }
 }
 
 dependencies {
-    implementation 'com.github.dervarex.minified:minified-modrinth:3.0.0'
+    implementation 'io.github.dervarex.minified:minified-modrinth:{{version}}'
 }
 ```
 

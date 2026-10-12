@@ -1,28 +1,16 @@
 plugins {
     id 'org.gradlex.extra-java-module-info' version '1.8' apply false
+    id 'com.vanniktech.maven.publish' version '0.37.0' apply false
 }
 
 allprojects {
-    group = 'com.dervarex.minified'
-    version = '3.2.0'
+    group = 'io.github.dervarex.minified'
+    version = '3.3.0'
 }
 
-def propOrEnv = { String propName, String envName ->
-    if (project.hasProperty(propName)) {
-        return project.property(propName)
-    }
-    return System.getenv(envName)
-}
-
-def pomValue = { String propName, String envName, String fallback ->
-    return propOrEnv(propName, envName) ?: fallback
-}
-
-// docs is the documentation generator, not a published library
 configure(subprojects.findAll { it.name != 'docs' }) {
     apply plugin: 'java-library'
-    apply plugin: 'maven-publish'
-    apply plugin: 'signing'
+    apply plugin: 'com.vanniktech.maven.publish'
     apply plugin: 'org.gradlex.extra-java-module-info'
     apply plugin: 'jacoco'
 
@@ -41,8 +29,6 @@ configure(subprojects.findAll { it.name != 'docs' }) {
         toolchain {
             languageVersion = JavaLanguageVersion.of(21)
         }
-        withSourcesJar()
-        withJavadocJar()
         modularity.inferModulePath = true
     }
 
@@ -75,56 +61,36 @@ configure(subprojects.findAll { it.name != 'docs' }) {
         finalizedBy tasks.named('jacocoTestReport')
     }
 
-    publishing {
-        publications {
-            mavenJava(MavenPublication) {
-                from components.java
-                pom {
-                    name = pomValue('POM_NAME', 'POM_NAME', project.name)
-                    description = pomValue('POM_DESCRIPTION', 'POM_DESCRIPTION', project.description ?: project.name)
-                    url = pomValue('POM_URL', 'POM_URL', '')
-                    licenses {
-                        license {
-                            name = pomValue('POM_LICENSE_NAME', 'POM_LICENSE_NAME', '')
-                            url = pomValue('POM_LICENSE_URL', 'POM_LICENSE_URL', '')
-                        }
-                    }
-                    developers {
-                        developer {
-                            id = pomValue('POM_DEVELOPER_ID', 'POM_DEVELOPER_ID', '')
-                            name = pomValue('POM_DEVELOPER_NAME', 'POM_DEVELOPER_NAME', '')
-                            email = pomValue('POM_DEVELOPER_EMAIL', 'POM_DEVELOPER_EMAIL', '')
-                        }
-                    }
-                    scm {
-                        connection = pomValue('POM_SCM_CONNECTION', 'POM_SCM_CONNECTION', '')
-                        developerConnection = pomValue('POM_SCM_DEV_CONNECTION', 'POM_SCM_DEV_CONNECTION', '')
-                        url = pomValue('POM_SCM_URL', 'POM_SCM_URL', '')
-                    }
-                }
-            }
+    // released by .github/workflows/release.yml
+    mavenPublishing {
+        publishToMavenCentral()
+        if (providers.gradleProperty('signingInMemoryKey').isPresent()) {
+            signAllPublications()
         }
-        repositories {
-            maven {
-                name = 'OSSRH'
-                def releasesRepoUrl = 'https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/'
-                def snapshotsRepoUrl = 'https://s01.oss.sonatype.org/content/repositories/snapshots/'
-                url = version.toString().endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
-                credentials {
-                    username = propOrEnv('ossrhUsername', 'OSSRH_USERNAME')
-                    password = propOrEnv('ossrhPassword', 'OSSRH_PASSWORD')
-                }
-            }
-        }
-    }
 
-    signing {
-        def signingKey = propOrEnv('signingKey', 'SIGNING_KEY')
-        def signingPassword = propOrEnv('signingPassword', 'SIGNING_PASSWORD')
-        required { !version.toString().endsWith('SNAPSHOT') && signingKey }
-        if (signingKey) {
-            useInMemoryPgpKeys(signingKey, signingPassword)
-            sign publishing.publications
+        pom {
+            name = project.name
+            description = provider { project.description ?: project.name }
+            url = 'https://github.com/dervarex/minified'
+            licenses {
+                license {
+                    name = 'The Apache License, Version 2.0'
+                    url = 'https://www.apache.org/licenses/LICENSE-2.0.txt'
+                    distribution = 'repo'
+                }
+            }
+            developers {
+                developer {
+                    id = 'dervarex'
+                    name = 'dervarex'
+                    url = 'https://github.com/dervarex'
+                }
+            }
+            scm {
+                url = 'https://github.com/dervarex/minified'
+                connection = 'scm:git:https://github.com/dervarex/minified.git'
+                developerConnection = 'scm:git:ssh://git@github.com/dervarex/minified.git'
+            }
         }
     }
 }

@@ -2,8 +2,6 @@ plugins {
     id 'java'
 }
 
-group = 'com.dervarex.minified'
-
 repositories {
     mavenCentral()
 }
