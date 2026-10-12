@@ -8,8 +8,8 @@ on:
   push:
     branches:
       - master
-  release:
-    types: [published]
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 permissions:
@@ -38,9 +38,7 @@ jobs:
 
       # strict: stale guide references and broken links fail the build instead of being published
       - name: Generate site
-        run: ./gradlew :docs:docs -PdocsRef=${{ github.sha }} -PdocsStrict=true -PdocsRelease=${{ env.RELEASE }} --no-daemon
-        env:
-          RELEASE: ${{ github.event_name == 'release' || startsWith(github.ref, 'refs/tags/') }}
+        run: ./gradlew :docs:docs -PdocsRef=${{ github.sha }} -PdocsStrict=true --no-daemon
 
       - name: Check out gh-pages
         run: |
