@@ -68,14 +68,16 @@ Passing `null` as the user launches Minecraft in offline mode.
 ## Available Modules
 
 * `minified-auth`
+* `minified-events`
 * `minified-java`
 * `minified-launch`
-* `minified-utils`
 * `minified-modrinth`
+* `minified-utils`
+* `minified-worlds`
 
 ## Documentation
 
-Documentation is available in the Javadoc, and on the [Documentation Website](https://dervarex.github.io/minified-docs/)
+Documentation is available in the Javadoc, and on the [Documentation Website](https://dervarex.github.io/minified/)
 
 ## Community
 
@@ -87,11 +89,11 @@ https://discord.gg/fhbcfMSvBy
 
 ## Credits
 
-Big thanks to [etkmlm](https://github.com/etkmlm) for explaining important details about the launch process and the Forge installer. Without him, I wouldn't have been able to implement Forge support.
+Big thanks to [etkmlm](https://github.com/etkmlm) for explaining important details about the launch process and the Forge installer. Without him, I wouldn't have been able to implement the base of Forge support.
 
 Thanks to MinecraftAuth by RaphiMC for providing an excellent authentication library, which is used by Minified's authentication module.
 
-A significant portion of the Modrinth integration was inspired by my earlier project, PandaClient, a Minecraft launcher I developed in 2023–2024. While much of the implementation has since been rewritten and improved for Minified, the original project laid the foundation for this module. I may share the full story behind this repository in the future.
+A significant portion of the Modrinth integration was inspired by my earlier project, PandaClient, a Minecraft launcher I developed in 2023–2024. While almost everything of the implementation has since been rewritten and improved for Minified, the original project laid the foundation for this module. I may share the full story behind this repository in the future.
 
 ## License
 
