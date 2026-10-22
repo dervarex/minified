@@ -9,10 +9,8 @@ import com.dervarex.minified.launch.download.ClientDownloader;
 import com.dervarex.minified.launch.download.assets.AssetDownloader;
 import com.dervarex.minified.launch.download.assets.LegacyAssets;
 import com.dervarex.minified.launch.download.libraries.LibraryDownloader;
-import com.dervarex.minified.launch.events.launch.GameOutputEvent;
-import com.dervarex.minified.launch.events.launch.GameProcessStartedEvent;
-import com.dervarex.minified.launch.events.launch.GameStartEvent;
-import com.dervarex.minified.launch.events.launch.GameStoppedEvent;
+import com.dervarex.minified.launch.events.launch.*;
+import com.dervarex.minified.launch.exceptions.launch.NonZeroExitCodeException;
 import com.dervarex.minified.launch.exceptions.loader.UnexpectedLoaderException;
 import com.dervarex.minified.launch.exceptions.version.MalformedVersionJsonException;
 import com.dervarex.minified.launch.launch.internal.ArgumentsBuilder;
@@ -365,11 +363,13 @@ public class Launcher {
         }
 
         context.getEventBus().post(new GameStoppedEvent(exitCode, context.getLaunchConfiguration()));
-//        if (exitCode != 0) {
-//            throw new RuntimeException(
-//                    "Minecraft exited with code " + exitCode
-//            );
-//        } todo: NonZeroExitCodeException or NonZeroExitCodeEvent?
+        if (exitCode != 0) {
+            context.getEventBus().post(new NonZeroExitCodeEvent(exitCode));
+            throw new NonZeroExitCodeException(
+                    "Minecraft exited with code " + exitCode,
+                    exitCode
+            );
+        }
     }
 
     private static Thread forwardOutput(InputStream stream, GameOutputEvent.Stream type, LaunchContext context) {
