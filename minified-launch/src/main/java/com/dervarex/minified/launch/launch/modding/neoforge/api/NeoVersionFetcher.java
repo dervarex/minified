@@ -55,7 +55,7 @@ public final class NeoVersionFetcher {
 
         throw new NoLoadersFoundException(
                 "No NeoForge version found for " + versionOrMinecraftVersion,
-                "NEOFORGE" // todo replace that uppercase string with an enum
+                "NEOFORGE"
         );
     }
 
