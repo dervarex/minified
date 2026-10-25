@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+@API(status = API.Status.STABLE)
 public final class EventBus {
     private final Map<Class<?>, List<EventListener<?>>> listeners = new ConcurrentHashMap<>();
 
