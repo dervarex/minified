@@ -222,7 +222,7 @@ public class AuthManager {
      *
      * @return the initial login state as JSON, usually {@code STARTING} or {@code PENDING}
      */
-    @API(status = API.Status.EXPERIMENTAL)
+    @API(status = API.Status.STABLE)
     public static String startDeviceCodeLoginAsync() {
         final LoginState currentState;
         final CountDownLatch latch;
@@ -369,7 +369,7 @@ public class AuthManager {
      * @return the UUIDs of all accounts with a saved session, no order
      * @throws IOException if the session directory exists but can't be read
      */
-    @API(status = API.Status.EXPERIMENTAL, since = "v3.2.1")
+    @API(status = API.Status.STABLE, since = "v3.2.1")
     public static List<UUID> getSavedAccounts() throws IOException {
         List<UUID> accounts = new ArrayList<>();
         if (!Files.isDirectory(SESSIONS_DIR)) return accounts;
@@ -390,7 +390,7 @@ public class AuthManager {
      * @param uuid the account to log in with
      * @return the logged in user, or null if there is no saved session for it or it could not be refreshed
      */
-    @API(status = API.Status.EXPERIMENTAL, since = "v3.2.1")
+    @API(status = API.Status.STABLE, since = "v3.2.1")
     public static User loginWithSavedSession(UUID uuid) {
         try {
             JsonObject saved = Encryptor.loadEncryptedSession(sessionFile(uuid), masterKey, eventBus);
@@ -421,7 +421,7 @@ public class AuthManager {
      * @return the user from the saved session, or null if there is none
      * @throws LoginFailedException if the session file exists but can't be decrypted or read
      */
-    @API(status = API.Status.EXPERIMENTAL, since = "v3.2.1")
+    @API(status = API.Status.STABLE, since = "v3.2.1")
     public static User loadSavedSession(UUID uuid) {
         try {
             JsonObject saved = Encryptor.loadEncryptedSession(sessionFile(uuid), masterKey, eventBus);
