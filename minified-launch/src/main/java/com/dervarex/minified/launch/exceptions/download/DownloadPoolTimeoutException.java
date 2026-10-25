@@ -1,5 +1,8 @@
 package com.dervarex.minified.launch.exceptions.download;
 
+/**
+ * Gets thrown when the download pool timeout was hit
+ */
 public class DownloadPoolTimeoutException extends DownloadException {
     public DownloadPoolTimeoutException(String message) {
         super(message);

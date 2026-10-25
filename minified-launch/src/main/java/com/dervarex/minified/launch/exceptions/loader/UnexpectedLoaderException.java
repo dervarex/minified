@@ -1,6 +1,9 @@
 package com.dervarex.minified.launch.exceptions.loader;
 
-public class UnexpectedLoaderException extends IllegalStateException{
+/**
+ * Gets thrown when an unexpected loader has been used
+ */
+public class UnexpectedLoaderException extends IllegalStateException {
     public UnexpectedLoaderException(String message) {
         super(message);
     }

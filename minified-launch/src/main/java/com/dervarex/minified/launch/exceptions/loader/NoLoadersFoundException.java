@@ -2,6 +2,9 @@ package com.dervarex.minified.launch.exceptions.loader;
 
 import lombok.Getter;
 
+/**
+ * Gets thrown when no loaders could be found (loader exists, but no versions found)
+ */
 @Getter
 public class NoLoadersFoundException extends RuntimeException {
 
