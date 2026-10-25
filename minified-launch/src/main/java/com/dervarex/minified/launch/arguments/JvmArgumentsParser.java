@@ -3,9 +3,11 @@ package com.dervarex.minified.launch.arguments;
 import com.dervarex.minified.utils.json.JsonArray;
 import com.dervarex.minified.utils.json.JsonObject;
 import com.dervarex.minified.utils.json.JsonValue;
+import org.apiguardian.api.API;
 
 import java.util.ArrayList;
 
+@API(status = API.Status.INTERNAL)
 public final class JvmArgumentsParser {
     private static final String OS_NAME = getMinecraftOsName();
     private static final String OS_VERSION = System.getProperty("os.version");

@@ -9,12 +9,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+@API(status = API.Status.INTERNAL)
 public final class GameArgumentsParser {
     private static final String OS_NAME = getMinecraftOsName();
 
     private GameArgumentsParser() {
     }
 
+    /**
+     * Parses the Game Arguments from the JsonArray to a List
+     * @param arguments original JSON Array
+     * @param variables variables to be set
+     * @param features features to be enabled/disabled
+     * @return List of the Game Arguments
+     */
     public static List<String> parse(
             JsonArray arguments,
             Map<String, String> variables,
@@ -204,6 +212,7 @@ public final class GameArgumentsParser {
 
         return "unknown";
     }
+
     private static void appendArgument(
             List<String> output,
             String arg,
