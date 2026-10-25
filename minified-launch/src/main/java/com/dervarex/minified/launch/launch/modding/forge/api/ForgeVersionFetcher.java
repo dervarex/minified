@@ -17,12 +17,18 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
 
+/**
+ * Utility for Fetching forge Versions
+ */
 public class ForgeVersionFetcher {
     private final HttpClient client = HttpClient.newHttpClient();
 
     private List<String> cachedVersions;
     private JsonObject cachedPromotions;
 
+    /**
+     * @return available forge versions
+     */
     @API(status = API.Status.STABLE)
     public List<String> getAvailableVersions() {
         if (cachedVersions != null) {
@@ -51,6 +57,10 @@ public class ForgeVersionFetcher {
         }
     }
 
+    /**
+     * @param minecraftVersion minecraft version
+     * @return forge versions for specified minecraft version
+     */
     @API(status = API.Status.STABLE)
     public List<String> getVersionsForMinecraft(String minecraftVersion) {
         return getAvailableVersions()
@@ -111,6 +121,9 @@ public class ForgeVersionFetcher {
         return version;
     }
 
+    /**
+     * @return forge promotions as JsonObject
+     */
     private JsonObject getPromotions() {
         if (cachedPromotions != null) {
             return cachedPromotions;

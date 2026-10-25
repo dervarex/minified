@@ -9,11 +9,18 @@ import org.apiguardian.api.API;
 import java.nio.file.Path;
 
 public class NeoProfileJsonLoader {
+    /**
+     * Loads the Neoforge Profile Json
+     * @param version minecraft version
+     * @param launchConfig launch configuration given by the launcher
+     * @param online is the user online?
+     * @return Neoforge Profile JSON as an JSON Object
+     */
     @API(status = API.Status.INTERNAL, consumers = {"com.dervarex.minified.launch.*"})
     public static JsonObject loadNeoforgeProfileJson(
-                                                      String version,
-                                                      LaunchConfiguration launchConfig,
-                                                      boolean online
+            String version,
+            LaunchConfiguration launchConfig,
+            boolean online
     ) {
         return CacheManager.loadProfileJson(
                 version,

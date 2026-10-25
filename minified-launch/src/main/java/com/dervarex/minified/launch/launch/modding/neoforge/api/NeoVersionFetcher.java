@@ -29,6 +29,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public final class NeoVersionFetcher {
+
     private static final HttpClient HTTP = HttpClient.newBuilder()
             .followRedirects(HttpClient.Redirect.NORMAL)
             .build();
@@ -36,6 +37,10 @@ public final class NeoVersionFetcher {
     private final AtomicReference<List<String>> cachedVersions = new AtomicReference<>();
     private final AtomicReference<List<String>> cachedDirectoryVersions = new AtomicReference<>();
 
+    /**
+     * @param minecraftVersion minecraft version
+     * @return latest neoforge loader version for given minecraft version
+     */
     @API(status = API.Status.STABLE)
     public String getLatest(String minecraftVersion) {
         return resolveLoaderVersion(minecraftVersion);
@@ -69,6 +74,9 @@ public final class NeoVersionFetcher {
                 .orElse(null);
     }
 
+    /**
+     * @return all neoforge versions
+     */
     @API(status = API.Status.STABLE)
     public List<String> getAllVersions() {
         List<String> cached = cachedVersions.get();

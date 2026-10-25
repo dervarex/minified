@@ -10,6 +10,9 @@ import org.apiguardian.api.API;
 
 public class FabricLoaderFetcher {
 
+    /**
+     * @return Latest FabricMC Loader Version
+     */
     @API(status = API.Status.STABLE)
     public static String getLatestLoaderVersion() throws Exception {
 
@@ -28,6 +31,12 @@ public class FabricLoaderFetcher {
                 .asString();
     }
 
+    /**
+     *
+     * @param minecraftVersion minecraft version
+     * @param loaderVersion FabricMC loader version
+     * @return the profile JSON for the fabric loader of the specified minecraft version
+     */
     @API(status = API.Status.STABLE)
     public static JsonObject getProfileJson(
             String minecraftVersion,
@@ -47,6 +56,10 @@ public class FabricLoaderFetcher {
                 .asObject();
     }
 
+    /**
+     * @param minecraftVersion minecraft version
+     * @return the latest profile JSON for the given minecraft version
+     */
     public static JsonObject getLatestProfile(
             String minecraftVersion
     ) throws Exception {
