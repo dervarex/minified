@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+@API(status = API.Status.STABLE)
 public final class EventBus {
     private final Map<Class<?>, List<EventListener<?>>> listeners = new ConcurrentHashMap<>();
 
@@ -24,6 +25,14 @@ public final class EventBus {
         listeners.computeIfAbsent(type, k -> new CopyOnWriteArrayList<>()).add(listener);
     }
 
+    /**
+     * Unsubscribe to an Event
+     * Unsubscribing might not seem useful at first, but it's important for a clean and fast launcher.
+     * For example, if the user closes some GUI that displays it, listening to an event that triggers often would waste resources
+     * Additionally, forgetting to unsubscribe can eventually lead to memory leaks, which you usually do not want
+     * @param type the listener class you subscribed to
+     * @param listener the listener object got from subscribing
+     */
     @API(status = API.Status.STABLE)
     public <T extends Event> void unsubscribe(
             Class<T> type,
@@ -38,6 +47,13 @@ public final class EventBus {
         }
     }
 
+    /**
+     * Posting an Event Update
+     * This one's mostly used internally for posting event updates,
+     * but can be used by the Launcher to Stop the Game for example
+     * @param event
+     * @param <T>
+     */
     @SuppressWarnings("unchecked")
     @API(status = API.Status.STABLE)
     public <T extends Event> void post(T event) {
