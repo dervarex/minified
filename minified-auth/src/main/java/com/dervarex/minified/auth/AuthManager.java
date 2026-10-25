@@ -413,8 +413,8 @@ public class AuthManager {
     }
 
     /**
-     * Loads the saved session of one account without refreshing it, for when there is no network
-     * The access token may have expired, that's fine for singleplayer but online servers will refuse it
+     * Loads the saved session of one account without refreshing it, for when there is no network.
+     * The access token may have expired, that's fine for singleplayer but online servers will refuse it.
      * Will not work if disk is on fire, though we're already working on a fire extinguisher
      *
      * @param uuid the account to load

@@ -3,6 +3,10 @@ package com.dervarex.minified.auth.user;
 import java.util.Objects;
 import java.util.UUID;
 
+/**
+ * A Minecraft UUID, saved with and without dashes.
+ * The Official Minecraft API takes {@link uuid}, but for processing it's better to use {@link dashedUUID}
+ */
 public class MinecraftUUID {
     private final UUID dashedUUID;
     private final String uuid;
