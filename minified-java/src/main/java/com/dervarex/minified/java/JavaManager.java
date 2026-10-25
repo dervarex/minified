@@ -78,6 +78,12 @@ public final class JavaManager {
         JavaManager.baseDir = baseDir.toAbsolutePath();
         localEventBus = eventBus == null ? new EventBus() : eventBus;
     }
+    /**
+     * Configures the root directory used for managed Java runtimes.
+     * Does not need an EventBus
+     *
+     * @param baseDir the directory where managed runtimes will be stored
+     */
     @API(status = API.Status.STABLE)
     public static synchronized void init(Path baseDir) {
         Objects.requireNonNull(baseDir, "baseDir");
