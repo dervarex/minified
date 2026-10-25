@@ -23,9 +23,13 @@ import java.time.Duration;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
+/**
+ * Downloads the Client Jar, the one which actually is minecraft
+ */
 public class ClientDownloader {
 
     /**
+     * Downloads the Client Jar
      * @param version the game version
      * @param path    the full path to the jar including the file name, for example /home/dervarex/client.jar
      * @param context the launch context
@@ -35,6 +39,13 @@ public class ClientDownloader {
         downloadClient(version, path, progress -> {}, context);
     }
 
+    /**
+     * Downloads the Client Jar
+     * @param version the game version
+     * @param path path to where the client jar should be downloaded
+     * @param progressConsumer Consumer that takes the current Progress
+     * @param context internal Launch Context
+     */
     public void downloadClient(String version, Path path, Consumer<Double> progressConsumer, @Nullable LaunchContext context)
             throws HttpException, IOException {
 

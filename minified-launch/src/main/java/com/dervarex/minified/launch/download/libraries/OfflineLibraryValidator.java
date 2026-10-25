@@ -21,11 +21,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Validates the Libraries when the User is offline.
+ */
 public final class OfflineLibraryValidator {
 
     private OfflineLibraryValidator() {
     }
 
+    /**
+     * Validates the Libraries.
+     * Needs a Cached Version JSON to work
+     * @param version minecraft version
+     * @param loader loader whose dependencies should be included
+     * @param librariesDir directory where the assets have been downloaded to
+     */
     public static void validate(String version, Loader loader, Path librariesDir) {
         List<String> problems = new ArrayList<>();
         Path cacheRoot = resolveCacheRoot(librariesDir);

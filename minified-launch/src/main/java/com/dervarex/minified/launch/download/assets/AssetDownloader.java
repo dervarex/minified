@@ -32,6 +32,9 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
+/**
+ * Downloads the Assets Minecraft is using (mostly some random old screenshots, but minecraft needs them)
+ */
 public class AssetDownloader {
 
     private final ExecutorService pool;
@@ -53,6 +56,8 @@ public class AssetDownloader {
      * Downloads the assets
      * @param version the game version
      * @param assetsDir the directory the assets should be downloaded to
+     * @param progressConsumer Consumer that takes the current Progress
+     * @param context internal Launch Context
      */
     public void downloadAssets(String version, Path assetsDir, Consumer<Double> progressConsumer, LaunchContext context) {
         try {

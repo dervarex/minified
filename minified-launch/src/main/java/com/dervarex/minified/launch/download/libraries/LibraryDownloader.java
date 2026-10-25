@@ -58,10 +58,19 @@ public class LibraryDownloader {
             .connectTimeout(Duration.ofSeconds(10))
             .build();
 
+    /**
+     * @param downloadThreads network threads to download on
+     */
     public LibraryDownloader(int downloadThreads) {
         this.pool = Executors.newFixedThreadPool(downloadThreads);
     }
 
+    /**
+     * Downloads the libraries.
+     *
+     * @param loader the loader to use
+     * @param librariesDir the directory the libraries should be downloaded to
+     */
     public void downloadLibraries(Loader loader, Path librariesDir) {
         downloadLibraries(loader, librariesDir, progress -> {}, null);
     }
@@ -71,6 +80,8 @@ public class LibraryDownloader {
      *
      * @param loader the loader to use
      * @param librariesDir the directory the libraries should be downloaded to
+     * @param progressConsumer Consumer that takes the current Progress
+     * @param context internal LaunchContext
      */
     public void downloadLibraries(Loader loader, Path librariesDir, Consumer<Double> progressConsumer, LaunchContext context) {
         downloadLibraries(loader, librariesDir, resolveNativesDirectory(librariesDir), progressConsumer, context);

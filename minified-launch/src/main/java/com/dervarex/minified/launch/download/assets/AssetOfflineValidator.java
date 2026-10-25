@@ -11,11 +11,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Validates the Assets when the User is offline.
+ */
 public final class AssetOfflineValidator {
 
     private AssetOfflineValidator() {
     }
 
+    /**
+     * Validates the Assets.
+     * Needs a Cached Version JSON to work
+     * @param version minecraft version
+     * @param assetsDir directory where the assets have been downloaded to
+     */
     public static void validate(String version, Path assetsDir) {
         List<String> problems = new ArrayList<>();
         Path cacheRoot = resolveCacheRoot(assetsDir);
