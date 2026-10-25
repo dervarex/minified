@@ -12,6 +12,24 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Configuration for Launching the Game. <br>
+ * Example Usage:
+ * <pre>
+ * {@code
+ * LaunchConfiguration config = new LaunchConfiguration.Builder()
+ *         .downloadThreads(10)
+ *         .launcherName("YourLauncherName")
+ *         .launcherVersion("1.0.0")
+ *         .assetsDirectory(Path.of("<assets-directory>"))
+ *         .librariesDirectory(Path.of("<libraries-directory>"))
+ *         .jarFile(Path.of("<client.jar>"))
+ *         .isDemoUser(false)
+ *         .loader(new VanillaLoader("1.21.11"))
+ *         .build();
+ * }
+ * </pre>
+ */
 @Getter
 @API(status = API.Status.STABLE)
 public class LaunchConfiguration {
