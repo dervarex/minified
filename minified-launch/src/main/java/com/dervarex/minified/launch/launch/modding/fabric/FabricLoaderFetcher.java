@@ -32,7 +32,6 @@ public class FabricLoaderFetcher {
     }
 
     /**
-     *
      * @param minecraftVersion minecraft version
      * @param loaderVersion FabricMC loader version
      * @return the profile JSON for the fabric loader of the specified minecraft version
