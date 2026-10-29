@@ -7,6 +7,10 @@ public final class NeoInstallerFetcher {
     private NeoInstallerFetcher() {
     }
 
+    /**
+     * @param neoForgeVersion neoforge version
+     * @return direct link to the neoforge installer
+     */
     @API(status = API.Status.STABLE)
     public static String getInstallerLink(String neoForgeVersion) {
         if (NeoVersionFetcher.isLegacyVersion(neoForgeVersion)) {
