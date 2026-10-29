@@ -34,13 +34,15 @@ final class EventPages {
 
     static final String SECTION = "events";
     static final String EVENT_INTERFACE = "com.dervarex.minified.events.Event";
+    static final String REVERSE_EVENT_INTERFACE = "com.dervarex.minified.events.ReverseEvent";
     static final String EVENTS_MODULE = "minified-events";
 
     /**
      * @param group sidebar group, the module label or for the events module itself the sub package
-     * @param posts places in the library sources that create the event
+     * @param reverse whether the launcher posts it and the library listens, see {@code ReverseEvent}
+     * @param posts places in the library sources that create the event, or for reverse events subscribe to it
      */
-    record EventDoc(TypeElement type, String group, String path, ModuleDoc module, List<Post> posts) {
+    record EventDoc(TypeElement type, String group, String path, ModuleDoc module, boolean reverse, List<Post> posts) {
     }
 
     record Post(String owner, Path file, long line) {
@@ -83,8 +85,10 @@ final class EventPages {
             return;
         }
         TypeMirror erasedEvent = site.types.erasure(eventInterface.asType());
+        TypeElement reverseInterface = site.elements.getTypeElement(REVERSE_EVENT_INTERFACE);
+        TypeMirror erasedReverse = reverseInterface == null ? null : site.types.erasure(reverseInterface.asType());
         for (TypeElement type : site.typePaths.keySet()) {
-            if (type.equals(eventInterface) || type.getModifiers().contains(Modifier.ABSTRACT) || type.getKind().isInterface()) {
+            if (type.equals(eventInterface) || type.equals(reverseInterface) || type.getModifiers().contains(Modifier.ABSTRACT) || type.getKind().isInterface()) {
                 continue;
             }
             if (!site.types.isAssignable(site.types.erasure(type.asType()), erasedEvent)) {
@@ -93,7 +97,8 @@ final class EventPages {
             ModuleDoc module = site.typePackages.get(type).module();
             String group = module.name().equals(EVENTS_MODULE) ? subPackageLabel(type) : module.label();
             String path = "events/" + Html.slug(group) + "/" + type.getSimpleName().toString().toLowerCase(Locale.ROOT) + "/";
-            EventDoc doc = new EventDoc(type, group, path, module, new ArrayList<>());
+            boolean reverse = erasedReverse != null && site.types.isAssignable(site.types.erasure(type.asType()), erasedReverse);
+            EventDoc doc = new EventDoc(type, group, path, module, reverse, new ArrayList<>());
             events.add(doc);
             byType.put(type, doc);
         }
@@ -115,7 +120,10 @@ final class EventPages {
         }
         Map<String, EventDoc> bySimpleName = new HashMap<>();
         events.forEach(e -> bySimpleName.put(e.type().getSimpleName().toString(), e));
-        Pattern creation = Pattern.compile("new\\s+(" + String.join("|", bySimpleName.keySet()) + ")\\s*[(<]");
+        String names = String.join("|", bySimpleName.keySet());
+        Pattern creation = Pattern.compile("new\\s+(" + names + ")\\s*[(<]");
+        // reverse events are created by the launcher, the library only subscribes to them
+        Pattern subscription = Pattern.compile("subscribe\\(\\s*(" + names + ")\\.class");
         for (Config.ModuleSource module : site.config.modules()) {
             List<Path> files;
             try (Stream<Path> walk = Files.walk(module.sourceDir())) {
@@ -123,11 +131,17 @@ final class EventPages {
             }
             for (Path file : files) {
                 String text = Files.readString(file);
-                Matcher m = creation.matcher(text);
-                while (m.find()) {
-                    long line = text.substring(0, m.start()).chars().filter(c -> c == '\n').count() + 1;
-                    String owner = file.getFileName().toString().replaceFirst("\\.java$", "");
-                    bySimpleName.get(m.group(1)).posts().add(new Post(owner, file.toAbsolutePath().normalize(), line));
+                for (Pattern pattern : List.of(creation, subscription)) {
+                    Matcher m = pattern.matcher(text);
+                    while (m.find()) {
+                        EventDoc event = bySimpleName.get(m.group(1));
+                        if (event.reverse() != (pattern == subscription)) {
+                            continue;
+                        }
+                        long line = text.substring(0, m.start()).chars().filter(c -> c == '\n').count() + 1;
+                        String owner = file.getFileName().toString().replaceFirst("\\.java$", "");
+                        event.posts().add(new Post(owner, file.toAbsolutePath().normalize(), line));
+                    }
                 }
             }
         }
@@ -157,7 +171,11 @@ final class EventPages {
                     summary = Html.esc(contentDescription(event));
                 }
                 b.append("<div class=\"enum-row\"><a href=\"").append(Html.rel(from, event.path())).append("\"><code>")
-                        .append(event.type().getSimpleName()).append("</code></a><span>").append(summary).append("</span></div>");
+                        .append(event.type().getSimpleName()).append("</code></a><span>");
+                if (event.reverse()) {
+                    b.append(Layout.badge("reverse", "kind", "Posted by your launcher, the library listens")).append(' ');
+                }
+                b.append(summary).append("</span></div>");
             }
             b.append("</div></div>");
         }
@@ -191,7 +209,7 @@ final class EventPages {
         String eyebrow = "<a href=\"" + Html.rel(from, "events/introduction/") + "\">Events</a><span class=\"api-crumb-sep\">/</span>"
                 + Html.esc(event.group()) + "<span class=\"api-crumb-sep\">/</span><a href=\"" + Html.rel(from, event.module().path())
                 + "\">" + event.module().name() + "</a>";
-        b.append("<div class=\"api-header\"><div class=\"api-badges\">").append(Layout.badge("event", "kind"))
+        b.append("<div class=\"api-header\"><div class=\"api-badges\">").append(Layout.badge(event.reverse() ? "reverse event" : "event", "kind"))
                 .append("<a class=\"api-link\" href=\"").append(site.typeUrl(type, from)).append("\">API reference</a>");
         String source = site.sourceUrl(type);
         if (source != null) {
@@ -248,17 +266,30 @@ final class EventPages {
             toc.addAll(extra.toc());
         }
 
-        b.append("<h2 id=\"listening\">Listening</h2>");
-        toc.add(new TocEntry(2, "listening", "Listening"));
-        b.append("<p>Subscribe on the <code>EventBus</code> the event is posted to, see <a href=\"")
-                .append(Html.rel(from, "events/introduction/")).append("\">Events</a> for which bus that is.</p>");
-        b.append(Layout.tabs(List.of(
-                new String[]{"Java", snippet(javaSnippet(name, fields), "java")},
-                new String[]{"Kotlin", snippet(kotlinSnippet(name, fields), "kotlin")})));
+        if (event.reverse()) {
+            b.append("<h2 id=\"posting\">Posting</h2>");
+            toc.add(new TocEntry(2, "posting", "Posting"));
+            b.append("<p>This is a reverse event: your launcher posts it and the library listens. Post it on the <code>EventBus</code> ")
+                    .append("you gave the library, see <a href=\"").append(Html.rel(from, "events/introduction/"))
+                    .append("#reverse-events\">Reverse events</a>.</p>");
+            b.append(Layout.tabs(List.of(
+                    new String[]{"Java", snippet(javaPostSnippet(name, fields), "java")},
+                    new String[]{"Kotlin", snippet(kotlinPostSnippet(name, fields), "kotlin")})));
+        } else {
+            b.append("<h2 id=\"listening\">Listening</h2>");
+            toc.add(new TocEntry(2, "listening", "Listening"));
+            b.append("<p>Subscribe on the <code>EventBus</code> the event is posted to, see <a href=\"")
+                    .append(Html.rel(from, "events/introduction/")).append("\">Events</a> for which bus that is.</p>");
+            b.append(Layout.tabs(List.of(
+                    new String[]{"Java", snippet(javaSnippet(name, fields), "java")},
+                    new String[]{"Kotlin", snippet(kotlinSnippet(name, fields), "kotlin")})));
+        }
 
         if (!event.posts().isEmpty()) {
-            b.append("<h2 id=\"posted-by\">Posted by</h2>");
-            toc.add(new TocEntry(2, "posted-by", "Posted by"));
+            String postsId = event.reverse() ? "handled-by" : "posted-by";
+            String postsTitle = event.reverse() ? "Handled by" : "Posted by";
+            b.append("<h2 id=\"").append(postsId).append("\">").append(postsTitle).append("</h2>");
+            toc.add(new TocEntry(2, postsId, postsTitle));
             b.append("<ul class=\"api-used-by\">");
             for (Post post : event.posts()) {
                 TypeElement ownerType = site.findType(post.owner());
@@ -281,7 +312,8 @@ final class EventPages {
         b.append("<p class=\"member-note\">API reference: <a href=\"").append(site.typeUrl(type, from)).append("\"><code>")
                 .append(site.elements.getPackageOf(type).getQualifiedName()).append('.').append(name).append("</code></a></p>");
 
-        site.search.add(new SearchEntry(name, "event", from, event.group() + " event"));
+        String kind = event.reverse() ? "reverse event" : "event";
+        site.search.add(new SearchEntry(name, kind, from, event.group() + " " + kind));
         return new Page(from, name, description, b.toString(), toc, SECTION, false, null, eyebrow);
     }
 
@@ -349,6 +381,14 @@ final class EventPages {
                     .append(getter ? field.name() : field.accessor()).append('\n');
         }
         return sb.append('}').toString();
+    }
+
+    private static String javaPostSnippet(String event, List<Field> fields) {
+        return "eventBus.post(new " + event + "(" + String.join(", ", fields.stream().map(Field::name).toList()) + "));";
+    }
+
+    private static String kotlinPostSnippet(String event, List<Field> fields) {
+        return "eventBus.post(" + event + "(" + String.join(", ", fields.stream().map(Field::name).toList()) + "))";
     }
 
     private static String snippet(String code, String lang) {

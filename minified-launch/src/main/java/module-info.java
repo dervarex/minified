@@ -28,7 +28,8 @@
  *     <li>{@link com.dervarex.minified.launch.profile} - saving a configuration to disk and loading it later
  *     with {@link com.dervarex.minified.launch.profile.ProfileFactory ProfileFactory}</li>
  *     <li>{@code com.dervarex.minified.launch.events.*} - events posted while downloading, preparing the
- *     environment, installing loaders and launching</li>
+ *     environment, instaling loaders and launching, and reverse events like
+ *  *     {@link com.dervarex.minified.launch.events.control.StopGameEvent StopGameEvent} your launchelr posts to control the game</li>
  *     <li>{@code com.dervarex.minified.launch.exceptions.*} - exceptions thrown when a launch step fails,
  *     grouped by the step they belong to</li>
  * </ul>
@@ -67,6 +68,7 @@ module minified.minified.launch.main {
     exports com.dervarex.minified.launch.exceptions.loader;
     exports com.dervarex.minified.launch.exceptions.profile;
     exports com.dervarex.minified.launch.exceptions.version;
+    exports com.dervarex.minified.launch.events.control;
     exports com.dervarex.minified.launch.events.download.assets;
     exports com.dervarex.minified.launch.events.download.client;
     exports com.dervarex.minified.launch.events.download.libraries;

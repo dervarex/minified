@@ -4,11 +4,13 @@ import com.dervarex.minified.auth.user.User;
 import com.dervarex.minified.events.type.connection.CheckConnectionEvent;
 import com.dervarex.minified.events.type.connection.OfflineEvent;
 import com.dervarex.minified.java.JavaInstallation;
+import com.dervarex.minified.events.EventListener;
 import com.dervarex.minified.java.JavaManager;
 import com.dervarex.minified.launch.download.ClientDownloader;
 import com.dervarex.minified.launch.download.assets.AssetDownloader;
 import com.dervarex.minified.launch.download.assets.LegacyAssets;
 import com.dervarex.minified.launch.download.libraries.LibraryDownloader;
+import com.dervarex.minified.launch.events.control.StopGameEvent;
 import com.dervarex.minified.launch.events.launch.*;
 import com.dervarex.minified.launch.exceptions.launch.NonZeroExitCodeException;
 import com.dervarex.minified.launch.exceptions.loader.UnexpectedLoaderException;
@@ -82,6 +84,25 @@ public class Launcher {
             User user,
             LaunchConfiguration launchConfig) {
         LaunchContext context = new LaunchContext(user, launchConfig);
+        EventListener<StopGameEvent> stopListener = event -> context.requestStop(event.force());
+        context.getEventBus().subscribe(StopGameEvent.class, stopListener);
+
+        try {
+            launch(context);
+        } catch (RuntimeException e) {
+            if (!context.isStopRequested() || context.isProcessStarted()) {
+                throw e;
+            }
+            context.getEventBus().post(new LaunchCancelledEvent(launchConfig));
+        } finally {
+            context.getEventBus().unsubscribe(StopGameEvent.class, stopListener);
+            context.finish();
+        }
+    }
+
+    private static void launch(LaunchContext context) {
+        User user = context.getUser();
+        LaunchConfiguration launchConfig = context.getLaunchConfiguration();
 
         try {
             Loader loader = launchConfig.getLoader();
@@ -95,6 +116,7 @@ public class Launcher {
                 context.getEventBus().post(new OfflineEvent());
             }
 
+            context.throwIfStopRequested();
             if (context.isOnline()) {
                 if (loader instanceof ForgeLoader) {
                     ForgeInstallerInjector forgeInstallerInjector = new ForgeInstallerInjector();
@@ -105,6 +127,7 @@ public class Launcher {
                 }
             }
 
+            context.throwIfStopRequested();
             JsonFile versionJson = CacheManager.loadVersionJson(loader.mcVersion(), context.isOnline());
 
             JavaInstallation javaInstallation;
@@ -122,10 +145,17 @@ public class Launcher {
                 javaInstallation = null;
             }
 
-            downloadFiles(
-                    loader.mcVersion(),
-                    context
-            );
+            context.throwIfStopRequested();
+            context.runInterruptibly(() -> {
+                try {
+                    downloadFiles(
+                            loader.mcVersion(),
+                            context
+                    );
+                } catch (HttpException | IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
             LegacyAssets.reconstruct(versionJson, launchConfig);
             if (loader instanceof ForgeLoader) {
                 LegacyForgeGameJar.prepare(
@@ -338,13 +368,15 @@ public class Launcher {
             processBuilder.inheritIO();
         }
 
+        context.throwIfStopRequested();
         context.getEventBus().post(new GameStartEvent(
                 context.getUser(),
                 context.getLaunchConfiguration(),
                 context.isOnline()
         ));
 
-        Process process = processBuilder.start();
+        // throws instead of starting the game if the launch was stopped in the meantime
+        Process process = context.startProcess(processBuilder);
         context.getEventBus().post(new GameProcessStartedEvent(process, launchConfig));
 
         List<Thread> outputReaders = capture
@@ -363,7 +395,8 @@ public class Launcher {
         }
 
         context.getEventBus().post(new GameStoppedEvent(exitCode, context.getLaunchConfiguration()));
-        if (exitCode != 0) {
+        // if the launcher asked us to stop the game, then a non-zero exit code isn't a crash
+        if (exitCode != 0 && !context.isStopRequested()) {
             context.getEventBus().post(new NonZeroExitCodeEvent(exitCode));
             throw new NonZeroExitCodeException(
                     "Minecraft exited with code " + exitCode,

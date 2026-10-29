@@ -234,6 +234,9 @@ public class LibraryDownloader {
             AtomicLong downloadedBytes = new AtomicLong();
 
             for (DownloadTarget target : targets) {
+                if (context != null) {
+                    context.throwIfStopRequested();
+                }
                 long targetSize = Math.max(target.size(), 1L);
                 String currentFile = target.path().getFileName().toString();
 
@@ -298,12 +301,17 @@ public class LibraryDownloader {
         } catch (Exception e) {
             throw new LibraryDownloadException("Failed to download libraries", e);
         } finally {
-            pool.shutdown();
+            if (context != null && context.isStopRequested()) {
+                pool.shutdownNow();
+            } else {
+                pool.shutdown();
+            }
             try {
                 if (!pool.awaitTermination(1, TimeUnit.HOURS)) {
                     throw new DownloadPoolTimeoutException("Download pool timeout");
                 }
             } catch (InterruptedException e) {
+                pool.shutdownNow();
                 Thread.currentThread().interrupt();
                 throw new DownloadPoolShutdownException("Failed to shut down download pool", e);
             }
