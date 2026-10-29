@@ -27,6 +27,9 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.function.Consumer;
 
+/**
+ * Injects itself into the Forge installer and lets it do the work
+ */
 @API(status = API.Status.INTERNAL, consumers = {"com.dervarex.minified.launch.*"})
 public class ForgeInstallerInjector {
     private static void prepare(LaunchContext context) {
@@ -166,6 +169,10 @@ public class ForgeInstallerInjector {
         }
     }
 
+    /**
+     * Install Forge.
+     * @param context internal Launching Context
+     */
     public void install(LaunchContext context) {
         LaunchConfiguration config = context.getLaunchConfiguration();
         prepare(context);

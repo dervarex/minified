@@ -151,7 +151,11 @@ public class NeoInstallerInjector {
         }
     }
 
-    public void install(/*String versionOrMinecraftVersion, */LaunchContext context) {
+    /**
+     * Install Neoforge.
+     * @param context Internal Launching context
+     */
+    public void install(LaunchContext context) {
         LaunchConfiguration config = context.getLaunchConfiguration();
         prepare(context);
         Path installerPath = downloadInstaller(context);

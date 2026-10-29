@@ -2,6 +2,9 @@ package com.dervarex.minified.launch.exceptions.version;
 
 import lombok.Getter;
 
+/**
+ * Gets thrown when there was an issue fetching the versions
+ */
 @Getter
 public class FailedToFetchVersionsException extends RuntimeException {
     /**

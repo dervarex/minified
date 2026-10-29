@@ -1,5 +1,8 @@
 package com.dervarex.minified.launch.exceptions.download;
 
+/**
+ * Gets thrown when there was an issue shutting down the downloading pool
+ */
 public class DownloadPoolShutdownException extends DownloadException {
     public DownloadPoolShutdownException(String message) {
         super(message);

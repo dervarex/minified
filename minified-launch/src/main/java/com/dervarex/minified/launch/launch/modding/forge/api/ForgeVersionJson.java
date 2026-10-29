@@ -6,6 +6,9 @@ import org.apiguardian.api.API;
 import java.io.IOException;
 import java.nio.file.Path;
 
+/**
+ * Forge Version Json Utils
+ */
 public class ForgeVersionJson {
     /**
      *

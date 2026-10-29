@@ -8,12 +8,22 @@ import org.apiguardian.api.API;
 
 import java.nio.file.Path;
 
+/**
+ * Loads the Profile Json of Forge
+ */
 public class ForgeProfileJsonLoader {
+    /**
+     * Loads the Profile Json of Forge.
+     * @param version minecraft version
+     * @param launchConfig the LaunchConfiguration given by the launcher
+     * @param online is the user online?
+     * @return Forge Profile JSON as JsonObject
+     */
     @API(status = API.Status.INTERNAL, consumers = {"com.dervarex.minified.launch.*"})
     public static JsonObject loadForgeProfileJson(
-                                                  String version,
-                                                  LaunchConfiguration launchConfig,
-                                                  boolean online
+            String version,
+            LaunchConfiguration launchConfig,
+            boolean online
     ) {
         return CacheManager.loadProfileJson(
                 version,

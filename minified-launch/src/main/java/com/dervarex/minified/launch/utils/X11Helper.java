@@ -108,6 +108,11 @@ public class X11Helper {
         }
     }
 
+    /**
+     * Parses the Display Number
+     * @param socketName name of the socket to use
+     * @return integer of the display number
+     */
     public static Integer parseDisplayNumber(
             String socketName
     ) {

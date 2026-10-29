@@ -16,6 +16,10 @@ import java.util.List;
 
 public class QuiltLoaderFetcher {
 
+    /**
+     * @param minecraftVersion minecraft version
+     * @return latest quilt loader version for specified minecraft version
+     */
     @API(status = API.Status.STABLE)
     public static String getLatestLoaderVersion(
             String minecraftVersion

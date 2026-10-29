@@ -2,6 +2,9 @@ package com.dervarex.minified.launch.exceptions.download;
 
 import lombok.Getter;
 
+/**
+ * Gets thrown when there was an issue downloading something over http
+ */
 @Getter
 public class HttpDownloadException extends DownloadException {
 
