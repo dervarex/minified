@@ -157,6 +157,10 @@ public class AssetDownloader {
             AtomicLong downloadedBytes = new AtomicLong();
 
             for (AssetTarget target : targets) {
+                if (context != null) {
+                    // hashing thousands of existing assets takes a moment or two
+                    context.throwIfStopRequested();
+                }
                 String currentFile = target.path().getFileName().toString();
 
                 if (isAlreadyDownloaded(target.path(), target.sha1())) {
@@ -219,7 +223,11 @@ public class AssetDownloader {
         } catch (Exception e) {
             throw new AssetDownloadException("Failed to download assets", e);
         } finally {
-            pool.shutdown();
+            if (context != null && context.isStopRequested()) {
+                pool.shutdownNow();
+            } else {
+                pool.shutdown();
+            }
         }
     }
 

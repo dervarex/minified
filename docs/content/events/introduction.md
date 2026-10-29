@@ -69,7 +69,7 @@ eventBus.post(StopGameEvent())
   </TabItem>
 </Tabs>
 
-Posting a reverse event while nothing listens to it, for example when there's no Game currently running, does nothing
+Posting a reverse event while nothing listens to it, for example when no launch is currently running, does nothing
 
 ## All events
 
