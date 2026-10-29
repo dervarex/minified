@@ -4,11 +4,13 @@ import com.dervarex.minified.auth.user.User;
 import com.dervarex.minified.events.type.connection.CheckConnectionEvent;
 import com.dervarex.minified.events.type.connection.OfflineEvent;
 import com.dervarex.minified.java.JavaInstallation;
+import com.dervarex.minified.events.EventListener;
 import com.dervarex.minified.java.JavaManager;
 import com.dervarex.minified.launch.download.ClientDownloader;
 import com.dervarex.minified.launch.download.assets.AssetDownloader;
 import com.dervarex.minified.launch.download.assets.LegacyAssets;
 import com.dervarex.minified.launch.download.libraries.LibraryDownloader;
+import com.dervarex.minified.launch.events.control.StopGameEvent;
 import com.dervarex.minified.launch.events.launch.*;
 import com.dervarex.minified.launch.exceptions.launch.NonZeroExitCodeException;
 import com.dervarex.minified.launch.exceptions.loader.UnexpectedLoaderException;
@@ -54,6 +56,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Launcher {
     /**
@@ -345,25 +348,42 @@ public class Launcher {
         ));
 
         Process process = processBuilder.start();
-        context.getEventBus().post(new GameProcessStartedEvent(process, launchConfig));
+        AtomicBoolean stopRequested = new AtomicBoolean(false);
+        EventListener<StopGameEvent> stopListener = event -> {
+            stopRequested.set(true);
+            if (event.force()) {
+                process.destroyForcibly();
+            } else {
+                process.destroy();
+            }
+        };
+        context.getEventBus().subscribe(StopGameEvent.class, stopListener);
 
-        List<Thread> outputReaders = capture
-                ? List.of(
-                        forwardOutput(process.getInputStream(), GameOutputEvent.Stream.STDOUT, context),
-                        forwardOutput(process.getErrorStream(), GameOutputEvent.Stream.STDERR, context))
-                : List.of();
+        int exitCode;
+        try {
+            context.getEventBus().post(new GameProcessStartedEvent(process, launchConfig));
 
-        int exitCode = launchConfig.isHeadless()
-                ? HeadlessWatcher.forLaunch(launchConfig, logsNoMarkers).watch(process)
-                : process.waitFor();
+            List<Thread> outputReaders = capture
+                    ? List.of(
+                            forwardOutput(process.getInputStream(), GameOutputEvent.Stream.STDOUT, context),
+                            forwardOutput(process.getErrorStream(), GameOutputEvent.Stream.STDERR, context))
+                    : List.of();
 
-        // the last lines (the crash report, usually) should arrive before anyone hears that the game stopped
-        for (Thread reader : outputReaders) {
-            reader.join();
+            exitCode = launchConfig.isHeadless()
+                    ? HeadlessWatcher.forLaunch(launchConfig, logsNoMarkers).watch(process)
+                    : process.waitFor();
+
+            // the last lines (the crash report, usually) should arrive before anyone hears that the game stopped
+            for (Thread reader : outputReaders) {
+                reader.join();
+            }
+        } finally {
+            context.getEventBus().unsubscribe(StopGameEvent.class, stopListener);
         }
 
         context.getEventBus().post(new GameStoppedEvent(exitCode, context.getLaunchConfiguration()));
-        if (exitCode != 0) {
+        // if the launcher asked us to stop the game, then a non-zero exit code isn't a crash
+        if (exitCode != 0 && !stopRequested.get()) {
             context.getEventBus().post(new NonZeroExitCodeEvent(exitCode));
             throw new NonZeroExitCodeException(
                     "Minecraft exited with code " + exitCode,

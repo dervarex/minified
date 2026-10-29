@@ -5,6 +5,7 @@ description: Introduction to Events
 
 Events are an essential part of building your own launcher.
 They allow you to receive updates from the backend, such as the current launch status, the game exit code, and many other events during the launch process.
+[Reverse events](#reverse-events) work the other way round and let your launcher control the backend, like stopping the game.
 
 ## Where events live
 
@@ -13,13 +14,13 @@ Events aren't all posted by one class - different modules post to different cate
 * **<a href="/events/connection/checkconnectionevent" class="link">Connection</a>**: online/offline detection, posted by `minified-launch` before network-dependent work.
 * **<a href="/events/download/assets/downloadassetsevent" class="link">Download</a>**: asset, library and client JAR download progress.
 * **<a href="/events/environment/configurex11environmentevent" class="link">Environment</a>**: graphics environment setup on Linux.
-* **<a href="/events/launch/gamestartevent" class="link">Launch</a>**: the Minecraft process starting and stopping.
+* **<a href="/events/launch/gamestartevent" class="link">Launch</a>**: the Minecraft process starting and stopping, plus the reverse <a href="/events/launch/stopgameevent" class="link">`StopGameEvent`</a> to stop it.
 * **<a href="/events/loader/installforgeevent" class="link">Loader</a>**: Forge/NeoForge installer progress.
 * **<a href="/events/java/ensurejavaversionevent" class="link">Java</a>**: managed Java runtime resolution, download and extraction (`minified-java`).
 * **<a href="/events/auth/createmasterkeyevent" class="link">Auth</a>**: session encryption (`minified-auth`).
 
 :::caution[Two different event buses]
-Only the **Connection**, **Download**, **Environment**, **Launch** and **Loader** events are posted to the `EventBus` you pass to `LaunchConfiguration.Builder.eventBus(...)` (via `LaunchContext`).
+Only the **Connection**, **Download**, **Environment**, **Launch** and **Loader** events are posted to (and `StopGameEvent` is listened to on) the `EventBus` you pass to `LaunchConfiguration.Builder.eventBus(...)` (via `LaunchContext`).
 
 The **Java** and **Auth** events are posted by `JavaManager` and `AuthManager` respectively, and each keeps its *own* internal, static `EventBus` that has nothing to do with `LaunchConfiguration`'s. `AuthManager.init(baseDir, eventBus)` does **not** forward that bus to `JavaManager` either - internally it always calls the single-argument `JavaManager.init(path)`, which resets Java's bus back to a fresh, private one.
 
@@ -41,6 +42,34 @@ LaunchConfiguration config = new LaunchConfiguration.Builder()
 
 Skip this and subscribers on the `LaunchConfiguration`'s bus will simply never see Java or Auth events - there's no error, they just go to a different, private `EventBus` instance.
 :::
+
+## Reverse events
+
+Most events go from Minified to your launcher. Reverse events go the other way: your launcher posts them and Minified listens, to control the backend. They implement `ReverseEvent` and are marked with "reverse" in the List below
+
+Pleas don't mix up the two types, <a href="/events/launch/gamestoppedevent" class="link">`GameStoppedEvent`</a> tells you when the game has stopped, <a href="/events/launch/stopgameevent" class="link">`StopGameEvent`</a> asks Minified to stop it.
+
+<Tabs>
+  <TabItem label="Java">
+
+```java
+// on the same EventBus you passed to LaunchConfiguration.Builder.eventBus(...)
+eventBus.post(new StopGameEvent());
+```
+
+  </TabItem>
+
+  <TabItem label="Kotlin">
+
+```kotlin
+// on the same EventBus you passed to LaunchConfiguration.Builder.eventBus(...)
+eventBus.post(StopGameEvent())
+```
+
+  </TabItem>
+</Tabs>
+
+Posting a reverse event while nothing listens to it, for example when there's no Game currently running, does nothing
 
 ## All events
 
