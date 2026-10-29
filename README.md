@@ -1,11 +1,30 @@
-# Minified
+<h1 align="center">
+  <br>
+  <img width="150" src="minified.svg" alt="Minified Logo"> 
+  <br>
+  <p align="center">Minified</p>
+</h1>
 
-A lightweight Java library for downloading, managing and launching Minecraft.
+<p align="center">
+  <a href="https://github.com/dervarex/minified/releases">
+    <img src="https://img.shields.io/github/v/release/dervarex/minified?style=for-the-badge&color=orange" alt="Latest Release">
+  </a>
+  <a href="LICENSE">
+    <img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg?style=for-the-badge" alt="License">
+  </a>
+    <a href="https://discord.gg/fhbcfMSvBy">
+        <img src="https://img.shields.io/discord/1518629359714570392?style=for-the-badge&logo=discord&label=Discord&color=5865F2" alt="Join the Minified Discord"/>
+    </a>
+</p>
 
-Supports Vanilla, Forge, NeoForge, Fabric and Quilt.
+<p align="center">
+  A lightweight Java library for downloading, managing and launching Minecraft.<br>
+  Supports Vanilla, Forge, NeoForge, Fabric and Quilt.
+</p>
+
+---
 
 Minified provides a high-level API for authentication, version management, asset downloading, library resolution and game launching without requiring developers to reimplement Mojang's launcher logic.
-
 ## Features
 
 * Version management
