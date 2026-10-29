@@ -15,7 +15,6 @@ Modules
   Launch
     Basics -> guides/minified-launch/basics
     Configuration -> guides/minified-launch/configuration
-    Modding -> guides/minified-launch/modding/loader
     Versions -> guides/minified-launch/versions/versions
   Utils
     JSON -> guides/minified-utils/json/json
