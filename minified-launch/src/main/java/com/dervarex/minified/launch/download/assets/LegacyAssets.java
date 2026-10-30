@@ -43,7 +43,8 @@ public final class LegacyAssets {
 
     /**
      * Copies the downloaded asset objects to where legacy versions look for them
-     *
+     * @param versionJson version JSON to be used for reconstruction
+     * @param config original launch configuration
      * @throws AssetDownloadException if an asset could not be copied
      */
     public static void reconstruct(JsonFile versionJson, LaunchConfiguration config) {

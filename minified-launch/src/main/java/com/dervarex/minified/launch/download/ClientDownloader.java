@@ -28,13 +28,19 @@ public class ClientDownloader {
     /**
      * @param version the game version
      * @param path    the full path to the jar including the file name, for example /home/dervarex/client.jar
-     * @param context the launch context
+     * @param context internal launching context
      */
     public void downloadClient(String version, Path path, @Nullable LaunchContext context)
             throws HttpException, IOException {
         downloadClient(version, path, progress -> {}, context);
     }
 
+    /**
+     * @param version the game version
+     * @param path    the full path to the jar including the file name, for example /home/dervarex/client.jar
+     * @param progressConsumer receives the number of bytes read for each chunk
+     * @param context internal launching context
+     */
     public void downloadClient(String version, Path path, Consumer<Double> progressConsumer, @Nullable LaunchContext context)
             throws HttpException, IOException {
 

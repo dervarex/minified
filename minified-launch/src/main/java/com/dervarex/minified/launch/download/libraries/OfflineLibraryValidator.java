@@ -26,6 +26,12 @@ public final class OfflineLibraryValidator {
     private OfflineLibraryValidator() {
     }
 
+    /**
+     * Validates the Libraries while the User is offline
+     * @param version minecraft version to use
+     * @param loader loader to be used for validation
+     * @param librariesDir directory where the libraries have been downloaded to
+     */
     public static void validate(String version, Loader loader, Path librariesDir) {
         List<String> problems = new ArrayList<>();
         Path cacheRoot = resolveCacheRoot(librariesDir);

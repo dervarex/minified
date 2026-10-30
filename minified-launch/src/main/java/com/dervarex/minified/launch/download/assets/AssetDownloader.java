@@ -53,6 +53,8 @@ public class AssetDownloader {
      * Downloads the assets
      * @param version the game version
      * @param assetsDir the directory the assets should be downloaded to
+     * @param progressConsumer receives the number of bytes read for each chunk
+     * @param context internal launching context
      */
     public void downloadAssets(String version, Path assetsDir, Consumer<Double> progressConsumer, LaunchContext context) {
         try {
