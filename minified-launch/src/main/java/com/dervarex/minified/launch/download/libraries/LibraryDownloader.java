@@ -67,7 +67,6 @@ public class LibraryDownloader {
 
     /**
      * Downloads the libraries.
-     *
      * @param loader the loader to use
      * @param librariesDir the directory the libraries should be downloaded to
      */
