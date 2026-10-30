@@ -1,6 +1,6 @@
 package com.dervarex.minified.launch.profile;
 
-import com.dervarex.minified.launch.exceptions.loader.UnknownLoaderTypeException;
+import com.dervarex.minified.launch.exceptions.loader.UnexpectedLoaderException;
 import com.dervarex.minified.launch.exceptions.profile.FailedToLoadProfileException;
 import com.dervarex.minified.launch.exceptions.profile.FailedToSaveProfileException;
 import com.dervarex.minified.launch.launch.LaunchConfiguration;
@@ -76,7 +76,7 @@ class ProfileFactoryTest {
         ProfileFactory.save(minimalConfiguration(new VanillaLoader("1.21.11")), profile);
         Files.writeString(profile, Files.readString(profile).replace("\"VANILLA\"", "\"LITELOADER\""));
 
-        assertThrows(UnknownLoaderTypeException.class, () -> ProfileFactory.load(profile));
+        assertThrows(UnexpectedLoaderException.class, () -> ProfileFactory.load(profile));
     }
 
     @Test

@@ -1,6 +1,6 @@
 package com.dervarex.minified.launch.profile;
 
-import com.dervarex.minified.launch.exceptions.loader.UnknownLoaderTypeException;
+import com.dervarex.minified.launch.exceptions.loader.UnexpectedLoaderException;
 import com.dervarex.minified.launch.exceptions.profile.FailedToLoadProfileException;
 import com.dervarex.minified.launch.exceptions.profile.FailedToSaveProfileException;
 import com.dervarex.minified.launch.launch.LaunchConfiguration;
@@ -172,7 +172,7 @@ public class ProfileFactory {
             }
 
             return builder.build();
-        } catch (UnknownLoaderTypeException e) {
+        } catch (UnexpectedLoaderException e) {
             throw e;
         } catch (IOException | RuntimeException e) {
             throw new FailedToLoadProfileException("Failed to load profile", e);
@@ -258,7 +258,7 @@ public class ProfileFactory {
         Function<JsonObject, Loader> loaderFactory = LOADERS.get(type);
 
         if (loaderFactory == null) {
-            throw new UnknownLoaderTypeException("Unknown loader type: " + type);
+            throw new UnexpectedLoaderException("Unknown loader type: " + type);
         }
 
         return loaderFactory.apply(loaderJson);

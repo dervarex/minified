@@ -312,12 +312,13 @@ public class Launcher {
             if (vanillaMain != null) return vanillaMain.asString();
         }
 
-        JsonValue mainClassValue = switch (loader) {
-            case VanillaLoader ignored -> versionJson.get("mainClass");
-            case FabricLoader ignored -> FabricProfileJsonLoader.loadFabricProfileJson(version, launchConfig, online).get("mainClass");
-            case QuiltLoader ignored -> QuiltProfileJsonLoader.loadQuiltProfileJson(version, launchConfig, online).get("mainClass");
-            case ForgeLoader ignored -> ForgeProfileJsonLoader.loadForgeProfileJson(version, launchConfig, online).get("mainClass");
-            case NeoforgeLoader ignored -> NeoProfileJsonLoader.loadNeoforgeProfileJson(version, launchConfig, online).get("mainClass");
+        String mainClassValue = switch (loader) {
+            case VanillaLoader ignored -> versionJson.get("mainClass").asString();
+            case FabricLoader ignored -> FabricProfileJsonLoader.loadFabricProfileJson(version, launchConfig, online).get("mainClass").asString();
+            case QuiltLoader ignored -> QuiltProfileJsonLoader.loadQuiltProfileJson(version, launchConfig, online).get("mainClass").asString();
+            case ForgeLoader ignored -> ForgeProfileJsonLoader.loadForgeProfileJson(version, launchConfig, online).get("mainClass").asString();
+            case NeoforgeLoader ignored -> NeoProfileJsonLoader.loadNeoforgeProfileJson(version, launchConfig, online).get("mainClass").asString();
+            case CustomLoader ignored -> versionJson.get("mainClass").asString();
             default -> throw new UnexpectedLoaderException("Unexpected loader: " + loader);
         };
 
@@ -327,7 +328,7 @@ public class Launcher {
             );
         }
 
-        return mainClassValue.asString();
+        return mainClassValue;
     }
 
 
