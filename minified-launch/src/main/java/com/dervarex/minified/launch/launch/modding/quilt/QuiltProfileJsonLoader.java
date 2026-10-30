@@ -1,5 +1,6 @@
 package com.dervarex.minified.launch.launch.modding.quilt;
 
+import com.dervarex.minified.launch.exceptions.loader.FailedToLoadLoaderProfileException;
 import com.dervarex.minified.launch.launch.LaunchConfiguration;
 import com.dervarex.minified.launch.launch.internal.CacheManager;
 import com.dervarex.minified.utils.json.JsonObject;
@@ -25,7 +26,7 @@ public class QuiltProfileJsonLoader {
                     try {
                         return QuiltLoaderFetcher.getProfileJson(version, loaderVersion);
                     } catch (Exception e) {
-                        throw new RuntimeException(e);
+                        throw new FailedToLoadLoaderProfileException("Failed to load the Quilt profile JSON", "QUILT", e);
                     }
                 }
         );

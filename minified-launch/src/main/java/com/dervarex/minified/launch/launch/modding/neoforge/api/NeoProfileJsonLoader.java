@@ -1,5 +1,6 @@
 package com.dervarex.minified.launch.launch.modding.neoforge.api;
 
+import com.dervarex.minified.launch.exceptions.loader.FailedToLoadLoaderProfileException;
 import com.dervarex.minified.launch.launch.internal.CacheManager;
 import com.dervarex.minified.launch.launch.LaunchConfiguration;
 import com.dervarex.minified.utils.json.JsonFile;
@@ -34,7 +35,7 @@ public class NeoProfileJsonLoader {
                         JsonFile neoVersionJson = NeoVersionJson.getVersionJson(parent, launchConfig.getLoader().loaderVersion());
                         return neoVersionJson.asObject();
                     } catch (Exception e) {
-                        throw new RuntimeException(e);
+                        throw new FailedToLoadLoaderProfileException("Failed to load the NeoForge profile JSON", "NEOFORGE", e);
                     }
                 }
         );

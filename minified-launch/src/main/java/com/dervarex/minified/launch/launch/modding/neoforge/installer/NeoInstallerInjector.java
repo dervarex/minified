@@ -1,5 +1,6 @@
 package com.dervarex.minified.launch.launch.modding.neoforge.installer;
 
+import com.dervarex.minified.launch.exceptions.loader.neoforge.FailedToRunNeoforgeInstallerException;
 import com.dervarex.minified.launch.events.loader.InstallNeoforgeEvent;
 import com.dervarex.minified.launch.exceptions.download.DownloadException;
 import com.dervarex.minified.launch.exceptions.loader.neoforge.NeoforgeInstallerReportFailureException;
@@ -169,7 +170,7 @@ public class NeoInstallerInjector {
             );
         } catch (ReflectiveOperationException | IOException e) {
             context.getEventBus().post(new InstallNeoforgeEvent(InstallNeoforgeEvent.Stage.FAILED, context.getLaunchConfiguration().getLoader().mcVersion(), context.getLaunchConfiguration().getLoader().loaderVersion()));
-            throw new RuntimeException(e);
+            throw new FailedToRunNeoforgeInstallerException(e);
         }
         context.getEventBus().post(new InstallNeoforgeEvent(InstallNeoforgeEvent.Stage.FINISHED, context.getLaunchConfiguration().getLoader().mcVersion(), context.getLaunchConfiguration().getLoader().loaderVersion()));
     }
