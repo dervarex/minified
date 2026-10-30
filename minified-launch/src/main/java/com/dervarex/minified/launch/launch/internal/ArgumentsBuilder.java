@@ -175,6 +175,7 @@ public class ArgumentsBuilder {
     ) {
         return switch (loader) {
             case VanillaLoader ignored -> null;
+            case CustomLoader ignored -> null;
             case FabricLoader ignored -> FabricProfileJsonLoader.loadFabricProfileJson(version, launchConfig, online);
             case QuiltLoader ignored -> QuiltProfileJsonLoader.loadQuiltProfileJson(version, launchConfig, online);
             case ForgeLoader ignored -> ForgeProfileJsonLoader.loadForgeProfileJson(version, launchConfig, online);

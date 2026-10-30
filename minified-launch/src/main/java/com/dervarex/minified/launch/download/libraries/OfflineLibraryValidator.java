@@ -2,6 +2,7 @@ package com.dervarex.minified.launch.download.libraries;
 
 import com.dervarex.minified.launch.exceptions.loader.UnexpectedLoaderException;
 import com.dervarex.minified.launch.launch.modding.Loader;
+import com.dervarex.minified.launch.launch.modding.custom.CustomLoader;
 import com.dervarex.minified.launch.launch.modding.fabric.FabricLoader;
 import com.dervarex.minified.launch.launch.modding.forge.ForgeLoader;
 import com.dervarex.minified.launch.launch.modding.neoforge.NeoforgeLoader;
@@ -55,23 +56,19 @@ public final class OfflineLibraryValidator {
         validateLibraries(versionLibraries, librariesDir, problems);
 
         switch (loader) {
-            case FabricLoader ignored -> {
-                Path fabricProfilePath = cacheRoot.resolve("profiles").resolve("fabric").resolve(version + ".json");
-                validateLoaderProfile(fabricProfilePath, librariesDir, problems);
-            }
-            case QuiltLoader ignored -> {
-                Path quiltProfilePath = cacheRoot.resolve("profiles").resolve("quilt").resolve(version + ".json");
-                validateLoaderProfile(quiltProfilePath, librariesDir, problems);
-            }
-            case VanillaLoader ignored -> {
-                // nothing extra here
-            }
-            case ForgeLoader ignored -> {
-                // nothing extra here
-            }
-            case NeoforgeLoader ignored -> {
-                // nothing extra here (why do I have to copy and paste this 3 times...)
-            }
+            case FabricLoader ignored ->
+                    validateLoaderProfile(cacheRoot.resolve("profiles/fabric/" + version + ".json"), librariesDir, problems);
+
+            case QuiltLoader ignored ->
+                    validateLoaderProfile(cacheRoot.resolve("profiles/quilt/" + version + ".json"), librariesDir, problems);
+
+            case CustomLoader custom ->
+                    validateCustomClasspath(custom.customClasspathEntries(), librariesDir, problems);
+
+            case VanillaLoader ignored -> { }
+            case ForgeLoader ignored -> { }
+            case NeoforgeLoader ignored -> { }
+
             default -> throw new UnexpectedLoaderException("Unexpected loader: " + loader);
         }
 
@@ -81,6 +78,26 @@ public final class OfflineLibraryValidator {
                     OfflineModeNeedsNetworkException.Reason.MISSING_LIBRARIES,
                     problems
             );
+        }
+    }
+
+    private static void validateCustomClasspath(List<String> entries, Path librariesDir, List<String> problems) {
+        Path gameDir = librariesDir.toAbsolutePath().getParent();
+
+        for (String entry : entries) {
+            try {
+                Path path = Path.of(entry);
+                if (!path.isAbsolute()) {
+                    if (gameDir == null) {
+                        problems.add("Cannot resolve relative custom classpath entry: " + entry);
+                        continue;
+                    }
+                    path = gameDir.resolve(path);
+                }
+                validateFile(path, null, "Missing custom classpath entry: " + path, problems);
+            } catch (java.nio.file.InvalidPathException e) {
+                problems.add("Invalid custom classpath entry path: " + entry);
+            }
         }
     }
 
