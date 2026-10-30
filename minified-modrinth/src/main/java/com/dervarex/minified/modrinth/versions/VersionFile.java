@@ -1,6 +1,7 @@
 package com.dervarex.minified.modrinth.versions;
 
 import com.dervarex.minified.modrinth.exceptions.ModrinthDownloadException;
+import com.dervarex.minified.modrinth.exceptions.ModrinthHashMismatchException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -93,7 +94,7 @@ public class VersionFile {
             in.transferTo(out);
         }
         if (hashName != null && !hashMatches(temp, hashName, hashes.get(hashName))) {
-            throw new ModrinthDownloadException("Hash verification failed for " + resolveFilename() + " using " + hashName);
+            throw new ModrinthHashMismatchException(resolveFilename(), hashName, hashes.get(hashName), computeHash(temp, hashName));
         }
         Files.move(temp, destination, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
         return destination;
@@ -130,12 +131,17 @@ public class VersionFile {
         if (expected == null || expected.isBlank()) {
             return true;
         }
+        String actual = computeHash(file, algorithm);
+        return actual == null || expected.equalsIgnoreCase(actual);
+    }
+
+    // null if the JVM doesn't know the algorithm
+    private static String computeHash(Path file, String algorithm) throws IOException {
         try {
             MessageDigest digest = MessageDigest.getInstance(normalizeAlgorithm(algorithm));
-            byte[] actual = digest.digest(Files.readAllBytes(file));
-            return expected.equalsIgnoreCase(toHex(actual));
+            return toHex(digest.digest(Files.readAllBytes(file)));
         } catch (NoSuchAlgorithmException ex) {
-            return true;
+            return null;
         }
     }
 

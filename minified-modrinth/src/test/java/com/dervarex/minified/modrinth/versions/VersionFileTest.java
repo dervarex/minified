@@ -1,6 +1,7 @@
 package com.dervarex.minified.modrinth.versions;
 
 import com.dervarex.minified.modrinth.exceptions.ModrinthDownloadException;
+import com.dervarex.minified.modrinth.exceptions.ModrinthHashMismatchException;
 import com.sun.net.httpserver.HttpServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -78,8 +79,12 @@ class VersionFileTest {
     }
 
     @Test
-    void leavesNothingBehindWhenTheHashIsWrong() throws IOException {
-        assertThrows(ModrinthDownloadException.class, () -> file("/mod.jar", Map.of("sha1", "0".repeat(40))).download(tempDir));
+    void leavesNothingBehindWhenTheHashIsWrong() throws Exception {
+        ModrinthHashMismatchException e = assertThrows(ModrinthHashMismatchException.class,
+                () -> file("/mod.jar", Map.of("sha1", "0".repeat(40))).download(tempDir));
+        assertEquals("sha1", e.getAlgorithm());
+        assertEquals("0".repeat(40), e.getExpectedHash());
+        assertEquals(hash("SHA-1"), e.getActualHash());
 
         try (var files = Files.list(tempDir)) {
             assertEquals(0, files.count());
