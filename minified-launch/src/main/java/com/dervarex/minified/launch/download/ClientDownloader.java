@@ -26,6 +26,7 @@ import java.util.function.Consumer;
 public class ClientDownloader {
 
     /**
+     * Downloads the Client JAR, which is the actual Game with everything in it.
      * @param version the game version
      * @param path    the full path to the jar including the file name, for example /home/dervarex/client.jar
      * @param context internal launching context
@@ -36,6 +37,7 @@ public class ClientDownloader {
     }
 
     /**
+     * Downloads the Client JAR, which is the actual Game with everything in it.
      * @param version the game version
      * @param path    the full path to the jar including the file name, for example /home/dervarex/client.jar
      * @param progressConsumer receives the number of bytes read for each chunk
