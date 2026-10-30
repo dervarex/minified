@@ -6,6 +6,7 @@ import com.dervarex.minified.utils.nbt.NbtEquals;
 import com.dervarex.minified.utils.nbt.Parser;
 import com.dervarex.minified.utils.nbt.Writer;
 import com.dervarex.minified.utils.nbt.tag.NbtCompound;
+import com.dervarex.minified.worlds.exceptions.InvalidWorldException;
 import com.dervarex.minified.worlds.save.data.CustomBossEvents;
 import com.dervarex.minified.worlds.save.data.GameRules;
 import com.dervarex.minified.worlds.save.data.RandomSequences;
@@ -77,13 +78,13 @@ public class WorldSave {
         Path dataDirectory = worldDirectory.resolve("data").resolve("minecraft");
 
         if (!Files.isDirectory(worldDirectory)) {
-            throw new RuntimeException("World directory does not exist or is not a directory: " + worldDirectory);
+            throw new InvalidWorldException("World directory does not exist or is not a directory: " + worldDirectory, worldDirectory);
         }
 
         Path levelDatPath = worldDirectory.resolve("level.dat");
 
         if (!Files.exists(levelDatPath)) {
-            throw new RuntimeException("World directory does not contain level.dat file: " + worldDirectory);
+            throw new InvalidWorldException("World directory does not contain level.dat file: " + worldDirectory, worldDirectory);
         }
 
         try {
