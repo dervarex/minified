@@ -1,11 +1,13 @@
 package com.dervarex.minified.auth;
 
+import com.dervarex.minified.auth.exceptions.AuthInitException;
 import com.dervarex.minified.auth.user.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.api.Tag;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -14,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AuthTest {
@@ -52,6 +55,13 @@ class AuthTest {
     @Test
     void loginWithSavedSession_returnsNullWithoutSession() {
         assertNull(AuthManager.loginWithSavedSession());
+    }
+
+    @Test
+    void init_throwsWhenBaseDirectoryIsAFile() throws Exception {
+        Path file = Files.createFile(tempDir.resolve("not-a-directory"));
+        AuthInitException e = assertThrows(AuthInitException.class, () -> AuthManager.init(file));
+        assertNotNull(e.getCause());
     }
 
     @Test
