@@ -5,9 +5,14 @@ import com.dervarex.minified.java.events.EnsureJavaVersionEvent;
 import com.dervarex.minified.java.events.download.JavaArchiveDownloadEvent;
 import com.dervarex.minified.java.events.extract.ArchiveType;
 import com.dervarex.minified.java.events.extract.ExtractArchiveEvent;
+import com.dervarex.minified.java.exceptions.NoJavaRuntimeAvailableException;
+import com.dervarex.minified.java.exceptions.JavaRuntimeInstallException;
+import com.dervarex.minified.java.exceptions.JavaRuntimeDownloadException;
 import com.dervarex.minified.utils.ApiEndpoints;
+import com.dervarex.minified.utils.exceptions.ChecksumMismatchException;
 import com.dervarex.minified.utils.exceptions.HttpException;
 import com.dervarex.minified.utils.exceptions.OfflineModeNeedsNetworkException;
+import com.dervarex.minified.utils.exceptions.UnsafeArchiveEntryException;
 import com.dervarex.minified.utils.http.HttpUtil;
 import com.dervarex.minified.utils.json.JsonArray;
 import com.dervarex.minified.utils.json.JsonFile;
@@ -15,6 +20,7 @@ import com.dervarex.minified.utils.json.JsonObject;
 import com.dervarex.minified.utils.json.JsonValue;
 import org.apiguardian.api.API;
 
+import java.io.EOFException;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -322,7 +328,7 @@ public final class JavaManager {
 
                     Path installedExecutable = locateExecutable(installRoot);
                     if (!Files.exists(installedExecutable)) {
-                        throw new IOException(
+                        throw new JavaRuntimeInstallException(
                                 "Downloaded Java runtime did not contain a java executable: " + installRoot
                         );
                     }
@@ -457,12 +463,7 @@ public final class JavaManager {
             }
         }
 
-        throw new IOException(
-                "No supported Java runtime asset found for version "
-                        + requiredMajorVersion
-                        + " on "
-                        + platformId()
-        );
+        throw new NoJavaRuntimeAvailableException(requiredMajorVersion, platformId());
     }
 
     private static JsonArray loadAdoptiumAssets(int majorVersion, String imageType) {
@@ -618,10 +619,15 @@ public final class JavaManager {
             response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofInputStream());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new IOException("Interrupted while downloading Java runtime", e);
+            throw new JavaRuntimeDownloadException("Interrupted while downloading Java runtime", url, -1, e);
         }
         if (response.statusCode() != 200) {
-            throw new IOException("Failed to download Java runtime: HTTP " + response.statusCode() + " from " + url);
+            throw new JavaRuntimeDownloadException(
+                    "Failed to download Java runtime: HTTP " + response.statusCode() + " from " + url,
+                    url,
+                    response.statusCode(),
+                    null
+            );
         }
 
         long totalBytes = response.headers().firstValueAsLong("Content-Length").orElse(-1L);
@@ -655,8 +661,7 @@ public final class JavaManager {
 
             String actualChecksum = bytesToHex(digest.digest());
             if (!actualChecksum.equalsIgnoreCase(expectedChecksum)) {
-                throw new IOException("Checksum mismatch for Java runtime download. Expected "
-                        + expectedChecksum + " but got " + actualChecksum);
+                throw new ChecksumMismatchException(url, expectedChecksum, actualChecksum);
             }
             Files.move(tempFile, archive, StandardCopyOption.REPLACE_EXISTING);
         } catch (Exception e) {
@@ -667,7 +672,7 @@ public final class JavaManager {
             if (e instanceof IOException ioException) {
                 throw ioException;
             }
-            throw new IOException("Failed to download Java runtime", e);
+            throw new JavaRuntimeDownloadException("Failed to download Java runtime", url, -1, e);
         }
     }
 
@@ -680,7 +685,7 @@ public final class JavaManager {
             extractTarGz(archive, destination);
             return;
         }
-        throw new IOException("Unsupported Java runtime archive format: " + packageName);
+        throw new JavaRuntimeInstallException("Unsupported Java runtime archive format: " + packageName);
     }
 
     private static void extractZip(Path archive, Path destination) throws IOException {
@@ -941,7 +946,7 @@ public final class JavaManager {
     private static Path resolveExtractionTarget(Path destination, String entryName) throws IOException {
         Path target = destination.resolve(entryName).normalize();
         if (!target.startsWith(destination.normalize())) {
-            throw new IOException("Blocked path traversal entry in archive: " + entryName);
+            throw new UnsafeArchiveEntryException(entryName);
         }
         return target;
     }
@@ -1012,7 +1017,7 @@ public final class JavaManager {
         while (remaining > 0) {
             int read = inputStream.read(buffer, 0, (int) Math.min(buffer.length, remaining));
             if (read == -1) {
-                throw new IOException("Unexpected end of tar archive");
+                throw new EOFException("Unexpected end of tar archive");
             }
             outputStream.write(buffer, 0, read);
             remaining -= read;

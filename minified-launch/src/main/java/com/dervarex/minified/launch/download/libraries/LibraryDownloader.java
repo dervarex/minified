@@ -1,5 +1,6 @@
 package com.dervarex.minified.launch.download.libraries;
 
+import com.dervarex.minified.utils.exceptions.UnsafeArchiveEntryException;
 import com.dervarex.minified.launch.events.download.libraries.DownloadLibrariesEvent;
 import com.dervarex.minified.launch.exceptions.download.*;
 import com.dervarex.minified.launch.exceptions.loader.UnexpectedLoaderException;
@@ -540,7 +541,7 @@ public class LibraryDownloader {
     private Path resolveExtractionTarget(Path destination, String entryName) throws IOException {
         Path target = destination.resolve(entryName).normalize();
         if (!target.startsWith(destination.normalize())) {
-            throw new IOException("Blocked path traversal entry in archive: " + entryName);
+            throw new UnsafeArchiveEntryException(entryName);
         }
         return target;
     }
