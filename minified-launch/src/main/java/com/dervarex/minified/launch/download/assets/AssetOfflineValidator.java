@@ -16,6 +16,11 @@ public final class AssetOfflineValidator {
     private AssetOfflineValidator() {
     }
 
+    /**
+     * Validates the Assets while the User is offline
+     * @param version minecraft version to use
+     * @param assetsDir directory where the assets have been downloaded to
+     */
     public static void validate(String version, Path assetsDir) {
         List<String> problems = new ArrayList<>();
         Path cacheRoot = resolveCacheRoot(assetsDir);

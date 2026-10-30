@@ -58,10 +58,18 @@ public class LibraryDownloader {
             .connectTimeout(Duration.ofSeconds(10))
             .build();
 
+    /**
+     * @param downloadThreads the amount of threads to use for downloading
+     */
     public LibraryDownloader(int downloadThreads) {
         this.pool = Executors.newFixedThreadPool(downloadThreads);
     }
 
+    /**
+     * Downloads the libraries.
+     * @param loader the loader to use
+     * @param librariesDir the directory the libraries should be downloaded to
+     */
     public void downloadLibraries(Loader loader, Path librariesDir) {
         downloadLibraries(loader, librariesDir, progress -> {}, null);
     }
@@ -71,6 +79,8 @@ public class LibraryDownloader {
      *
      * @param loader the loader to use
      * @param librariesDir the directory the libraries should be downloaded to
+     * @param progressConsumer receives the number of bytes read for each chunk
+     * @param context internal launching context
      */
     public void downloadLibraries(Loader loader, Path librariesDir, Consumer<Double> progressConsumer, LaunchContext context) {
         downloadLibraries(loader, librariesDir, resolveNativesDirectory(librariesDir), progressConsumer, context);
@@ -82,6 +92,8 @@ public class LibraryDownloader {
      * @param loader the loader to use
      * @param librariesDir the directory the libraries should be downloaded to
      * @param nativesDir the directory native libraries should be extracted to, has to match the directory the game loads them from
+     * @param progressConsumer receives the number of bytes read for each chunk
+     * @param context internal launching context
      * @throws LibraryDownloadException if a library could not be downloaded or extracted
      */
     public void downloadLibraries(Loader loader, Path librariesDir, Path nativesDir, Consumer<Double> progressConsumer, LaunchContext context) {
