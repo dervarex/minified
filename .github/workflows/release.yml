@@ -50,3 +50,50 @@ jobs:
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_KEY_PASSWORD }}
+
+  # Makes the GitHub release draft once Maven Central has it. Intro will be manually written, same goes for Releasing it
+  draft-release:
+    name: Draft GitHub release
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create draft with generated notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "release $TAG already exists, we'll leave that alone, exiting"
+            exit 0
+          fi
+          PREVIOUS="$({ git tag --list 'v*'; echo "$TAG"; } | sort -uV | grep -Fx -B1 "$TAG" | head -n1)"
+          [ "$PREVIOUS" = "$TAG" ] && PREVIOUS=""
+          ARGS=(-f tag_name="$TAG")
+          [ -n "$PREVIOUS" ] && ARGS+=(-f previous_tag_name="$PREVIOUS")
+          NOTES="$(gh api -X POST "repos/$GITHUB_REPOSITORY/releases/generate-notes" "${ARGS[@]}" -q .body)"
+
+          {
+            echo "# Minified $TAG"
+            echo
+            echo "<!-- intro stuff here -->"
+            echo
+            echo "$NOTES"
+            echo
+            echo "## Installation"
+            echo '```gradle'
+            echo 'repositories {'
+            echo '    mavenCentral()'
+            echo '}'
+            echo 'dependencies {'
+            echo "    implementation 'io.github.dervarex.minified:minified-launch:${TAG#v}'"
+            echo '}'
+            echo '```'
+          } > notes.md
+
+          gh release create "$TAG" --draft --verify-tag --title "Minified $TAG" --notes-file notes.md
