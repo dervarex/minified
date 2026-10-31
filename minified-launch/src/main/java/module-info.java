@@ -64,8 +64,11 @@ module minified.minified.launch.main {
     exports com.dervarex.minified.launch.profile;
     exports com.dervarex.minified.launch.exceptions.cache;
     exports com.dervarex.minified.launch.exceptions.download;
+    exports com.dervarex.minified.launch.exceptions.launch;
     exports com.dervarex.minified.launch.exceptions.libraries;
     exports com.dervarex.minified.launch.exceptions.loader;
+    exports com.dervarex.minified.launch.exceptions.loader.forge;
+    exports com.dervarex.minified.launch.exceptions.loader.neoforge;
     exports com.dervarex.minified.launch.exceptions.profile;
     exports com.dervarex.minified.launch.exceptions.version;
     exports com.dervarex.minified.launch.events.control;
