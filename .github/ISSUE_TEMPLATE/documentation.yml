@@ -1,0 +1,32 @@
+name: Documentation
+description: Something that is wrong with the Docs
+labels: ["documentation", "needs triage"]
+projects: ["dervarex/3"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Something's wrong with the Docs? Tell us here
+
+  - type: textarea
+    id: whats-wrong
+    attributes:
+      label: What's wrong?
+      description: What is wrong with the Documentation
+      placeholder: The Example Code is outdated.
+    validations:
+      required: true
+
+  - type: textarea
+    id: where
+    attributes:
+      label: Link to the Documentation Page that's wrong
+      placeholder: https://dervarex.github.io/minified/3.3.0/
+    validations:
+      required: true
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?
+      description: Anything else you want to add, like a Suggestion
