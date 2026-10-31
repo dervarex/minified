@@ -1,5 +1,6 @@
 package com.dervarex.minified.utils.nbt;
 
+import com.dervarex.minified.utils.exceptions.NbtFormatException;
 import com.dervarex.minified.utils.nbt.tag.*;
 
 import java.io.DataOutputStream;
@@ -49,7 +50,7 @@ public class NbtWriter {
                 out.writeInt(t.value().length);
                 for (long v : t.value()) out.writeLong(v);
             }
-            case NbtEnd ignored -> throw new IOException("Cannot write a TAG_End as a value");
+            case NbtEnd ignored -> throw new NbtFormatException("Cannot write a TAG_End as a value");
         }
     }
 }

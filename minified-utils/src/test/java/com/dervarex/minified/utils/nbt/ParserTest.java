@@ -1,5 +1,6 @@
 package com.dervarex.minified.utils.nbt;
 
+import com.dervarex.minified.utils.exceptions.NbtFormatException;
 import com.dervarex.minified.utils.nbt.tag.NbtCompound;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -37,7 +38,7 @@ class ParserTest {
     void rootHasToBeACompound() throws IOException {
         Path file = Files.write(tempDir.resolve("string.nbt"), new byte[]{8, 0, 0, 0, 0}); // not a compound
 
-        assertThrows(IOException.class, () -> Parser.readFile(file.toFile()));
+        assertThrows(NbtFormatException.class, () -> Parser.readFile(file.toFile()));
     }
 
     @Test
@@ -45,7 +46,7 @@ class ParserTest {
         // compound "" containing a tag of type 99 called "?", we don't know what this is so it should reject it
         Path file = Files.write(tempDir.resolve("future.nbt"), new byte[]{10, 0, 0, 99, 0, 1, '?'});
 
-        IOException e = assertThrows(IOException.class, () -> Parser.readFile(file.toFile()));
+        NbtFormatException e = assertThrows(NbtFormatException.class, () -> Parser.readFile(file.toFile()));
         assertEquals("Unknown Tag Type: 99", e.getMessage());
     }
 }
