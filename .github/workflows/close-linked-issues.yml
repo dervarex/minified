@@ -1,0 +1,80 @@
+name: Close linked issues
+
+# When a PR is merged, close every issue it lists under "Related issue(s)"
+on:
+  pull_request_target:
+    types: [closed]
+
+permissions:
+  issues: write
+  pull-requests: read
+
+jobs:
+  close:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const { owner, repo } = context.repo;
+            
+            const body = (pr.body || '').replace(/<!--[\s\S]*?-->/g, '');
+            const lines = body.split(/\r?\n/);
+            const start = lines.findIndex(l => /^#{1,6}\s*related issues?(\s*\(s\))?\s*$/i.test(l.trim()));
+            if (start === -1) {
+              core.info('No "Related issue(s)" section, nothing to close.');
+              return;
+            }
+            const section = [];
+            for (const line of lines.slice(start + 1)) {
+              if (/^#{1,6}\s/.test(line.trim())) break;
+              section.push(line);
+            }
+
+            const refs = new Set();
+            for (const line of section) {
+              // "part of #12" links the issue without closing it
+              if (/\bpart(ly|ially)?\s+of\b/i.test(line) || /\bpartial(ly)?\b/i.test(line)) continue;
+              for (const m of line.matchAll(/(?<![\w/&])#(\d+)\b/g)) refs.add(Number(m[1]));
+              for (const m of line.matchAll(new RegExp(String.raw`https://github\.com/${owner}/${repo}/issues/(\d+)`, 'gi'))) {
+                refs.add(Number(m[1]));
+              }
+            }
+            if (refs.size === 0) {
+              core.info('"Related issue(s)" lists no issues, nothing to close');
+              return;
+            }
+
+            for (const number of refs) {
+              let issue;
+              try {
+                ({ data: issue } = await github.rest.issues.get({ owner, repo, issue_number: number }));
+              } catch (e) {
+                core.warning(`#${number}: could not fetch (${e.status ?? e.message}), skipping.`);
+                continue;
+              }
+              if (issue.pull_request) {
+                core.info(`#${number} is a pull request, skipping.`);
+                continue;
+              }
+              if (issue.state === 'closed') {
+                core.info(`#${number} is already closed, skipping.`);
+                continue;
+              }
+
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: number,
+                body: [
+                  `Closed by #${pr.number} (${pr.html_url}), which was merged into \`${pr.base.ref}\` and listed this issue under *Related issue(s)*.`,
+                  '',
+                  'The change ships with the next release. If this isn\'t actually resolved, please reopen the issue and tell us the Reason.',
+                ].join('\n'),
+              });
+              await github.rest.issues.update({
+                owner, repo, issue_number: number,
+                state: 'closed', state_reason: 'completed',
+              });
+              core.info(`Closed #${number}.`);
+            }
