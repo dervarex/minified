@@ -35,6 +35,7 @@ jobs:
       has_jobs: ${{ steps.build.outputs.has_jobs }}
       config_changed: ${{ steps.discover.outputs.changed }}
       config_base: ${{ steps.discover.outputs.base }}
+      discover_outcome: ${{ steps.discover.outcome }}
     steps:
       - uses: actions/checkout@v4
 
@@ -136,7 +137,14 @@ jobs:
             -Dmatrix.mcVersion="$MINIFIED_TEST_MC_VERSION" \
             -Dmatrix.headless="$MINIFIED_TEST_HEADLESS" \
             -Dmatrix.timeoutSeconds="$MINIFIED_TEST_TIMEOUT_SECONDS" \
-            -Dmatrix.resultFile="$PWD/matrix-results/${{ matrix.loader }}-${{ matrix.mc_version }}.json"
+            -Dmatrix.resultFile="$PWD/matrix-results/${{ matrix.loader }}-${{ matrix.mc_version }}.json" \
+            2>&1 | tee test-output.log
+
+      - name: Keep the output of a failed test
+        if: failure()
+        run: |
+          mkdir -p matrix-results
+          if [ -f test-output.log ]; then cp test-output.log "matrix-results/${{ matrix.loader }}-${{ matrix.mc_version }}.log"; fi
 
       - name: Upload result
         if: always()
@@ -154,7 +162,7 @@ jobs:
     name: Aggregate SUPPORTED_VERSIONS.svg
     needs: [prepare, matrix]
     if: >-
-      always() && github.ref == 'refs/heads/master' && needs.prepare.result == 'success'
+      !cancelled() && github.ref == 'refs/heads/master' && needs.prepare.result == 'success'
       && (needs.prepare.outputs.has_jobs == 'true' || needs.prepare.outputs.config_changed == 'true')
     runs-on: ubuntu-latest
     permissions:
@@ -194,9 +202,15 @@ jobs:
           merge-multiple: true
 
       # results.json keeps the results of earlier runs, so runs of only some loaders/versions don't lose the others
+      # jobs that ended without a result (failed setup step, timeout) get marked as failed too
       - name: Update results and SUPPORTED_VERSIONS.svg
+        env:
+          JOBS: ${{ needs.prepare.outputs.matrix }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          python3 scripts/version-matrix/matrix.py merge matrix-results
+          echo "$JOBS" > jobs.json
+          python3 scripts/version-matrix/matrix.py merge matrix-results --jobs jobs.json --run-url "$RUN_URL"
+          rm jobs.json
           python3 scripts/version-matrix/matrix.py render -o SUPPORTED_VERSIONS.svg
 
       - name: Commit if changed
@@ -215,3 +229,32 @@ jobs:
       - name: Clean matrix-results
         if: always()
         run: rm -rf matrix-results
+
+  # If there's a failure, we'll create an Issue with the details explaining what failed
+  report:
+    name: Report failures
+    needs: [prepare, matrix, aggregate]
+    if: ${{ !cancelled() && github.ref == 'refs/heads/master' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: master
+
+      - name: Download test output
+        if: needs.prepare.outputs.has_jobs == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          path: matrix-results
+          pattern: matrix-result-*
+          merge-multiple: true
+
+      - name: Open, update or close the issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DISCOVER_OUTCOME: ${{ needs.prepare.outputs.discover_outcome }}
+        run: python3 scripts/version-matrix/report.py --logs matrix-results --discover-outcome "$DISCOVER_OUTCOME"

@@ -2,7 +2,7 @@
 """
 matrix.py jobs     [--loaders a,b] [--versions x,y] [--pairs FILE]   print the GitHub Actions job matrix as JSON
 matrix.py discover [--dry-run] [--pairs-out FILE]               add new Minecraft releases and new loader builds to versions.toml
-matrix.py merge    [DIR]                                          merge test result files into results.json
+matrix.py merge    [DIR] [--jobs FILE] [--run-url URL]            merge test result files into results.json
 matrix.py render   [-o FILE]                                      draw results.json as SVG
 """
 import argparse
@@ -10,6 +10,7 @@ import json
 import re
 import sys
 import time
+from datetime import datetime, timezone
 import tomllib
 import urllib.error
 import urllib.request
@@ -135,6 +136,8 @@ def save_results(results, config, path=RESULTS):
 
 # Commands
 
+NO_RESULT_MESSAGE = "The job ended before the test wrote a result (failed setup step or timeout)"
+
 def split(arg):
     return [s.strip() for s in (arg or "").split(",") if s.strip()]
 
@@ -165,25 +168,45 @@ def cmd_merge(args):
     if not files:
         print(f"no results in {args.dir}, nothing to merge")
 
-    changed = 0
+    # jobs of this run that ended before the test wrote its result (setup step failed, timeout) count as failed
+    reported = set()
     for file in files:
         try:
             r = json.loads(file.read_text())
+            reported.add((r["loader"], r["mcVersion"]))
+        except (json.JSONDecodeError, KeyError, TypeError):
+            pass
+    no_result = []
+    if args.jobs:
+        for job in json.loads(Path(args.jobs).read_text())["include"]:
+            key = (job["loader"], job["mc_version"])
+            if key in expected and key not in reported:
+                no_result.append({"loader": key[0], "mcVersion": key[1], "status": "fail",
+                                  "message": NO_RESULT_MESSAGE, "timestamp": datetime.now(timezone.utc).isoformat()})
+
+    changed = 0
+    for file_name, r in [*((f.name, f) for f in files), *((f"{j['loader']} {j['mcVersion']}", j) for j in no_result)]:
+        try:
+            if isinstance(r, Path):
+                r = json.loads(r.read_text())
             key = (r["loader"], r["mcVersion"])
             status = r["status"]
         except (json.JSONDecodeError, KeyError, TypeError) as e:
-            print(f"skipping {file.name}: {e!r}")
+            print(f"skipping {file_name}: {e!r}")
             continue
         if key not in expected:
-            print(f"skipping {file.name}: {key[0]} {key[1]} isn't in {CONFIG.name}")
+            print(f"skipping {file_name}: {key[0]} {key[1]} isn't in {CONFIG.name}")
             continue
         if status not in STATUSES:
-            print(f"skipping {file.name}: unknown status {status!r}")
+            print(f"skipping {file_name}: unknown status {status!r}")
             continue
         old = results.get(key)
         if old and old["status"] == status and old.get("message") == r.get("message"):
             continue
         results[key] = {k: r.get(k, "") for k in ("loader", "mcVersion", "status", "message", "timestamp")}
+        if args.run_url:
+            # the run the current status started in, the issue report links its logs
+            results[key]["run"] = args.run_url
         changed += 1
 
     for key in [k for k in results if k not in expected]:
@@ -563,6 +586,8 @@ def main():
     merge = commands.add_parser("merge", help="merge test result files into results.json")
     merge.add_argument("dir", nargs="?", default=ROOT / "minified-launch/build/matrix-results",
                        help="folder with the result files of VersionSupportTest (default: its local output folder)")
+    merge.add_argument("--jobs", help="the job matrix JSON of the run, jobs without a result file count as failed")
+    merge.add_argument("--run-url", help="stored with every result that changed")
     merge.set_defaults(run=cmd_merge)
 
     render_ = commands.add_parser("render", help="draw results.json as SVG")
