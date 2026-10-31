@@ -232,7 +232,7 @@ When integrating an API:
 - Avoid unnecessary requests; cache where it is safe to do so.
 - Respect the rate limits and terms of the service you are calling.
 
-Just to mention it here, we've got a great `HttpException`, you can that one to save a lot of work.
+Just to mention it here, we've got a great `HttpException`, you can use that one to save a lot of work.
 
 ---
 
