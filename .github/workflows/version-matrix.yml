@@ -9,8 +9,18 @@ on:
       mc_versions:
         description: 'Comma separated MC versions (empty = all)'
         default: ''
+      discover:
+        description: 'Check for new Minecraft releases and loader builds first'
+        type: boolean
+        default: true
+      only_new:
+        description: 'Only test what discover found (ignores the filters above)'
+        type: boolean
+        default: false
+  # every day: look for new Minecraft releases and loader builds and test those
+  # sunday: test everything
   schedule:
-    - cron: '0 3 * * 0'
+    - cron: '0 3 * * *'
 
 concurrency:
   group: version-matrix
@@ -22,19 +32,64 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.build.outputs.matrix }}
+      has_jobs: ${{ steps.build.outputs.has_jobs }}
+      config_changed: ${{ steps.discover.outputs.changed }}
+      config_base: ${{ steps.discover.outputs.base }}
     steps:
       - uses: actions/checkout@v4
+
+      # New Minecraft releases get written into versions.toml
+      - id: discover
+        if: github.event_name == 'schedule' || inputs.discover
+        continue-on-error: true
+        run: |
+          CONFIG=scripts/version-matrix/versions.toml
+          echo "base=$(git hash-object "$CONFIG")" >> "$GITHUB_OUTPUT"
+          if ! python3 scripts/version-matrix/matrix.py discover --pairs-out new-pairs.json > discover.log 2>&1; then
+            cat discover.log
+            git checkout -- "$CONFIG"
+            rm -f new-pairs.json
+            echo "::warning::Looking for new versions failed, see that discover step"
+            exit 1
+          fi
+          cat discover.log
+          { echo '### New versions'; echo '```'; cat discover.log; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          if git diff --quiet -- "$CONFIG"; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload versions.toml
+        if: steps.discover.outputs.changed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: versions-toml
+          path: scripts/version-matrix/versions.toml
+
       - id: build
         env:
-          INPUT_LOADERS: ${{ github.event.inputs.loaders }}
-          INPUT_MC_VERSIONS: ${{ github.event.inputs.mc_versions }}
+          INPUT_LOADERS: ${{ inputs.loaders }}
+          INPUT_MC_VERSIONS: ${{ inputs.mc_versions }}
+          ONLY_NEW: ${{ (github.event_name == 'schedule' || inputs.only_new) && 'true' || 'false' }}
         run: |
-          MATRIX=$(python3 scripts/version-matrix/matrix.py jobs --loaders "$INPUT_LOADERS" --versions "$INPUT_MC_VERSIONS")
+          [ -f new-pairs.json ] || echo "[]" > new-pairs.json
+          if [ "$ONLY_NEW" = true ] && { [ "${{ github.event_name }}" != schedule ] || [ "$(date -u +%u)" != 7 ]; }; then
+            MATRIX=$(python3 scripts/version-matrix/matrix.py jobs --pairs new-pairs.json --allow-empty)
+          else
+            MATRIX=$(python3 scripts/version-matrix/matrix.py jobs --loaders "$INPUT_LOADERS" --versions "$INPUT_MC_VERSIONS")
+          fi
           echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
+          if [ "$MATRIX" = '{"include":[]}' ]; then
+            echo "has_jobs=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_jobs=true" >> "$GITHUB_OUTPUT"
+          fi
 
   matrix:
     name: ${{ matrix.loader }} ${{ matrix.mc_version }}
     needs: prepare
+    if: needs.prepare.outputs.has_jobs == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
@@ -97,8 +152,10 @@ jobs:
 
   aggregate:
     name: Aggregate SUPPORTED_VERSIONS.svg
-    needs: matrix
-    if: always() && github.ref == 'refs/heads/master'
+    needs: [prepare, matrix]
+    if: >-
+      always() && github.ref == 'refs/heads/master' && needs.prepare.result == 'success'
+      && (needs.prepare.outputs.has_jobs == 'true' || needs.prepare.outputs.config_changed == 'true')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -107,7 +164,29 @@ jobs:
         with:
           ref: master
 
+      # only if nobody changed versions.toml on master while the matrix ran
+      - name: Download versions.toml
+        if: needs.prepare.outputs.config_changed == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: versions-toml
+          path: discovered
+
+      - name: Take over versions.toml
+        if: needs.prepare.outputs.config_changed == 'true'
+        env:
+          BASE: ${{ needs.prepare.outputs.config_base }}
+        run: |
+          CONFIG=scripts/version-matrix/versions.toml
+          if [ "$(git hash-object "$CONFIG")" = "$BASE" ]; then
+            cp discovered/versions.toml "$CONFIG"
+          else
+            echo "::warning::$CONFIG changed on master during this run, not taking over the discovered versions"
+          fi
+          rm -rf discovered
+
       - name: Download all matrix results
+        if: needs.prepare.outputs.has_jobs == 'true'
         uses: actions/download-artifact@v4
         with:
           path: matrix-results
@@ -124,9 +203,13 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add SUPPORTED_VERSIONS.svg scripts/version-matrix/results.json
+          git add SUPPORTED_VERSIONS.svg scripts/version-matrix/results.json scripts/version-matrix/versions.toml
           git diff --cached --quiet && echo "no changes" && exit 0
-          git commit -m "update SUPPORTED_VERSIONS.svg"
+          if git diff --cached --quiet -- scripts/version-matrix/versions.toml; then
+            git commit -m "update SUPPORTED_VERSIONS.svg"
+          else
+            git commit -m "add new Minecraft versions to the version matrix"
+          fi
           git push
 
       - name: Clean matrix-results
