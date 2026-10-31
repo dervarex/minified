@@ -3,6 +3,7 @@ package com.dervarex.minified.worlds.dimension;
 import com.dervarex.minified.utils.nbt.Writer;
 import com.dervarex.minified.utils.nbt.tag.NbtCompound;
 import com.dervarex.minified.utils.nbt.tag.NbtList;
+import com.dervarex.minified.worlds.exceptions.FailedToLoadWorldException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -48,5 +49,17 @@ class EndTest {
         assertTrue(end.getEnderDragonFight().isPresent());
         assertTrue(end.getEnderDragonFight().get().isDragonKilled());
         assertEquals(3953, end.getEnderDragonFight().get().getDataVersion());
+    }
+
+    @Test
+    void testBrokenDragonFightFileFails(@TempDir Path worldDir) throws IOException {
+        Path fightDir = worldDir.resolve("dimensions").resolve("minecraft").resolve("the_end")
+                .resolve("data").resolve("minecraft");
+        Files.createDirectories(fightDir);
+        Path fightFile = Files.writeString(fightDir.resolve("ender_dragon_fight.dat"), "not nbt");
+
+        FailedToLoadWorldException e = assertThrows(FailedToLoadWorldException.class, () -> new End(worldDir.toFile()));
+        assertEquals(fightFile, e.getPath());
+        assertInstanceOf(IOException.class, e.getCause());
     }
 }

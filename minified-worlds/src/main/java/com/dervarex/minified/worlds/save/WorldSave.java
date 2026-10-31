@@ -6,6 +6,7 @@ import com.dervarex.minified.utils.nbt.NbtEquals;
 import com.dervarex.minified.utils.nbt.Parser;
 import com.dervarex.minified.utils.nbt.Writer;
 import com.dervarex.minified.utils.nbt.tag.NbtCompound;
+import com.dervarex.minified.worlds.exceptions.FailedToLoadWorldException;
 import com.dervarex.minified.worlds.exceptions.InvalidWorldException;
 import com.dervarex.minified.worlds.save.data.CustomBossEvents;
 import com.dervarex.minified.worlds.save.data.GameRules;
@@ -103,7 +104,7 @@ public class WorldSave {
             this.players = readPlayers(worldDirectory);
             this.lock = new SessionLock(worldDirectory.resolve("session.lock"));
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new FailedToLoadWorldException("Failed to load the world in " + worldDirectory, worldDirectory, e);
         }
     }
 

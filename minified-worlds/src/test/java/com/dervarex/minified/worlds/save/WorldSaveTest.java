@@ -6,6 +6,7 @@ import com.dervarex.minified.utils.nbt.Parser;
 import com.dervarex.minified.utils.nbt.Writer;
 import com.dervarex.minified.utils.nbt.tag.NbtCompound;
 import com.dervarex.minified.utils.nbt.tag.NbtList;
+import com.dervarex.minified.worlds.exceptions.FailedToLoadWorldException;
 import com.dervarex.minified.worlds.exceptions.InvalidWorldException;
 import com.dervarex.minified.worlds.save.data.GameRules;
 import com.dervarex.minified.worlds.save.level.Difficulty;
@@ -57,6 +58,15 @@ class WorldSaveTest {
     void testInitWithMissingLevelDatFails(@TempDir Path dir) throws IOException {
         Path worldDir = Files.createDirectories(dir.resolve("world"));
         assertThrows(InvalidWorldException.class, () -> new WorldSave(worldDir));
+    }
+
+    @Test
+    void testInitWithBrokenLevelDatFails(@TempDir Path dir) throws IOException {
+        Path worldDir = Files.createDirectories(dir.resolve("world"));
+        Files.writeString(worldDir.resolve("level.dat"), "not nbt");
+
+        FailedToLoadWorldException e = assertThrows(FailedToLoadWorldException.class, () -> new WorldSave(worldDir));
+        assertEquals(worldDir, e.getPath());
     }
 
     @Test

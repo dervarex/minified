@@ -1,5 +1,6 @@
 package com.dervarex.minified.worlds.save;
 
+import com.dervarex.minified.worlds.exceptions.WorldLockedException;
 import lombok.Getter;
 
 import java.io.Closeable;
@@ -42,7 +43,8 @@ public class SessionLock {
      * Every write in minified-worlds takes it anyway, take it yourself if you keep a world open for longer (an editor, say).
      * Taking it twice is fine. Disk I/O, creates session.lock if it's missing
      * @param worldDirectory the folder with level.dat in it
-     * @throws IOException if Minecraft (or something else) has the world open
+     * @throws WorldLockedException if Minecraft (or something else) has the world open
+     * @throws IOException if the lock file can't be opened
      */
     public static Handle acquire(Path worldDirectory) throws IOException {
         Path file = worldDirectory.toAbsolutePath().normalize().resolve("session.lock");
@@ -53,13 +55,16 @@ public class SessionLock {
                 FileLock lock;
                 try {
                     lock = channel.tryLock();
-                } catch (OverlappingFileLockException | IOException e) {
+                } catch (OverlappingFileLockException e) {
                     channel.close();
-                    throw e instanceof IOException io ? io : new IOException(file + " is already locked by this program", e);
+                    throw new WorldLockedException(file + " is already locked by this program", file, e);
+                } catch (IOException e) {
+                    channel.close();
+                    throw e;
                 }
                 if (lock == null) {
                     channel.close();
-                    throw new IOException("The world is open somewhere else, probably in Minecraft (" + file + " is locked)");
+                    throw new WorldLockedException("The world is open somewhere else, probably in Minecraft (" + file + " is locked)", file, null);
                 }
                 held = new Held(channel, lock);
                 HELD.put(file, held);
