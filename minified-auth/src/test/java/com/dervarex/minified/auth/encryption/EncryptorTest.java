@@ -10,6 +10,7 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.util.Base64;
 
@@ -258,7 +259,7 @@ class EncryptorTest {
         SecretKey key = Encryptor.loadOrCreateMasterKey(keyFile, eventBus);
         Files.write(sessionFile, Base64.getEncoder().encode("too short".getBytes()));
 
-        assertThrows(Exception.class,
+        assertThrows(GeneralSecurityException.class,
                 () -> Encryptor.loadEncryptedSession(sessionFile, key, eventBus));
     }
 

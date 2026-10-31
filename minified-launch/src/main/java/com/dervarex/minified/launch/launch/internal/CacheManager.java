@@ -1,5 +1,6 @@
 package com.dervarex.minified.launch.launch.internal;
 
+import com.dervarex.minified.launch.exceptions.version.FailedToFetchVersionsException;
 import com.dervarex.minified.java.JavaManager;
 import com.dervarex.minified.launch.exceptions.cache.FailedToCacheException;
 import com.dervarex.minified.launch.launch.Launcher;
@@ -97,7 +98,7 @@ public class CacheManager {
 
             raw = HttpUtil.get(versionJsonUrl);
         } catch (HttpException e) {
-            throw new RuntimeException(e); // no custom exception
+            throw new FailedToFetchVersionsException("Failed to fetch the version JSON of " + version, "VANILLA", e);
         }
         writeCache(cachePath, raw);
         return new JsonFile(raw);

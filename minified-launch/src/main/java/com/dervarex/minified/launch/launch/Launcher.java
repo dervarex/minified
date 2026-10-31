@@ -1,5 +1,7 @@
 package com.dervarex.minified.launch.launch;
 
+import com.dervarex.minified.launch.exceptions.launch.LaunchFailedException;
+import com.dervarex.minified.launch.exceptions.download.DownloadException;
 import com.dervarex.minified.auth.user.User;
 import com.dervarex.minified.events.type.connection.CheckConnectionEvent;
 import com.dervarex.minified.events.type.connection.OfflineEvent;
@@ -153,7 +155,7 @@ public class Launcher {
                             context
                     );
                 } catch (HttpException | IOException e) {
-                    throw new RuntimeException(e);
+                    throw new DownloadException("Failed to download the game files", e);
                 }
             });
             LegacyAssets.reconstruct(versionJson, launchConfig);
@@ -249,10 +251,10 @@ public class Launcher {
             launchProcess(command, context, logsNoMarkers);
 
         } catch (HttpException | IOException e) {
-            throw new RuntimeException(e);
+            throw new LaunchFailedException("Failed to launch Minecraft", e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new RuntimeException(e);
+            throw new LaunchFailedException("Interrupted while running Minecraft", e);
         }
     }
 

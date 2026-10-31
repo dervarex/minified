@@ -3,6 +3,7 @@ package com.dervarex.minified.utils.shortcut.writer;
 import com.dervarex.minified.utils.shortcut.Shortcut;
 
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -57,7 +58,9 @@ final class WindowsShortcutWriter implements ShortcutWriter {
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new IOException("Interrupted while creating shortcut", e);
+            InterruptedIOException interrupted = new InterruptedIOException("Interrupted while creating shortcut");
+            interrupted.initCause(e);
+            throw interrupted;
         }
         return s.shortcutPath();
     }

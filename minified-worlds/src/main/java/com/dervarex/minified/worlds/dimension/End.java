@@ -8,6 +8,7 @@ import java.util.Optional;
 
 import com.dervarex.minified.worlds.dimension.region.RegionCategory;
 import com.dervarex.minified.worlds.dimension.data.EnderDragonFight;
+import com.dervarex.minified.worlds.exceptions.FailedToLoadWorldException;
 import org.jetbrains.annotations.Nullable;
 
 public final class End extends Dimension {
@@ -28,7 +29,7 @@ public final class End extends Dimension {
                     ? EnderDragonFight.fromNbt(Parser.readFile(fightFile))
                     : null;
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new FailedToLoadWorldException("Failed to read " + fightFile, fightFile.toPath(), e);
         }
     }
 

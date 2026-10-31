@@ -1,5 +1,7 @@
 package com.dervarex.minified.launch.launch.modding.forge.installer;
 
+import com.dervarex.minified.launch.exceptions.loader.forge.FailedToRunForgeInstallerException;
+import com.dervarex.minified.launch.exceptions.download.DownloadException;
 import com.dervarex.minified.launch.events.loader.InstallForgeEvent;
 import com.dervarex.minified.launch.exceptions.loader.forge.ForgeInstallerReportFailureException;
 import com.dervarex.minified.launch.exceptions.loader.forge.ForgePreparationException;
@@ -89,7 +91,7 @@ public class ForgeInstallerInjector {
 
             sha1 = response.body().trim();
         } catch (IOException | InterruptedException e) {
-            throw new RuntimeException(e); // no custom exception here
+            throw new DownloadException(e);
         }
 
         Path installerPath = context.getLaunchConfiguration()
@@ -206,7 +208,7 @@ public class ForgeInstallerInjector {
             );
         } catch (ReflectiveOperationException | MalformedURLException e) {
             context.getEventBus().post(new InstallForgeEvent(InstallForgeEvent.Stage.FAILED, context.getLaunchConfiguration().getLoader().mcVersion(), context.getLaunchConfiguration().getLoader().loaderVersion()));
-            throw new RuntimeException(e); // no custom exception
+            throw new FailedToRunForgeInstallerException(e);
         }
         context.getEventBus().post(new InstallForgeEvent(InstallForgeEvent.Stage.FINISHED, context.getLaunchConfiguration().getLoader().mcVersion(), context.getLaunchConfiguration().getLoader().loaderVersion()));
     }

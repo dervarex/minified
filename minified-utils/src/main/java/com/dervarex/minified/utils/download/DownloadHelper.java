@@ -1,5 +1,7 @@
 package com.dervarex.minified.utils.download;
 
+import com.dervarex.minified.utils.exceptions.DownloadFailedException;
+import com.dervarex.minified.utils.exceptions.DownloadInterruptedException;
 import com.dervarex.minified.utils.exceptions.HttpException;
 import com.dervarex.minified.utils.http.HttpUtil;
 import com.dervarex.minified.utils.json.JsonFile;
@@ -109,7 +111,8 @@ public class DownloadHelper {
      * @param path the path to save the file to
      * @param client HTTP client used for the request
      * @param progressConsumer receives the number of bytes read for each chunk
-     * @throws RuntimeException if the download fails; when the server does not answer with HTTP 200 the cause is an {@link HttpException}
+     * @throws DownloadFailedException if the download fails; when the server does not answer with HTTP 200 the cause is an {@link HttpException}
+     * @throws DownloadInterruptedException if the thread gets interrupted while downloading
      */
     @API(status = API.Status.STABLE, since = "v3.2.1")
     public static void downloadWithoutSha1(String url, Path path, HttpClient client, LongConsumer progressConsumer) {
@@ -163,10 +166,11 @@ public class DownloadHelper {
                 Files.deleteIfExists(tempFile);
             } catch (Exception ignored) {
             }
-            if (e instanceof InterruptedException) {
+            if (e instanceof InterruptedException interrupted) {
                 Thread.currentThread().interrupt();
+                throw new DownloadInterruptedException(url, path, interrupted);
             }
-            throw new RuntimeException("Failed to download " + url, e);
+            throw new DownloadFailedException("Failed to download " + url, url, path, e);
         }
     }
 
@@ -185,16 +189,19 @@ public class DownloadHelper {
                 return downloadOnce(url, path, expectedSha1, client, progressConsumer);
             } catch (IOException e) {
                 if (attempt >= MAX_ATTEMPTS) {
-                    throw new RuntimeException("Failed to download " + path, e);
+                    throw new DownloadFailedException("Failed to download " + path, url, path, e);
                 }
                 try {
                     Thread.sleep(1000L * attempt);
                 } catch (InterruptedException interrupted) {
                     Thread.currentThread().interrupt();
-                    throw new RuntimeException("Interrupted while downloading " + path, interrupted);
+                    throw new DownloadInterruptedException(url, path, interrupted);
                 }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new DownloadInterruptedException(url, path, e);
             } catch (Exception e) {
-                throw new RuntimeException("Failed to download " + path, e);
+                throw new DownloadFailedException("Failed to download " + path, url, path, e);
             }
         }
     }
@@ -243,12 +250,15 @@ public class DownloadHelper {
 
             if (response.statusCode() != 200) {
                 response.body().close();
-                String message = "HTTP " + response.statusCode() + " for " + url;
                 // CDN hiccups, the minecraft resources CDN sometimes answers with a 304
                 if (isTransient(response.statusCode())) {
-                    throw new IOException(message);
+                    throw new IOException("HTTP " + response.statusCode() + " for " + url);
                 }
-                throw new RuntimeException(message);
+                throw new HttpException.Builder()
+                        .status(response.statusCode())
+                        .method(HttpException.Method.GET)
+                        .url(url)
+                        .build();
             }
 
             try (

@@ -1,6 +1,10 @@
 package com.dervarex.minified.modrinth.versions;
 
+import com.dervarex.minified.events.EventBus;
+import com.dervarex.minified.modrinth.Modrinth;
+import com.dervarex.minified.modrinth.events.UnverifiedDownloadEvent;
 import com.dervarex.minified.modrinth.exceptions.ModrinthDownloadException;
+import com.dervarex.minified.modrinth.exceptions.ModrinthHashMismatchException;
 import com.sun.net.httpserver.HttpServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,12 +17,15 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
+import java.util.ArrayList;
 import java.util.HexFormat;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class VersionFileTest {
 
@@ -78,8 +85,12 @@ class VersionFileTest {
     }
 
     @Test
-    void leavesNothingBehindWhenTheHashIsWrong() throws IOException {
-        assertThrows(ModrinthDownloadException.class, () -> file("/mod.jar", Map.of("sha1", "0".repeat(40))).download(tempDir));
+    void leavesNothingBehindWhenTheHashIsWrong() throws Exception {
+        ModrinthHashMismatchException e = assertThrows(ModrinthHashMismatchException.class,
+                () -> file("/mod.jar", Map.of("sha1", "0".repeat(40))).download(tempDir));
+        assertEquals("sha1", e.getAlgorithm());
+        assertEquals("0".repeat(40), e.getExpectedHash());
+        assertEquals(hash("SHA-1"), e.getActualHash());
 
         try (var files = Files.list(tempDir)) {
             assertEquals(0, files.count());
@@ -98,6 +109,36 @@ class VersionFileTest {
     @Test
     void httpErrorsBecomeDownloadExceptions() {
         assertThrows(ModrinthDownloadException.class, () -> file("/gone.jar", Map.of()).download(tempDir));
+    }
+
+    @Test
+    void downloadsAnywayButTellsTheLauncherWhenTheHashCannotBeChecked() {
+        List<UnverifiedDownloadEvent> events = new ArrayList<>();
+        VersionFile file = attached(file("/mod.jar", Map.of("blake3", "0".repeat(64))), events);
+
+        Path jar = file.download(tempDir);
+
+        assertTrue(Files.exists(jar));
+        assertEquals(1, events.size());
+        assertEquals("blake3", events.get(0).algorithm());
+        assertEquals(jar, events.get(0).destination());
+    }
+
+    @Test
+    void checkedDownloadsPostNoEvent() throws Exception {
+        List<UnverifiedDownloadEvent> events = new ArrayList<>();
+        attached(file("/mod.jar", Map.of("sha1", hash("SHA-1"))), events).download(tempDir);
+
+        assertTrue(events.isEmpty());
+    }
+
+    private static VersionFile attached(VersionFile file, List<UnverifiedDownloadEvent> events) {
+        EventBus eventBus = new EventBus();
+        eventBus.subscribe(UnverifiedDownloadEvent.class, events::add);
+        Version version = new Version();
+        version.files = new VersionFile[]{file};
+        version.attach(new Modrinth(Modrinth.DEFAULT_BASE_URL, eventBus));
+        return file;
     }
 
     private VersionFile file(String path, Map<String, String> hashes) {

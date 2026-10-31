@@ -1,5 +1,6 @@
 package com.dervarex.minified.utils.nbt;
 
+import com.dervarex.minified.utils.exceptions.NbtFormatException;
 import com.dervarex.minified.utils.nbt.tag.*;
 
 import java.io.*;
@@ -30,7 +31,7 @@ public class Parser {
                 // root tag headers
                 int rootType = in.readUnsignedByte();
                 if (rootType != TAG_Compound) {
-                    throw new IOException("Root tag isn't a compound (type " + rootType + ")");
+                    throw new NbtFormatException("Root tag isn't a compound (type " + rootType + ")");
                 }
                 in.readUTF(); // root name, for level.dat it's usually empty
 
@@ -105,7 +106,7 @@ public class Parser {
             case TAG_Compound:
                 return readCompoundBody(in);
             default:
-                throw new IOException("Unknown Tag Type: " + type);
+                throw new NbtFormatException("Unknown Tag Type: " + type);
         }
     }
 }

@@ -2,7 +2,9 @@ package com.dervarex.minified.auth;
 
 import com.dervarex.minified.auth.encryption.Encryptor;
 import com.dervarex.minified.auth.events.LoginStateChangeListener;
+import com.dervarex.minified.auth.exceptions.AuthInitException;
 import com.dervarex.minified.auth.exceptions.LoginFailedException;
+import com.dervarex.minified.auth.exceptions.NoConnectionLoginFailedException;
 import com.dervarex.minified.auth.user.User;
 import com.dervarex.minified.events.EventBus;
 import com.dervarex.minified.java.JavaManager;
@@ -52,6 +54,7 @@ public class AuthManager {
      *
      * @param baseDir  the directory where the key and session files will be stored.
      * @param eventBus the event bus to push event updates to
+     * @throws AuthInitException if the directory can't be created or the master key can't be loaded or created
      */
     @API(status = API.Status.STABLE)
     public static void init(Path baseDir, EventBus eventBus) {
@@ -76,6 +79,7 @@ public class AuthManager {
      *
      * @param launcherName the launcher name used to create the application directory
      * @param eventBus     the event bus to push event updates to
+     * @throws AuthInitException if the directory can't be created or the master key can't be loaded or created
      */
     @API(status = API.Status.STABLE)
     public static void init(String launcherName, EventBus eventBus) {
@@ -108,9 +112,8 @@ public class AuthManager {
             masterKey = Encryptor.loadOrCreateMasterKey(KEY_FILE, eventBus);
             System.out.println("AuthManager initialized");
         } catch (Exception e) {
-            StringWriter sw = new StringWriter();
-            e.printStackTrace(new PrintWriter(sw));
-            System.out.println("AuthManager init failed: " + sw);
+            // without the master key no session can be saved or loaded, better fail now than on the first login
+            throw new AuthInitException("Failed to initialize the AuthManager in " + BASE_DIR, e);
         }
     }
 
@@ -138,6 +141,9 @@ public class AuthManager {
      * try { Thread.sleep(100); } catch (InterruptedException ignored) {}
      * }
      * }</pre>
+     *
+     * @throws NoConnectionLoginFailedException if there is no internet connection
+     * @throws LoginFailedException if the login failed for any other reason
      */
     @API(status = API.Status.STABLE)
     public static User login() {
@@ -171,7 +177,7 @@ public class AuthManager {
             loginState.message = nce.getMessage();
             notifyStateChanged();
             System.out.println(nce.getMessage());
-            throw new RuntimeException(nce.toUserFriendlyMessage(), nce);
+            throw new NoConnectionLoginFailedException(nce.toUserFriendlyMessage(), nce);
         } catch (Exception e) {
             loginState.status = LoginStatus.ERROR;
             loginState.message = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();

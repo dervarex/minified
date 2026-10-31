@@ -13,6 +13,7 @@ dependencies {
 
     implementation 'org.apiguardian:apiguardian-api:1.1.2'
     implementation project(":minified-utils")
+    implementation project(':minified-events')
 }
 
 test {

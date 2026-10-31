@@ -1,5 +1,6 @@
 package com.dervarex.minified.utils.nbt;
 
+import com.dervarex.minified.utils.exceptions.NbtFormatException;
 import com.dervarex.minified.utils.nbt.tag.NbtCompound;
 
 import java.io.*;
@@ -100,7 +101,7 @@ public class RegionFile implements Closeable {
                 case COMPRESSION_GZIP -> new GZIPInputStream(raw);
                 case COMPRESSION_ZLIB -> new InflaterInputStream(raw);
                 case COMPRESSION_NONE -> raw;
-                default -> throw new IOException(
+                default -> throw new NbtFormatException(
                         "Unsupported compression type " + compressionType
                                 + " (LZ4 is not supported!)");
             };
@@ -108,7 +109,7 @@ public class RegionFile implements Closeable {
             try (DataInputStream in = new DataInputStream(decompressed)) {
                 int rootType = in.readUnsignedByte();
                 if (rootType != Parser.TAG_Compound) {
-                    throw new IOException("Chunk root tag isn't a compound (type " + rootType + ")");
+                    throw new NbtFormatException("Chunk root tag isn't a compound (type " + rootType + ")");
                 }
                 in.readUTF(); // root name, empty for chunk data
                 return Parser.readCompoundBody(in);

@@ -1,5 +1,6 @@
 package com.dervarex.minified.worlds.save;
 
+import com.dervarex.minified.worlds.exceptions.WorldLockedException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -77,7 +78,8 @@ class SessionLockTest {
         Files.write(lockFile, new byte[0]);
 
         try (FileChannel game = FileChannel.open(lockFile, StandardOpenOption.WRITE); FileLock held = game.lock()) {
-            assertThrows(IOException.class, () -> SessionLock.acquire(world));
+            WorldLockedException e = assertThrows(WorldLockedException.class, () -> SessionLock.acquire(world));
+            assertEquals(lockFile.toAbsolutePath().normalize(), e.getLockFile());
         }
         SessionLock.acquire(world).close();
     }

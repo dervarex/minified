@@ -1,5 +1,6 @@
 package com.dervarex.minified.launch.launch.modding.forge.installer;
 
+import com.dervarex.minified.utils.exceptions.ChecksumMismatchException;
 import com.dervarex.minified.launch.exceptions.loader.forge.ForgePreparationException;
 import com.dervarex.minified.launch.launch.LaunchConfiguration;
 import com.dervarex.minified.launch.launch.modding.forge.api.ForgeVersionJson;
@@ -111,7 +112,7 @@ public final class LegacyForgeInstaller {
 
             String url = baseUrl + artifactPath;
             if (!download(url, target, checksums(url, library), client)) {
-                throw new IOException("Checksum mismatch for " + url);
+                throw new ChecksumMismatchException(url);
             }
         }
     }

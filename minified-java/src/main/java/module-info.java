@@ -3,6 +3,7 @@ module minified.minified.java.main {
     exports com.dervarex.minified.java.events;
     exports com.dervarex.minified.java.events.download;
     exports com.dervarex.minified.java.events.extract;
+    exports com.dervarex.minified.java.exceptions;
     requires java.net.http;
     requires minified.minified.events.main;
     requires minified.minified.utils.main;

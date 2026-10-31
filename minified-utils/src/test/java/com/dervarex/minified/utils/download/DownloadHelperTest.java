@@ -1,5 +1,7 @@
 package com.dervarex.minified.utils.download;
 
+import com.dervarex.minified.utils.exceptions.DownloadFailedException;
+import com.dervarex.minified.utils.exceptions.DownloadInterruptedException;
 import com.dervarex.minified.utils.exceptions.HttpException;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
@@ -118,10 +120,25 @@ class DownloadHelperTest {
 
     @Test
     void doesNotRetryMissingFiles() {
-        assertThrows(RuntimeException.class,
+        DownloadFailedException e = assertThrows(DownloadFailedException.class,
                 () -> DownloadHelper.download(baseUrl + "/missing", tempDir.resolve("file.txt"), SHA1, client));
 
+        assertEquals(404, e.getStatusCode());
+        assertEquals(baseUrl + "/missing", e.getUrl());
+
         assertEquals(1, requests.get());
+    }
+
+    @Test
+    void keepsTheInterruptWhenInterrupted() {
+        Thread.currentThread().interrupt();
+        try {
+            assertThrows(DownloadInterruptedException.class,
+                    () -> DownloadHelper.download(baseUrl + "/file", tempDir.resolve("file.txt"), SHA1, client));
+            assertTrue(Thread.currentThread().isInterrupted());
+        } finally {
+            Thread.interrupted();
+        }
     }
 
     @Test
@@ -163,7 +180,7 @@ class DownloadHelperTest {
     void failsOnMissingFilesWithoutAChecksum() {
         Path target = tempDir.resolve("file.txt");
 
-        RuntimeException e = assertThrows(RuntimeException.class,
+        DownloadFailedException e = assertThrows(DownloadFailedException.class,
                 () -> DownloadHelper.downloadWithoutSha1(baseUrl + "/missing", target, client, bytes -> {}));
 
         HttpException http = assertInstanceOf(HttpException.class, e.getCause());

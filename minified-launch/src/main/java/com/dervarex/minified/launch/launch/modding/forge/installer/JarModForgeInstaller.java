@@ -1,5 +1,6 @@
 package com.dervarex.minified.launch.launch.modding.forge.installer;
 
+import com.dervarex.minified.utils.exceptions.ChecksumMismatchException;
 import com.dervarex.minified.launch.exceptions.loader.forge.ForgePreparationException;
 import com.dervarex.minified.launch.launch.LaunchConfiguration;
 import com.dervarex.minified.launch.launch.internal.CacheManager;
@@ -76,7 +77,7 @@ public final class JarModForgeInstaller {
 
             Path target = gameDir.resolve("libraries/net/minecraftforge/forge").resolve(loaderVersion).resolve(fileName);
             if (!DownloadHelper.download(url, target, sha1, client)) {
-                throw new IOException("Checksum mismatch for " + url);
+                throw new ChecksumMismatchException(url);
             }
             return target;
         }
@@ -86,7 +87,7 @@ public final class JarModForgeInstaller {
         for (String[] library : readFmlLibraries(jarMod)) {
             String url = ApiEndpoints.FML_LIBRARIES_MIRROR_URL.formatted(library[0]);
             if (!DownloadHelper.download(url, libDir.resolve(library[0]), library[1], client)) {
-                throw new IOException("Checksum mismatch for " + url);
+                throw new ChecksumMismatchException(url);
             }
         }
     }

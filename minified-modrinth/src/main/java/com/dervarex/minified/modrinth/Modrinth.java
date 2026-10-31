@@ -1,5 +1,6 @@
 package com.dervarex.minified.modrinth;
 
+import com.dervarex.minified.events.EventBus;
 import com.dervarex.minified.modrinth.projects.ProjectsClient;
 import com.dervarex.minified.modrinth.tags.TagsClient;
 import com.dervarex.minified.modrinth.teams.TeamsClient;
@@ -19,6 +20,7 @@ public final class Modrinth {
     public static final String DEFAULT_BASE_URL = "https://api.modrinth.com/v2";
 
     private final String baseUrl;
+    private final EventBus eventBus;
     private final ProjectsClient projects;
     private final VersionsClient versions;
     private final TagsClient tags;
@@ -30,7 +32,17 @@ public final class Modrinth {
     }
 
     public Modrinth(String baseUrl) {
+        this(baseUrl, new EventBus());
+    }
+
+    /**
+     * @param baseUrl  the Modrinth API URL, usually {@link #DEFAULT_BASE_URL}
+     * @param eventBus the EventBus where events are posted to
+     */
+    @API(status = API.Status.STABLE)
+    public Modrinth(String baseUrl, EventBus eventBus) {
         this.baseUrl = normalizeBaseUrl(baseUrl);
+        this.eventBus = eventBus == null ? new EventBus() : eventBus;
         this.projects = new ProjectsClient(this);
         this.versions = new VersionsClient(this);
         this.tags = new TagsClient(this);
@@ -48,6 +60,14 @@ public final class Modrinth {
 
     public String getBaseUrl() {
         return baseUrl;
+    }
+
+    /**
+     * @return the EventBus this client posts its events to
+     */
+    @API(status = API.Status.STABLE)
+    public EventBus getEventBus() {
+        return eventBus;
     }
 
     public ProjectsClient projects() {

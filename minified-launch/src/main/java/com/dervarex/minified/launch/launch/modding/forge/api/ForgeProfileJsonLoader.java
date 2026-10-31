@@ -1,5 +1,6 @@
 package com.dervarex.minified.launch.launch.modding.forge.api;
 
+import com.dervarex.minified.launch.exceptions.loader.FailedToLoadLoaderProfileException;
 import com.dervarex.minified.launch.launch.internal.CacheManager;
 import com.dervarex.minified.launch.launch.LaunchConfiguration;
 import com.dervarex.minified.utils.json.JsonFile;
@@ -37,7 +38,7 @@ public class ForgeProfileJsonLoader {
                         JsonFile forgeVersionJson = ForgeVersionJson.getVersionJson(parent, launchConfig.getLoader().loaderVersion());
                         return forgeVersionJson.asObject();
                     } catch (Exception e) {
-                        throw new RuntimeException(e);
+                        throw new FailedToLoadLoaderProfileException("Failed to load the Forge profile JSON", "FORGE", e);
                     }
                 }
         );

@@ -1,6 +1,8 @@
 package com.dervarex.minified.modrinth.versions;
 
+import com.dervarex.minified.modrinth.events.UnverifiedDownloadEvent;
 import com.dervarex.minified.modrinth.exceptions.ModrinthDownloadException;
+import com.dervarex.minified.modrinth.exceptions.ModrinthHashMismatchException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -63,12 +65,15 @@ public class VersionFile {
             Path destination = directory.resolve(resolveFilename());
             String hashName = selectSupportedHash();
             if (Files.exists(destination) && hashName != null && hashMatches(destination, hashName, hashes.get(hashName))) {
+                notifyIfUnverified(hashName, destination);
                 return destination;
             }
 
             Path temp = Files.createTempFile(directory, "modrinth-", ".download");
             try {
-                return downloadTo(temp, destination, hashName);
+                Path downloaded = downloadTo(temp, destination, hashName);
+                notifyIfUnverified(hashName, downloaded);
+                return downloaded;
             } finally {
                 Files.deleteIfExists(temp);
             }
@@ -93,7 +98,7 @@ public class VersionFile {
             in.transferTo(out);
         }
         if (hashName != null && !hashMatches(temp, hashName, hashes.get(hashName))) {
-            throw new ModrinthDownloadException("Hash verification failed for " + resolveFilename() + " using " + hashName);
+            throw new ModrinthHashMismatchException(resolveFilename(), hashName, hashes.get(hashName), computeHash(temp, hashName));
         }
         Files.move(temp, destination, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
         return destination;
@@ -130,12 +135,41 @@ public class VersionFile {
         if (expected == null || expected.isBlank()) {
             return true;
         }
+        String actual = computeHash(file, algorithm);
+        return actual == null || expected.equalsIgnoreCase(actual);
+    }
+
+    // file will still be downloaded, we're just informing the launcher that we didn't check it
+    private void notifyIfUnverified(String hashName, Path destination) {
+        String expected = hashes.get(hashName);
+        if (expected == null || expected.isBlank() || isKnownAlgorithm(hashName)) {
+            return;
+        }
+        UnverifiedDownloadEvent event = new UnverifiedDownloadEvent(resolveFilename(), url, hashName, destination);
+        if (owner != null && owner.client != null) {
+            owner.client.getEventBus().post(event);
+        } else {
+            // not attached to a client, so no eventbus here
+            System.err.println("Could not verify " + resolveFilename() + ": unknown hash algorithm " + hashName);
+        }
+    }
+
+    private static boolean isKnownAlgorithm(String algorithm) {
+        try {
+            MessageDigest.getInstance(normalizeAlgorithm(algorithm));
+            return true;
+        } catch (NoSuchAlgorithmException ex) {
+            return false;
+        }
+    }
+
+    // null if the JVM doesn't know the algorithm
+    private static String computeHash(Path file, String algorithm) throws IOException {
         try {
             MessageDigest digest = MessageDigest.getInstance(normalizeAlgorithm(algorithm));
-            byte[] actual = digest.digest(Files.readAllBytes(file));
-            return expected.equalsIgnoreCase(toHex(actual));
+            return toHex(digest.digest(Files.readAllBytes(file)));
         } catch (NoSuchAlgorithmException ex) {
-            return true;
+            return null;
         }
     }
 
