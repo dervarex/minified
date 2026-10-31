@@ -1,0 +1,12 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Report a security issue
+    url: https://github.com/dervarex/minified/security/advisories/new
+    about: Leaked tokens, code that runs when it shouldn't, ... Please report these privately, not as a public issue
+
+  - name: Documentation
+    url: https://dervarex.github.io/minified/
+    about: Guides and the full API reference, maybe your answer is already in there
+  - name: Discord
+    url: https://discord.gg/fhbcfMSvBy
+    about: For quick questions and chatting about launchers

@@ -1,0 +1,45 @@
+name: Question
+description: How do I do xyz? Is this supposed to work like that?
+labels: ["question", "needs triage"]
+projects: ["dervarex/3"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        No question is too small or too dumb, just ask. If it comes up often it'll end up in the docs.
+        Quick questions can be asked on [Discord](https://discord.gg/fhbcfMSvBy), but you can ask here too.
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Your question
+    validations:
+      required: true
+
+  - type: textarea
+    id: tried
+    attributes:
+      label: What have you tried so far?
+      description: Code, docs pages you looked at, anything
+      render: java
+
+  - type: dropdown
+    id: modules
+    attributes:
+      label: Module(s)
+      multiple: true
+      options:
+        - minified-launch
+        - minified-auth
+        - minified-java
+        - minified-modrinth
+        - minified-worlds
+        - minified-events
+        - minified-utils
+        - No idea
+
+  - type: input
+    id: minified-version
+    attributes:
+      label: minified version
+      placeholder: "3.3.0"

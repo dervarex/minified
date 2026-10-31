@@ -1,0 +1,52 @@
+name: Label issue modules
+
+# Adds the "module: ..." label.
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  issues: write
+
+jobs:
+  label:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const lines = (issue.body || '').split(/\r?\n/);
+
+            const start = lines.findIndex(l => /^###\s*(affected\s+)?module\(s\)\s*$/i.test(l.trim()));
+            if (start === -1) {
+              core.info('No module field (blank issue or other template), nothing to do');
+              return;
+            }
+            const answer = [];
+            for (const line of lines.slice(start + 1)) {
+              if (/^###\s/.test(line.trim())) break;
+              answer.push(line);
+            }
+
+            // "minified-launch, minified-auth" -> ["module: launch", "module: auth"]
+            const labels = [...new Set(
+              [...answer.join(' ').matchAll(/minified-([a-z]+)/g)].map(m => `module: ${m[1]}`)
+            )];
+            if (labels.length === 0) {
+              core.info('No module picked ("No idea" / "New module" / no response)');
+              return;
+            }
+
+            const existing = new Set(
+              (await github.paginate(github.rest.issues.listLabelsForRepo, { ...context.repo, per_page: 100 }))
+                .map(l => l.name)
+            );
+            const toAdd = labels.filter(l => existing.has(l));
+            for (const missing of labels.filter(l => !existing.has(l))) {
+              core.warning(`Label "${missing}" doesn't exist in the repo, skipping`);
+            }
+            if (toAdd.length === 0) return;
+
+            await github.rest.issues.addLabels({ ...context.repo, issue_number: issue.number, labels: toAdd });
+            core.info(`Added ${toAdd.join(', ')} to #${issue.number}`);
