@@ -1,0 +1,106 @@
+name: Bug report
+description: Something's broken, crashes, or does the wrong thing
+labels: ["bug", "needs triage"]
+projects: ["dervarex/3"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time!
+        Not sure if it's a bug or you're just doing something wrong? Open a **Question** instead, or ask on [Discord](https://discord.gg/fhbcfMSvBy).
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you do, and what went wrong?
+      placeholder: Launching a Forge 1.12.2 profile throws an exception while downloading libraries
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+      placeholder: The game starts
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: How to reproduce
+      description: The smallest piece of code that shows the problem. Leave out everything that isn't needed for it
+      render: java
+      placeholder: |
+        LaunchConfiguration config = new LaunchConfiguration.Builder()
+                ...
+                .build();
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / stack trace
+      description: The full stack trace, including the `Caused by:` parts. Remove access tokens and other secrets before posting!
+      render: shell
+
+  - type: dropdown
+    id: modules
+    attributes:
+      label: Affected module(s)
+      description: Pick what you think it is. If you don't know, pick "No idea", that's fine
+      multiple: true
+      options:
+        - minified-launch
+        - minified-auth
+        - minified-java
+        - minified-modrinth
+        - minified-worlds
+        - minified-events
+        - minified-utils
+        - No idea
+    validations:
+      required: true
+
+  - type: input
+    id: minified-version
+    attributes:
+      label: minified version
+      placeholder: "3.3.0"
+    validations:
+      required: true
+
+  - type: input
+    id: mc-version
+    attributes:
+      label: Minecraft version
+      description: If it's launch or world related
+      placeholder: "1.12.2"
+
+  - type: dropdown
+    id: loader
+    attributes:
+      label: Mod loader
+      description: If it's launch related
+      options:
+        - Vanilla
+        - Fabric
+        - Forge
+        - NeoForge
+        - Quilt
+        - Custom loader
+        - Not launch related
+
+  - type: input
+    id: environment
+    attributes:
+      label: OS and Java version
+      placeholder: Arch Linux (Wayland), Java 21
+    validations:
+      required: true
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?
+      description: Screenshots, workarounds you found, ideas where the bug might be, ...

@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation
+    url: https://dervarex.github.io/minified/
+    about: Guides and the full API reference, maybe your answer is already in there
+  - name: Discord
+    url: https://discord.gg/fhbcfMSvBy
+    about: For quick questions and chatting about launchers
