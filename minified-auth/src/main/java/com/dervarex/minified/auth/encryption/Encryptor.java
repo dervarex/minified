@@ -12,8 +12,10 @@ import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.util.Base64;
 
@@ -25,10 +27,12 @@ public class Encryptor {
      * Loads the master key, if it already exists, or creates a new one and saves it to disk.
      *
      * @param keyFile the file to check for
+     * @param eventBus the EventBus to post a {@link CreateMasterKeyEvent} to when a new key is created
      * @return the SecretKey that will be used to encrypt and decrypt the refreshtoken
-     * @throws Exception when something goes wrong with file access or key generation
+     * @throws IOException when the key file can't be read or written
+     * @throws GeneralSecurityException when the JVM can't generate an AES key
      */
-    public static SecretKey loadOrCreateMasterKey(Path keyFile, EventBus eventBus) throws Exception {
+    public static SecretKey loadOrCreateMasterKey(Path keyFile, EventBus eventBus) throws IOException, GeneralSecurityException {
         if (Files.exists(keyFile)) {
             byte[] rawKey = Files.readAllBytes(keyFile);
             System.out.println("Loaded existing master key");
@@ -52,9 +56,11 @@ public class Encryptor {
      * @param sessionJson the JSON object of the Session
      * @param masterKey   the SecretKey to encrypt and decrypt the session
      * @param sessionFile the File to save the Session to
-     * @throws Exception when encrypting or writing to the file fails
+     * @param eventBus    the EventBus for posting the {@link SaveEncryptedSessionEvent} to
+     * @throws IOException when writing to the file fails
+     * @throws GeneralSecurityException when encrypting fails, for example because the master key is invalid
      */
-    public static void saveEncryptedSession(JsonObject sessionJson, SecretKey masterKey, Path sessionFile, EventBus eventBus) throws Exception {
+    public static void saveEncryptedSession(JsonObject sessionJson, SecretKey masterKey, Path sessionFile, EventBus eventBus) throws IOException, GeneralSecurityException {
         Cipher cipher = Cipher.getInstance("AES");
         cipher.init(Cipher.ENCRYPT_MODE, masterKey);
         byte[] encrypted = cipher.doFinal(sessionJson.toString().getBytes());
@@ -68,9 +74,14 @@ public class Encryptor {
      *
      * @param sessionFile the file where it will load the session from
      * @param masterKey   the master key, used to decrypt the file
+     * @param eventBus    the EventBus to post a {@link LoadEncryptedSessionEvent} to
      * @return the decrypted session as a JsonObject, or null if no session file exists
+     * @throws IOException when the file can't be read
+     * @throws GeneralSecurityException when decrypting fails, usually because the file is corrupt or was saved with another master key
+     * @throws IllegalArgumentException when the file isn't valid Base64
+     * @throws com.google.gson.JsonParseException when the decrypted content isn't valid JSON
      */
-    public static JsonObject loadEncryptedSession(Path sessionFile, SecretKey masterKey, EventBus eventBus) throws Exception {
+    public static JsonObject loadEncryptedSession(Path sessionFile, SecretKey masterKey, EventBus eventBus) throws IOException, GeneralSecurityException {
         if (!Files.exists(sessionFile)) {
             System.out.println("No saved session");
             return null;
