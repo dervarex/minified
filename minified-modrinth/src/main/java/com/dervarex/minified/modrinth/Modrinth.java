@@ -39,7 +39,7 @@ public final class Modrinth {
      * @param baseUrl  the Modrinth API URL, usually {@link #DEFAULT_BASE_URL}
      * @param eventBus the EventBus where events are posted to
      */
-    @API(status = API.Status.EXPERIMENTAL)
+    @API(status = API.Status.STABLE)
     public Modrinth(String baseUrl, EventBus eventBus) {
         this.baseUrl = normalizeBaseUrl(baseUrl);
         this.eventBus = eventBus == null ? new EventBus() : eventBus;
@@ -65,7 +65,7 @@ public final class Modrinth {
     /**
      * @return the EventBus this client posts its events to
      */
-    @API(status = API.Status.EXPERIMENTAL)
+    @API(status = API.Status.STABLE)
     public EventBus getEventBus() {
         return eventBus;
     }

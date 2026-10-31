@@ -7,7 +7,7 @@ import java.io.IOException;
 /**
  * Gets thrown when a downloaded file doesn't match its expected checksum, so it's corrupt or not the file that was asked for
  */
-@API(status = API.Status.EXPERIMENTAL)
+@API(status = API.Status.STABLE)
 public class ChecksumMismatchException extends IOException {
 
     private static final long serialVersionUID = 1L;

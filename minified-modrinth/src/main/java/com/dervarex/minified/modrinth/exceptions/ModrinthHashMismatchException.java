@@ -5,7 +5,7 @@ import org.apiguardian.api.API;
 /**
  * Thrown when a downloaded Modrinth file doesn't match the hash Modrinth told us
  */
-@API(status = API.Status.EXPERIMENTAL)
+@API(status = API.Status.STABLE)
 public final class ModrinthHashMismatchException extends ModrinthDownloadException {
     private final String filename;
     private final String algorithm;

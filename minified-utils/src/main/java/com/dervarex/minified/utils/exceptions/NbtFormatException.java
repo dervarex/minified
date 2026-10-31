@@ -8,7 +8,7 @@ import java.io.IOException;
  * Gets thrown when NBT data is malformed or uses something that isn't supported, your file probably is corrupt
  * Other {@link IOException}s mean the file couldn't be read or written at all
  */
-@API(status = API.Status.EXPERIMENTAL)
+@API(status = API.Status.STABLE)
 public class NbtFormatException extends IOException {
 
     private static final long serialVersionUID = 1L;

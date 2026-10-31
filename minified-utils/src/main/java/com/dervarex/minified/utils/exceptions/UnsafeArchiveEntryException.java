@@ -7,7 +7,7 @@ import java.io.IOException;
 /**
  * Gets thrown when an archive contains an entry that would be extracted outside the target directory (path traversal, most likely malware)
  */
-@API(status = API.Status.EXPERIMENTAL)
+@API(status = API.Status.STABLE)
 public class UnsafeArchiveEntryException extends IOException {
 
     private static final long serialVersionUID = 1L;

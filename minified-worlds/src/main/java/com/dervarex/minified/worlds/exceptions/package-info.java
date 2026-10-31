@@ -3,7 +3,7 @@
  * <p>
  * Should be caught individually to handle specific world errors
  */
-@API(status = API.Status.EXPERIMENTAL)
+@API(status = API.Status.STABLE)
 package com.dervarex.minified.worlds.exceptions;
 
 import org.apiguardian.api.API;

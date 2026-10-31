@@ -15,6 +15,6 @@ import java.nio.file.Path;
  * @param algorithm   the hash algorithm that couldn't be checked, with the name modrinth tells us
  * @param destination where the file was saved
  */
-@API(status = API.Status.EXPERIMENTAL)
+@API(status = API.Status.STABLE)
 public record UnverifiedDownloadEvent(String filename, String url, String algorithm, Path destination) implements Event {
 }

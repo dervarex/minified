@@ -7,7 +7,7 @@ import java.nio.file.Path;
 /**
  * Gets thrown when the downloading thread was interrupted
  */
-@API(status = API.Status.EXPERIMENTAL)
+@API(status = API.Status.STABLE)
 public class DownloadInterruptedException extends DownloadFailedException {
 
     private static final long serialVersionUID = 1L;

@@ -7,7 +7,7 @@ import java.nio.file.Path;
 /**
  * Gets thrown when a file couldn't be downloaded. If the server answered with an error, the cause is an {@link HttpException}
  */
-@API(status = API.Status.EXPERIMENTAL)
+@API(status = API.Status.STABLE)
 public class DownloadFailedException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
