@@ -9,10 +9,14 @@ public class NoJavaRuntimeAvailableException extends IOException {
 
     private static final long serialVersionUID = 1L;
 
+    /** The Java version that was asked for */
     private final int requiredMajorVersion;
+    /** The platform, for example linux-x64 */
     private final String platform;
 
     /**
+     * Creates the exception for a Java version that has no runtime on this platform
+     *
      * @param requiredMajorVersion the Java version that was asked for
      * @param platform             the platform, for example linux-x64
      */
@@ -23,14 +27,14 @@ public class NoJavaRuntimeAvailableException extends IOException {
     }
 
     /**
-     * @return the Java version that was asked for
+     * {@return the Java version that was asked for}
      */
     public int getRequiredMajorVersion() {
         return requiredMajorVersion;
     }
 
     /**
-     * @return the platform, for example linux-x64
+     * {@return the platform, for example linux-x64}
      */
     public String getPlatform() {
         return platform;

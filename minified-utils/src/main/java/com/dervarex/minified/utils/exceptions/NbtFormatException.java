@@ -14,6 +14,8 @@ public class NbtFormatException extends IOException {
     private static final long serialVersionUID = 1L;
 
     /**
+     * Creates the exception for malformed NBT data
+     *
      * @param message what the problem with it is
      */
     public NbtFormatException(String message) {

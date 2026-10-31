@@ -9,10 +9,14 @@ public class JavaRuntimeDownloadException extends IOException {
 
     private static final long serialVersionUID = 1L;
 
+    /** The URL of the archive */
     private final String url;
+    /** The HTTP status code, or -1 if there was no response */
     private final int statusCode;
 
     /**
+     * Creates the exception for a failed Java runtime download.
+     *
      * @param message    what went wrong
      * @param url        the URL of the archive
      * @param statusCode the HTTP status code, or -1 if there was no response
@@ -25,14 +29,14 @@ public class JavaRuntimeDownloadException extends IOException {
     }
 
     /**
-     * @return the URL of the archive
+     * {@return the URL of the archive}
      */
     public String getUrl() {
         return url;
     }
 
     /**
-     * @return the HTTP status code, or -1 if there was no response
+     * {@return the HTTP status code, or -1 if there was no response}
      */
     public int getStatusCode() {
         return statusCode;

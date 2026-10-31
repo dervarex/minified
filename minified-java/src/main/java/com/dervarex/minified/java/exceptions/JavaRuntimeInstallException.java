@@ -11,6 +11,8 @@ public class JavaRuntimeInstallException extends IOException {
     private static final long serialVersionUID = 1L;
 
     /**
+     * Creates the exception for a Java runtime that can't be installed
+     *
      * @param message what went wrong
      */
     public JavaRuntimeInstallException(String message) {

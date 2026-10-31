@@ -12,9 +12,12 @@ public class UnsafeArchiveEntryException extends IOException {
 
     private static final long serialVersionUID = 1L;
 
+    /** The name of the blocked entry */
     private final String entryName;
 
     /**
+     * Creates the exception for an entry that would end up outside the target directory
+     *
      * @param entryName the name of the blocked entry
      */
     public UnsafeArchiveEntryException(String entryName) {
@@ -23,7 +26,7 @@ public class UnsafeArchiveEntryException extends IOException {
     }
 
     /**
-     * @return the name of the blocked entry
+     * {@return the name of the blocked entry}
      */
     public String getEntryName() {
         return entryName;

@@ -12,10 +12,14 @@ public class DownloadFailedException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
 
+    /** The URL that was downloaded */
     private final String url;
+    /** Where the file should have been saved */
     private final transient Path path;
 
     /**
+     * Creates the exception for a failed download
+     *
      * @param message what went wrong
      * @param url     the URL that was downloaded
      * @param path    where the file should have been saved
@@ -28,21 +32,21 @@ public class DownloadFailedException extends RuntimeException {
     }
 
     /**
-     * @return the URL that was downloaded
+     * {@return the URL that was downloaded}
      */
     public String getUrl() {
         return url;
     }
 
     /**
-     * @return where the file should have been saved
+     * {@return where the file should have been saved}
      */
     public Path getPath() {
         return path;
     }
 
     /**
-     * @return the HTTP status code if the server answered with an error, otherwise -1
+     * {@return the HTTP status code if the server answered with an error, otherwise -1}
      */
     public int getStatusCode() {
         return getCause() instanceof HttpException http ? http.getStatusCode() : -1;

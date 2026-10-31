@@ -12,11 +12,16 @@ public class ChecksumMismatchException extends IOException {
 
     private static final long serialVersionUID = 1L;
 
+    /** The URL or path of the file */
     private final String source;
+    /** The expected checksum, or null if unknown */
     private final String expected;
+    /** The actual checksum, or null if unknown */
     private final String actual;
 
     /**
+     * Creates the exception with both checksums
+     *
      * @param source   the URL or path of the file
      * @param expected the expected checksum, or null if unknown
      * @param actual   the actual checksum, or null if unknown
@@ -31,6 +36,8 @@ public class ChecksumMismatchException extends IOException {
     }
 
     /**
+     * Creates the exception when the checksums are unknown
+     *
      * @param source the URL or path of the file
      */
     public ChecksumMismatchException(String source) {
@@ -38,21 +45,21 @@ public class ChecksumMismatchException extends IOException {
     }
 
     /**
-     * @return the URL or path of the file
+     * {@return the URL or path of the file}
      */
     public String getSource() {
         return source;
     }
 
     /**
-     * @return the expected checksum, or null if unknown
+     * {@return the expected checksum, or null if unknown}
      */
     public String getExpected() {
         return expected;
     }
 
     /**
-     * @return the actual checksum, or null if unknown
+     * {@return the actual checksum, or null if unknown}
      */
     public String getActual() {
         return actual;

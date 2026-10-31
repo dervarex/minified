@@ -13,6 +13,8 @@ public class DownloadInterruptedException extends DownloadFailedException {
     private static final long serialVersionUID = 1L;
 
     /**
+     * Creates the exception for a download that was interrupted
+     *
      * @param url   the URL that was downloaded
      * @param path  where the file should have been saved
      * @param cause the original {@link InterruptedException}
