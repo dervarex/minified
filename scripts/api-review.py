@@ -209,8 +209,8 @@ def window():
     style.configure("Thin.Vertical.TScrollbar", troughcolor=card, background=c["outlineVariant"], bordercolor=card,
                     lightcolor=c["outlineVariant"], darkcolor=c["outlineVariant"], arrowsize=6, gripcount=0)
     style.map("Thin.Vertical.TScrollbar", background=[("active", c["onSurfaceVariant"])])
-    show, query, exported_only = tk.StringVar(value="Everything"), tk.StringVar(), tk.BooleanVar(value=True)
-    set_since = tk.BooleanVar(value=True)
+    show, query = tk.StringVar(value="Everything"), tk.StringVar()
+    set_since = tk.BooleanVar(value=False)
     version = re.search(r"version\s*=\s*'([^']+)'", (ROOT / "build.gradle").read_text())[1]
     state = {"places": [], "rows": [], "stamp": None, "sort": None, "hover": None}
 
@@ -224,7 +224,7 @@ def window():
     def refill():
         q = query.get().lower()
         rows = [p for p in state["places"] if show.get() in ("Everything", p.problem)
-                and (p.exported or not exported_only.get()) and q in f"{p.file} {p.name}".lower()]
+                and q in f"{p.file} {p.name}".lower()]
         if state["sort"]:
             rows.sort(key=lambda p: str(getattr(p, state["sort"])))
         state["rows"] = rows
@@ -283,7 +283,7 @@ def window():
     x = 24 + ui.font.measure("Filter")
     search.create_window(x, 18, window=entry, anchor="w", width=288 - x)
     query.trace_add("write", lambda *a: refill())
-    for w in (*segments, search, Button(top, ui, "Exported packages only", reload, "text", exported_only)):
+    for w in (*segments, search):
         w.pack(side="left", padx=(0, 10))
     segments[0].set(selected=True)
 
