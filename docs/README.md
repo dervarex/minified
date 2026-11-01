@@ -6,7 +6,7 @@ nor to deal with all the versioning, so I asked Claude Opus 5.5 to set this up f
 Just wanted to be upfront about that :)
 
 The documentation site is generated from the library sources and the guides in this directory.
-API reference, event pages, the event list and the installation snippets come from the code, so they
+API reference, event and exception pages, their lists and the installation snippets come from the code, so they
 can't go out of date.
 
 ```sh
@@ -18,16 +18,18 @@ Add `-PdocsStrict=true` to fail on warnings, which is what the `Docs` workflow d
 
 ## What lives where
 
-| Path                       | Content                                                                                      |
-|----------------------------|----------------------------------------------------------------------------------------------|
-| `content/index.md`         | Home page                                                                                    |
-| `content/guides/**.md`     | Guides, the file path is the url (`guides/minified-launch/basics.md` → `guides/minified-launch/basics/`) |
-| `content/events/introduction.md` | Events overview, `{{events}}` inserts the generated list of all events                  |
-| `content/events/<Event>.md`| Optional prose for an event page, e.g. "When it fires". Fields come from the event's javadoc   |
-| `content/modules/<module>.md` | Optional introduction for a module page in the API reference                              |
-| `content/sidebar.txt`      | Left navigation, see the comment at the top of the file                                      |
-| `theme/`                   | Stylesheets, script and favicon, copied to the site as they are                              |
-| `src/`                     | The generator, a javadoc doclet                                                              |
+| Path                                 | Content                                                                                                  |
+|--------------------------------------|----------------------------------------------------------------------------------------------------------|
+| `content/index.md`                   | Home page                                                                                                |
+| `content/guides/**.md`               | Guides, the file path is the url (`guides/minified-launch/basics.md` → `guides/minified-launch/basics/`) |
+| `content/events/introduction.md`     | Events overview, `{{events}}` inserts the generated list of all events                                   |
+| `content/events/<Event>.md`          | Optional prose for an event page, e.g. "When it fires". Fields come from the event's javadoc             |
+| `content/exceptions/introduction.md` | Exceptions overview, `{{exceptions}}` inserts the generated list of all exceptions                       |
+| `content/exceptions/<Exception>.md`  | Optional prose for an exception page. Fields, hierarchy and "Thrown by" come from the code               |
+| `content/modules/<module>.md`        | Optional introduction for a module page in the API reference                                             |
+| `content/sidebar.txt`                | Left navigation, see the comment at the top of the file                                                  |
+| `theme/`                             | Stylesheets, script and favicon, copied to the site as they are                                          |
+| `src/`                               | The generator, a javadoc doclet                                                                          |
 
 ## Writing guides
 

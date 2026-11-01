@@ -446,6 +446,10 @@ nav[aria-label="Main"] :is(a, summary) * {
   line-height: 1.5;
 }
 
+.enum-row.exception-depth-1 a { padding-left: 1rem; }
+.enum-row.exception-depth-2 a { padding-left: 2rem; }
+.enum-row.exception-depth-3 a { padding-left: 3rem; }
+
 .enum-row.status-success code {
   color: var(--sl-color-green-high);
 }

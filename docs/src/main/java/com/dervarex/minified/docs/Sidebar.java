@@ -61,6 +61,8 @@ final class Sidebar {
             List<Item> parent = stack.peek().getValue();
             if (line.equals("@events")) {
                 parent.add(events(site));
+            } else if (line.equals("@exceptions")) {
+                parent.add(exceptions(site));
             } else if (line.equals("@api")) {
                 parent.add(api(site));
             } else if (line.contains("->")) {
@@ -96,6 +98,20 @@ final class Sidebar {
         }
         groups.forEach((label, links) -> items.add(new Group(label, links)));
         return new Group("Events", items);
+    }
+
+    private static Group exceptions(Site site) {
+        List<Item> items = new ArrayList<>();
+        if (site.pageTitles.containsKey("exceptions/introduction/")) {
+            items.add(new Link("Introduction", "exceptions/introduction/"));
+        }
+        Map<String, List<Item>> groups = new LinkedHashMap<>();
+        for (ExceptionPages.ExceptionDoc exception : site.exceptions.exceptions()) {
+            groups.computeIfAbsent(exception.group(), k -> new ArrayList<>())
+                    .add(new Link(exception.type().getSimpleName().toString(), exception.path()));
+        }
+        groups.forEach((label, links) -> items.add(new Group(label, links)));
+        return new Group("Exceptions", items);
     }
 
     private static Group api(Site site) {

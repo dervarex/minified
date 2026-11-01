@@ -3,12 +3,14 @@
 #   Label -> page/path     links a page, the path is the markdown file path below docs/content
 #   Label                  starts a group, the indented lines below it are its entries
 #   @events                inserts the generated event pages
+#   @exceptions            inserts the generated exception pages
 #   @api                   inserts the generated API reference
 #
 # Pages that are not listed here are still generated, they are only reachable through links.
 
 Getting Started -> guides/getting-started
 @events
+@exceptions
 Modules
   Auth -> guides/minified-auth/authentication
   Java -> guides/minified-java/java
