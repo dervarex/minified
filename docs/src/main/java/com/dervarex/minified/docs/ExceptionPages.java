@@ -380,14 +380,14 @@ final class ExceptionPages {
     private String javaSnippet(String exception, List<Field> fields) {
         StringBuilder sb = new StringBuilder("try {\n    // call into Minified\n} catch (").append(exception).append(" e) {\n");
         if (fields.isEmpty()) {
-            sb.append("    System.err.println(e.getMessage());\n");
+            sb.append("    // Do you handling here, for example a Error Popup\n");
         }
         for (Field field : fields.stream().limit(SNIPPET_FIELDS).toList()) {
             sb.append("    ").append(site.signatures.plain(field.type())).append(' ').append(field.name())
                     .append(" = e.").append(field.accessor()).append(";\n");
         }
         if (fields.size() > SNIPPET_FIELDS) {
-            sb.append("    // ... see Fields for the rest\n");
+            sb.append("    // ... see Fields for the rest, then do your error handling once you've got the data\n");
         }
         return sb.append('}').toString();
     }
