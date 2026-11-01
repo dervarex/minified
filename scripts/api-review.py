@@ -152,65 +152,47 @@ def rounded(canvas, x1, y1, x2, y2, r, fill, bg, tag="shape"):
 
 
 class Button(tk.Canvas):
-    """kind: primary (filled), tonal, or text (filled only while selected)"""
+    """kind: primary (filled), tonal, or text (filled only while selected). With var it's a toggle (filter chip)"""
 
-    def __init__(self, parent, ui, text, command, kind="tonal"):
+    def __init__(self, parent, ui, text, command, kind="tonal", var=None):
         super().__init__(parent, height=36, bg=parent["bg"], highlightthickness=0, bd=0, cursor="hand2")
-        self.ui, self.kind, self.command, self.hover, self.selected = ui, kind, command, False, False
+        self.ui, self.kind, self.command, self.var, self.hover, self.selected = ui, kind, command, var, False, False
+        self.min_width = 0
         self.bind("<Enter>", lambda e: self.set(hover=True))
         self.bind("<Leave>", lambda e: self.set(hover=False))
-        self.bind("<ButtonRelease-1>", lambda e: self.command())
+        self.bind("<ButtonRelease-1>", lambda e: (var and var.set(not var.get()), self.set(), self.command()))
         self.set(label=text)
 
     def set(self, **changes):
         self.__dict__.update(changes)
         c, bg = self.ui.c, self["bg"]
+        if self.var:
+            self.selected = self.var.get()
         fill, fg = {"primary": (c["primary"], c["onPrimary"]),
                     "tonal": (c["secondaryContainer"], c["onSecondaryContainer"]),
                     "text": (c["secondaryContainer"], c["onSecondaryContainer"]) if self.selected
                     else (bg, c["onSurfaceVariant"])}[self.kind]
         fill = mix(fill, fg, 0.08) if self.hover else fill
-        w = self.ui.font.measure(self.label) + 32
+        text = ("✓  " if self.selected and self.var else "") + self.label
+        w = max(self.ui.font.measure(text) + 32, self.min_width)
         self.configure(width=w)
         self.delete("all")
-        if fill != bg:
+        if self.var and not self.selected:  # outlined while off
+            rounded(self, 0, 0, w, 36, 10, c["outlineVariant"], bg)
+            rounded(self, 1, 1, w - 1, 35, 9, fill, c["outlineVariant"])
+        elif fill != bg:
             rounded(self, 0, 0, w, 36, 10, fill, bg)
-        self.create_text(w / 2, 18, text=self.label, fill=fg, font=self.ui.font)
+        self.create_text(w / 2, 18, text=text, fill=fg, font=self.ui.font)
 
 
-class Check(tk.Canvas):
-    def __init__(self, parent, ui, text, var, command=None):
-        super().__init__(parent, height=36, bg=parent["bg"], highlightthickness=0, bd=0, cursor="hand2")
-        self.ui, self.var, self.label = ui, var, text
-        self.bind("<ButtonRelease-1>", lambda e: (var.set(not var.get()), self.draw(), command and command()))
-        self.draw()
-
-    def draw(self):
-        c, bg = self.ui.c, self["bg"]
-        self.delete("all")
-        self.configure(width=self.ui.font.measure(self.label) + 30)
-        if self.var.get():
-            rounded(self, 0, 9, 18, 27, 5, c["primary"], bg)
-            self.create_text(9, 18, text="✓", fill=c["onPrimary"], font=self.ui.mono)
-        else:
-            rounded(self, 0, 9, 18, 27, 5, c["onSurfaceVariant"], bg)
-            rounded(self, 2, 11, 16, 25, 3, bg, c["onSurfaceVariant"])
-        self.create_text(28, 18, text=self.label, anchor="w", fill=c["onSurface"], font=self.ui.font)
-
-
-def search_field(parent, ui, var, width=300):
-    c = ui.c
-    canvas = tk.Canvas(parent, width=width, height=36, bg=parent["bg"], highlightthickness=0, bd=0)
-    rounded(canvas, 0, 0, width, 36, 10, c["surfaceContainerHigh"], parent["bg"])
-    canvas.create_text(14, 18, text="Filter", anchor="w", fill=c["onSurfaceVariant"], font=ui.font)
-    entry = tk.Entry(canvas, textvariable=var, bd=0, highlightthickness=0, bg=c["surfaceContainerHigh"],
-                     fg=c["onSurface"], insertbackground=c["onSurface"], font=ui.font)
-    x = 24 + ui.font.measure("Filter")
-    canvas.create_window(x, 18, window=entry, anchor="w", width=width - x - 12)
-    return canvas, entry
-
-
-def style_table(root, c, ui):
+def window():
+    root = tk.Tk(className="api-review")
+    root.title("API review")
+    root.geometry("1200x720")
+    c = scheme()
+    ui = SimpleNamespace(c=c, font=tkfont.Font(family="Rubik", size=10),
+                         mono=tkfont.Font(family="JetBrainsMono Nerd Font", size=10))
+    root.configure(bg=c["background"])
     card = c["surfaceContainer"]
     style = ttk.Style(root)
     style.theme_use("clam")
@@ -227,30 +209,17 @@ def style_table(root, c, ui):
     style.configure("Thin.Vertical.TScrollbar", troughcolor=card, background=c["outlineVariant"], bordercolor=card,
                     lightcolor=c["outlineVariant"], darkcolor=c["outlineVariant"], arrowsize=6, gripcount=0)
     style.map("Thin.Vertical.TScrollbar", background=[("active", c["onSurfaceVariant"])])
-
-
-def window():
-    root = tk.Tk(className="api-review")
-    root.title("API review")
-    root.geometry("1200x720")
-    c = scheme()
-    ui = SimpleNamespace(c=c, font=tkfont.Font(family="Rubik", size=10),
-                         mono=tkfont.Font(family="JetBrainsMono Nerd Font", size=10))
-    root.configure(bg=c["background"])
-    style_table(root, c, ui)
     show, query, exported_only = tk.StringVar(value="Everything"), tk.StringVar(), tk.BooleanVar(value=True)
-    set_since, status = tk.BooleanVar(value=True), tk.StringVar()
+    set_since = tk.BooleanVar(value=True)
     version = re.search(r"version\s*=\s*'([^']+)'", (ROOT / "build.gradle").read_text())[1]
     state = {"places": [], "rows": [], "stamp": None, "sort": None, "hover": None}
 
     def stamp():
         return sum(p.stat().st_mtime_ns for p in ROOT.glob("*/src/main/java/**/*.java"))
 
-    def reload(message=""):
+    def reload():
         state["places"], state["stamp"] = scan(), stamp()
         refill()
-        shown = [p.problem for p in state["places"] if p.exported or not exported_only.get()]
-        status.set(f"{message}{shown.count('Experimental')} experimental · {shown.count('No status')} without status")
 
     def refill():
         q = query.get().lower()
@@ -269,8 +238,19 @@ def window():
 
     def apply(new_status):
         if places := selected():
+            last = max(int(i) for i in table.selection())
+            after = state["rows"][last + 1] if last + 1 < len(state["rows"]) else None
             mark(places, new_status, f"v{version}" if set_since.get() else None)
-            reload(f"Set {len(places)} to {new_status} · ")
+            reload()
+            # select the row that followed the marked ones; marked rows usually drop out of the list
+            key = lambda p: (p.file, p.name, p.kind)
+            rows = state["rows"]
+            index = next((i for i, p in enumerate(rows) if after and key(p) == key(after)), len(rows) - 1)
+            if index >= 0:
+                table.selection_set(str(index))
+                table.focus(str(index))
+                table.see(str(index))
+            table.focus_set()
 
     def jump(_=None):
         try:
@@ -295,9 +275,15 @@ def window():
     (top := tk.Frame(root, bg=c["background"])).pack(fill="x", padx=16, pady=(14, 10))
     segments = [Button(top, ui, name, lambda n=name: filter_by(n), "text")
                 for name in ("Everything", "Experimental", "No status")]
-    search, entry = search_field(top, ui, query)
+    search = tk.Canvas(top, width=300, height=36, bg=c["background"], highlightthickness=0, bd=0)
+    rounded(search, 0, 0, 300, 36, 10, c["surfaceContainerHigh"], c["background"])
+    search.create_text(14, 18, text="Filter", anchor="w", fill=c["onSurfaceVariant"], font=ui.font)
+    entry = tk.Entry(search, textvariable=query, bd=0, highlightthickness=0, bg=c["surfaceContainerHigh"],
+                     fg=c["onSurface"], insertbackground=c["onSurface"], font=ui.font)
+    x = 24 + ui.font.measure("Filter")
+    search.create_window(x, 18, window=entry, anchor="w", width=288 - x)
     query.trace_add("write", lambda *a: refill())
-    for w in (*segments, search, Check(top, ui, "Exported packages only", exported_only, reload)):
+    for w in (*segments, search, Button(top, ui, "Exported packages only", reload, "text", exported_only)):
         w.pack(side="left", padx=(0, 10))
     segments[0].set(selected=True)
 
@@ -327,12 +313,16 @@ def window():
     table.bind("<Leave>", lambda e: hover(None))
     for key in ("<Double-1>", "<Return>"):
         table.bind(key, jump)
+    table.bind("m", lambda e: apply("STABLE"))  # on the table only, so typing m in the filter still works
 
     def popup():
         menu = tk.Toplevel(root, bg=c["surfaceContainerHigh"], padx=6, pady=6)
         menu.overrideredirect(True)
-        for name in ("MAINTAINED", "EXPERIMENTAL", "INTERNAL", "DEPRECATED"):
-            Button(menu, ui, name, lambda n=name: (menu.destroy(), apply(n)), "text").pack(fill="x")
+        items = [Button(menu, ui, n, lambda n=n: (menu.destroy(), apply(n)), "text")
+                 for n in ("MAINTAINED", "EXPERIMENTAL", "INTERNAL", "DEPRECATED")]
+        for b in items:
+            b.set(min_width=max(i.winfo_reqwidth() for i in items))
+            b.pack()
         menu.update_idletasks()  # opens upwards, the bar is at the bottom
         menu.geometry(f"+{other.winfo_rootx()}+{other.winfo_rooty() - menu.winfo_reqheight() - 6}")
         menu.grab_set()
@@ -342,10 +332,9 @@ def window():
     (bottom := tk.Frame(root, bg=c["background"])).pack(fill="x", padx=16, pady=(10, 14))
     other = Button(bottom, ui, "Other status  ▾", popup)
     for w in (Button(bottom, ui, "Mark stable", lambda: apply("STABLE"), "primary"), other,
-              Check(bottom, ui, f"Set since v{version}", set_since),
+              Button(bottom, ui, f"Set since v{version}", lambda: None, "text", set_since),
               Button(bottom, ui, "Open in IntelliJ", jump, "text")):
         w.pack(side="left", padx=(0, 10))
-    tk.Label(bottom, textvariable=status, bg=c["background"], fg=c["onSurfaceVariant"], font=ui.font).pack(side="right")
 
     root.bind("<F5>", lambda e: reload())
     root.bind("<Alt-m>", lambda e: apply("STABLE"))
