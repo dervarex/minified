@@ -1,5 +1,6 @@
 package com.dervarex.minified.launch.launch.modding.forge.installer;
 
+import com.dervarex.minified.launch.events.loader.LoaderInstallerOutputEvent;
 import com.dervarex.minified.launch.exceptions.loader.forge.FailedToRunForgeInstallerException;
 import com.dervarex.minified.launch.exceptions.download.DownloadException;
 import com.dervarex.minified.launch.events.loader.InstallForgeEvent;
@@ -83,7 +84,6 @@ public class ForgeInstallerInjector {
             );
 
             if (response.statusCode() != 200) {
-                System.out.println("Link: " + url + sha1);
                 throw new IOException(
                         "Failed to fetch SHA1: HTTP " + response.statusCode()
                 );
@@ -203,7 +203,7 @@ public class ForgeInstallerInjector {
                     }),
                     config.getJarFile().getParent().toFile(),
                     Path.of(config.getJarFile().getParent().toAbsolutePath().toString(),"forge-installer.jar").toFile(),
-                    System.out::println,
+                    message -> context.getEventBus().post(new LoaderInstallerOutputEvent("FORGE", message)),
                     context
             );
         } catch (ReflectiveOperationException | MalformedURLException e) {

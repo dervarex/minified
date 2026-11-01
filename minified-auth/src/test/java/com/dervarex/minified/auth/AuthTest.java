@@ -1,6 +1,7 @@
 package com.dervarex.minified.auth;
 
 import com.dervarex.minified.auth.exceptions.AuthInitException;
+import com.dervarex.minified.auth.events.login.SessionRefreshFailedEvent;
 import com.dervarex.minified.auth.user.User;
 import com.dervarex.minified.events.EventBus;
 import com.dervarex.minified.java.JavaManager;
@@ -11,6 +12,8 @@ import org.junit.jupiter.api.Tag;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -64,6 +67,21 @@ class AuthTest {
         Path file = Files.createFile(tempDir.resolve("not-a-directory"));
         AuthInitException e = assertThrows(AuthInitException.class, () -> AuthManager.init(file));
         assertNotNull(e.getCause());
+    }
+
+    @Test
+    void loginWithSavedSession_postsTheReasonWhenTheSessionIsBroken() throws Exception {
+        EventBus eventBus = new EventBus();
+        List<SessionRefreshFailedEvent> failures = new ArrayList<>();
+        eventBus.subscribe(SessionRefreshFailedEvent.class, failures::add);
+        AuthManager.init(tempDir, eventBus);
+        Files.writeString(tempDir.resolve("session.enc"), "not an encrypted session");
+
+        assertNull(AuthManager.loginWithSavedSession());
+
+        assertEquals(1, failures.size());
+        assertNull(failures.get(0).uuid());
+        assertNotNull(failures.get(0).cause());
     }
 
     @Test

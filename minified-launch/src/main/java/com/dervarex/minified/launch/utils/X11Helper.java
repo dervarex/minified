@@ -73,11 +73,6 @@ public class X11Helper {
             environment.remove("WAYLAND_DISPLAY");
             environment.put("XDG_SESSION_TYPE", "x11");
         }
-
-        System.out.println(
-                "Detected X11 display " + resolvedDisplay +
-                        " for Minecraft"
-        );
     }
 
     /**

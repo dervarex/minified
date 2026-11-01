@@ -35,10 +35,8 @@ public class Encryptor {
     public static SecretKey loadOrCreateMasterKey(Path keyFile, EventBus eventBus) throws IOException, GeneralSecurityException {
         if (Files.exists(keyFile)) {
             byte[] rawKey = Files.readAllBytes(keyFile);
-            System.out.println("Loaded existing master key");
             return new SecretKeySpec(rawKey, "AES");
         } else {
-            System.out.println("Creating new master key");
             eventBus.post(new CreateMasterKeyEvent(keyFile));
             KeyGenerator keyGen = KeyGenerator.getInstance("AES");
             keyGen.init(256, new SecureRandom());
@@ -65,7 +63,6 @@ public class Encryptor {
         cipher.init(Cipher.ENCRYPT_MODE, masterKey);
         byte[] encrypted = cipher.doFinal(sessionJson.toString().getBytes());
         Files.write(sessionFile, Base64.getEncoder().encode(encrypted));
-        System.out.println("Session saved to " + sessionFile);
         eventBus.post(new SaveEncryptedSessionEvent(sessionFile));
     }
 
@@ -83,14 +80,12 @@ public class Encryptor {
      */
     public static JsonObject loadEncryptedSession(Path sessionFile, SecretKey masterKey, EventBus eventBus) throws IOException, GeneralSecurityException {
         if (!Files.exists(sessionFile)) {
-            System.out.println("No saved session");
             return null;
         }
         byte[] encrypted = Base64.getDecoder().decode(Files.readAllBytes(sessionFile));
         Cipher cipher = Cipher.getInstance("AES");
         cipher.init(Cipher.DECRYPT_MODE, masterKey);
         String json = new String(cipher.doFinal(encrypted));
-        System.out.println("Loaded saved session");
         eventBus.post(new LoadEncryptedSessionEvent(sessionFile));
         return GSON.fromJson(json, JsonObject.class);
     }

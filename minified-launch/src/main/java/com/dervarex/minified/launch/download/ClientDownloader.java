@@ -1,5 +1,6 @@
 package com.dervarex.minified.launch.download;
 
+import com.dervarex.minified.launch.exceptions.version.VersionNotFoundException;
 import com.dervarex.minified.events.type.connection.CheckConnectionEvent;
 import com.dervarex.minified.events.type.connection.OfflineEvent;
 import com.dervarex.minified.launch.events.download.client.DownloadClientJarEvent;
@@ -30,6 +31,7 @@ public class ClientDownloader {
      * @param version the game version
      * @param path    the full path to the jar including the file name, for example /home/dervarex/client.jar
      * @param context internal launching context
+     * @throws VersionNotFoundException if the version or its client jar isn't in Mojang's version manifest
      */
     public void downloadClient(String version, Path path, @Nullable LaunchContext context)
             throws HttpException, IOException {
@@ -42,6 +44,7 @@ public class ClientDownloader {
      * @param path    the full path to the jar including the file name, for example /home/dervarex/client.jar
      * @param progressConsumer receives the number of bytes read for each chunk
      * @param context internal launching context
+     * @throws VersionNotFoundException if the version or its client jar isn't in Mojang's version manifest
      */
     public void downloadClient(String version, Path path, Consumer<Double> progressConsumer, @Nullable LaunchContext context)
             throws HttpException, IOException {
@@ -52,7 +55,6 @@ public class ClientDownloader {
             }
             NetworkUtil.ensureOnline("download client jar");
         } catch (NoConnectionException nce) {
-            System.err.println("You do not have a working internet connection!");
             if(context != null) {
                 context.getEventBus().post(new OfflineEvent());
             }
@@ -66,16 +68,14 @@ public class ClientDownloader {
 
         String versionJsonUrl = VersionMetadataProvider.getVersionJsonUrl(version);
         if (versionJsonUrl == null) {
-            System.out.println("ClientDownloader: Cannot find version!");
-            return;
+            throw new VersionNotFoundException("Unknown Minecraft version " + version, version);
         }
 
         String clientUrl = VersionMetadataProvider.getClientUrl(version);
         String sha1 = VersionMetadataProvider.getClientSha1(version);
 
         if (clientUrl == null || sha1 == null) {
-            System.out.println("ClientDownloader: Cannot find client jar!");
-            return;
+            throw new VersionNotFoundException("Minecraft " + version + " has no client jar to download", version);
         }
 
         HttpClient client = HttpClient.newBuilder()

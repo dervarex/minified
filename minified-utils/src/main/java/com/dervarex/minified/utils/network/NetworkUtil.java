@@ -61,7 +61,6 @@ public class NetworkUtil {
         boolean httpOk = !dnsOk && !tcpOk && probeHttp(builder);
         builder.dnsResolved(dnsOk).tcpAny(tcpOk).httpAny(httpOk);
         if (!(dnsOk || tcpOk || httpOk) || fakeOffline) {
-            System.out.println("No connectivity for " + action);
             return builder.build();
         }
         return null;

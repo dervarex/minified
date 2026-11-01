@@ -146,11 +146,9 @@ public class VersionFile {
             return;
         }
         UnverifiedDownloadEvent event = new UnverifiedDownloadEvent(resolveFilename(), url, hashName, destination);
+        // if we aren't attached to a client we can't tell anyone
         if (owner != null && owner.client != null) {
             owner.client.getEventBus().post(event);
-        } else {
-            // not attached to a client, so no eventbus here
-            System.err.println("Could not verify " + resolveFilename() + ": unknown hash algorithm " + hashName);
         }
     }
 

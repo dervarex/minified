@@ -3,6 +3,8 @@ module minified.minified.auth.main {
     exports com.dervarex.minified.auth.user;
     exports com.dervarex.minified.auth.skin;
     exports com.dervarex.minified.auth.events;
+    exports com.dervarex.minified.auth.events.encryption;
+    exports com.dervarex.minified.auth.events.login;
     exports com.dervarex.minified.auth.exceptions;
 
     requires com.google.gson;
