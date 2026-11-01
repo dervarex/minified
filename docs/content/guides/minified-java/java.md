@@ -53,11 +53,7 @@ JavaManager.init(javaDirectory)
   </TabItem>
 </Tabs>
 
-:::caution[Sharing an EventBus with AuthManager]
-`JavaManager.init(baseDir, eventBus)` also exists, but if you call `AuthManager.init(...)` afterwards it will silently reset `JavaManager` back to its own private `EventBus`. If you want both managers posting to the same bus, always call `JavaManager.init(...)` *last*. See the <a href="/events/introduction" class="link">Events introduction</a> for the full explanation and a working order of calls.
-:::
-
-Calling `init(...)` is entirely optional - if you skip it, `JavaManager` lazily uses its default directory the first time it needs one.
+Calling `init(...)` is optional, if you skip it, `JavaManager` lazily uses its default directory the first time it needs one.
 
 ---
 

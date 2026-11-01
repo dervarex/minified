@@ -2,6 +2,8 @@ package com.dervarex.minified.auth;
 
 import com.dervarex.minified.auth.exceptions.AuthInitException;
 import com.dervarex.minified.auth.user.User;
+import com.dervarex.minified.events.EventBus;
+import com.dervarex.minified.java.JavaManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -62,6 +64,14 @@ class AuthTest {
         Path file = Files.createFile(tempDir.resolve("not-a-directory"));
         AuthInitException e = assertThrows(AuthInitException.class, () -> AuthManager.init(file));
         assertNotNull(e.getCause());
+    }
+
+    @Test
+    void init_leavesJavaManagerAlone() {
+        Path javaDir = tempDir.resolve("own-java");
+        JavaManager.init(javaDir, new EventBus());
+        AuthManager.init(tempDir, new EventBus());
+        assertEquals(javaDir.toAbsolutePath(), JavaManager.getBaseDir());
     }
 
     @Test
