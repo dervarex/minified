@@ -8,6 +8,7 @@ import org.apiguardian.api.API;
  * @param mcVersion minecraft version
  * @param loaderVersion neoforge loader version
  */
+@API(status = API.Status.STABLE)
 public record NeoforgeLoader(String mcVersion, String loaderVersion) implements Loader {
     @Override
     public String iconUrl() {

@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+@API(status = API.Status.STABLE)
 public class QuiltLoaderFetcher {
 
     /**

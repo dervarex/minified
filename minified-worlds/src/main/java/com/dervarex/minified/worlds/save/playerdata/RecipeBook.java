@@ -6,9 +6,11 @@ import com.dervarex.minified.utils.nbt.tag.NbtString;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import org.apiguardian.api.API;
 
 @Getter
 @Setter
+@API(status = API.Status.STABLE)
 public class RecipeBook {
     // maybe not the best solution but it sure is one
     private String[] recipes = new String[0];

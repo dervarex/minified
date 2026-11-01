@@ -3,9 +3,11 @@ package com.dervarex.minified.worlds.save.data;
 import com.dervarex.minified.utils.nbt.tag.NbtCompound;
 import lombok.Getter;
 import lombok.Setter;
+import org.apiguardian.api.API;
 
 @Getter
 @Setter
+@API(status = API.Status.STABLE)
 public class BossEvent {
     private String name;
     private boolean visible;

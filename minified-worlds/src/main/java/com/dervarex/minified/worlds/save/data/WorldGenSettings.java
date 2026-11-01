@@ -7,8 +7,10 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import org.apiguardian.api.API;
 
 @Getter
+@API(status = API.Status.STABLE)
 public class WorldGenSettings {
     @Setter
     private int dataVersion;

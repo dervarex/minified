@@ -1,5 +1,8 @@
 package com.dervarex.minified.utils;
 
+import org.apiguardian.api.API;
+
+@API(status = API.Status.STABLE)
 public final class ApiEndpoints {
 
     private ApiEndpoints() {

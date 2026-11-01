@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 
+@API(status = API.Status.STABLE)
 public class ProfileFactory {
     private static final Map<String, Function<JsonObject, Loader>> LOADERS = Map.of(
             "VANILLA", ProfileFactory::readVanillaLoader,

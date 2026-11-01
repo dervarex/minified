@@ -15,12 +15,14 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import org.apiguardian.api.API;
 
 /**
  * Represents a Base Minecraft World.
  * Extended by {@link Overworld}, {@link Nether} and {@link End}
  * If anyone would need a CustomDimension (modded worlds maybe?), we could do that, but I'm keeping it simple for now
  */
+@API(status = API.Status.STABLE)
 public sealed class Dimension permits Overworld, Nether, End {
     private DimensionType type;
     private Versioned<ChunkTicket[]> chunkTickets;

@@ -6,6 +6,7 @@ import com.dervarex.minified.utils.nbt.tag.NbtTag;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.apiguardian.api.API;
 
 /**
  * Wraps an entities/*.mca chunk's raw NBT
@@ -13,6 +14,7 @@ import java.util.List;
  * "Health" field (the simplest reliable marker that separates living entities from
  * items/minecarts/...), or a plain {@link Entity} otherwise.
  */
+@API(status = API.Status.STABLE)
 public class EntityData {
     private final NbtCompound root;
     private final NbtList entitiesList;

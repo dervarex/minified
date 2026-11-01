@@ -1,5 +1,8 @@
 package com.dervarex.minified.worlds.save.level;
 
+import org.apiguardian.api.API;
+
+@API(status = API.Status.STABLE)
 public enum Difficulty {
     peaceful,
     easy,

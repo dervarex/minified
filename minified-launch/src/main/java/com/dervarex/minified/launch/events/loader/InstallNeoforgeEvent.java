@@ -1,6 +1,7 @@
 package com.dervarex.minified.launch.events.loader;
 
 import com.dervarex.minified.events.Event;
+import org.apiguardian.api.API;
 
 /**
  * Fired continuously while NeoForge is installing
@@ -9,6 +10,7 @@ import com.dervarex.minified.events.Event;
  * @param gameVersion   target Minecraft version (e.g., {@code 1.20.1})
  * @param loaderVersion NeoForge loader version being installed
  */
+@API(status = API.Status.STABLE)
 public record InstallNeoforgeEvent(
         Stage stage,
         String gameVersion,

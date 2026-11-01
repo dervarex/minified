@@ -59,6 +59,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+@API(status = API.Status.STABLE)
 public class Launcher {
     /**
      * Downloads required files and launches Minecraft.

@@ -8,6 +8,7 @@ import com.dervarex.minified.utils.json.JsonObject;
 import com.dervarex.minified.utils.json.JsonParser;
 import org.apiguardian.api.API;
 
+@API(status = API.Status.STABLE)
 public class FabricLoaderFetcher {
 
     /**

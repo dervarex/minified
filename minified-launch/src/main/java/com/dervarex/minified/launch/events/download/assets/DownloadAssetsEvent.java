@@ -1,6 +1,7 @@
 package com.dervarex.minified.launch.events.download.assets;
 
 import com.dervarex.minified.events.Event;
+import org.apiguardian.api.API;
 
 /**
  * Gets fired every time a new asset file has been downloaded
@@ -12,6 +13,7 @@ import com.dervarex.minified.events.Event;
  * @param currentFileBytes the number of bytes downloaded for the current file
  * @param currentFileSize  the total size of the current file in bytes
  */
+@API(status = API.Status.STABLE)
 public record DownloadAssetsEvent(
         double progress,
         long downloadedBytes,

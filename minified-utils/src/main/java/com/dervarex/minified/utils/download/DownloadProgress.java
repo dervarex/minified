@@ -8,7 +8,7 @@ import java.util.function.Consumer;
 /**
  * Recently moved over from Launch module, be careful.
  */
-@API(status = API.Status.EXPERIMENTAL)
+@API(status = API.Status.STABLE)
 public final class DownloadProgress {
 
     private final AtomicLong downloaded = new AtomicLong();

@@ -444,7 +444,7 @@ public class AuthManager {
      * @return true if a saved session was deleted
      * @throws IOException if a session file can't be deleted
      */
-    @API(status = API.Status.EXPERIMENTAL, since = "v3.2.1")
+    @API(status = API.Status.STABLE, since = "v3.2.1")
     public static boolean removeSavedSession(UUID uuid) throws IOException {
         session.remove(uuid.toString());
         boolean removed = Files.deleteIfExists(sessionFile(uuid));

@@ -55,6 +55,7 @@ import java.util.zip.ZipFile;
  * <p>The default runtime cache is placed under a user-specific application directory, but callers
  * may override it with {@link #init(Path)}.</p>
  */
+@API(status = API.Status.STABLE)
 public final class JavaManager {
     private static final String VERSION_MANIFEST_URL = ApiEndpoints.VERSION_MANIFEST_URL;
 
@@ -254,7 +255,7 @@ public final class JavaManager {
      * @throws HttpException if the runtime manifest request fails
      * @throws IOException if a runtime download or extraction fails
      */
-    @API(status = API.Status.EXPERIMENTAL)
+    @API(status = API.Status.STABLE)
     public static JavaInstallation ensureExactJavaVersion(int requiredMajorVersion) throws HttpException, IOException {
         JavaInstallation current = currentRuntime();
         if (requiredMajorVersion <= 0 || current.majorVersion() == requiredMajorVersion) {

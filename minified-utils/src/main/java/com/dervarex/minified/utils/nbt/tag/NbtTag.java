@@ -1,5 +1,8 @@
 package com.dervarex.minified.utils.nbt.tag;
 
+import org.apiguardian.api.API;
+
+@API(status = API.Status.STABLE)
 public sealed interface NbtTag
 
         permits NbtCompound, NbtList, NbtString, NbtByte, NbtBoolean, NbtShort, NbtInt,

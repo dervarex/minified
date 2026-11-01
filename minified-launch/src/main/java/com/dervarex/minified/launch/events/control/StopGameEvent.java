@@ -13,7 +13,7 @@ import org.apiguardian.api.API;
  *
  * @param force true kills the process, false asks the game to close first. attention: killing the game can cause data loss!
  */
-@API(status = API.Status.EXPERIMENTAL)
+@API(status = API.Status.STABLE)
 public record StopGameEvent(boolean force) implements ReverseEvent {
 
     /**

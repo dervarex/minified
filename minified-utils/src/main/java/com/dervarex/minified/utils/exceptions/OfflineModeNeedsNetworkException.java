@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * This exception will get thrown when the user tries to launch in offline mode, but the launcher needs network to launch for a specified {@link Reason}
  */
-@API(status = API.Status.EXPERIMENTAL)
+@API(status = API.Status.STABLE)
 public class OfflineModeNeedsNetworkException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;

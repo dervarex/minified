@@ -5,10 +5,12 @@ import com.dervarex.minified.utils.nbt.tag.NbtList;
 import com.dervarex.minified.utils.nbt.tag.NbtTag;
 
 import java.util.*;
+import org.apiguardian.api.API;
 
 /**
  * Wraps a poi/*.mca chunk's raw NBT
  */
+@API(status = API.Status.STABLE)
 public class PoiData {
     private final NbtCompound root;
     private final Map<Integer, NbtCompound> sectionTags = new HashMap<>();

@@ -1,10 +1,12 @@
 package com.dervarex.minified.worlds.entity;
 
 import com.dervarex.minified.utils.nbt.tag.NbtCompound;
+import org.apiguardian.api.API;
 
 /**
  * Extends {@link Entity} with common living entity fields
  */
+@API(status = API.Status.STABLE)
 public class LivingEntity extends Entity {
 
     public LivingEntity(NbtCompound raw) {

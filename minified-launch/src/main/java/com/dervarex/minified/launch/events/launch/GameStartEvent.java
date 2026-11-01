@@ -3,6 +3,7 @@ package com.dervarex.minified.launch.events.launch;
 import com.dervarex.minified.auth.user.User;
 import com.dervarex.minified.events.Event;
 import com.dervarex.minified.launch.launch.LaunchConfiguration;
+import org.apiguardian.api.API;
 
 /**
  * Gets fired when Minecraft is starting
@@ -11,6 +12,7 @@ import com.dervarex.minified.launch.launch.LaunchConfiguration;
  * @param launchConfiguration the launch configuration that was used to launch the game
  * @param online              whether the connectivity check earlier in the launch succeeded
  */
+@API(status = API.Status.STABLE)
 public record GameStartEvent(
         User user,
         LaunchConfiguration launchConfiguration,

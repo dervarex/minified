@@ -1,5 +1,8 @@
 package com.dervarex.minified.utils.os;
 
+import org.apiguardian.api.API;
+
+@API(status = API.Status.STABLE)
 public enum OS {
     WINDOWS("windows"),
     LINUX("linux"),

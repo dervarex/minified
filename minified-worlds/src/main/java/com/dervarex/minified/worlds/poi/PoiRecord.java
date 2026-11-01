@@ -1,10 +1,12 @@
 package com.dervarex.minified.worlds.poi;
 
 import com.dervarex.minified.utils.nbt.tag.NbtCompound;
+import org.apiguardian.api.API;
 
 /**
  * Wraps a single POI record
  */
+@API(status = API.Status.STABLE)
 public class PoiRecord {
     private final NbtCompound raw;
 

@@ -9,6 +9,7 @@ import lombok.Setter;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
+import org.apiguardian.api.API;
 
 /**
  * level.dat
@@ -17,6 +18,7 @@ import java.util.UUID;
  */
 @Setter
 @Getter
+@API(status = API.Status.STABLE)
 public class Level {
     @Nullable
     private Difficulty difficulty;

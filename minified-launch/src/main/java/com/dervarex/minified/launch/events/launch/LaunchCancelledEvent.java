@@ -10,7 +10,7 @@ import org.apiguardian.api.API;
  *
  * @param launchConfiguration the launch configuration that was used to launch the game
  */
-@API(status = API.Status.EXPERIMENTAL)
+@API(status = API.Status.STABLE)
 public record LaunchCancelledEvent(LaunchConfiguration launchConfiguration) implements Event {
 
 }

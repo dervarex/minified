@@ -3,12 +3,14 @@ package com.dervarex.minified.worlds.entity;
 import com.dervarex.minified.utils.nbt.tag.*;
 
 import java.util.UUID;
+import org.apiguardian.api.API;
 
 /**
  * Wraps the fields confirmed common to every entity type in the Anvil entity format
  * See {@link LivingEntity} for the living entity tier, and use
  * raw() for anything type specific
  */
+@API(status = API.Status.STABLE)
 public class Entity {
     protected final NbtCompound raw;
 

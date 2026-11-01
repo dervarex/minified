@@ -9,10 +9,12 @@ import com.dervarex.minified.worlds.block.BlockStateFormat;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.apiguardian.api.API;
 
 /**
  * A 16x16x16 piece of a chunk, its blocks and its biomes (one per 4x4x4 cell)
  */
+@API(status = API.Status.STABLE)
 public class ChunkSection {
     private static final int BLOCKS = 4096;
     private static final int BIOMES = 64;

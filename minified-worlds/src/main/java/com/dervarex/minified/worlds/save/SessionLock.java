@@ -12,8 +12,10 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.Map;
+import org.apiguardian.api.API;
 
 @Getter
+@API(status = API.Status.STABLE)
 public class SessionLock {
     // java only lets a JVM lock a file once, so all handles for a world share one
     private static final Map<Path, Held> HELD = new HashMap<>();

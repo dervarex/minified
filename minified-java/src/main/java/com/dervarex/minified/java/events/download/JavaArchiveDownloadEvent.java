@@ -1,6 +1,7 @@
 package com.dervarex.minified.java.events.download;
 
 import com.dervarex.minified.events.Event;
+import org.apiguardian.api.API;
 
 /**
  * Gets fired while a Java runtime archive is being downloaded
@@ -10,6 +11,7 @@ import com.dervarex.minified.events.Event;
  * @param totalBytes      the total size of the Java archive in bytes
  * @param downloadUrl     the URL the Java archive is being downloaded from
  */
+@API(status = API.Status.STABLE)
 public record JavaArchiveDownloadEvent(
         double progress,
         long downloadedBytes,

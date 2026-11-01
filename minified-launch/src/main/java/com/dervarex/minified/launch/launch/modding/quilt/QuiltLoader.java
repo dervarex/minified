@@ -3,6 +3,7 @@ package com.dervarex.minified.launch.launch.modding.quilt;
 import com.dervarex.minified.launch.launch.modding.Loader;
 import org.apiguardian.api.API;
 
+@API(status = API.Status.STABLE)
 public record QuiltLoader(String mcVersion, String loaderVersion) implements Loader {
     @Override
     public String name() { return "QUILT"; }

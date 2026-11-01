@@ -3,6 +3,7 @@ package com.dervarex.minified.launch.launch.modding.vanilla;
 import com.dervarex.minified.launch.launch.modding.Loader;
 import org.apiguardian.api.API;
 
+@API(status = API.Status.STABLE)
 public record VanillaLoader(String mcVersion) implements Loader {
     @Override
     public String name() { return "VANILLA"; }

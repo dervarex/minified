@@ -4,7 +4,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
+import org.apiguardian.api.API;
 
+@API(status = API.Status.STABLE)
 public record HttpResponse(int statusCode, String statusMessage, Map<String, String> headers, byte[] body) {
     public HttpResponse(int statusCode, String statusMessage, Map<String, String> headers, byte[] body) {
         this.statusCode = statusCode;

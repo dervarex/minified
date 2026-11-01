@@ -6,7 +6,9 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
+import org.apiguardian.api.API;
 
+@API(status = API.Status.STABLE)
 public final class NbtCompound implements NbtTag {
     private final LinkedHashMap<String, NbtTag> entries = new LinkedHashMap<>();
 

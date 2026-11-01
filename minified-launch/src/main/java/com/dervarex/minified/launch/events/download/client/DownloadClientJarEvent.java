@@ -1,6 +1,7 @@
 package com.dervarex.minified.launch.events.download.client;
 
 import com.dervarex.minified.events.Event;
+import org.apiguardian.api.API;
 
 /**
  * Gets fired while the Minecraft client JAR is being downloaded
@@ -9,6 +10,7 @@ import com.dervarex.minified.events.Event;
  * @param downloadedBytes the number of bytes downloaded so far
  * @param totalBytes      the total size of the client JAR in bytes
  */
+@API(status = API.Status.STABLE)
 public record DownloadClientJarEvent(
         double progress,
         long downloadedBytes,

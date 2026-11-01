@@ -8,6 +8,7 @@ import org.apiguardian.api.API;
  * @param mcVersion
  * @param loaderVersion
  */
+@API(status = API.Status.STABLE)
 public record FabricLoader(String mcVersion, String loaderVersion) implements Loader {
     @Override
     public String iconUrl() {

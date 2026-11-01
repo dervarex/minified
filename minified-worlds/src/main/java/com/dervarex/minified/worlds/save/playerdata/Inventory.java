@@ -5,9 +5,11 @@ import com.dervarex.minified.utils.nbt.tag.NbtList;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import org.apiguardian.api.API;
 
 @Getter
 @Setter
+@API(status = API.Status.STABLE)
 public class Inventory {
     InventoryItem[] items;
 
