@@ -1,15 +1,20 @@
 #!/usr/bin/env python3
 # API.Status.EXPERIMENTAL review utility
 # Claude helped here, base idea and implementation are made by myself
+import math
 import os
 import re
 import shutil
 import subprocess
 import sys
+import tkinter as tk
+import tkinter.font as tkfont
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+from tkinter import messagebox, ttk
+from types import SimpleNamespace
 
 ROOT = Path(__file__).resolve().parent.parent
 API = re.compile(r'@API\s*\(([^)]*)\)')
@@ -108,45 +113,135 @@ def open_in_idea(p):
                      stderr=subprocess.DEVNULL, start_new_session=True)
 
 
-def theme(root, ttk):
-    """Flat colors like IntelliJ's new UI, dark when the desktop prefers dark"""
-    dark = bool(shutil.which("gsettings")) and "dark" in subprocess.run(
-        ["gsettings", "get", "org.gnome.desktop.interface", "color-scheme"], capture_output=True, text=True).stdout
-    bg, field, fg, muted, line, sel = ("#1e1f22", "#2b2d30", "#dfe1e5", "#868a91", "#393b40", "#2e436e") if dark \
-        else ("#f7f8fa", "#ffffff", "#1e1f22", "#6c707e", "#dfe1e5", "#d4e2ff")
-    style, font = ttk.Style(root), ("Noto Sans", 10)
+FALLBACK = {"background": "0a0f0f", "surfaceContainer": "131b1a", "surfaceContainerHigh": "192120",
+            "onSurface": "dce8e6", "onSurfaceVariant": "a2adac", "primary": "9bd0cc", "onPrimary": "0d4845",
+            "secondaryContainer": "27403e", "onSecondaryContainer": "a9c5c2", "outlineVariant": "3f4a49"}
+CORNERS = {}
+
+
+def scheme():
+    """Material colors of the rice (caelestia writes them for Hyprland), so the window follows the wallpaper"""
+    files = [p for p in (Path.home() / ".config/hypr/scheme.lua", Path.home() / ".local/state/caelestia/scheme.json")
+             if p.exists()]
+    colors = dict(FALLBACK)
+    if files:
+        colors.update(re.findall(r'"?(\w+)"?\s*[=:]\s*"([0-9a-fA-F]{6})"', max(files, key=os.path.getmtime).read_text()))
+    return {k: "#" + v for k, v in colors.items()}
+
+
+def mix(a, b, t):
+    """a with t of b on top, like Material's state layers"""
+    x, y = int(a[1:], 16), int(b[1:], 16)
+    return "#" + "".join(f"{round(((x >> s) & 255) * (1 - t) + ((y >> s) & 255) * t):02x}" for s in (16, 8, 0))
+
+
+def rounded(canvas, x1, y1, x2, y2, r, fill, bg, tag="shape"):
+    """Flat rounded rectangle. Tk doesn't antialias shapes, so the corners are images with computed coverage"""
+    canvas.create_rectangle(x1 + r, y1, x2 - r, y2, fill=fill, width=0, tags=tag)
+    canvas.create_rectangle(x1, y1 + r, x2, y2 - r, fill=fill, width=0, tags=tag)
+    for left, top, x, y in ((1, 1, x1, y1), (0, 1, x2 - r, y1), (1, 0, x1, y2 - r), (0, 0, x2 - r, y2 - r)):
+        key = (fill, bg, r, left, top)
+        if key not in CORNERS:
+            def cover(i, j):
+                dx, dy = (r - i - 0.5) if left else (i + 0.5), (r - j - 0.5) if top else (j + 0.5)
+                return max(0.0, min(1.0, r + 0.5 - math.hypot(dx, dy)))
+            CORNERS[key] = tk.PhotoImage(width=r, height=r)
+            CORNERS[key].put(" ".join("{" + " ".join(mix(bg, fill, cover(i, j)) for i in range(r)) + "}"
+                                      for j in range(r)))
+        canvas.create_image(x, y, image=CORNERS[key], anchor="nw", tags=tag)
+
+
+class Button(tk.Canvas):
+    """kind: primary (filled), tonal, or text (filled only while selected)"""
+
+    def __init__(self, parent, ui, text, command, kind="tonal"):
+        super().__init__(parent, height=36, bg=parent["bg"], highlightthickness=0, bd=0, cursor="hand2")
+        self.ui, self.kind, self.command, self.hover, self.selected = ui, kind, command, False, False
+        self.bind("<Enter>", lambda e: self.set(hover=True))
+        self.bind("<Leave>", lambda e: self.set(hover=False))
+        self.bind("<ButtonRelease-1>", lambda e: self.command())
+        self.set(label=text)
+
+    def set(self, **changes):
+        self.__dict__.update(changes)
+        c, bg = self.ui.c, self["bg"]
+        fill, fg = {"primary": (c["primary"], c["onPrimary"]),
+                    "tonal": (c["secondaryContainer"], c["onSecondaryContainer"]),
+                    "text": (c["secondaryContainer"], c["onSecondaryContainer"]) if self.selected
+                    else (bg, c["onSurfaceVariant"])}[self.kind]
+        fill = mix(fill, fg, 0.08) if self.hover else fill
+        w = self.ui.font.measure(self.label) + 32
+        self.configure(width=w)
+        self.delete("all")
+        if fill != bg:
+            rounded(self, 0, 0, w, 36, 10, fill, bg)
+        self.create_text(w / 2, 18, text=self.label, fill=fg, font=self.ui.font)
+
+
+class Check(tk.Canvas):
+    def __init__(self, parent, ui, text, var, command=None):
+        super().__init__(parent, height=36, bg=parent["bg"], highlightthickness=0, bd=0, cursor="hand2")
+        self.ui, self.var, self.label = ui, var, text
+        self.bind("<ButtonRelease-1>", lambda e: (var.set(not var.get()), self.draw(), command and command()))
+        self.draw()
+
+    def draw(self):
+        c, bg = self.ui.c, self["bg"]
+        self.delete("all")
+        self.configure(width=self.ui.font.measure(self.label) + 30)
+        if self.var.get():
+            rounded(self, 0, 9, 18, 27, 5, c["primary"], bg)
+            self.create_text(9, 18, text="✓", fill=c["onPrimary"], font=self.ui.mono)
+        else:
+            rounded(self, 0, 9, 18, 27, 5, c["onSurfaceVariant"], bg)
+            rounded(self, 2, 11, 16, 25, 3, bg, c["onSurfaceVariant"])
+        self.create_text(28, 18, text=self.label, anchor="w", fill=c["onSurface"], font=self.ui.font)
+
+
+def search_field(parent, ui, var, width=300):
+    c = ui.c
+    canvas = tk.Canvas(parent, width=width, height=36, bg=parent["bg"], highlightthickness=0, bd=0)
+    rounded(canvas, 0, 0, width, 36, 10, c["surfaceContainerHigh"], parent["bg"])
+    canvas.create_text(14, 18, text="Filter", anchor="w", fill=c["onSurfaceVariant"], font=ui.font)
+    entry = tk.Entry(canvas, textvariable=var, bd=0, highlightthickness=0, bg=c["surfaceContainerHigh"],
+                     fg=c["onSurface"], insertbackground=c["onSurface"], font=ui.font)
+    x = 24 + ui.font.measure("Filter")
+    canvas.create_window(x, 18, window=entry, anchor="w", width=width - x - 12)
+    return canvas, entry
+
+
+def style_table(root, c, ui):
+    card = c["surfaceContainer"]
+    style = ttk.Style(root)
     style.theme_use("clam")
-    root.configure(background=bg)
-    style.configure(".", background=bg, foreground=fg, fieldbackground=field, bordercolor=line, lightcolor=field,
-                    darkcolor=field, troughcolor=bg, arrowcolor=muted, font=font, selectbackground=sel,
-                    selectforeground=fg, insertcolor=fg, indicatorbackground=field, indicatorforeground="#3574f0")
     style.layout("Treeview", [("Treeview.treearea", {"sticky": "nswe"})])
-    style.configure("Treeview", background=field, rowheight=30)
-    style.map("Treeview", background=[("selected", sel)], foreground=[("selected", fg)])
-    style.configure("Treeview.Heading", background=bg, foreground=muted, relief="flat", padding=(8, 6))
-    style.map("Treeview.Heading", background=[("active", bg)])
-    style.configure("TButton", background=field, padding=(12, 5), relief="flat")
-    style.map("TButton", background=[("active", line)])
-    style.configure("Accent.TButton", background="#3574f0", foreground="#ffffff", bordercolor="#3574f0")
-    style.map("Accent.TButton", background=[("active", "#2f64d1")])
-    style.map("TCombobox", fieldbackground=[("readonly", field)], foreground=[("readonly", fg)])
-    style.configure("TEntry", padding=5)
-    style.configure("Muted.TLabel", foreground=muted)
-    for key, value in (("background", field), ("foreground", fg), ("selectBackground", sel), ("font", font)):
-        root.option_add(f"*TCombobox*Listbox.{key}", value)
+    style.configure("Treeview", background=card, fieldbackground=card, foreground=c["onSurface"], rowheight=34,
+                    font=ui.mono, borderwidth=0)
+    style.map("Treeview", background=[("selected", c["secondaryContainer"])],
+              foreground=[("selected", c["onSecondaryContainer"])])
+    style.configure("Treeview.Heading", background=card, foreground=c["onSurfaceVariant"], font=ui.font,
+                    relief="flat", padding=(4, 8), borderwidth=0, lightcolor=card, darkcolor=card, bordercolor=card)
+    style.map("Treeview.Heading", background=[("active", card)], foreground=[("active", c["onSurface"])])
+    style.layout("Thin.Vertical.TScrollbar", [("Vertical.Scrollbar.trough", {"sticky": "ns", "children": [
+        ("Vertical.Scrollbar.thumb", {"expand": "1", "sticky": "nswe"})]})])
+    style.configure("Thin.Vertical.TScrollbar", troughcolor=card, background=c["outlineVariant"], bordercolor=card,
+                    lightcolor=c["outlineVariant"], darkcolor=c["outlineVariant"], arrowsize=6, gripcount=0)
+    style.map("Thin.Vertical.TScrollbar", background=[("active", c["onSurfaceVariant"])])
 
 
 def window():
-    import tkinter as tk
-    from tkinter import messagebox, ttk
-    root = tk.Tk()
+    root = tk.Tk(className="api-review")
     root.title("API review")
-    root.geometry("1200x700")
-    theme(root, ttk)
+    root.geometry("1200x720")
+    c = scheme()
+    ui = SimpleNamespace(c=c, font=tkfont.Font(family="Rubik", size=10),
+                         mono=tkfont.Font(family="JetBrainsMono Nerd Font", size=10))
+    root.configure(bg=c["background"])
+    style_table(root, c, ui)
     show, query, exported_only = tk.StringVar(value="Everything"), tk.StringVar(), tk.BooleanVar(value=True)
-    choice, set_since, status = tk.StringVar(value="STABLE"), tk.BooleanVar(value=True), tk.StringVar()
+    set_since, status = tk.BooleanVar(value=True), tk.StringVar()
     version = re.search(r"version\s*=\s*'([^']+)'", (ROOT / "build.gradle").read_text())[1]
-    state = {"places": [], "rows": [], "stamp": None, "sort": None}
+    state = {"places": [], "rows": [], "stamp": None, "sort": None, "hover": None}
 
     def stamp():
         return sum(p.stat().st_mtime_ns for p in ROOT.glob("*/src/main/java/**/*.java"))
@@ -155,7 +250,7 @@ def window():
         state["places"], state["stamp"] = scan(), stamp()
         refill()
         shown = [p.problem for p in state["places"] if p.exported or not exported_only.get()]
-        status.set(f"{message}{shown.count('Experimental')} experimental, {shown.count('No status')} without status")
+        status.set(f"{message}{shown.count('Experimental')} experimental · {shown.count('No status')} without status")
 
     def refill():
         q = query.get().lower()
@@ -175,7 +270,7 @@ def window():
     def apply(new_status):
         if places := selected():
             mark(places, new_status, f"v{version}" if set_since.get() else None)
-            reload(f"Set {len(places)} to {new_status}  ·  ")
+            reload(f"Set {len(places)} to {new_status} · ")
 
     def jump(_=None):
         try:
@@ -184,36 +279,77 @@ def window():
         except OSError as e:
             messagebox.showerror("IntelliJ", str(e))
 
-    (top := ttk.Frame(root, padding=(12, 10))).pack(fill="x")
-    box = ttk.Combobox(top, textvariable=show, state="readonly", width=12, values=["Everything", "Experimental", "No status"])
-    box.bind("<<ComboboxSelected>>", lambda e: refill())
-    entry = ttk.Entry(top, textvariable=query, width=30)
-    query.trace_add("write", lambda *a: refill())
-    for w in (box, entry, ttk.Checkbutton(top, text="Exported packages only", variable=exported_only, command=reload),
-              ttk.Button(top, text="Reload (F5)", command=reload)):
-        w.pack(side="left", padx=4)
+    def filter_by(name):
+        show.set(name)
+        for b in segments:
+            b.set(selected=b.label == name)
+        refill()
 
-    columns = {"problem": 100, "name": 400, "kind": 80, "module": 130, "since": 70, "changed": 90, "file": 300}
-    table = ttk.Treeview(root, columns=list(columns), show="headings")
-    for c, width in columns.items():
-        table.heading(c, text=c.capitalize(), anchor="w", command=lambda c=c: (state.update(sort=c), refill()))
-        table.column(c, width=width, stretch=c in ("name", "file"))
-    table.pack(fill="both", expand=True, padx=12)
+    def hover(row):
+        if state["hover"] and table.exists(state["hover"]):
+            table.item(state["hover"], tags=())
+        if row:
+            table.item(row, tags=("hover",))
+        state["hover"] = row
+
+    (top := tk.Frame(root, bg=c["background"])).pack(fill="x", padx=16, pady=(14, 10))
+    segments = [Button(top, ui, name, lambda n=name: filter_by(n), "text")
+                for name in ("Everything", "Experimental", "No status")]
+    search, entry = search_field(top, ui, query)
+    query.trace_add("write", lambda *a: refill())
+    for w in (*segments, search, Check(top, ui, "Exported packages only", exported_only, reload)):
+        w.pack(side="left", padx=(0, 10))
+    segments[0].set(selected=True)
+
+    card = tk.Canvas(root, bg=c["background"], highlightthickness=0, bd=0)
+    card.pack(fill="both", expand=True, padx=16)
+    inner = tk.Frame(card, bg=c["surfaceContainer"])
+    view = card.create_window(12, 8, window=inner, anchor="nw")
+
+    def fit(e):
+        card.delete("shape")
+        rounded(card, 0, 0, e.width, e.height, 10, c["surfaceContainer"], c["background"])
+        card.tag_lower("shape")
+        card.itemconfigure(view, width=e.width - 24, height=e.height - 16)
+
+    card.bind("<Configure>", fit)
+    columns = {"problem": 110, "name": 420, "kind": 90, "module": 140, "since": 70, "changed": 100, "file": 300}
+    table = ttk.Treeview(inner, columns=list(columns), show="headings")
+    for col, width in columns.items():
+        table.heading(col, text=col.capitalize(), anchor="w", command=lambda k=col: (state.update(sort=k), refill()))
+        table.column(col, width=width, stretch=col in ("name", "file"))
+    scroll = ttk.Scrollbar(inner, orient="vertical", command=table.yview, style="Thin.Vertical.TScrollbar")
+    table.configure(yscrollcommand=scroll.set)
+    scroll.pack(side="right", fill="y", pady=8)
+    table.pack(fill="both", expand=True)
+    table.tag_configure("hover", background=c["surfaceContainerHigh"])
+    table.bind("<Motion>", lambda e: hover(table.identify_row(e.y)))
+    table.bind("<Leave>", lambda e: hover(None))
     for key in ("<Double-1>", "<Return>"):
         table.bind(key, jump)
 
-    (actions := ttk.Frame(root, padding=(12, 10))).pack(fill="x")
-    for w in (ttk.Button(actions, text="Mark STABLE (Alt+M)", style="Accent.TButton", command=lambda: apply("STABLE")),
-              ttk.Combobox(actions, textvariable=choice, state="readonly", width=13,
-                           values=["STABLE", "MAINTAINED", "EXPERIMENTAL", "INTERNAL", "DEPRECATED"]),
-              ttk.Button(actions, text="Apply", command=lambda: apply(choice.get())),
-              ttk.Checkbutton(actions, text=f'Set since = "v{version}"', variable=set_since),
-              ttk.Button(actions, text="Open in IntelliJ (Enter)", command=jump)):
-        w.pack(side="left", padx=4)
-    ttk.Label(root, textvariable=status, style="Muted.TLabel", padding=(14, 0, 14, 10)).pack(fill="x")
+    def popup():
+        menu = tk.Toplevel(root, bg=c["surfaceContainerHigh"], padx=6, pady=6)
+        menu.overrideredirect(True)
+        for name in ("MAINTAINED", "EXPERIMENTAL", "INTERNAL", "DEPRECATED"):
+            Button(menu, ui, name, lambda n=name: (menu.destroy(), apply(n)), "text").pack(fill="x")
+        menu.update_idletasks()  # opens upwards, the bar is at the bottom
+        menu.geometry(f"+{other.winfo_rootx()}+{other.winfo_rooty() - menu.winfo_reqheight() - 6}")
+        menu.grab_set()
+        menu.bind("<Escape>", lambda e: menu.destroy())
+        menu.bind("<Button-1>", lambda e: e.widget is menu and menu.destroy())  # click outside
+
+    (bottom := tk.Frame(root, bg=c["background"])).pack(fill="x", padx=16, pady=(10, 14))
+    other = Button(bottom, ui, "Other status  ▾", popup)
+    for w in (Button(bottom, ui, "Mark stable", lambda: apply("STABLE"), "primary"), other,
+              Check(bottom, ui, f"Set since v{version}", set_since),
+              Button(bottom, ui, "Open in IntelliJ", jump, "text")):
+        w.pack(side="left", padx=(0, 10))
+    tk.Label(bottom, textvariable=status, bg=c["background"], fg=c["onSurfaceVariant"], font=ui.font).pack(side="right")
 
     root.bind("<F5>", lambda e: reload())
     root.bind("<Alt-m>", lambda e: apply("STABLE"))
+    root.bind("<Control-f>", lambda e: entry.focus_set())
     root.bind("<FocusIn>", lambda e: stamp() != state["stamp"] and reload())  # picks up edits made in IntelliJ
     reload()
     root.mainloop()
