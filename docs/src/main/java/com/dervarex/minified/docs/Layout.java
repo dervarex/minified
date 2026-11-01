@@ -90,7 +90,7 @@ final class Layout {
         } else {
             b.append("<span id=\"_top\"></span>");
         }
-        boolean reference = page.section().equals(ApiPages.SECTION) || page.section().equals(EventPages.SECTION) && page.eyebrow() != null;
+        boolean reference = page.section().equals(ApiPages.SECTION) || (page.section().equals(EventPages.SECTION) || page.section().equals(ExceptionPages.SECTION)) && page.eyebrow() != null;
         b.append("<div class=\"content-panel\"><div class=\"sl-container\"><div class=\"sl-markdown-content")
                 .append(reference ? " reference-page" : "").append("\">")
                 .append(page.body())

@@ -51,7 +51,7 @@ final class EventPages {
     /**
      * A value the event carries, a record component or a getter
      */
-    private record Field(String name, TypeMirror type, String accessor, String description) {
+    record Field(String name, TypeMirror type, String accessor, String description) {
     }
 
     private final Site site;
@@ -317,7 +317,7 @@ final class EventPages {
         return new Page(from, name, description, b.toString(), toc, SECTION, false, null, eyebrow);
     }
 
-    private List<Field> fields(TypeElement type, DocComments.Doc doc, String from) {
+    List<Field> fields(TypeElement type, DocComments.Doc doc, String from) {
         List<Field> fields = new ArrayList<>();
         if (type.getKind() == ElementKind.RECORD) {
             for (RecordComponentElement component : type.getRecordComponents()) {
@@ -343,7 +343,7 @@ final class EventPages {
         return fields;
     }
 
-    private TypeElement documentedEnum(TypeMirror type) {
+    TypeElement documentedEnum(TypeMirror type) {
         TypeElement element = site.asTypeElement(type);
         return element != null && element.getKind() == ElementKind.ENUM && site.typePaths.containsKey(element) ? element : null;
     }

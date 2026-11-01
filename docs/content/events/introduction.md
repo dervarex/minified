@@ -9,38 +9,15 @@ They allow you to receive updates from the backend, such as the current launch s
 
 ## Where events live
 
-Events aren't all posted by one class - different modules post to different categories, but they all follow the same `EventBus`/`subscribe()`/`unsubscribe()` pattern described on this page:
+Events aren't all posted by one class, different modules post them, but they all follow the same `EventBus`/`subscribe()`/`unsubscribe()` pattern.
+Every event is listed in [All events](#all-events), grouped by modules
 
-* **<a href="/events/connection/checkconnectionevent" class="link">Connection</a>**: online/offline detection, posted by `minified-launch` before network-dependent work.
-* **<a href="/events/download/assets/downloadassetsevent" class="link">Download</a>**: asset, library and client JAR download progress.
-* **<a href="/events/environment/configurex11environmentevent" class="link">Environment</a>**: graphics environment setup on Linux.
-* **<a href="/events/launch/gamestartevent" class="link">Launch</a>**: the Minecraft process starting and stopping, plus the reverse <a href="/events/launch/stopgameevent" class="link">`StopGameEvent`</a> to stop it.
-* **<a href="/events/loader/installforgeevent" class="link">Loader</a>**: Forge/NeoForge installer progress.
-* **<a href="/events/java/ensurejavaversionevent" class="link">Java</a>**: managed Java runtime resolution, download and extraction (`minified-java`).
-* **<a href="/events/auth/createmasterkeyevent" class="link">Auth</a>**: session encryption (`minified-auth`).
+:::caution[Multiple event buses]
+Only the **Connection** and **Launch** events are posted to (and `StopGameEvent` is listened to on) the `EventBus` you pass to `LaunchConfiguration.Builder.eventBus(...)`
 
-:::caution[Two different event buses]
-Only the **Connection**, **Download**, **Environment**, **Launch** and **Loader** events are posted to (and `StopGameEvent` is listened to on) the `EventBus` you pass to `LaunchConfiguration.Builder.eventBus(...)` (via `LaunchContext`).
+The **Java** and **Auth** events are posted by `JavaManager` and `AuthManager` individually.
 
-The **Java** and **Auth** events are posted by `JavaManager` and `AuthManager` respectively, and each keeps its *own* internal, static `EventBus` that has nothing to do with `LaunchConfiguration`'s. `AuthManager.init(baseDir, eventBus)` does **not** forward that bus to `JavaManager` either - internally it always calls the single-argument `JavaManager.init(path)`, which resets Java's bus back to a fresh, private one.
-
-To actually receive `EnsureJavaVersionEvent`, `JavaArchiveDownloadEvent`, `ExtractArchiveEvent`, or any of the Auth encryption events, you need to explicitly (re-)initialize `JavaManager` (and `AuthManager`, if you want its events too) with the same `EventBus` instance - and do it *after* `AuthManager.init(...)`, since that call would otherwise overwrite `JavaManager`'s bus back to a private one:
-
-```java
-EventBus eventBus = new EventBus();
-
-AuthManager.init(authDirectory, eventBus);
-// AuthManager.init() just reset JavaManager to a private bus internally,
-// so re-point it at the shared bus afterwards:
-JavaManager.init(javaDirectory, eventBus);
-
-LaunchConfiguration config = new LaunchConfiguration.Builder()
-        // ...
-        .eventBus(eventBus)
-        .build();
-```
-
-Skip this and subscribers on the `LaunchConfiguration`'s bus will simply never see Java or Auth events - there's no error, they just go to a different, private `EventBus` instance.
+The **Modrinth** events are posted to the `EventBus` you pass to `new Modrinth(baseUrl, eventBus)`.
 :::
 
 ## Reverse events

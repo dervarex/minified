@@ -159,6 +159,19 @@ final class ApiPages {
             b.append("</ul>");
         }
 
+        List<ExceptionPages.ExceptionDoc> moduleExceptions = site.exceptions.exceptions().stream()
+                .filter(e -> e.module() == module).toList();
+        if (!moduleExceptions.isEmpty()) {
+            b.append("<h2 id=\"exceptions\">Exceptions</h2>");
+            toc.add(new TocEntry(2, "exceptions", "Exceptions"));
+            b.append("<ul>");
+            for (ExceptionPages.ExceptionDoc exception : moduleExceptions) {
+                b.append("<li><a href=\"").append(Html.rel(from, exception.path())).append("\"><code>")
+                        .append(exception.type().getSimpleName()).append("</code></a></li>");
+            }
+            b.append("</ul>");
+        }
+
         site.search.add(new SearchEntry(module.name(), "module", from, moduleDescription(module)));
         return new Page(from, module.name(), moduleDescription(module), b.toString(), toc, SECTION, false, null,
                 "<a href=\"" + Html.rel(from, "api/") + "\">API Reference</a>");
@@ -505,6 +518,11 @@ final class ApiPages {
         if (event != null) {
             b.append("<dt>Event</dt><dd><a href=\"").append(Html.rel(from, event.path()))
                     .append("\">When it fires and how to listen to it</a></dd>");
+        }
+        ExceptionPages.ExceptionDoc exception = site.exceptions.exceptionFor(type);
+        if (exception != null) {
+            b.append("<dt>Exception</dt><dd><a href=\"").append(Html.rel(from, exception.path()))
+                    .append("\">Where it is thrown and how to catch it</a></dd>");
         }
         return b.isEmpty() ? "" : "<dl class=\"api-relations\">" + b + "</dl>";
     }

@@ -105,6 +105,7 @@ final class Site {
     final Map<String, String> pageTitles = new HashMap<>();
 
     EventPages events;
+    ExceptionPages exceptions;
     Guides guides;
 
     Site(DocletEnvironment env, Config config) {
@@ -126,11 +127,14 @@ final class Site {
         indexTypes();
         events = new EventPages(this);
         events.collect();
+        exceptions = new ExceptionPages(this);
+        exceptions.collect();
         guides = new Guides(this);
         guides.load();
 
         new ApiPages(this).build();
         events.build();
+        exceptions.build();
         guides.build();
 
         Sidebar sidebar = Sidebar.load(this);

@@ -56,7 +56,7 @@ final class Guides {
         }
         for (Path file : files) {
             Path relative = content.relativize(file);
-            if (relative.startsWith("modules") || isEventContent(file)) {
+            if (relative.startsWith("modules") || isEventContent(file) || isExceptionContent(file)) {
                 continue;
             }
             String text = Files.readString(file);
@@ -74,6 +74,12 @@ final class Guides {
         Path events = site.config.content().resolve("events");
         String base = file.getFileName().toString().replaceFirst("\\.md$", "");
         return file.getParent().equals(events) && site.events.byLowerName(base.toLowerCase(Locale.ROOT)) != null;
+    }
+
+    private boolean isExceptionContent(Path file) {
+        Path exceptions = site.config.content().resolve("exceptions");
+        String base = file.getFileName().toString().replaceFirst("\\.md$", "");
+        return file.getParent().equals(exceptions) && site.exceptions.byLowerName(base.toLowerCase(Locale.ROOT)) != null;
     }
 
     void build() {
@@ -111,6 +117,7 @@ final class Guides {
             public String directive(String name, String argument) {
                 return switch (name) {
                     case "events" -> site.events.overview(from);
+                    case "exceptions" -> site.exceptions.overview(from);
                     default -> {
                         site.warnings.add(where, "unknown directive {{" + name + "}}");
                         yield null;
@@ -127,6 +134,7 @@ final class Guides {
             knownPaths = new HashSet<>();
             guides.forEach(g -> knownPaths.add(g.path()));
             site.events.events().forEach(e -> knownPaths.add(e.path()));
+            site.exceptions.exceptions().forEach(e -> knownPaths.add(e.path()));
             knownPaths.addAll(site.typePaths.values());
             site.packages.values().forEach(p -> knownPaths.add(p.path()));
             site.modules.forEach(m -> knownPaths.add(m.path()));
@@ -168,6 +176,10 @@ final class Guides {
         EventPages.EventDoc event = site.events.byLowerName(last);
         if (event != null) {
             return Html.rel(from, event.path()) + fragment;
+        }
+        ExceptionPages.ExceptionDoc exception = site.exceptions.byLowerName(last);
+        if (exception != null) {
+            return Html.rel(from, exception.path()) + fragment;
         }
         site.warnings.add(where, "broken link " + href);
         return href;
