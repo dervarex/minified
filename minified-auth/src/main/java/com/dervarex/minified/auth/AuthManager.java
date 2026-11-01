@@ -7,7 +7,6 @@ import com.dervarex.minified.auth.exceptions.LoginFailedException;
 import com.dervarex.minified.auth.exceptions.NoConnectionLoginFailedException;
 import com.dervarex.minified.auth.user.User;
 import com.dervarex.minified.events.EventBus;
-import com.dervarex.minified.java.JavaManager;
 import com.dervarex.minified.utils.exceptions.NoConnectionException;
 import com.dervarex.minified.utils.network.NetworkUtil;
 import com.google.gson.Gson;
@@ -64,7 +63,6 @@ public class AuthManager {
         SESSIONS_DIR = BASE_DIR.resolve("sessions");
         KEY_FILE = BASE_DIR.resolve("master.key");
         prepareKeyDirectories();
-        JavaManager.init(BASE_DIR.resolve("java"));
     }
     @API(status = API.Status.STABLE)
     public static void init(Path BaseDir) {
@@ -98,7 +96,6 @@ public class AuthManager {
         SESSIONS_DIR = BASE_DIR.resolve("sessions");
         KEY_FILE = BASE_DIR.resolve("master.key");
         prepareKeyDirectories();
-        JavaManager.init(BASE_DIR.resolve("java"));
     }
     @API(status = API.Status.STABLE)
     public static void init(String launcherName) {

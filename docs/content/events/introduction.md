@@ -12,13 +12,7 @@ They allow you to receive updates from the backend, such as the current launch s
 Events aren't all posted by one class, different modules post them, but they all follow the same `EventBus`/`subscribe()`/`unsubscribe()` pattern.
 Every event is listed in [All events](#all-events), grouped by modules
 
-:::caution[Multiple event buses]
-Only the **Connection** and **Launch** events are posted to (and `StopGameEvent` is listened to on) the `EventBus` you pass to `LaunchConfiguration.Builder.eventBus(...)`
-
-The **Java** and **Auth** events are posted by `JavaManager` and `AuthManager` individually.
-
-The **Modrinth** events are posted to the `EventBus` you pass to `new Modrinth(baseUrl, eventBus)`.
-:::
+Every module posts its events to the `EventBus` you give it: `LaunchConfiguration.Builder.eventBus(...)`, `AuthManager.init(...)`, `JavaManager.init(...)` or `new Modrinth(baseUrl, eventBus)`. I'd recommend passing the same EventBus to every module, it's simpler like that.
 
 ## Reverse events
 
