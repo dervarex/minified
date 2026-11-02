@@ -1,11 +1,14 @@
 package com.dervarex.minified.modrinth.internal;
 
 import com.dervarex.minified.modrinth.*;
+import com.dervarex.minified.modrinth.events.ApiRequestEvent;
+import com.dervarex.minified.modrinth.events.RateLimitedEvent;
 import com.dervarex.minified.modrinth.exceptions.ModrinthApiException;
 import com.dervarex.minified.modrinth.exceptions.ModrinthNotFoundException;
 import com.dervarex.minified.modrinth.exceptions.ModrinthRateLimitedException;
 import com.dervarex.minified.modrinth.exceptions.ModrinthSerializationException;
 import com.dervarex.minified.utils.exceptions.HttpException;
+import com.dervarex.minified.utils.http.HttpResponse;
 import com.dervarex.minified.utils.http.HttpUtil;
 import com.dervarex.minified.utils.json.JsonArray;
 import com.dervarex.minified.utils.json.JsonObject;
@@ -14,6 +17,7 @@ import com.dervarex.minified.utils.json.JsonParser;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +28,8 @@ import java.util.function.Function;
  * Shared HTTP/JSON helper for Modrinth endpoint clients.
  */
 public abstract class AbstractModrinthClient {
+    private static final int TIMEOUT_MS = 10_000;
+
     protected final Modrinth modrinth;
 
     protected AbstractModrinthClient(Modrinth modrinth) {
@@ -61,24 +67,34 @@ public abstract class AbstractModrinthClient {
 
     protected String request(String path, Map<String, String> query) {
         String url = buildUrl(path, query);
-        try {
-            return HttpUtil.get(url);
-        } catch (HttpException ex) {
-            throw translateHttpException(url, ex);
-        } catch (IOException ex) {
-            throw new ModrinthApiException("Failed to contact Modrinth at " + url, -1, url, ex);
-        }
+        return send("GET", url, () -> HttpUtil.request("GET", url, Map.of(), null, TIMEOUT_MS, TIMEOUT_MS));
     }
 
     protected JsonObject postObject(String path, String jsonBody) {
         String url = buildUrl(path, Map.of());
+        return readJsonObject(send("POST", url, () -> HttpUtil.requestJson("POST", url, jsonBody)));
+    }
+
+    private String send(String method, String url, HttpCall call) {
+        long start = System.nanoTime();
+        int status = -1;
         try {
-            return readJsonObject(HttpUtil.requestJson("POST", url, jsonBody).getBodyAsString());
+            HttpResponse response = call.execute();
+            status = response.statusCode();
+            return response.getBodyAsString();
         } catch (HttpException ex) {
+            status = ex.getStatusCode();
             throw translateHttpException(url, ex);
         } catch (IOException ex) {
             throw new ModrinthApiException("Failed to contact Modrinth at " + url, -1, url, ex);
+        } finally {
+            modrinth.getEventBus().post(new ApiRequestEvent(method, url, status, Duration.ofNanos(System.nanoTime() - start)));
         }
+    }
+
+    @FunctionalInterface
+    private interface HttpCall {
+        HttpResponse execute() throws IOException, HttpException;
     }
 
     protected JsonObject readJsonObject(String json) {
@@ -147,6 +163,7 @@ public abstract class AbstractModrinthClient {
         }
         if (status == 429) {
             long retryAfter = parseLong(ex.getResponseHeaders().getOrDefault("Retry-After", ex.getResponseHeaders().getOrDefault("retry-after", "0")));
+            modrinth.getEventBus().post(new RateLimitedEvent(url, retryAfter));
             return new ModrinthRateLimitedException(message, status, url, retryAfter, ex);
         }
         return new ModrinthApiException(message, status, url, ex);

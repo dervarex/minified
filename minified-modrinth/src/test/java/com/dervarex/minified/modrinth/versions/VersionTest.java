@@ -1,6 +1,13 @@
 package com.dervarex.minified.modrinth.versions;
 
+import com.dervarex.minified.events.Event;
+import com.dervarex.minified.events.EventBus;
 import com.dervarex.minified.modrinth.Modrinth;
+import com.dervarex.minified.modrinth.events.DependencyConflictEvent;
+import com.dervarex.minified.modrinth.events.DependencyDownloadedEvent;
+import com.dervarex.minified.modrinth.events.DependencyResolvedEvent;
+import com.dervarex.minified.modrinth.events.DependencySkippedEvent;
+import com.dervarex.minified.modrinth.events.DependencySkippedEvent.Reason;
 import com.dervarex.minified.modrinth.exceptions.ModrinthStateException;
 import com.dervarex.minified.modrinth.loaders.ModLoader;
 import com.sun.net.httpserver.HttpServer;
@@ -201,12 +208,147 @@ class VersionTest {
         assertEquals(2665879L, jar.toFile().length());
     }
 
+    @Test
+    void resolveDependencies_postsWhatItResolvedAndWhatItSkipped() throws IOException {
+        List<Event> events = new ArrayList<>();
+        Modrinth modrinth = fakeModrinth(Map.of(
+                "root", version("root", "required:a", "optional:c", "incompatible:enemy", "embedded:inside", "required:nothing"),
+                "a", version("a", "required:root"),
+                "c", version("c"),
+                "nothing", "{\"id\":null}"), events);
+
+        modrinth.versions().get("root").resolveDependencies();
+
+        assertEquals(List.of(
+                "resolved root -> a",
+                "skipped a -> root CIRCULAR",
+                "skipped root -> c OPTIONAL",
+                "skipped root -> enemy INCOMPATIBLE",
+                "skipped root -> inside EMBEDDED",
+                "skipped root -> nothing UNRESOLVABLE"
+        ), describe(events));
+    }
+
+    @Test
+    void resolveDependencies_postsUnknownTypes() throws IOException {
+        List<Event> events = new ArrayList<>();
+        Modrinth modrinth = fakeModrinth(Map.of("root", version("root", "weird:x")), events);
+
+        assertTrue(modrinth.versions().get("root").resolveDependencies().isEmpty());
+        assertEquals(List.of("skipped root -> x UNKNOWN_TYPE"), describe(events));
+    }
+
+    @Test
+    void downloadDependencies_countsUp(@TempDir Path tempDir) throws IOException {
+        List<Event> events = new ArrayList<>();
+        Modrinth modrinth = fakeModrinth(Map.of(
+                "root", version("root", "required:a", "required:b"),
+                "a", withFile(version("a")),
+                "b", withFile(version("b"))), events);
+
+        List<Path> files = modrinth.versions().get("root").downloadDependencies(tempDir);
+
+        List<DependencyDownloadedEvent> downloaded = events.stream()
+                .filter(DependencyDownloadedEvent.class::isInstance).map(DependencyDownloadedEvent.class::cast).toList();
+        assertEquals(2, downloaded.size());
+        assertEquals("a", downloaded.get(0).dependency().getId());
+        assertEquals(1, downloaded.get(0).completed());
+        assertEquals(2, downloaded.get(1).completed());
+        assertEquals(2, downloaded.get(1).total());
+        assertEquals(files.get(1), downloaded.get(1).file());
+        assertEquals("root", downloaded.get(1).root().getId());
+    }
+
+    @Test
+    void resolveDependencies_postsConflictsBetweenWhatGetsInstalled() throws IOException {
+        List<Event> events = new ArrayList<>();
+        Modrinth modrinth = fakeModrinth(Map.of(
+                // root can't run with anything from project p-b, but a pulls in b anyway
+                "root", version("root", "required:a", "required:c").replace("]}",
+                        ",{\"project_id\":\"p-b\",\"dependency_type\":\"incompatible\"}]}"),
+                "a", version("a", "required:b"),
+                "b", version("b"),
+                // c can't run with version a
+                "c", version("c", "incompatible:a")), events);
+
+        assertEquals(List.of("a", "b", "c"), ids(modrinth.versions().get("root").resolveDependencies()));
+
+        List<String> conflicts = events.stream().filter(DependencyConflictEvent.class::isInstance)
+                .map(DependencyConflictEvent.class::cast)
+                .map(e -> e.declaredBy().getId() + " vs " + e.conflicting().getId()).toList();
+        assertEquals(List.of("root vs b", "c vs a"), conflicts);
+    }
+
+    @Test
+    void resolveDependencies_noConflictWhenTheIncompatibleOneStaysOut() throws IOException {
+        List<Event> events = new ArrayList<>();
+        Modrinth modrinth = fakeModrinth(Map.of(
+                "root", version("root", "required:a", "incompatible:enemy"),
+                "a", version("a"),
+                "enemy", version("enemy")), events);
+
+        modrinth.versions().get("root").resolveDependencies();
+
+        assertTrue(events.stream().noneMatch(DependencyConflictEvent.class::isInstance));
+    }
+
+    @Test
+    void resolvedEventsSayWhenAVersionIsNotListed() throws IOException {
+        List<Event> events = new ArrayList<>();
+        Modrinth modrinth = fakeModrinth(Map.of(
+                "root", version("root", "required:old", "required:fine", "required:nostatus"),
+                "old", version("old").replace("{", "{\"status\":\"archived\","),
+                "fine", version("fine").replace("{", "{\"status\":\"listed\","),
+                "nostatus", version("nostatus")), events);
+
+        modrinth.versions().get("root").resolveDependencies();
+
+        List<String> notListed = events.stream().filter(DependencyResolvedEvent.class::isInstance)
+                .map(DependencyResolvedEvent.class::cast)
+                .filter(DependencyResolvedEvent::notListed)
+                .map(e -> e.resolved().getId()).toList();
+        assertEquals(List.of("old"), notListed);
+    }
+
+    private Modrinth fakeModrinth(Map<String, String> versions, List<Event> events) throws IOException {
+        EventBus eventBus = new EventBus();
+        eventBus.subscribe(DependencyResolvedEvent.class, events::add);
+        eventBus.subscribe(DependencySkippedEvent.class, events::add);
+        eventBus.subscribe(DependencyDownloadedEvent.class, events::add);
+        eventBus.subscribe(DependencyConflictEvent.class, events::add);
+        Modrinth plain = fakeModrinth(versions);
+        return new Modrinth(plain.getBaseUrl(), eventBus);
+    }
+
+    private static List<String> describe(List<Event> events) {
+        return events.stream().map(event -> switch (event) {
+            case DependencyResolvedEvent e -> "resolved " + e.parent().getId() + " -> " + e.resolved().getId();
+            case DependencySkippedEvent e -> "skipped " + e.parent().getId() + " -> " + e.dependency().getVersionId() + " " + e.reason();
+            default -> event.toString();
+        }).toList();
+    }
+
+    private static String withFile(String versionJson) {
+        String id = versionJson.substring(7, versionJson.indexOf('"', 7));
+        return versionJson.substring(0, versionJson.length() - 1)
+                + ",\"files\":[{\"url\":\"BASE/file/" + id + ".jar\",\"filename\":\"" + id + ".jar\",\"primary\":true,\"hashes\":{}}]}";
+    }
+
     private Modrinth fakeModrinth(Map<String, String> versions) throws IOException {
         HttpServer server = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
         server.createContext("/version/", exchange -> {
             String json = versions.get(exchange.getRequestURI().getPath().substring("/version/".length()));
+            if (json != null) {
+                json = json.replace("BASE", "http://localhost:" + exchange.getLocalAddress().getPort());
+            }
             byte[] body = (json == null ? "{}" : json).getBytes(StandardCharsets.UTF_8);
             exchange.sendResponseHeaders(json == null ? 404 : 200, body.length);
+            exchange.getResponseBody().write(body);
+            exchange.close();
+        });
+        server.createContext("/file/", exchange -> {
+            byte[] body = exchange.getRequestURI().getPath().getBytes(StandardCharsets.UTF_8);
+            exchange.sendResponseHeaders(200, body.length);
             exchange.getResponseBody().write(body);
             exchange.close();
         });
