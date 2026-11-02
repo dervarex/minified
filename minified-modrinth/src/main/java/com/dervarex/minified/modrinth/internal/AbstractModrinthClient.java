@@ -1,6 +1,7 @@
 package com.dervarex.minified.modrinth.internal;
 
 import com.dervarex.minified.modrinth.*;
+import com.dervarex.minified.modrinth.events.RateLimitedEvent;
 import com.dervarex.minified.modrinth.exceptions.ModrinthApiException;
 import com.dervarex.minified.modrinth.exceptions.ModrinthNotFoundException;
 import com.dervarex.minified.modrinth.exceptions.ModrinthRateLimitedException;
@@ -147,6 +148,7 @@ public abstract class AbstractModrinthClient {
         }
         if (status == 429) {
             long retryAfter = parseLong(ex.getResponseHeaders().getOrDefault("Retry-After", ex.getResponseHeaders().getOrDefault("retry-after", "0")));
+            modrinth.getEventBus().post(new RateLimitedEvent(url, retryAfter));
             return new ModrinthRateLimitedException(message, status, url, retryAfter, ex);
         }
         return new ModrinthApiException(message, status, url, ex);

@@ -1,5 +1,9 @@
 package com.dervarex.minified.modrinth.versions;
 
+import com.dervarex.minified.events.Event;
+import com.dervarex.minified.modrinth.events.DownloadFinishedEvent;
+import com.dervarex.minified.modrinth.events.DownloadProgressEvent;
+import com.dervarex.minified.modrinth.events.DownloadStartedEvent;
 import com.dervarex.minified.modrinth.events.UnverifiedDownloadEvent;
 import com.dervarex.minified.modrinth.exceptions.ModrinthDownloadException;
 import com.dervarex.minified.modrinth.exceptions.ModrinthHashMismatchException;
@@ -66,13 +70,16 @@ public class VersionFile {
             String hashName = selectSupportedHash();
             if (Files.exists(destination) && hashName != null && hashMatches(destination, hashName, hashes.get(hashName))) {
                 notifyIfUnverified(hashName, destination);
+                post(new DownloadFinishedEvent(resolveFilename(), url, destination, true));
                 return destination;
             }
 
             Path temp = Files.createTempFile(directory, "modrinth-", ".download");
             try {
+                post(new DownloadStartedEvent(resolveFilename(), url, destination, size > 0 ? size : -1));
                 Path downloaded = downloadTo(temp, destination, hashName);
                 notifyIfUnverified(hashName, downloaded);
+                post(new DownloadFinishedEvent(resolveFilename(), url, downloaded, false));
                 return downloaded;
             } finally {
                 Files.deleteIfExists(temp);
@@ -94,14 +101,45 @@ public class VersionFile {
             response.body().close();
             throw new ModrinthDownloadException("Failed to download " + resolveFilename() + " (HTTP " + response.statusCode() + ")");
         }
+        long totalBytes = response.headers().firstValueAsLong("Content-Length").orElse(size > 0 ? size : -1);
         try (InputStream in = response.body(); OutputStream out = Files.newOutputStream(temp)) {
-            in.transferTo(out);
+            copyWithProgress(in, out, totalBytes);
         }
         if (hashName != null && !hashMatches(temp, hashName, hashes.get(hashName))) {
             throw new ModrinthHashMismatchException(resolveFilename(), hashName, hashes.get(hashName), computeHash(temp, hashName));
         }
         Files.move(temp, destination, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
         return destination;
+    }
+
+    // progress events are throttled to 100ms
+    private void copyWithProgress(InputStream in, OutputStream out, long totalBytes) throws IOException {
+        byte[] buffer = new byte[8192];
+        long downloadedBytes = 0;
+        long lastEventTime = 0;
+        int read;
+        while ((read = in.read(buffer)) != -1) {
+            out.write(buffer, 0, read);
+            downloadedBytes += read;
+            long now = System.currentTimeMillis();
+            if (now - lastEventTime >= 100) {
+                postProgress(downloadedBytes, totalBytes);
+                lastEventTime = now;
+            }
+        }
+        postProgress(downloadedBytes, totalBytes);
+    }
+
+    private void postProgress(long downloadedBytes, long totalBytes) {
+        double progress = totalBytes > 0 ? Math.min(1.0, (double) downloadedBytes / totalBytes) : -1.0;
+        post(new DownloadProgressEvent(resolveFilename(), url, progress, downloadedBytes, totalBytes));
+    }
+
+    // if there's no eventbus we can't tell anyone
+    private void post(Event event) {
+        if (owner != null && owner.client != null) {
+            owner.client.getEventBus().post(event);
+        }
     }
 
     public boolean hasHash(String name) {

@@ -1,6 +1,8 @@
 package com.dervarex.minified.modrinth.internal;
 
+import com.dervarex.minified.events.EventBus;
 import com.dervarex.minified.modrinth.Modrinth;
+import com.dervarex.minified.modrinth.events.RateLimitedEvent;
 import com.dervarex.minified.modrinth.exceptions.ModrinthApiException;
 import com.dervarex.minified.modrinth.exceptions.ModrinthRateLimitedException;
 import com.dervarex.minified.modrinth.exceptions.ModrinthSerializationException;
@@ -11,6 +13,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -199,11 +202,18 @@ class AbstractModrinthClientTest {
         });
         server.start();
         try {
-            Modrinth modrinth = new Modrinth("http://localhost:" + server.getAddress().getPort());
+            EventBus eventBus = new EventBus();
+            List<RateLimitedEvent> events = new ArrayList<>();
+            eventBus.subscribe(RateLimitedEvent.class, events::add);
+            Modrinth modrinth = new Modrinth("http://localhost:" + server.getAddress().getPort(), eventBus);
 
             ModrinthRateLimitedException limited = assertThrows(ModrinthRateLimitedException.class, () -> modrinth.projects().get("iris"));
             assertEquals(30, limited.getRetryAfterSeconds());
+            assertEquals(1, events.size());
+            assertEquals(30, events.get(0).retryAfterSeconds());
+            assertEquals(limited.getRequestUrl(), events.get(0).url());
             assertEquals(500, assertThrows(ModrinthApiException.class, () -> modrinth.versions().get("x")).getStatusCode());
+            assertEquals(1, events.size());
         } finally {
             server.stop(0);
         }
