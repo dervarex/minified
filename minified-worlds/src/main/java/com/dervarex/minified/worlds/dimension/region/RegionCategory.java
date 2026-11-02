@@ -1,5 +1,8 @@
 package com.dervarex.minified.worlds.dimension.region;
 
+import org.apiguardian.api.API;
+
+@API(status = API.Status.STABLE)
 public enum RegionCategory {
     REGION("region"),
     POI("poi"),

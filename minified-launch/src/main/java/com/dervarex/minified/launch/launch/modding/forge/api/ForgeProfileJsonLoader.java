@@ -12,6 +12,7 @@ import java.nio.file.Path;
 /**
  * Loads the Profile Json of Forge
  */
+@API(status = API.Status.STABLE)
 public class ForgeProfileJsonLoader {
     /**
      * Loads the Profile Json of Forge.

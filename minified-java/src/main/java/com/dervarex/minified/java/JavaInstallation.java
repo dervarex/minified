@@ -1,6 +1,7 @@
 package com.dervarex.minified.java;
 
 import java.nio.file.Path;
+import org.apiguardian.api.API;
 
 /**
  * Describes a resolved Java runtime.
@@ -14,6 +15,7 @@ import java.nio.file.Path;
  * @param managed whether this runtime was downloaded and managed by {@link JavaManager}
  * @param releaseName the vendor release name for managed runtimes, or {@code null} for the current JVM
  */
+@API(status = API.Status.STABLE)
 public record JavaInstallation(
         int majorVersion,
         Path home,

@@ -11,7 +11,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import org.apiguardian.api.API;
 
+@API(status = API.Status.STABLE)
 public class Chunk {
     private static final String DEFAULT_FALLBACK_BIOME = "minecraft:plains";
 

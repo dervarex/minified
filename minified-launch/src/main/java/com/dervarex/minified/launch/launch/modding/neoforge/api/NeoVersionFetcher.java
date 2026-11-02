@@ -28,6 +28,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@API(status = API.Status.STABLE)
 public final class NeoVersionFetcher {
 
     private static final HttpClient HTTP = HttpClient.newBuilder()

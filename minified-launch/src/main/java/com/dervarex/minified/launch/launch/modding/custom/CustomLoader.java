@@ -1,6 +1,7 @@
 package com.dervarex.minified.launch.launch.modding.custom;
 import com.dervarex.minified.launch.launch.modding.Loader;
 import java.util.List;
+import org.apiguardian.api.API;
 /**
  * Custom Loader Option, the launcher will have to handle installation itself, we will not modify anything
  * @param name the display name of the custom loader
@@ -12,6 +13,7 @@ import java.util.List;
  * @param customGameArgs extra game args used to launch Minecraft
  * @param customClasspathEntries entries that will be added to the classpath on launch
  */
+@API(status = API.Status.STABLE)
 public record CustomLoader(
         String name,
         String mcVersion,

@@ -1,6 +1,7 @@
 package com.dervarex.minified.launch.events.download.libraries;
 
 import com.dervarex.minified.events.Event;
+import org.apiguardian.api.API;
 
 /**
  * Gets fired every time a new library file has been downloaded
@@ -12,6 +13,7 @@ import com.dervarex.minified.events.Event;
  * @param currentFileBytes the number of bytes downloaded for the current file
  * @param currentFileSize  the total size of the current file in bytes
  */
+@API(status = API.Status.STABLE)
 public record DownloadLibrariesEvent(
         double progress,
         long downloadedBytes,

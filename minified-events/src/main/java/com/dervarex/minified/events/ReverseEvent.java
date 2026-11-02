@@ -12,6 +12,6 @@ import org.apiguardian.api.API;
  * }</pre>
  * Post it on the same {@link EventBus} you gave the backend, posting while nothing is listening does nothing
  */
-@API(status = API.Status.EXPERIMENTAL)
+@API(status = API.Status.STABLE)
 public interface ReverseEvent extends Event {
 }

@@ -20,6 +20,7 @@ import java.util.List;
 /**
  * Utility for Fetching forge Versions
  */
+@API(status = API.Status.STABLE)
 public class ForgeVersionFetcher {
     private final HttpClient client = HttpClient.newHttpClient();
 

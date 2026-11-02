@@ -4,9 +4,11 @@ import com.dervarex.minified.utils.nbt.tag.NbtCompound;
 import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.Nullable;
+import org.apiguardian.api.API;
 
 @Getter
 @Setter
+@API(status = API.Status.STABLE)
 public class Weather {
     private Integer dataVersion;
     @Nullable

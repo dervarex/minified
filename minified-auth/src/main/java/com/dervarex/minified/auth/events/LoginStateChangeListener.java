@@ -1,6 +1,7 @@
 package com.dervarex.minified.auth.events;
 
 import com.dervarex.minified.auth.LoginState;
+import org.apiguardian.api.API;
 
 /**
  * Can be used like this:
@@ -11,6 +12,7 @@ import com.dervarex.minified.auth.LoginState;
  * }</pre>
  */
 @FunctionalInterface
+@API(status = API.Status.STABLE)
 public interface LoginStateChangeListener {
     void onStateChanged(LoginState newState);
 }

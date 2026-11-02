@@ -6,7 +6,9 @@ import com.dervarex.minified.utils.shortcut.writer.ShortcutWriter;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import org.apiguardian.api.API;
 
+@API(status = API.Status.STABLE)
 public final class Shortcut {
 
     private final String name;

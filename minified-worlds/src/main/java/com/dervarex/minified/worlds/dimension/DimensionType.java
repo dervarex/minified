@@ -1,7 +1,9 @@
 package com.dervarex.minified.worlds.dimension;
 
 import java.io.File;
+import org.apiguardian.api.API;
 
+@API(status = API.Status.STABLE)
 public enum DimensionType {
     Overworld("overworld"),
     Nether("the_nether"),

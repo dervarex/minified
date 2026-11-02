@@ -6,11 +6,13 @@ import com.dervarex.minified.utils.nbt.tag.NbtTag;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import org.apiguardian.api.API;
 
 /**
  * A block with its properties, e.g. minecraft:oak_log with axis=x.
  * No properties means the block's default state, since 5006 Minecraft doesn't even store them for that one
  */
+@API(status = API.Status.STABLE)
 public record BlockState(String name, Map<String, String> properties) {
     public static BlockState of(String name) {
         return new BlockState(name, Map.of());

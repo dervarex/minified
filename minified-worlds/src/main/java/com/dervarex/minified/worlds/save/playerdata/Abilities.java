@@ -4,9 +4,11 @@ import com.dervarex.minified.utils.nbt.tag.NbtCompound;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import org.apiguardian.api.API;
 
 @Getter
 @Setter
+@API(status = API.Status.STABLE)
 public class Abilities {
     private float walkSpeed = 0.1f;
     private float flySpeed = 0.05f;

@@ -9,11 +9,13 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import org.apiguardian.api.API;
 
 // a31ccf30-00e4-4928-a590-e366c90af710.dat (<player-uuid>.dat)
 
 @Getter
 @Setter
+@API(status = API.Status.STABLE)
 public class Player {
 
     @Nullable

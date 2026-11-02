@@ -6,10 +6,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.jetbrains.annotations.Nullable;
+import org.apiguardian.api.API;
 
 @Getter
 @Setter
 @NoArgsConstructor
+@API(status = API.Status.STABLE)
 public class Spawn {
     @Nullable
     private String dimension;

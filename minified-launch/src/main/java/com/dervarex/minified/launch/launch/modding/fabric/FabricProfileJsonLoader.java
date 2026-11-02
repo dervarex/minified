@@ -6,6 +6,7 @@ import com.dervarex.minified.launch.launch.internal.CacheManager;
 import com.dervarex.minified.utils.json.JsonObject;
 import org.apiguardian.api.API;
 
+@API(status = API.Status.STABLE)
 public class FabricProfileJsonLoader {
     @API(status = API.Status.INTERNAL, consumers = {"com.dervarex.minified.launch.*"})
     public static JsonObject loadFabricProfileJson(String version, LaunchConfiguration launchConfig, boolean online) {

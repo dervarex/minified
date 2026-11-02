@@ -9,6 +9,7 @@ import java.nio.file.Path;
 /**
  * Forge Version Json Utils
  */
+@API(status = API.Status.STABLE)
 public class ForgeVersionJson {
     /**
      *

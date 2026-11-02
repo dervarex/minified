@@ -1,8 +1,11 @@
 package com.dervarex.minified.launch.exceptions.download;
 
+import org.apiguardian.api.API;
+
 /**
  * Gets thrown when there was an issue downloading a native
  */
+@API(status = API.Status.STABLE)
 public class NativeExtractionException extends LibraryDownloadException {
     public NativeExtractionException(String message) {
         super(message);

@@ -3,6 +3,7 @@ package com.dervarex.minified.launch.launch.modding.neoforge.api;
 import com.dervarex.minified.utils.ApiEndpoints;
 import org.apiguardian.api.API;
 
+@API(status = API.Status.STABLE)
 public final class NeoInstallerFetcher {
     private NeoInstallerFetcher() {
     }

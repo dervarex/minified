@@ -36,12 +36,14 @@ import java.util.function.Supplier;
 
 import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
+import org.apiguardian.api.API;
 
 /**
  * Represents a world.
  * Note: Fields are marked nullable to prevent NullPointerExceptions,
  * although Minecraft usually generates default Nbt Structures when loading a World.
  */
+@API(status = API.Status.STABLE)
 public class WorldSave {
     @Getter
     private final Path worldDirectory;

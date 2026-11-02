@@ -6,6 +6,7 @@ import org.apiguardian.api.API;
 /**
  * Fetches the Forge Installer
  */
+@API(status = API.Status.STABLE)
 public class ForgeInstallerFetcher {
     /**
      * @param loaderVersion loader version to fetch the loader of

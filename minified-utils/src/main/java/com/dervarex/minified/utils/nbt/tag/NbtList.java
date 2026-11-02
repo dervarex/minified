@@ -2,7 +2,9 @@ package com.dervarex.minified.utils.nbt.tag;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.apiguardian.api.API;
 
+@API(status = API.Status.STABLE)
 public final class NbtList implements NbtTag {
     private final byte elementId;
     private final List<NbtTag> elements = new ArrayList<>();

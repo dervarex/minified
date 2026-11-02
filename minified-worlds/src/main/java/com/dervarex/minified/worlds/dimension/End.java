@@ -10,7 +10,9 @@ import com.dervarex.minified.worlds.dimension.region.RegionCategory;
 import com.dervarex.minified.worlds.dimension.data.EnderDragonFight;
 import com.dervarex.minified.worlds.exceptions.FailedToLoadWorldException;
 import org.jetbrains.annotations.Nullable;
+import org.apiguardian.api.API;
 
+@API(status = API.Status.STABLE)
 public final class End extends Dimension {
 
     @Nullable

@@ -1,6 +1,7 @@
 package com.dervarex.minified.launch.events.loader;
 
 import com.dervarex.minified.events.Event;
+import org.apiguardian.api.API;
 
 /**
  * Fired continuously while Minecraft Forge is installing
@@ -9,6 +10,7 @@ import com.dervarex.minified.events.Event;
  * @param gameVersion   target Minecraft version (e.g., {@code 1.20.1})
  * @param loaderVersion Forge loader version being installed (e.g., {@code 47.2.0})
  */
+@API(status = API.Status.STABLE)
 public record InstallForgeEvent(
         Stage stage,
         String gameVersion,

@@ -1,8 +1,11 @@
 package com.dervarex.minified.java;
 
+import org.apiguardian.api.API;
+
 /**
  * Utility class for checking the current Java runtime version
  */
+@API(status = API.Status.STABLE)
 public final class JavaPlatform {
     private JavaPlatform() {
     }

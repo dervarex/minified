@@ -124,6 +124,9 @@ Before opening a pull request, please verify that:
   launcher frontend.
 - Avoid adding third-party dependencies. If a change needs one, explain in the
   issue why it cannot reasonably be implemented without it.
+- Public API gets an APIGuardian `@API` status, directly, through its class or
+  `package-info.java`. New things should start as `EXPERIMENTAL` and get marked as Stable
+  before the PR gets merged.
 
 ---
 

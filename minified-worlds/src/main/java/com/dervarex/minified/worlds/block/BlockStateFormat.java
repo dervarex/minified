@@ -5,10 +5,12 @@ import com.dervarex.minified.utils.nbt.tag.NbtString;
 import com.dervarex.minified.utils.nbt.tag.NbtTag;
 
 import java.util.Map;
+import org.apiguardian.api.API;
 
 /**
  * How a chunk's palettes store block states. Mojang changed it in DataVersion 5006, because why not
  */
+@API(status = API.Status.STABLE)
 public enum BlockStateFormat {
     /**
      * {@code {Name: "minecraft:oak_log", Properties: {axis: "x"}}}, before 5006
