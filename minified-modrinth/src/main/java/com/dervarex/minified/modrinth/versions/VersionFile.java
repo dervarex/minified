@@ -4,6 +4,7 @@ import com.dervarex.minified.events.Event;
 import com.dervarex.minified.modrinth.events.DownloadFinishedEvent;
 import com.dervarex.minified.modrinth.events.DownloadProgressEvent;
 import com.dervarex.minified.modrinth.events.DownloadStartedEvent;
+import com.dervarex.minified.modrinth.events.OutdatedFileReplacedEvent;
 import com.dervarex.minified.modrinth.events.UnverifiedDownloadEvent;
 import com.dervarex.minified.modrinth.exceptions.ModrinthDownloadException;
 import com.dervarex.minified.modrinth.exceptions.ModrinthHashMismatchException;
@@ -72,6 +73,10 @@ public class VersionFile {
                 notifyIfUnverified(hashName, destination);
                 post(new DownloadFinishedEvent(resolveFilename(), url, destination, true));
                 return destination;
+            }
+            if (Files.exists(destination) && hashName != null) {
+                post(new OutdatedFileReplacedEvent(resolveFilename(), destination, hashName,
+                        hashes.get(hashName), computeHash(destination, hashName)));
             }
 
             Path temp = Files.createTempFile(directory, "modrinth-", ".download");

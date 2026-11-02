@@ -2,6 +2,7 @@ package com.dervarex.minified.modrinth.internal;
 
 import com.dervarex.minified.events.EventBus;
 import com.dervarex.minified.modrinth.Modrinth;
+import com.dervarex.minified.modrinth.events.ApiRequestEvent;
 import com.dervarex.minified.modrinth.events.RateLimitedEvent;
 import com.dervarex.minified.modrinth.exceptions.ModrinthApiException;
 import com.dervarex.minified.modrinth.exceptions.ModrinthRateLimitedException;
@@ -205,6 +206,8 @@ class AbstractModrinthClientTest {
             EventBus eventBus = new EventBus();
             List<RateLimitedEvent> events = new ArrayList<>();
             eventBus.subscribe(RateLimitedEvent.class, events::add);
+            List<ApiRequestEvent> requests = new ArrayList<>();
+            eventBus.subscribe(ApiRequestEvent.class, requests::add);
             Modrinth modrinth = new Modrinth("http://localhost:" + server.getAddress().getPort(), eventBus);
 
             ModrinthRateLimitedException limited = assertThrows(ModrinthRateLimitedException.class, () -> modrinth.projects().get("iris"));
@@ -214,6 +217,42 @@ class AbstractModrinthClientTest {
             assertEquals(limited.getRequestUrl(), events.get(0).url());
             assertEquals(500, assertThrows(ModrinthApiException.class, () -> modrinth.versions().get("x")).getStatusCode());
             assertEquals(1, events.size());
+
+            assertEquals(2, requests.size());
+            assertEquals("GET", requests.get(0).method());
+            assertEquals(429, requests.get(0).statusCode());
+            assertEquals(500, requests.get(1).statusCode());
+            assertFalse(requests.get(1).successful());
+        } finally {
+            server.stop(0);
+        }
+    }
+
+    @Test
+    void everyRequestPostsAnEvent() throws IOException {
+        HttpServer server = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
+        server.createContext("/project/", exchange -> {
+            byte[] body = "{\"id\":\"iris\"}".getBytes();
+            exchange.sendResponseHeaders(200, body.length);
+            exchange.getResponseBody().write(body);
+            exchange.close();
+        });
+        server.start();
+        try {
+            EventBus eventBus = new EventBus();
+            List<ApiRequestEvent> requests = new ArrayList<>();
+            eventBus.subscribe(ApiRequestEvent.class, requests::add);
+            String base = "http://localhost:" + server.getAddress().getPort();
+            new Modrinth(base, eventBus).projects().get("iris");
+
+            assertEquals(1, requests.size());
+            assertEquals(base + "/project/iris", requests.get(0).url());
+            assertTrue(requests.get(0).successful());
+            assertFalse(requests.get(0).duration().isNegative());
+
+            requests.clear();
+            assertThrows(ModrinthApiException.class, () -> new Modrinth("http://localhost:1", eventBus).projects().get("iris"));
+            assertEquals(-1, requests.get(0).statusCode());
         } finally {
             server.stop(0);
         }

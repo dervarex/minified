@@ -6,6 +6,7 @@ import com.dervarex.minified.events.Event;
 import com.dervarex.minified.modrinth.events.DownloadFinishedEvent;
 import com.dervarex.minified.modrinth.events.DownloadProgressEvent;
 import com.dervarex.minified.modrinth.events.DownloadStartedEvent;
+import com.dervarex.minified.modrinth.events.OutdatedFileReplacedEvent;
 import com.dervarex.minified.modrinth.events.UnverifiedDownloadEvent;
 import com.dervarex.minified.modrinth.exceptions.ModrinthDownloadException;
 import com.dervarex.minified.modrinth.exceptions.ModrinthHashMismatchException;
@@ -174,6 +175,26 @@ class VersionFileTest {
 
         assertThrows(ModrinthHashMismatchException.class, () -> file.download(tempDir));
         assertTrue(events.stream().noneMatch(DownloadFinishedEvent.class::isInstance));
+    }
+
+    @Test
+    void replacingABrokenFilePostsWhatWasWrong() throws Exception {
+        Files.writeString(tempDir.resolve("mod.jar"), "half a mod");
+        List<OutdatedFileReplacedEvent> events = new ArrayList<>();
+        EventBus eventBus = new EventBus();
+        eventBus.subscribe(OutdatedFileReplacedEvent.class, events::add);
+        VersionFile file = file("/mod.jar", Map.of("sha1", hash("SHA-1")));
+        Version version = new Version();
+        version.files = new VersionFile[]{file};
+        version.attach(new Modrinth(Modrinth.DEFAULT_BASE_URL, eventBus));
+
+        Path jar = file.download(tempDir);
+
+        assertEquals("pretend this is a mod", Files.readString(jar));
+        assertEquals(1, events.size());
+        assertEquals(hash("SHA-1"), events.get(0).expectedHash());
+        assertEquals(HexFormat.of().formatHex(MessageDigest.getInstance("SHA-1").digest("half a mod".getBytes(StandardCharsets.UTF_8))),
+                events.get(0).actualHash());
     }
 
     private static VersionFile withDownloadEvents(VersionFile file, List<Event> events) {

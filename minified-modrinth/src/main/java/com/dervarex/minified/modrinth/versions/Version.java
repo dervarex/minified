@@ -1,6 +1,10 @@
 package com.dervarex.minified.modrinth.versions;
 
+import com.dervarex.minified.events.Event;
 import com.dervarex.minified.modrinth.Modrinth;
+import com.dervarex.minified.modrinth.events.DependencyDownloadedEvent;
+import com.dervarex.minified.modrinth.events.DependencyResolvedEvent;
+import com.dervarex.minified.modrinth.events.DependencySkippedEvent;
 import com.dervarex.minified.modrinth.exceptions.ModrinthDependencyResolutionException;
 import com.dervarex.minified.modrinth.exceptions.ModrinthStateException;
 import com.dervarex.minified.modrinth.loaders.ModLoader;
@@ -153,9 +157,12 @@ public class Version {
     }
 
     public List<Path> downloadDependencies(Path directory) {
+        List<Version> dependencies = resolveDependencies(true, false);
         List<Path> paths = new ArrayList<>();
-        for (Version dependency : resolveDependencies(true, false)) {
-            paths.add(dependency.download(directory));
+        for (Version dependency : dependencies) {
+            Path file = dependency.download(directory);
+            paths.add(file);
+            post(new DependencyDownloadedEvent(this, dependency, file, paths.size(), dependencies.size()));
         }
         return paths;
     }
@@ -179,21 +186,49 @@ public class Version {
                 continue;
             }
             // incompatible ones are mods that must NOT be there, embedded ones already are inside the jar
-            boolean wanted = dependency.dependencyType == DependencyType.REQUIRED
-                    || (dependency.dependencyType == DependencyType.OPTIONAL && includeOptional);
-            if (!wanted) {
+            DependencySkippedEvent.Reason skipReason = skipReason(dependency.dependencyType, includeOptional);
+            if (skipReason != null) {
+                post(new DependencySkippedEvent(current, dependency, skipReason));
                 continue;
             }
             Version resolvedDependency = resolveDependency(dependency);
-            // already on the way down here (a -> b -> a), that includes the version we started with
-            if (resolvedDependency == null || resolvedDependency.id == null || visiting.contains(resolvedDependency.id)) {
+            if (resolvedDependency == null || resolvedDependency.id == null) {
+                post(new DependencySkippedEvent(current, dependency, DependencySkippedEvent.Reason.UNRESOLVABLE));
                 continue;
             }
-            if (resolved.putIfAbsent(resolvedDependency.id, resolvedDependency) == null && recursive && visiting.add(resolvedDependency.id)) {
-                resolveDependenciesInternal(resolvedDependency, resolved, visiting, true, includeOptional);
+            // already on the way down here (a -> b -> a), that includes the version we started with
+            if (visiting.contains(resolvedDependency.id)) {
+                post(new DependencySkippedEvent(current, dependency, DependencySkippedEvent.Reason.CIRCULAR));
+                continue;
+            }
+            if (resolved.putIfAbsent(resolvedDependency.id, resolvedDependency) == null) {
+                post(new DependencyResolvedEvent(current, dependency, resolvedDependency));
+                if (recursive && visiting.add(resolvedDependency.id)) {
+                    resolveDependenciesInternal(resolvedDependency, resolved, visiting, true, includeOptional);
+                }
             }
         }
         visiting.remove(current.id);
+    }
+
+    // null means the dependency is wanted
+    private static DependencySkippedEvent.Reason skipReason(DependencyType type, boolean includeOptional) {
+        if (type == null) {
+            return DependencySkippedEvent.Reason.UNKNOWN_TYPE;
+        }
+        return switch (type) {
+            case REQUIRED -> null;
+            case OPTIONAL -> includeOptional ? null : DependencySkippedEvent.Reason.OPTIONAL;
+            case INCOMPATIBLE -> DependencySkippedEvent.Reason.INCOMPATIBLE;
+            case EMBEDDED -> DependencySkippedEvent.Reason.EMBEDDED;
+            case UNKNOWN -> DependencySkippedEvent.Reason.UNKNOWN_TYPE;
+        };
+    }
+
+    private void post(Event event) {
+        if (client != null) {
+            client.getEventBus().post(event);
+        }
     }
 
     private Version resolveDependency(VersionDependency dependency) {
