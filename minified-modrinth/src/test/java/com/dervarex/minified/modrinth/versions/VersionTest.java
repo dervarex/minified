@@ -3,6 +3,7 @@ package com.dervarex.minified.modrinth.versions;
 import com.dervarex.minified.events.Event;
 import com.dervarex.minified.events.EventBus;
 import com.dervarex.minified.modrinth.Modrinth;
+import com.dervarex.minified.modrinth.events.DependencyConflictEvent;
 import com.dervarex.minified.modrinth.events.DependencyDownloadedEvent;
 import com.dervarex.minified.modrinth.events.DependencyResolvedEvent;
 import com.dervarex.minified.modrinth.events.DependencySkippedEvent;
@@ -258,11 +259,63 @@ class VersionTest {
         assertEquals("root", downloaded.get(1).root().getId());
     }
 
+    @Test
+    void resolveDependencies_postsConflictsBetweenWhatGetsInstalled() throws IOException {
+        List<Event> events = new ArrayList<>();
+        Modrinth modrinth = fakeModrinth(Map.of(
+                // root can't run with anything from project p-b, but a pulls in b anyway
+                "root", version("root", "required:a", "required:c").replace("]}",
+                        ",{\"project_id\":\"p-b\",\"dependency_type\":\"incompatible\"}]}"),
+                "a", version("a", "required:b"),
+                "b", version("b"),
+                // c can't run with version a
+                "c", version("c", "incompatible:a")), events);
+
+        assertEquals(List.of("a", "b", "c"), ids(modrinth.versions().get("root").resolveDependencies()));
+
+        List<String> conflicts = events.stream().filter(DependencyConflictEvent.class::isInstance)
+                .map(DependencyConflictEvent.class::cast)
+                .map(e -> e.declaredBy().getId() + " vs " + e.conflicting().getId()).toList();
+        assertEquals(List.of("root vs b", "c vs a"), conflicts);
+    }
+
+    @Test
+    void resolveDependencies_noConflictWhenTheIncompatibleOneStaysOut() throws IOException {
+        List<Event> events = new ArrayList<>();
+        Modrinth modrinth = fakeModrinth(Map.of(
+                "root", version("root", "required:a", "incompatible:enemy"),
+                "a", version("a"),
+                "enemy", version("enemy")), events);
+
+        modrinth.versions().get("root").resolveDependencies();
+
+        assertTrue(events.stream().noneMatch(DependencyConflictEvent.class::isInstance));
+    }
+
+    @Test
+    void resolvedEventsSayWhenAVersionIsNotListed() throws IOException {
+        List<Event> events = new ArrayList<>();
+        Modrinth modrinth = fakeModrinth(Map.of(
+                "root", version("root", "required:old", "required:fine", "required:nostatus"),
+                "old", version("old").replace("{", "{\"status\":\"archived\","),
+                "fine", version("fine").replace("{", "{\"status\":\"listed\","),
+                "nostatus", version("nostatus")), events);
+
+        modrinth.versions().get("root").resolveDependencies();
+
+        List<String> notListed = events.stream().filter(DependencyResolvedEvent.class::isInstance)
+                .map(DependencyResolvedEvent.class::cast)
+                .filter(DependencyResolvedEvent::notListed)
+                .map(e -> e.resolved().getId()).toList();
+        assertEquals(List.of("old"), notListed);
+    }
+
     private Modrinth fakeModrinth(Map<String, String> versions, List<Event> events) throws IOException {
         EventBus eventBus = new EventBus();
         eventBus.subscribe(DependencyResolvedEvent.class, events::add);
         eventBus.subscribe(DependencySkippedEvent.class, events::add);
         eventBus.subscribe(DependencyDownloadedEvent.class, events::add);
+        eventBus.subscribe(DependencyConflictEvent.class, events::add);
         Modrinth plain = fakeModrinth(versions);
         return new Modrinth(plain.getBaseUrl(), eventBus);
     }

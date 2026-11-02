@@ -2,6 +2,7 @@ package com.dervarex.minified.modrinth.versions;
 
 import com.dervarex.minified.events.Event;
 import com.dervarex.minified.modrinth.Modrinth;
+import com.dervarex.minified.modrinth.events.DependencyConflictEvent;
 import com.dervarex.minified.modrinth.events.DependencyDownloadedEvent;
 import com.dervarex.minified.modrinth.events.DependencyResolvedEvent;
 import com.dervarex.minified.modrinth.events.DependencySkippedEvent;
@@ -153,7 +154,37 @@ public class Version {
         LinkedHashMap<String, Version> resolved = new LinkedHashMap<>();
         LinkedHashSet<String> visiting = new LinkedHashSet<>();
         resolveDependenciesInternal(this, resolved, visiting, recursive, includeOptional);
+        postConflicts(resolved.values());
         return new ArrayList<>(resolved.values());
+    }
+
+    private void postConflicts(Collection<Version> resolved) {
+        List<Version> installed = new ArrayList<>();
+        installed.add(this);
+        installed.addAll(resolved);
+        for (Version declaredBy : installed) {
+            if (declaredBy.dependencies == null) {
+                continue;
+            }
+            for (VersionDependency dependency : declaredBy.dependencies) {
+                if (dependency == null || dependency.dependencyType != DependencyType.INCOMPATIBLE) {
+                    continue;
+                }
+                for (Version candidate : installed) {
+                    if (candidate != declaredBy && matches(dependency, candidate)) {
+                        post(new DependencyConflictEvent(declaredBy, dependency, candidate));
+                    }
+                }
+            }
+        }
+    }
+
+    private static boolean matches(VersionDependency dependency, Version candidate) {
+        if (dependency.versionId != null && !dependency.versionId.isBlank()) {
+            return dependency.versionId.equals(candidate.id);
+        }
+        return dependency.projectId != null && !dependency.projectId.isBlank()
+                && dependency.projectId.equals(candidate.projectId);
     }
 
     public List<Path> downloadDependencies(Path directory) {
