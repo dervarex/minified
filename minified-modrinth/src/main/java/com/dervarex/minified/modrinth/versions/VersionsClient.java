@@ -23,24 +23,29 @@ public final class VersionsClient extends AbstractModrinthClient {
         super(modrinth);
     }
 
+    /** Gets a version by its ID */
     public Version get(String id) {
         Version version = parseVersion(getObject("/version/" + encode(id)));
         attach(version);
         return version;
     }
 
+    /** Gets several versions by their IDs */
     public List<Version> getMany(String... ids) {
         Map<String, String> query = query("ids", toJsonArray(ids));
         return getList("/versions", query, this::parseAndAttach);
     }
 
     /**
+     * Gets all versions of a project
+     *
      * @return every version of the project, newest first
      */
     public List<Version> getByProject(String projectIdOrSlug) {
         return getByProject(projectIdOrSlug, null);
     }
 
+    /** Gets the versions of a project that match the options, newest first. A limit of {@code 0} means no limit. */
     public List<Version> getByProject(String projectIdOrSlug, VersionSearchOptions options) {
         Map<String, String> query = new LinkedHashMap<>();
         if (options != null) {
@@ -64,6 +69,10 @@ public final class VersionsClient extends AbstractModrinthClient {
         return getList("/project/" + encode(projectIdOrSlug) + "/version", query, this::parseAndAttach);
     }
 
+    /**
+     * Finds a version of a project by its version number, like {@code mc1.21.11-0.8.0}, ignoring case. {@code null} if
+     * there is none
+     */
     public Version getVersionByNumber(String projectIdOrSlug, String versionNumber) {
         List<Version> versions = getByProject(projectIdOrSlug);
         for (Version version : versions) {
@@ -74,12 +83,15 @@ public final class VersionsClient extends AbstractModrinthClient {
         return null;
     }
 
+    /** Gets the newest version of a project that matches the options, {@code null} if none does. */
     public Version resolveLatest(String projectIdOrSlug, VersionSearchOptions options) {
         List<Version> versions = getByProject(projectIdOrSlug, options);
         return versions.isEmpty() ? null : versions.getFirst();
     }
 
     /**
+     * Gets the versions that files belong to, by the files sha1 or sha512 hashes
+     *
      * @return the versions the files with these hashes belong to, in the order of the hashes, unknown ones are left out
      */
     public List<Version> fromHashes(String... hashes) {
@@ -87,6 +99,8 @@ public final class VersionsClient extends AbstractModrinthClient {
     }
 
     /**
+     * Gets the version a file belongs to, by the file's hash. {@code null} for a blank hash
+     *
      * @param hash sha1 or sha512 of a file
      * @return the version the file belongs to
      */
@@ -98,6 +112,8 @@ public final class VersionsClient extends AbstractModrinthClient {
     }
 
     /**
+     * Gets the newest version of each file's project, by the files' hashes
+     *
      * @return the newest version of the project each file belongs to, no matter the loader or game version
      */
     public List<Version> latestFromHashes(String... hashes) {
@@ -105,6 +121,8 @@ public final class VersionsClient extends AbstractModrinthClient {
     }
 
     /**
+     * Gets the newest version of each file's project that matches the game versions and loaders, by the files' hashes
+     *
      * @param options only the game versions and loaders are used
      * @return the newest version matching the options of the project each file belongs to
      */
@@ -113,6 +131,8 @@ public final class VersionsClient extends AbstractModrinthClient {
     }
 
     /**
+     * Gets the dependencies of a version
+     *
      * @return the dependencies of the version, modrinth has no extra route for that, they come with the version
      */
     public List<VersionDependency> dependencies(String versionId) {

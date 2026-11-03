@@ -3,7 +3,15 @@ package com.dervarex.minified.modrinth.exceptions;
 import org.apiguardian.api.API;
 
 /**
- * Thrown when the Modrinth API rate limits a request.
+ * Thrown when the Modrinth API rate limits a request with HTTP 429. {@link #getRetryAfterSeconds()} says how long
+ * to wait:
+ * <pre>{@code
+ * try {
+ *     modrinth.projects().search(request);
+ * } catch (ModrinthRateLimitedException e) {
+ *     Thread.sleep(e.getRetryAfterSeconds() * 1000L);
+ * }
+ * }</pre>
  */
 @API(status = API.Status.STABLE)
 public final class ModrinthRateLimitedException extends ModrinthApiException {
@@ -15,7 +23,7 @@ public final class ModrinthRateLimitedException extends ModrinthApiException {
     }
 
     /**
-     * {@return how long we have to wait to retry (source: modrinth)}
+     * {@return how long we have to wait to retry (source: modrinth), 0 if Modrinth didn't say}
      */
     public long getRetryAfterSeconds() {
         return retryAfterSeconds;

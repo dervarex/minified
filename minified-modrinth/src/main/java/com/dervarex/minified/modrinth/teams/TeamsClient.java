@@ -19,15 +19,18 @@ public final class TeamsClient extends AbstractModrinthClient {
         super(modrinth);
     }
 
+    /** Gets a team by its ID */
     public Team get(String id) {
         return parseTeam(getObject("/team/" + encode(id)));
     }
 
+    /** Gets several teams by their IDs */
     public List<Team> getMany(String... ids) {
         Map<String, String> query = query("ids", toJsonArray(ids));
         return getList("/teams", query, this::parseTeam);
     }
 
+    /** Gets all members of a team */
     public List<TeamMember> members(String teamId) {
         JsonArray array = getArray("/team/" + encode(teamId) + "/members");
         return array.values().stream()

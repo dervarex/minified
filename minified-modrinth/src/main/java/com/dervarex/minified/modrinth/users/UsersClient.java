@@ -16,10 +16,12 @@ public final class UsersClient extends AbstractModrinthClient {
         super(modrinth);
     }
 
+    /** Gets a user by their ID or username */
     public User get(String idOrUsername) {
         return parseUser(getObject("/user/" + encode(idOrUsername)));
     }
 
+    /** Gets several users by their IDs */
     public List<User> getMany(String... ids) {
         Map<String, String> query = query("ids", toJsonArray(ids));
         return getList("/users", query, this::parseUser);

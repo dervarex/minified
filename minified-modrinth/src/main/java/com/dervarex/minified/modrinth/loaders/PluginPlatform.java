@@ -6,9 +6,13 @@ import org.apiguardian.api.API;
  * Represents the platform or host plugin a plugin is built for.
  */
 public enum PluginPlatform {
+    /** BungeeCord, a proxy that connects several servers into one network */
     BUNGEECORD("bungeecord"),
+    /** Extensions that add functionality directly to Geyser */
     GEYSER_EXTENSION("geyserextension"),
+    /** Velocity, a modern, high performance proxy for server networks */
     VELOCITY("velocity"),
+    /** Waterfall, a BungeeCord fork focused on performance and stability */
     WATERFALL("waterfall");
 
     private final String apiValue;

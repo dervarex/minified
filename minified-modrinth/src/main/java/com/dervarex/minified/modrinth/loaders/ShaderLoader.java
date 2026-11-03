@@ -6,9 +6,13 @@ import org.apiguardian.api.API;
  * Shader loaders that Modrinth knows and how the api calls them
  */
 public enum ShaderLoader {
+    /** Iris, the modern shader loader */
     IRIS("iris"),
+    /** OptiFine, an optimization mod with built-in shader support, replaced by modern alternatives */
     OPTIFINE("optifine"),
+    /** Minecraft's built-in shader system. */
     VANILLA_SHADER("vanilla"),
+    /** Canvas, an alternative renderer with support for advanced visual effects */
     CANVAS("canvas");
 
     private final String apiValue;

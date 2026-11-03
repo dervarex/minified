@@ -27,17 +27,25 @@ public final class ProjectsClient extends AbstractModrinthClient {
         super(modrinth);
     }
 
+    /**
+     * Gets a project by its ID or slug
+     */
     public Project get(String idOrSlug) {
         Project project = parseProject(getObject("/project/" + encode(idOrSlug)));
         attach(project);
         return project;
     }
 
+    /** Gets several projects by their IDs */
     public List<Project> getMany(String... ids) {
         Map<String, String> query = query("ids", toJsonArray(ids));
         return getList("/projects", query, this::parseAndAttach);
     }
 
+    /**
+     * Searches projects. The request supports a query, a sort index, pagination and facets, the result holds the
+     * matching projects and pagination data. {@code null} searches with the defaults.
+     */
     public SearchResult<Project> search(SearchRequest request) {
         SearchRequest value = request == null ? SearchRequest.builder().build() : request;
         Map<String, String> query = new LinkedHashMap<>();
@@ -73,10 +81,15 @@ public final class ProjectsClient extends AbstractModrinthClient {
         return new SearchResult<>(array, offset == null ? 0 : offset, limit == null ? 0 : limit, totalHits == null ? 0 : totalHits.intValue());
     }
 
+    /**
+     * Gets the versions of a project that match the options, the same as
+     * {@link com.dervarex.minified.modrinth.versions.VersionsClient#getByProject(String, VersionSearchOptions)}.
+     */
     public List<Version> getVersions(String idOrSlug, VersionSearchOptions options) {
         return modrinth.versions().getByProject(idOrSlug, options);
     }
 
+    /** Resolves the latest version of a project for a game version and loaders, {@code null} if none matches. */
     public Version getLatestVersion(String idOrSlug, String gameVersion, com.dervarex.minified.modrinth.loaders.ModLoader... loaders) {
         VersionSearchOptions.Builder builder = VersionSearchOptions.builder();
         if (gameVersion != null) {
@@ -88,6 +101,10 @@ public final class ProjectsClient extends AbstractModrinthClient {
         return modrinth.versions().resolveLatest(idOrSlug, builder.build());
     }
 
+    /**
+     * Resolves the latest version of a project for any of the game versions and loaders, given by their API values.
+     * {@code null} if none matches.
+     */
     public Version getLatestVersion(String idOrSlug, String[] gameVersions, String... loaders) {
         VersionSearchOptions.Builder builder = VersionSearchOptions.builder();
         builder.gameVersions(gameVersions);

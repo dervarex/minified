@@ -7,11 +7,17 @@ import org.apiguardian.api.API;
  */
 @API(status = API.Status.STABLE)
 public enum PluginLoader {
+    /** Paper, a high performance server software based on Spigot */
     PAPER("paper"),
+    /** Spigot, a widely used server platform with a large plugin ecosystem */
     SPIGOT("spigot"),
+    /** Bukkit, the original server plugin API that Spigot and Paper are based on */
     BUKKIT("bukkit"),
+    /** Folia, a Paper fork built around multithreading */
     FOLIA("folia"),
+    /** Purpur, a Paper fork focused on customization and extra configuration options */
     PURPUR("purpur"),
+    /** Sponge, a plugin platform with its own API and ecosystem */
     SPONGE("sponge");
 
     private final String apiValue;
