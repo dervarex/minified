@@ -81,8 +81,9 @@ public final class VersionFile {
     /**
      * Downloads the file into a directory and checks it against its hash.
      *
+     * @param directory where to put the file, created if it doesn't exist
      * @return the downloaded file
-     * @throws ModrinthDownloadException     if the download fails
+     * @throws ModrinthDownloadException if the download fails
      * @throws ModrinthHashMismatchException if the downloaded file doesn't match its hash
      */
     public Path download(Path directory) {

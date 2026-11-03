@@ -9,10 +9,21 @@ import org.apiguardian.api.API;
  */
 @API(status = API.Status.STABLE)
 public class ModrinthDownloadException extends ModrinthException {
+    /**
+     * Creates the exception
+     *
+     * @param message what went wrong
+     */
     public ModrinthDownloadException(String message) {
         super(message);
     }
 
+    /**
+     * Creates the exception
+     *
+     * @param message what went wrong
+     * @param cause   the exception that caused it
+     */
     public ModrinthDownloadException(String message, Throwable cause) {
         super(message, cause);
     }

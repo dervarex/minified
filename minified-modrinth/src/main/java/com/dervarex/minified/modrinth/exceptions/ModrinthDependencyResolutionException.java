@@ -8,10 +8,21 @@ import org.apiguardian.api.API;
  */
 @API(status = API.Status.STABLE)
 public final class ModrinthDependencyResolutionException extends ModrinthException {
+    /**
+     * Creates the exception
+     *
+     * @param message what went wrong
+     */
     public ModrinthDependencyResolutionException(String message) {
         super(message);
     }
 
+    /**
+     * Creates the exception
+     *
+     * @param message what went wrong
+     * @param cause   the exception that caused it
+     */
     public ModrinthDependencyResolutionException(String message, Throwable cause) {
         super(message, cause);
     }

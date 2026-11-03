@@ -32,6 +32,11 @@ public final class License {
         return url;
     }
 
+    /**
+     * Describes the license, for logging
+     *
+     * @return the license ID
+     */
     @Override
     public String toString() {
         return id;

@@ -32,38 +32,103 @@ public abstract class AbstractModrinthClient {
 
     protected final Modrinth modrinth;
 
+    /**
+     * Creates a client that talks to the API of a {@link Modrinth}
+     *
+     * @param modrinth the Modrinth that it belongs to
+     */
     protected AbstractModrinthClient(Modrinth modrinth) {
         this.modrinth = Objects.requireNonNull(modrinth, "modrinth");
     }
 
+    /**
+     * Sends a GET request and reads the answer as a JSON object
+     *
+     * @param path the API path, like {@code /project/sodium}
+     * @return the answer
+     */
     protected JsonObject getObject(String path) {
         return getObject(path, Map.of());
     }
 
+    /**
+     * Sends a GET request and reads the answer as a JSON object
+     *
+     * @param path  the API path, like {@code /project/sodium}
+     * @param query the query parameters
+     * @return the answer
+     */
     protected JsonObject getObject(String path, Map<String, String> query) {
         return readJsonObject(request(path, query));
     }
 
+    /**
+     * Sends a GET request and reads the answer as a JSON array.
+     *
+     * @param path the API path, like {@code /project/sodium}
+     * @return the answer
+     */
     protected JsonArray getArray(String path) {
         return getArray(path, Map.of());
     }
 
+    /**
+     * Sends a GET request and reads the answer as a JSON array.
+     *
+     * @param path  the API path, like {@code /project/sodium}
+     * @param query the query parameters
+     * @return the answer
+     */
     protected JsonArray getArray(String path, Map<String, String> query) {
         return readJsonArray(request(path, query));
     }
 
+    /**
+     * Sends a GET request and turns the JSON object it answers with into a model.
+     *
+     * @param path   the API path, like {@code /project/sodium}
+     * @param parser turns the JSON into the model
+     * @param <T> the type of the model
+     * @return the model
+     */
     protected <T> T get(String path, Function<JsonObject, T> parser) {
         return get(path, Map.of(), parser);
     }
 
+    /**
+     * Sends a GET request and turns the JSON object it answers with into a model.
+     *
+     * @param path   the API path, like {@code /project/sodium}
+     * @param query  the query parameters
+     * @param parser turns the JSON into the model
+     * @param <T> the type of the model
+     * @return the model
+     */
     protected <T> T get(String path, Map<String, String> query, Function<JsonObject, T> parser) {
         return ModrinthJson.parse(getObject(path, query), parser);
     }
 
+    /**
+     * Sends a GET request and turns every object of the JSON array it answers with into a model
+     *
+     * @param path   the API path, like {@code /project/sodium}
+     * @param query  the query parameters
+     * @param parser turns one JSON object into a model
+     * @param <T> the type of the model
+     * @return the models
+     */
     protected <T> List<T> getList(String path, Map<String, String> query, Function<JsonObject, T> parser) {
         return toList(getArray(path, query), parser);
     }
 
+    /**
+     * Turns every object of a JSON array into a model.
+     *
+     * @param array  the JSON array
+     * @param parser turns one JSON object into a model
+     * @param <T> the type of the model
+     * @return the models
+     */
     protected static <T> List<T> toList(JsonArray array, Function<JsonObject, T> parser) {
         return array.values().stream()
                 .map(value -> value == null || value.isNull() ? null : value.asObject())
@@ -72,6 +137,12 @@ public abstract class AbstractModrinthClient {
                 .toList();
     }
 
+    /**
+     * Writes values as a JSON array of strings, for the {@code ids=} and {@code hashes} parameters
+     *
+     * @param values the values
+     * @return the JSON array, like {@code ["a","b"]}
+     */
     protected static String toJsonArray(Iterable<String> values) {
         StringBuilder builder = new StringBuilder("[");
         boolean first = true;
@@ -88,15 +159,35 @@ public abstract class AbstractModrinthClient {
         return builder.append(']').toString();
     }
 
+    /**
+     * Writes values as a JSON array of strings, for the {@code ids=} and {@code hashes} parameters
+     *
+     * @param values the values, can be {@code null}
+     * @return the JSON array, like {@code ["a","b"]}
+     */
     protected static String toJsonArray(String... values) {
         return toJsonArray(values == null ? List.of() : java.util.Arrays.asList(values));
     }
 
+    /**
+     * Sends a GET request
+     *
+     * @param path  the API path, like {@code /project/sodium}
+     * @param query the query parameters, {@code null} values are left out
+     * @return the body of the answer
+     */
     protected String request(String path, Map<String, String> query) {
         String url = buildUrl(path, query);
         return send("GET", url, () -> HttpUtil.request("GET", url, Map.of(), null, TIMEOUT_MS, TIMEOUT_MS));
     }
 
+    /**
+     * Sends a POST request with a JSON body and reads the answer as a JSON object
+     *
+     * @param path     the API path, like {@code /project/sodium}
+     * @param jsonBody the JSON to send
+     * @return the answer
+     */
     protected JsonObject postObject(String path, String jsonBody) {
         String url = buildUrl(path, Map.of());
         return readJsonObject(send("POST", url, () -> HttpUtil.requestJson("POST", url, jsonBody)));
@@ -124,6 +215,13 @@ public abstract class AbstractModrinthClient {
         HttpResponse execute() throws IOException, HttpException;
     }
 
+    /**
+     * Parses a JSON object
+     *
+     * @param json the JSON text
+     * @return the object
+     * @throws com.dervarex.minified.modrinth.exceptions.ModrinthSerializationException if it isn't a JSON object
+     */
     protected JsonObject readJsonObject(String json) {
         try {
             return JsonParser.parse(json).asObject();
@@ -132,6 +230,13 @@ public abstract class AbstractModrinthClient {
         }
     }
 
+    /**
+     * Parses a JSON array
+     *
+     * @param json the JSON text
+     * @return the array
+     * @throws com.dervarex.minified.modrinth.exceptions.ModrinthSerializationException if it isn't a JSON array
+     */
     protected JsonArray readJsonArray(String json) {
         try {
             return JsonParser.parse(json).asArray();
@@ -140,6 +245,13 @@ public abstract class AbstractModrinthClient {
         }
     }
 
+    /**
+     * Builds the URL of a request
+     *
+     * @param path  the API path, like {@code /project/sodium}
+     * @param query the query parameters, {@code null} values are left out
+     * @return the URL
+     */
     protected String buildUrl(String path, Map<String, String> query) {
         String normalizedPath = path == null ? "" : path.trim();
         if (!normalizedPath.startsWith("/")) {
@@ -160,6 +272,13 @@ public abstract class AbstractModrinthClient {
         return builder.toString();
     }
 
+    /**
+     * Builds query parameters from key value pairs
+     *
+     * @param entries key, value, key, value and so on
+     * @return the query parameters
+     * @throws IllegalArgumentException if there's an odd number of entries
+     */
     protected Map<String, String> query(Object... entries) {
         if (entries == null || entries.length == 0) {
             return Map.of();
@@ -178,6 +297,12 @@ public abstract class AbstractModrinthClient {
         return query;
     }
 
+    /**
+     * URL encodes a value
+     *
+     * @param value the value
+     * @return the encoded value
+     */
     protected static String encode(String value) {
         return URLEncoder.encode(value, StandardCharsets.UTF_8);
     }

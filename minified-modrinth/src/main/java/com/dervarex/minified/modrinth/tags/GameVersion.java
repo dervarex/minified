@@ -41,6 +41,11 @@ public final class GameVersion {
         return major;
     }
 
+    /**
+     * Describes the Minecraft version, for logging
+     *
+     * @return the version
+     */
     @Override
     public String toString() {
         return version;

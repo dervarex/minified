@@ -153,12 +153,22 @@ public final class Version {
                 .orElse(files.isEmpty() ? null : files.getFirst());
     }
 
-    /** {@return whether the version supports a loader} */
+    /**
+     * Checks whether the version supports a loader
+     *
+     * @param loader the loader
+     * @return whether the version supports it, {@code false} for {@code null}
+     */
     public boolean hasLoader(Loader loader) {
         return loader != null && loaders.contains(loader.getApiValue());
     }
 
-    /** {@return whether the version supports a Minecraft version, like {@code 1.21.11}} */
+    /**
+     * Checks if the version supports a Minecraft version
+     *
+     * @param gameVersion the Minecraft version, like {@code 1.21.11}
+     * @return whether the version supports it
+     */
     public boolean supportsGameVersion(String gameVersion) {
         return gameVersions.contains(gameVersion);
     }
@@ -166,6 +176,7 @@ public final class Version {
     /**
      * Downloads the primary file into a directory, see {@link VersionFile#download(Path)}
      *
+     * @param directory where to put the file, created if it doesn't exist
      * @return the downloaded file
      * @throws ModrinthDependencyResolutionException if the version has no files
      */
@@ -178,7 +189,9 @@ public final class Version {
     }
 
     /**
-     * Resolves the required dependencies, and theirs, to the versions that should be installed with this one
+     * Resolves the required dependencies, and theirs, to the versions that should be installed with this one.
+     *
+     * @return every version to install, each once, without this one
      */
     public List<Version> resolveDependencies() {
         return resolveDependencies(true, false);
@@ -204,6 +217,7 @@ public final class Version {
      * Resolves the required dependencies like {@link #resolveDependencies()} and downloads each of them into a
      * directory, posting a {@link DependencyDownloadedEvent} after each
      *
+     * @param directory where to put the files, created if it doesn't exist
      * @return the downloaded files
      */
     public List<Path> downloadDependencies(Path directory) {
@@ -217,6 +231,11 @@ public final class Version {
         return paths;
     }
 
+    /**
+     * Describes the version, for logging purposes.
+     *
+     * @return the version number and ID
+     */
     @Override
     public String toString() {
         return "Version{" + versionNumber + ", " + id + "}";

@@ -9,7 +9,6 @@ import java.util.List;
 
 /**
  * A Modrinth project, e.g. a mod, resource pack or shader. Get one from {@link ProjectsClient}.
- * <p>
  */
 public final class Project {
     private final String id;
@@ -220,17 +219,32 @@ public final class Project {
         return updated;
     }
 
-    /** {@return whether the project has a category, primary or additional} */
+    /**
+     * Checks whether the project has a category, primary or additional
+     *
+     * @param category the category name, like {@code optimization}
+     * @return whether the project has it
+     */
     public boolean hasCategory(String category) {
         return categories.contains(category) || additionalCategories.contains(category);
     }
 
-    /** {@return whether the project supports a loader} */
+    /**
+     * Checks whether the project supports a loader
+     *
+     * @param loader the loader
+     * @return whether the project supports it, {@code false} for {@code null}
+     */
     public boolean hasLoader(Loader loader) {
         return loader != null && loaders.contains(loader.getApiValue());
     }
 
-    /** {@return whether the project supports a Minecraft version, like {@code 1.21.11}} */
+    /**
+     * Checks whether the project supports a Minecraft version
+     *
+     * @param gameVersion the Minecraft version, like {@code 1.21.11}
+     * @return whether the project supports it
+     */
     public boolean supportsGameVersion(String gameVersion) {
         return gameVersions.contains(gameVersion);
     }
@@ -240,6 +254,11 @@ public final class Project {
         return gallery.stream().filter(GalleryImage::isFeatured).findFirst().orElse(null);
     }
 
+    /**
+     * Describes the project, for logging purposes
+     *
+     * @return the slug and ID
+     */
     @Override
     public String toString() {
         return "Project{" + slug + ", " + id + "}";

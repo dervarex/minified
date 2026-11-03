@@ -27,7 +27,10 @@ public enum ProjectType {
     }
 
     /**
-     * {@return the constant for a value of the Modrinth API, {@link #UNKNOWN} for values this library doesn't know yet
+     * Finds the constant for a value of the Modrinth API, ignores casing
+     *
+     * @param value the API value
+     * @return the constant, {@link #UNKNOWN} for values this library doesn't know yet, {@code null} for {@code null}
      */
     public static ProjectType fromApiValue(String value) {
         if (value == null) {

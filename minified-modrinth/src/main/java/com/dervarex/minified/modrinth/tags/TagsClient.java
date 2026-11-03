@@ -14,6 +14,11 @@ import java.util.Objects;
  * Gets the lists Modrinth uses to describe projects (called Tags), like categories, loaders and game versions
  */
 public final class TagsClient extends AbstractModrinthClient {
+    /**
+     * Creates the client, use the one from {@link Modrinth}
+     *
+     * @param modrinth the Modrinth it belongs to
+     */
     @API(status = API.Status.INTERNAL)
     public TagsClient(Modrinth modrinth) {
         super(modrinth);

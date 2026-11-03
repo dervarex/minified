@@ -16,6 +16,14 @@ public final class SearchResult<T> {
     private final int limit;
     private final int totalHits;
 
+    /**
+     * Creates a page of results
+     *
+     * @param hits      the results on this page
+     * @param offset    how many results were skipped before this page
+     * @param limit     how many results a page has at most
+     * @param totalHits how many results there are on all pages together
+     */
     @API(status = API.Status.INTERNAL)
     public SearchResult(List<T> hits, int offset, int limit, int totalHits) {
         this.hits = List.copyOf(hits);
@@ -49,6 +57,11 @@ public final class SearchResult<T> {
         return hits.isEmpty();
     }
 
+    /**
+     * Describes the page, for logging purposes
+     *
+     * @return the hits, offset, limit and total hits
+     */
     @Override
     public String toString() {
         return "SearchResult{hits=" + hits + ", offset=" + offset + ", limit=" + limit + ", totalHits=" + totalHits + '}';

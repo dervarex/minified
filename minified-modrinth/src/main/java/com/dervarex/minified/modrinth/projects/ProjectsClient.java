@@ -19,6 +19,11 @@ import java.util.stream.Collectors;
  * Gets and searches projects, get it from {@link Modrinth#projects()}
  */
 public final class ProjectsClient extends AbstractModrinthClient {
+    /**
+     * Creates the client, use the one from {@link Modrinth}
+     *
+     * @param modrinth the Modrinth it belongs to
+     */
     @API(status = API.Status.INTERNAL)
     public ProjectsClient(Modrinth modrinth) {
         super(modrinth);
@@ -27,6 +32,8 @@ public final class ProjectsClient extends AbstractModrinthClient {
     /**
      * Gets a project by its ID or slug
      *
+     * @param idOrSlug the ID or slug, like {@code sodium}
+     * @return the project
      * @throws com.dervarex.minified.modrinth.exceptions.ModrinthNotFoundException if there is no such project
      */
     public Project get(String idOrSlug) {
@@ -34,7 +41,10 @@ public final class ProjectsClient extends AbstractModrinthClient {
     }
 
     /**
-     * Gets several projects by their IDs or slugs, in the same order.
+     * Gets several projects by their IDs or slugs
+     *
+     * @param idsOrSlugs the IDs or slugs
+     * @return the projects, if you fetch one that doesn't exist we'll leave it out
      */
     public List<Project> getMany(String... idsOrSlugs) {
         List<String> wanted = idsOrSlugs == null ? List.of() : List.of(idsOrSlugs);
@@ -59,6 +69,9 @@ public final class ProjectsClient extends AbstractModrinthClient {
 
     /**
      * Searches projects
+     *
+     * @param request what to search for
+     * @return one page of results
      */
     public SearchResult<Project> search(SearchRequest request) {
         Objects.requireNonNull(request, "request");

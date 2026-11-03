@@ -18,6 +18,11 @@ import java.util.Objects;
  * Gets versions by ID, project or file hash. Get it from {@link Modrinth#versions()}
  */
 public final class VersionsClient extends AbstractModrinthClient {
+    /**
+     * Creates the client, use the one from {@link Modrinth}
+     *
+     * @param modrinth the Modrinth it belongs to
+     */
     @API(status = API.Status.INTERNAL)
     public VersionsClient(Modrinth modrinth) {
         super(modrinth);
@@ -26,6 +31,8 @@ public final class VersionsClient extends AbstractModrinthClient {
     /**
      * Gets a version by its ID
      *
+     * @param id the ID of the version
+     * @return the version
      * @throws com.dervarex.minified.modrinth.exceptions.ModrinthNotFoundException if there is no such version
      */
     public Version get(String id) {
@@ -33,7 +40,10 @@ public final class VersionsClient extends AbstractModrinthClient {
     }
 
     /**
-     * Gets several versions by their IDs, in the same order.
+     * Gets several versions by their IDs.
+     *
+     * @param ids the IDs of the versions
+     * @return the versions in the same order, ones that don't exist are left out
      */
     public List<Version> getMany(String... ids) {
         List<String> wanted = ids == null ? List.of() : List.of(ids);
@@ -48,8 +58,11 @@ public final class VersionsClient extends AbstractModrinthClient {
     }
 
     /**
-     * Gets a version of a project by its version number, like {@code mc1.21.11-0.8.0}
+     * Gets a version of a project by its version number
      *
+     * @param projectIdOrSlug the ID or slug of the project
+     * @param versionNumber   the version number, like {@code mc1.21.11-0.8.0}
+     * @return the version
      * @throws com.dervarex.minified.modrinth.exceptions.ModrinthNotFoundException if the project has no such version
      */
     public Version getByNumber(String projectIdOrSlug, String versionNumber) {
@@ -57,14 +70,21 @@ public final class VersionsClient extends AbstractModrinthClient {
     }
 
     /**
-     * Gets all versions of a project, newest first
+     * Gets all versions of a project.
+     *
+     * @param projectIdOrSlug the ID or slug of the project
+     * @return the versions, newest first
      */
     public List<Version> getByProject(String projectIdOrSlug) {
         return getByProject(projectIdOrSlug, VersionSearchOptions.builder().build());
     }
 
     /**
-     * Gets the versions of a project that match the options, newest first
+     * Gets the versions of a project that match the options
+     *
+     * @param projectIdOrSlug the ID or slug of the project
+     * @param options         which versions to get
+     * @return the versions, newest first
      */
     public List<Version> getByProject(String projectIdOrSlug, VersionSearchOptions options) {
         Objects.requireNonNull(options, "options");
@@ -76,6 +96,8 @@ public final class VersionsClient extends AbstractModrinthClient {
     /**
      * Gets the newest version of a project that matches the options
      *
+     * @param projectIdOrSlug the ID or slug of the project
+     * @param options         which versions to look at
      * @return the version, {@code null} if none matches
      */
     public Version getLatest(String projectIdOrSlug, VersionSearchOptions options) {
@@ -85,8 +107,9 @@ public final class VersionsClient extends AbstractModrinthClient {
     }
 
     /**
-     * Gets the versions that files belong to, by the files' sha1 or sha512 hashes
+     * Gets the versions that files belong to
      *
+     * @param hashes the sha1 or sha512 hashes of the files
      * @return the versions in the order of the hashes, hashes of unknown files are left out
      */
     public List<Version> fromHashes(String... hashes) {
@@ -94,8 +117,10 @@ public final class VersionsClient extends AbstractModrinthClient {
     }
 
     /**
-     * Gets the version a file belongs to, by the file's sha1 or sha512 hash
+     * Gets the version a file belongs to
      *
+     * @param hash the sha1 or sha512 hash of the file
+     * @return the version
      * @throws com.dervarex.minified.modrinth.exceptions.ModrinthNotFoundException if Modrinth doesn't know the file
      */
     public Version fromHash(String hash) {
@@ -104,9 +129,10 @@ public final class VersionsClient extends AbstractModrinthClient {
     }
 
     /**
-     * Gets the newest version of each file's project, by the files sha1 or sha512 hashes
+     * Gets the newest version of each file's project
      *
      * @param options only the game versions and loaders are used, empty options for any
+     * @param hashes  the sha1 or sha512 hashes of the files
      * @return the versions in the order of the hashes, hashes of unknown files are left out
      */
     public List<Version> latestFromHashes(VersionSearchOptions options, String... hashes) {

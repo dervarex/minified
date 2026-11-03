@@ -44,17 +44,22 @@ public final class Modrinth {
     }
 
     /**
-     * {@return a client for a Modrinth API at another URL, like a staging instance or a compatible mirror, with
-     * its own EventBus}
+     * Creates a client for a Modrinth API at another URL, like a staging instance or a compatible mirror, with its own
+     * EventBus
+     *
+     * @param baseUrl the Modrinth API URL
+     * @return the client
      */
     public static Modrinth connect(String baseUrl) {
         return connect(baseUrl, new EventBus());
     }
 
     /**
+     * Creates a client for a Modrinth API that posts its events to an EventBus you already have.
+     *
      * @param baseUrl  the Modrinth API URL, usually {@link #DEFAULT_BASE_URL}
      * @param eventBus the EventBus the client posts its events to
-     * @return a client for the Modrinth API at that URL
+     * @return the client
      */
     @API(status = API.Status.STABLE)
     public static Modrinth connect(String baseUrl, EventBus eventBus) {

@@ -12,6 +12,14 @@ public final class ModrinthHashMismatchException extends ModrinthDownloadExcepti
     private final String expectedHash;
     private final String actualHash;
 
+    /**
+     * Creates the exception
+     *
+     * @param filename     the name of the file
+     * @param algorithm    the hash algorithm, like {@code sha512}
+     * @param expectedHash the hash Modrinth lists for the file
+     * @param actualHash   the hash of the downloaded file
+     */
     public ModrinthHashMismatchException(String filename, String algorithm, String expectedHash, String actualHash) {
         super("Hash verification failed for " + filename + " using " + algorithm);
         this.filename = filename;

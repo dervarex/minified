@@ -41,6 +41,11 @@ public final class TeamMember {
         return ordering;
     }
 
+    /**
+     * Describes the member, for logging purposes
+     *
+     * @return the user and role
+     */
     @Override
     public String toString() {
         return "TeamMember{" + user + ", " + role + "}";

@@ -44,6 +44,11 @@ public final class SearchRequest {
         this.facets = builder.facets.stream().map(List::copyOf).toList();
     }
 
+    /**
+     * Starts a new search
+     *
+     * @return a builder without filters
+     */
     public static Builder builder() {
         return new Builder();
     }
@@ -88,44 +93,85 @@ public final class SearchRequest {
         private Builder() {
         }
 
-        /** The text to search for */
+        /**
+         * Sets the text to search for
+         *
+         * @param query the search text, {@code null} to search without one
+         * @return this builder
+         */
         public Builder query(String query) {
             this.query = query;
             return this;
         }
 
-        /** How to sort the results, {@link SearchIndex#RELEVANCE} by default */
+        /**
+         * Sets how the results are sorted, {@link SearchIndex#RELEVANCE} by default
+         *
+         * @param index the sort order
+         * @return this builder
+         */
         public Builder index(SearchIndex index) {
             this.index = Objects.requireNonNull(index, "index");
             return this;
         }
 
-        /** Only projects of these types */
+        /**
+         * Only finds projects of one of these types.
+         *
+         * @param projectTypes the project types
+         * @return this builder
+         */
         public Builder projectTypes(ProjectType... projectTypes) {
             return facet("project_type", values(projectTypes, ProjectType::getApiValue));
         }
 
-        /** Only projects that run in one of these environments */
+        /**
+         * Only finds projects that run in one of these environments
+         *
+         * @param environments the environments
+         * @return this builder
+         */
         public Builder environments(Environment... environments) {
             return facet("environment", values(environments, Environment::getApiValue));
         }
 
-        /** Only projects in one of these categories, like {@code optimization} */
+        /**
+         * Only finds projects in one of these categories
+         *
+         * @param categories the category names, like {@code optimization}
+         * @return this builder
+         */
         public Builder categories(String... categories) {
             return facet("categories", categories);
         }
 
-        /** Only projects for one of these Minecraft versions, like {@code 1.21.11} */
+        /**
+         * Only finds projects for one of these Minecraft versions.
+         *
+         * @param gameVersions the Minecraft versions, like {@code 1.21.11}
+         * @return this builder
+         */
         public Builder gameVersions(String... gameVersions) {
             return facet("versions", gameVersions);
         }
 
-        /** Only projects for one of these loaders */
+        /**
+         * Only finds projects for one of these loaders
+         *
+         * @param loaders the loaders
+         * @return this builder
+         */
         public Builder loaders(Loader... loaders) {
             return facet("categories", values(loaders, Loader::getApiValue));
         }
 
-        /** How many results to return, between 0 and {@link #MAX_LIMIT}, 10 by default */
+        /**
+         * Sets how many results to return, default is 10
+         *
+         * @param limit between 0 and {@link #MAX_LIMIT}
+         * @return this builder
+         * @throws IllegalArgumentException if the limit is out of range
+         */
         public Builder limit(int limit) {
             if (limit < 0 || limit > MAX_LIMIT) {
                 throw new IllegalArgumentException("limit must be between 0 and " + MAX_LIMIT + ", was " + limit);
@@ -134,7 +180,13 @@ public final class SearchRequest {
             return this;
         }
 
-        /** How many results to skip, for paging purposes */
+        /**
+         * Sets how many results to skip, for paging.
+         *
+         * @param offset how many results to skip, 0 or more
+         * @return this builder
+         * @throws IllegalArgumentException if the offset is negative
+         */
         public Builder offset(int offset) {
             if (offset < 0) {
                 throw new IllegalArgumentException("offset must not be negative, was " + offset);
@@ -144,8 +196,12 @@ public final class SearchRequest {
         }
 
         /**
-         * Any other Modrinth facet, for filters this builder has no method for, like
-         * {@code facet("license", "mit")}. Any of the values has to match.
+         * Adds any other Modrinth "facet", for filters this builder has no method for, like {@code facet("license",
+         * "mit")}. Any of the values has to match
+         *
+         * @param key    the facet name
+         * @param values the values, blank and duplicate ones are left out
+         * @return this builder
          */
         public Builder facet(String key, String... values) {
             Objects.requireNonNull(key, "key");
@@ -164,6 +220,11 @@ public final class SearchRequest {
             return this;
         }
 
+        /**
+         * Builds the search
+         *
+         * @return the search request
+         */
         public SearchRequest build() {
             return new SearchRequest(this);
         }

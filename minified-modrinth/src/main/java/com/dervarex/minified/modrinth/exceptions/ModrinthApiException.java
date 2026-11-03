@@ -17,6 +17,14 @@ public class ModrinthApiException extends ModrinthException {
     private final int statusCode;
     private final String requestUrl;
 
+    /**
+     * Creates the exception
+     *
+     * @param message    what went wrong
+     * @param statusCode the HTTP status code, -1 if the request never reached the server
+     * @param requestUrl the URL of the request
+     * @param cause      the exception that caused it
+     */
     public ModrinthApiException(String message, int statusCode, String requestUrl, Throwable cause) {
         super(message, cause);
         this.statusCode = statusCode;

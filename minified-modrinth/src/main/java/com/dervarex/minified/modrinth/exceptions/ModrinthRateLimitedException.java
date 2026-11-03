@@ -17,6 +17,15 @@ import org.apiguardian.api.API;
 public final class ModrinthRateLimitedException extends ModrinthApiException {
     private final long retryAfterSeconds;
 
+    /**
+     * Creates the exception
+     *
+     * @param message           what went wrong
+     * @param statusCode        the HTTP status code, 429
+     * @param requestUrl        the URL of the request
+     * @param retryAfterSeconds how long to wait before trying again, 0 if Modrinth didn't say
+     * @param cause             the exception that caused it
+     */
     public ModrinthRateLimitedException(String message, int statusCode, String requestUrl, long retryAfterSeconds, Throwable cause) {
         super(message, statusCode, requestUrl, cause);
         this.retryAfterSeconds = retryAfterSeconds;

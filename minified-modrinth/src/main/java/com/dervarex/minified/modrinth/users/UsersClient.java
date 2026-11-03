@@ -10,6 +10,11 @@ import java.util.List;
  * Gets users by ID or username, get it from {@link Modrinth#users()}
  */
 public final class UsersClient extends AbstractModrinthClient {
+    /**
+     * Creates the client, use the one from {@link Modrinth}
+     *
+     * @param modrinth the Modrinth it belongs to
+     */
     @API(status = API.Status.INTERNAL)
     public UsersClient(Modrinth modrinth) {
         super(modrinth);
@@ -18,6 +23,8 @@ public final class UsersClient extends AbstractModrinthClient {
     /**
      * Gets a user by their ID or username
      *
+     * @param idOrUsername the ID or username
+     * @return the user
      * @throws com.dervarex.minified.modrinth.exceptions.ModrinthNotFoundException if there is no such user
      */
     public User get(String idOrUsername) {
@@ -25,7 +32,10 @@ public final class UsersClient extends AbstractModrinthClient {
     }
 
     /**
-     * Gets several users by their IDs or usernames. Ones that don't exist are left out.
+     * Gets several users by their IDs or usernames.
+     *
+     * @param idsOrUsernames the IDs or usernames
+     * @return the users, ones that don't exist are left out
      */
     public List<User> getMany(String... idsOrUsernames) {
         if (idsOrUsernames == null || idsOrUsernames.length == 0) {

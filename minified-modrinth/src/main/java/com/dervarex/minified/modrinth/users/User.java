@@ -17,6 +17,11 @@ public final class User {
     private final Instant created;
     private final String role;
 
+    /**
+     * Reads a user from Modrinth's JSON, the clients do this.
+     *
+     * @param json the user as Modrinth sends it
+     */
     @API(status = API.Status.INTERNAL)
     public User(JsonObject json) {
         id = ModrinthJson.string(json, "id");
@@ -57,6 +62,11 @@ public final class User {
         return role;
     }
 
+    /**
+     * Describes the user, for logging purposes
+     *
+     * @return the username and ID
+     */
     @Override
     public String toString() {
         return "User{" + username + ", " + id + "}";

@@ -36,6 +36,11 @@ public final class LoaderTag {
         return supportedProjectTypes;
     }
 
+    /**
+     * Describes the loader, for logging
+     *
+     * @return the name
+     */
     @Override
     public String toString() {
         return name;

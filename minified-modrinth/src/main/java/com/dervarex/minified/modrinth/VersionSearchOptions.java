@@ -35,6 +35,11 @@ public final class VersionSearchOptions {
         this.offset = builder.offset;
     }
 
+    /**
+     * Starts new version filters
+     *
+     * @return a builder without filters
+     */
     public static Builder builder() {
         return new Builder();
     }
@@ -77,7 +82,12 @@ public final class VersionSearchOptions {
         private Builder() {
         }
 
-        /** Only versions for one of these Minecraft versions, like {@code 1.21.11} */
+        /**
+         * Only matches versions for one of these Minecraft versions
+         *
+         * @param gameVersions the Minecraft versions, like {@code 1.21.11}
+         * @return this builder
+         */
         public Builder gameVersions(String... gameVersions) {
             this.gameVersions = gameVersions == null ? List.of() : Arrays.stream(gameVersions)
                     .filter(Objects::nonNull)
@@ -88,19 +98,35 @@ public final class VersionSearchOptions {
             return this;
         }
 
-        /** Only versions for one of these loaders */
+        /**
+         * Only matches versions for one of these loader
+         *
+         * @param loaders the loaders
+         * @return this builder
+         */
         public Builder loaders(Loader... loaders) {
             this.loaders = loaders == null ? List.of() : Arrays.stream(loaders).filter(Objects::nonNull).distinct().toList();
             return this;
         }
 
-        /** Only featured versions for {@code true}, only not featured ones for {@code false}, both for {@code null} */
+        /**
+         * Only matches featured or not featured versions
+         *
+         * @param featured {@code true} for featured ones, {@code false} for not featured ones, {@code null} for both
+         * @return this builder
+         */
         public Builder featured(Boolean featured) {
             this.featured = featured;
             return this;
         }
 
-        /** How many versions to return at most, {@code 0} (the default) for all of them */
+        /**
+         * Sets how many versions to return at most
+         *
+         * @param limit the most versions to return, {@code 0} (the default) for all of them
+         * @return this builder
+         * @throws IllegalArgumentException if the limit is negative
+         */
         public Builder limit(int limit) {
             if (limit < 0) {
                 throw new IllegalArgumentException("limit must not be negative, was " + limit);
@@ -109,7 +135,13 @@ public final class VersionSearchOptions {
             return this;
         }
 
-        /** How many versions to skip, for paging */
+        /**
+         * Sets how many versions to skip, for paging
+         *
+         * @param offset how many versions to skip, 0 or more
+         * @return this builder
+         * @throws IllegalArgumentException if the offset is negative
+         */
         public Builder offset(int offset) {
             if (offset < 0) {
                 throw new IllegalArgumentException("offset must not be negative, was " + offset);
@@ -118,6 +150,11 @@ public final class VersionSearchOptions {
             return this;
         }
 
+        /**
+         * Builds the filters
+         *
+         * @return the version filters
+         */
         public VersionSearchOptions build() {
             return new VersionSearchOptions(this);
         }

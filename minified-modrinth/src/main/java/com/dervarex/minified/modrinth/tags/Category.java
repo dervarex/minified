@@ -40,6 +40,11 @@ public final class Category {
         return header;
     }
 
+    /**
+     * Describes the category, for logging
+     *
+     * @return the name
+     */
     @Override
     public String toString() {
         return name;

@@ -8,6 +8,12 @@ import org.apiguardian.api.API;
  */
 @API(status = API.Status.STABLE)
 public final class ModrinthSerializationException extends ModrinthException {
+    /**
+     * Creates the exception
+     *
+     * @param message what couldn't be parsed
+     * @param cause   the parse failure
+     */
     public ModrinthSerializationException(String message, Throwable cause) {
         super(message, cause);
     }

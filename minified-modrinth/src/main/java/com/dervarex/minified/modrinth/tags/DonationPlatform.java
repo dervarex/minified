@@ -25,6 +25,11 @@ public final class DonationPlatform {
         return name;
     }
 
+    /**
+     * Describes the platform, for logging
+     *
+     * @return the ID
+     */
     @Override
     public String toString() {
         return id;

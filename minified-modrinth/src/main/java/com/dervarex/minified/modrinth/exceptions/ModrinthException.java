@@ -8,10 +8,21 @@ import org.apiguardian.api.API;
  */
 @API(status = API.Status.STABLE)
 public class ModrinthException extends RuntimeException {
+    /**
+     * Creates the exception
+     *
+     * @param message what went wrong
+     */
     public ModrinthException(String message) {
         super(message);
     }
 
+    /**
+     * Creates the exception
+     *
+     * @param message what went wrong
+     * @param cause   the exception that caused it
+     */
     public ModrinthException(String message, Throwable cause) {
         super(message, cause);
     }
