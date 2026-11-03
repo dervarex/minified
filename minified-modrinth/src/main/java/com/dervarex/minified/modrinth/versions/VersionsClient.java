@@ -15,6 +15,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Gets versions by id, project or file hash
+ */
 public final class VersionsClient extends AbstractModrinthClient {
     public VersionsClient(Modrinth modrinth) {
         super(modrinth);

@@ -1,5 +1,8 @@
 package com.dervarex.minified.modrinth.projects;
 
+/**
+ * What a Project is, for example a shader
+ */
 public enum ProjectType {
     MOD("mod"),
     MODPACK("modpack"),

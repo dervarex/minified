@@ -1,5 +1,8 @@
 package com.dervarex.minified.modrinth.versions;
 
+/**
+ * A dependency of a version, pointing to another version or project
+ */
 public class VersionDependency {
     public String versionId;
     public String projectId;

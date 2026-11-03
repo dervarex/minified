@@ -14,6 +14,9 @@ public final class ModrinthRateLimitedException extends ModrinthApiException {
         this.retryAfterSeconds = retryAfterSeconds;
     }
 
+    /**
+     * {@return how long we have to wait to retry (source: modrinth)}
+     */
     public long getRetryAfterSeconds() {
         return retryAfterSeconds;
     }

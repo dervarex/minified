@@ -1,5 +1,8 @@
 package com.dervarex.minified.modrinth.versions;
 
+/**
+ * The release channel of a version
+ */
 public enum VersionType {
     RELEASE("release"),
     BETA("beta"),

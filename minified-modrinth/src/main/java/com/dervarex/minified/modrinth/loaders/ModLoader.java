@@ -2,6 +2,9 @@ package com.dervarex.minified.modrinth.loaders;
 
 import org.apiguardian.api.API;
 
+/**
+ * Mod loaders that Modrinth knows,and the value the API uses
+ */
 @API(status = API.Status.STABLE)
 public enum ModLoader {
     FABRIC("fabric"),
@@ -14,7 +17,7 @@ public enum ModLoader {
     LITE_LOADER("liteloader"),
     RISUGAMIS_MODLOADER("risugamis-modloader"),
     NIL_LOADER("nilloader"),
-    ORNITHE("ornithe"), // Still convinced this is a typo; whoever named this had one chance...
+    ORNITHE("ornithe"),
     QUILT("quilt"),
     RIFT("rift");
 

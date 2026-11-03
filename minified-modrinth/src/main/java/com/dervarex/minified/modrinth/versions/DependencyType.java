@@ -1,5 +1,8 @@
 package com.dervarex.minified.modrinth.versions;
 
+/**
+ * Dependency Types, how they depend on each other
+ */
 public enum DependencyType {
     REQUIRED("required"),
     OPTIONAL("optional"),

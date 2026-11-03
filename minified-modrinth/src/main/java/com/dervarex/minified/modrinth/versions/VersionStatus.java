@@ -1,5 +1,8 @@
 package com.dervarex.minified.modrinth.versions;
 
+/**
+ * Whether a version is listed, unlisted, archived, a draft or scheduled
+ */
 public enum VersionStatus {
     LISTED("listed"),
     UNLISTED("unlisted"),

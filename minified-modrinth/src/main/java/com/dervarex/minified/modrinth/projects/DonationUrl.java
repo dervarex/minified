@@ -1,5 +1,8 @@
 package com.dervarex.minified.modrinth.projects;
 
+/**
+ * A donation link of a project, like a Patreon page
+ */
 public class DonationUrl {
 
     public String id;

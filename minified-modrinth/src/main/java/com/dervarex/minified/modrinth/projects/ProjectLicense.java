@@ -1,5 +1,8 @@
 package com.dervarex.minified.modrinth.projects;
 
+/**
+ * The license of a project, e.g. {@code MIT}
+ */
 public class ProjectLicense {
     public String id;
     public String name;

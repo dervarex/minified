@@ -16,10 +16,16 @@ public class ModrinthApiException extends ModrinthException {
         this.requestUrl = requestUrl;
     }
 
+    /**
+     * {@return status code given by the modrinth api}
+     */
     public int getStatusCode() {
         return statusCode;
     }
 
+    /**
+     * {@return url used for the request}
+     */
     public String getRequestUrl() {
         return requestUrl;
     }

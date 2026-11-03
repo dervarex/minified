@@ -2,6 +2,9 @@ package com.dervarex.minified.modrinth.teams;
 
 import java.time.Instant;
 
+/**
+ * A team of users that works on projects together
+ */
 public class Team {
     public String id;
     public String name;

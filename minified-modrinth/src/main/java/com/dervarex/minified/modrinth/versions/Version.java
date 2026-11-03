@@ -16,6 +16,9 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.*;
 
+/**
+ * A version of a project, with its files and dependencies
+ */
 public class Version {
     public String id;
     public String projectId;

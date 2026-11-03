@@ -2,6 +2,9 @@ package com.dervarex.minified.modrinth.loaders;
 
 import org.apiguardian.api.API;
 
+/**
+ * Shader loaders that Modrinth knows and how the api calls them
+ */
 public enum ShaderLoader {
     IRIS("iris"),
     OPTIFINE("optifine"),

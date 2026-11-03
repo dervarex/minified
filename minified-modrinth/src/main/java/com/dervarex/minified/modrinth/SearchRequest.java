@@ -42,6 +42,9 @@ public final class SearchRequest extends SearchOptions {
         return index;
     }
 
+    /**
+     * The Search Request Builder.
+     */
     public static final class Builder {
         private final SearchRequest request = new SearchRequest();
 
@@ -182,6 +185,9 @@ public final class SearchRequest extends SearchOptions {
         }
     }
 
+    /**
+     * How the search results are sorted, passed to {@link Builder#index(SearchIndex)}
+     */
     public enum SearchIndex {
         RELEVANCE("relevance"),
         DOWNLOADS("downloads"),

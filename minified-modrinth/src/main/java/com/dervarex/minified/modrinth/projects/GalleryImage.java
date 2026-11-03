@@ -2,6 +2,9 @@ package com.dervarex.minified.modrinth.projects;
 
 import java.time.Instant;
 
+/**
+ * An image from the gallery of a project.
+ */
 public class GalleryImage {
 
     public String url;

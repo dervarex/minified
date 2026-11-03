@@ -11,6 +11,9 @@ import com.dervarex.minified.utils.json.JsonValue;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Gets teams and their members
+ */
 public final class TeamsClient extends AbstractModrinthClient {
     public TeamsClient(Modrinth modrinth) {
         super(modrinth);

@@ -8,6 +8,9 @@ import com.dervarex.minified.utils.json.JsonObject;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Gets users by id or username
+ */
 public final class UsersClient extends AbstractModrinthClient {
     public UsersClient(Modrinth modrinth) {
         super(modrinth);

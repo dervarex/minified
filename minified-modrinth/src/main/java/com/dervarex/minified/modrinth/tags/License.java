@@ -1,5 +1,8 @@
 package com.dervarex.minified.modrinth.tags;
 
+/**
+ * A license Modrinth knows, returned by {@link TagsClient#licenses()}.
+ */
 public class License {
     public String id;
     public String name;

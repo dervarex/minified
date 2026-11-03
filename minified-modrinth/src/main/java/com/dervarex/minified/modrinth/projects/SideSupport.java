@@ -1,5 +1,8 @@
 package com.dervarex.minified.modrinth.projects;
 
+/**
+ * Whether a project is needed on the client or the server side
+ */
 public enum SideSupport {
     REQUIRED("required"),
     OPTIONAL("optional"),

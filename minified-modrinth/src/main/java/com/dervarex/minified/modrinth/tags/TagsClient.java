@@ -11,6 +11,9 @@ import com.dervarex.minified.utils.json.JsonValue;
 
 import java.util.List;
 
+/**
+ * Gets the lists Modrinth uses to describe projects (called Tags), like categories, loaders, game versions and licenses
+ */
 public final class TagsClient extends AbstractModrinthClient {
     public TagsClient(Modrinth modrinth) {
         super(modrinth);

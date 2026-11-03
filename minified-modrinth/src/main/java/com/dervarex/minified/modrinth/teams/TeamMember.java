@@ -4,6 +4,9 @@ import com.dervarex.minified.modrinth.users.User;
 
 import java.time.Instant;
 
+/**
+ * A user in a {@link Team}
+ */
 public class TeamMember {
     public User user;
     public String role;

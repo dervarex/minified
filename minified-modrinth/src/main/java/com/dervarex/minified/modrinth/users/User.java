@@ -2,6 +2,9 @@ package com.dervarex.minified.modrinth.users;
 
 import java.time.Instant;
 
+/**
+ * A Modrinth user
+ */
 public class User {
     public String id;
     public String username;

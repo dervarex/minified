@@ -22,6 +22,9 @@ public final class VersionSearchOptions extends SearchOptions {
         return new Builder();
     }
 
+    /**
+     * Builds {@link VersionSearchOptions}, created by {@link VersionSearchOptions#builder()}
+     */
     public static final class Builder {
         private final VersionSearchOptions options = new VersionSearchOptions();
 

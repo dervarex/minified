@@ -16,6 +16,9 @@ import org.apiguardian.api.API;
 @API(status = API.Status.EXPERIMENTAL)
 public record DependencySkippedEvent(Version parent, VersionDependency dependency, Reason reason) implements Event {
 
+    /**
+     * Why a dependency was left out.
+     */
     @API(status = API.Status.EXPERIMENTAL)
     public enum Reason {
         /** optional dependency, when optional ones weren't asked for */

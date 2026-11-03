@@ -23,6 +23,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * A file of a version, with its hashes
+ */
 public class VersionFile {
     public Map<String, String> hashes = new LinkedHashMap<>();
     public String url;

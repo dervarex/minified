@@ -2,6 +2,9 @@ package com.dervarex.minified.modrinth.loaders;
 
 import org.apiguardian.api.API;
 
+/**
+ * Plugin platforms Modrinth knows, with the value the API uses for them
+ */
 @API(status = API.Status.STABLE)
 public enum PluginLoader {
     PAPER("paper"),

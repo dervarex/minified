@@ -19,6 +19,9 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 
+/**
+ * Gets and searches projects and their versions
+ */
 public final class ProjectsClient extends AbstractModrinthClient {
     public ProjectsClient(Modrinth modrinth) {
         super(modrinth);
