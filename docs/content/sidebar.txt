@@ -26,7 +26,7 @@ Modules
     Exceptions -> guides/minified-utils/exceptions/exceptions
     API Endpoints -> guides/minified-utils/api-endpoints/api-endpoints
   Modrinth
-    Modrinth -> guides/minified-modrinth/modrinth
+    Modrinth -> api/com.dervarex.minified.modrinth/
     Loaders -> guides/minified-modrinth/loaders/loaders
     Projects
       Project -> guides/minified-modrinth/projects/project
