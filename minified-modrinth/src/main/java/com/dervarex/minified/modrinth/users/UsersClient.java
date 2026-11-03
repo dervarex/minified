@@ -2,64 +2,35 @@ package com.dervarex.minified.modrinth.users;
 
 import com.dervarex.minified.modrinth.Modrinth;
 import com.dervarex.minified.modrinth.internal.AbstractModrinthClient;
-import com.dervarex.minified.modrinth.internal.ModrinthJson;
-import com.dervarex.minified.utils.json.JsonObject;
+import org.apiguardian.api.API;
 
 import java.util.List;
-import java.util.Map;
 
 /**
- * Gets users by id or username
+ * Gets users by ID or username, get it from {@link Modrinth#users()}
  */
 public final class UsersClient extends AbstractModrinthClient {
+    @API(status = API.Status.INTERNAL)
     public UsersClient(Modrinth modrinth) {
         super(modrinth);
     }
 
-    /** Gets a user by their ID or username */
+    /**
+     * Gets a user by their ID or username
+     *
+     * @throws com.dervarex.minified.modrinth.exceptions.ModrinthNotFoundException if there is no such user
+     */
     public User get(String idOrUsername) {
-        return parseUser(getObject("/user/" + encode(idOrUsername)));
+        return get("/user/" + encode(idOrUsername), User::new);
     }
 
-    /** Gets several users by their IDs */
-    public List<User> getMany(String... ids) {
-        Map<String, String> query = query("ids", toJsonArray(ids));
-        return getList("/users", query, this::parseUser);
-    }
-
-    private User parseUser(JsonObject object) {
-        if (object == null) {
-            return null;
+    /**
+     * Gets several users by their IDs or usernames. Ones that don't exist are left out.
+     */
+    public List<User> getMany(String... idsOrUsernames) {
+        if (idsOrUsernames == null || idsOrUsernames.length == 0) {
+            return List.of();
         }
-        User user = new User();
-        user.id = ModrinthJson.string(object, "id");
-        user.username = ModrinthJson.string(object, "username");
-        user.name = ModrinthJson.string(object, "name");
-        user.avatarUrl = ModrinthJson.string(object, "avatar_url");
-        user.bio = ModrinthJson.string(object, "bio");
-        user.created = ModrinthJson.instant(object, "created");
-        user.role = ModrinthJson.string(object, "role");
-        return user;
-    }
-
-    private static String toJsonArray(String... values) {
-        if (values == null || values.length == 0) {
-            return "[]";
-        }
-        StringBuilder builder = new StringBuilder("[");
-        boolean first = true;
-        for (String value : values) {
-            if (value == null || value.isBlank()) {
-                continue;
-            }
-            if (!first) {
-                builder.append(',');
-            }
-            first = false;
-            builder.append('"').append(value.replace("\\", "\\\\").replace("\"", "\\\"")).append('"');
-        }
-        builder.append(']');
-        return builder.toString();
+        return getList("/users", query("ids", toJsonArray(idsOrUsernames)), User::new);
     }
 }
-

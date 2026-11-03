@@ -6,7 +6,7 @@ import org.apiguardian.api.API;
  * Mod loaders that Modrinth knows,and the value the API uses
  */
 @API(status = API.Status.STABLE)
-public enum ModLoader {
+public enum ModLoader implements Loader {
     /** Fabric, a lightweight and widely used modding toolchain. */
     FABRIC("fabric"),
     /** Forge, one of the oldest and largest Minecraft modding platforms out there */
@@ -40,7 +40,7 @@ public enum ModLoader {
         this.apiValue = apiValue;
     }
 
-    @API(status = API.Status.INTERNAL)
+    @Override
     public String getApiValue() {
         return apiValue;
     }
@@ -56,10 +56,5 @@ public enum ModLoader {
             }
         }
         throw new IllegalArgumentException("Unknown mod loader: " + value);
-    }
-
-    @Override
-    public String toString() {
-        return apiValue;
     }
 }

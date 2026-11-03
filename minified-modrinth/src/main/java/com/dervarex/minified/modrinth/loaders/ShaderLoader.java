@@ -5,7 +5,7 @@ import org.apiguardian.api.API;
 /**
  * Shader loaders that Modrinth knows and how the api calls them
  */
-public enum ShaderLoader {
+public enum ShaderLoader implements Loader {
     /** Iris, the modern shader loader */
     IRIS("iris"),
     /** OptiFine, an optimization mod with built-in shader support, replaced by modern alternatives */
@@ -21,7 +21,7 @@ public enum ShaderLoader {
         this.apiValue = apiValue;
     }
 
-    @API(status = API.Status.INTERNAL)
+    @Override
     public String getApiValue() {
         return apiValue;
     }
@@ -37,10 +37,5 @@ public enum ShaderLoader {
             }
         }
         throw new IllegalArgumentException("Unknown shader loader: " + value);
-    }
-
-    @Override
-    public String toString() {
-        return apiValue;
     }
 }

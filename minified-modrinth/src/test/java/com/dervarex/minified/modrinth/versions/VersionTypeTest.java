@@ -19,8 +19,8 @@ class VersionTypeTest {
     }
 
     @Test
-    void fromApiValue_throws_whenNoMatch() {
-        assertThrows(IllegalArgumentException.class, () -> VersionType.fromApiValue("nope"));
+    void fromApiValue_returnsUnknown_whenNoMatch() {
+        assertEquals(VersionType.UNKNOWN, VersionType.fromApiValue("nope"));
     }
 
     @Test
@@ -34,7 +34,7 @@ class VersionTypeTest {
     }
 
     @Test
-    void toString_returnsApiValue() {
-        assertEquals("beta", VersionType.BETA.toString());
+    void getApiValue_returnsApiValue() {
+        assertEquals("beta", VersionType.BETA.getApiValue());
     }
 }

@@ -2,44 +2,55 @@ package com.dervarex.minified.modrinth;
 
 import org.apiguardian.api.API;
 
-import java.util.Arrays;
+import java.util.List;
 
 /**
- * Generic search result container used by Modrinth endpoints.
+ * One page of search results
+ *
+ * @param <T> what was searched for
  */
 @API(status = API.Status.STABLE)
 public final class SearchResult<T> {
-    public T[] hits;
-    public int offset;
-    public int limit;
-    public int totalHits;
+    private final List<T> hits;
+    private final int offset;
+    private final int limit;
+    private final int totalHits;
 
-    public SearchResult() {
-    }
-
-    public SearchResult(T[] hits, int offset, int limit, int totalHits) {
-        this.hits = hits;
+    @API(status = API.Status.INTERNAL)
+    public SearchResult(List<T> hits, int offset, int limit, int totalHits) {
+        this.hits = List.copyOf(hits);
         this.offset = offset;
         this.limit = limit;
         this.totalHits = totalHits;
     }
 
-    public T[] getHits() {
+    /** {@return the results on this page} */
+    public List<T> getHits() {
         return hits;
     }
 
+    /** {@return how many results were skipped before this page} */
+    public int getOffset() {
+        return offset;
+    }
+
+    /** {@return how many results a page has at most} */
+    public int getLimit() {
+        return limit;
+    }
+
+    /** {@return how many results there are on all pages together} */
+    public int getTotalHits() {
+        return totalHits;
+    }
+
+    /** {@return whether this page has no results} */
     public boolean isEmpty() {
-        return hits == null || hits.length == 0;
+        return hits.isEmpty();
     }
 
     @Override
     public String toString() {
-        return "SearchResult{" +
-                "hits=" + Arrays.toString(hits) +
-                ", offset=" + offset +
-                ", limit=" + limit +
-                ", totalHits=" + totalHits +
-                '}';
+        return "SearchResult{hits=" + hits + ", offset=" + offset + ", limit=" + limit + ", totalHits=" + totalHits + '}';
     }
 }
-

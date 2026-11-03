@@ -6,7 +6,7 @@ import org.apiguardian.api.API;
  * Plugin platforms Modrinth knows, with the value the API uses for them
  */
 @API(status = API.Status.STABLE)
-public enum PluginLoader {
+public enum PluginLoader implements Loader {
     /** Paper, a high performance server software based on Spigot */
     PAPER("paper"),
     /** Spigot, a widely used server platform with a large plugin ecosystem */
@@ -26,7 +26,7 @@ public enum PluginLoader {
         this.apiValue = apiValue;
     }
 
-    @API(status = API.Status.INTERNAL)
+    @Override
     public String getApiValue() {
         return apiValue;
     }
@@ -42,10 +42,5 @@ public enum PluginLoader {
             }
         }
         throw new IllegalArgumentException("Unknown plugin loader: " + value);
-    }
-
-    @Override
-    public String toString() {
-        return apiValue;
     }
 }

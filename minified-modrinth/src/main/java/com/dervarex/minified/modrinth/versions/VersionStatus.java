@@ -32,10 +32,5 @@ public enum VersionStatus {
         }
         return UNKNOWN;
     }
-
-    @Override
-    public String toString() {
-        return apiValue;
-    }
 }
 

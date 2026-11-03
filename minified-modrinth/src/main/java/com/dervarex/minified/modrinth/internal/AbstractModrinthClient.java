@@ -1,6 +1,6 @@
 package com.dervarex.minified.modrinth.internal;
 
-import com.dervarex.minified.modrinth.*;
+import com.dervarex.minified.modrinth.Modrinth;
 import com.dervarex.minified.modrinth.events.ApiRequestEvent;
 import com.dervarex.minified.modrinth.events.RateLimitedEvent;
 import com.dervarex.minified.modrinth.exceptions.ModrinthApiException;
@@ -52,17 +52,44 @@ public abstract class AbstractModrinthClient {
         return readJsonArray(request(path, query));
     }
 
-    protected String getRaw(String path, Map<String, String> query) {
-        return request(path, query);
+    protected <T> T get(String path, Function<JsonObject, T> parser) {
+        return get(path, Map.of(), parser);
+    }
+
+    protected <T> T get(String path, Map<String, String> query, Function<JsonObject, T> parser) {
+        return ModrinthJson.parse(getObject(path, query), parser);
     }
 
     protected <T> List<T> getList(String path, Map<String, String> query, Function<JsonObject, T> parser) {
-        JsonArray array = getArray(path, query);
+        return toList(getArray(path, query), parser);
+    }
+
+    protected static <T> List<T> toList(JsonArray array, Function<JsonObject, T> parser) {
         return array.values().stream()
                 .map(value -> value == null || value.isNull() ? null : value.asObject())
                 .filter(Objects::nonNull)
-                .map(parser)
+                .map(object -> ModrinthJson.parse(object, parser))
                 .toList();
+    }
+
+    protected static String toJsonArray(Iterable<String> values) {
+        StringBuilder builder = new StringBuilder("[");
+        boolean first = true;
+        for (String value : values) {
+            if (value == null || value.isBlank()) {
+                continue;
+            }
+            if (!first) {
+                builder.append(',');
+            }
+            first = false;
+            builder.append('"').append(value.replace("\\", "\\\\").replace("\"", "\\\"")).append('"');
+        }
+        return builder.append(']').toString();
+    }
+
+    protected static String toJsonArray(String... values) {
+        return toJsonArray(values == null ? List.of() : java.util.Arrays.asList(values));
     }
 
     protected String request(String path, Map<String, String> query) {

@@ -5,7 +5,7 @@ import org.apiguardian.api.API;
 /**
  * Represents the platform or host plugin a plugin is built for.
  */
-public enum PluginPlatform {
+public enum PluginPlatform implements Loader {
     /** BungeeCord, a proxy that connects several servers into one network */
     BUNGEECORD("bungeecord"),
     /** Extensions that add functionality directly to Geyser */
@@ -21,7 +21,7 @@ public enum PluginPlatform {
         this.apiValue = apiValue;
     }
 
-    @API(status = API.Status.INTERNAL)
+    @Override
     public String getApiValue() {
         return apiValue;
     }
@@ -37,10 +37,5 @@ public enum PluginPlatform {
             }
         }
         throw new IllegalArgumentException("Unknown plugin platform: " + value);
-    }
-
-    @Override
-    public String toString() {
-        return apiValue;
     }
 }

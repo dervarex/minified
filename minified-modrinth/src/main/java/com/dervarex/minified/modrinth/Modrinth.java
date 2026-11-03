@@ -14,9 +14,8 @@ import java.util.Objects;
  * Entry point for the public Modrinth API.
  */
 @API(status = API.Status.STABLE)
-// This class could be a record class, but we've got a few constructor problems here when converting it
-@SuppressWarnings("ClassCanBeRecord")
 public final class Modrinth {
+    /** The public Modrinth API */
     public static final String DEFAULT_BASE_URL = "https://api.modrinth.com/v2";
 
     private final String baseUrl;
@@ -27,22 +26,9 @@ public final class Modrinth {
     private final UsersClient users;
     private final TeamsClient teams;
 
-    public Modrinth() {
-        this(DEFAULT_BASE_URL);
-    }
-
-    public Modrinth(String baseUrl) {
-        this(baseUrl, new EventBus());
-    }
-
-    /**
-     * @param baseUrl  the Modrinth API URL, usually {@link #DEFAULT_BASE_URL}
-     * @param eventBus the EventBus where events are posted to
-     */
-    @API(status = API.Status.STABLE)
-    public Modrinth(String baseUrl, EventBus eventBus) {
+    private Modrinth(String baseUrl, EventBus eventBus) {
         this.baseUrl = normalizeBaseUrl(baseUrl);
-        this.eventBus = eventBus == null ? new EventBus() : eventBus;
+        this.eventBus = Objects.requireNonNull(eventBus, "eventBus");
         this.projects = new ProjectsClient(this);
         this.versions = new VersionsClient(this);
         this.tags = new TagsClient(this);
@@ -50,42 +36,65 @@ public final class Modrinth {
         this.teams = new TeamsClient(this);
     }
 
+    /**
+     * {@return a client for the public Modrinth API at {@link #DEFAULT_BASE_URL}, with its own EventBus}
+     */
     public static Modrinth connect() {
-        return new Modrinth();
+        return connect(DEFAULT_BASE_URL);
     }
 
+    /**
+     * {@return a client for a Modrinth API at another URL, like a staging instance or a compatible mirror, with
+     * its own EventBus}
+     */
     public static Modrinth connect(String baseUrl) {
-        return new Modrinth(baseUrl);
+        return connect(baseUrl, new EventBus());
     }
 
+    /**
+     * @param baseUrl  the Modrinth API URL, usually {@link #DEFAULT_BASE_URL}
+     * @param eventBus the EventBus the client posts its events to
+     * @return a client for the Modrinth API at that URL
+     */
+    @API(status = API.Status.STABLE)
+    public static Modrinth connect(String baseUrl, EventBus eventBus) {
+        return new Modrinth(baseUrl, eventBus);
+    }
+
+    /** {@return the URL of the API this client talks to} */
     public String getBaseUrl() {
         return baseUrl;
     }
 
     /**
-     * @return the EventBus this client posts its events to
+     * {@return the EventBus this client posts its events to}
      */
     @API(status = API.Status.STABLE)
     public EventBus getEventBus() {
         return eventBus;
     }
 
+    /** {@return the client for projects} */
     public ProjectsClient projects() {
         return projects;
     }
 
+    /** {@return the client for versions} */
     public VersionsClient versions() {
         return versions;
     }
 
+    /** {@return the client for tags, like categories and loaders} */
     public TagsClient tags() {
         return tags;
     }
 
+    /** {@return the client for users} */
     public UsersClient users() {
         return users;
     }
 
+    /** {@return the client for teams} */
     public TeamsClient teams() {
         return teams;
     }

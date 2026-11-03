@@ -1,69 +1,54 @@
 package com.dervarex.minified.modrinth;
 
 import com.dervarex.minified.modrinth.loaders.ModLoader;
+import com.dervarex.minified.modrinth.loaders.PluginLoader;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class VersionSearchOptionsTest {
 
     @Test
-    void builder_gameVersions_trimsAndDistincts() {
+    void defaults_matchEverything() {
+        VersionSearchOptions options = VersionSearchOptions.builder().build();
+        assertTrue(options.getGameVersions().isEmpty());
+        assertTrue(options.getLoaders().isEmpty());
+        assertNull(options.getFeatured());
+        assertEquals(0, options.getLimit());
+        assertEquals(0, options.getOffset());
+    }
+
+    @Test
+    void builder_setsEverything() {
         VersionSearchOptions options = VersionSearchOptions.builder()
-                .gameVersions(" 1.20 ", "1.20", "1.21")
+                .gameVersions("1.21.11", " 1.21.10 ", "", null, "1.21.11")
+                .loaders(ModLoader.FABRIC, null, PluginLoader.PAPER, ModLoader.FABRIC)
+                .featured(true)
+                .limit(5)
+                .offset(2)
                 .build();
-        assertArrayEquals(new String[]{"1.20", "1.21"}, options.gameVersions);
+        assertEquals(List.of("1.21.11", "1.21.10"), options.getGameVersions());
+        assertEquals(List.of(ModLoader.FABRIC, PluginLoader.PAPER), options.getLoaders());
+        assertEquals(Boolean.TRUE, options.getFeatured());
+        assertEquals(5, options.getLimit());
+        assertEquals(2, options.getOffset());
     }
 
     @Test
-    void builder_loadersString_normalizes() {
+    void nullArrays_clearTheFilter() {
         VersionSearchOptions options = VersionSearchOptions.builder()
-                .loaders(" fabric ", "neoforge")
+                .gameVersions("1.21.11").gameVersions((String[]) null)
+                .loaders(ModLoader.FABRIC).loaders((ModLoader[]) null)
                 .build();
-        assertArrayEquals(new String[]{"fabric", "neoforge"}, options.loaders);
+        assertTrue(options.getGameVersions().isEmpty());
+        assertTrue(options.getLoaders().isEmpty());
     }
 
     @Test
-    void builder_loadersModLoader_convertsToStrings() {
-        VersionSearchOptions options = VersionSearchOptions.builder()
-                .loaders(ModLoader.FABRIC, ModLoader.NEOFORGE)
-                .build();
-        assertArrayEquals(new String[]{"fabric", "neoforge"}, options.loaders);
-    }
-
-    @Test
-    void builder_loadersModLoader_skipsNulls() {
-        VersionSearchOptions options = VersionSearchOptions.builder()
-                .loaders(ModLoader.FABRIC, null, ModLoader.NEOFORGE)
-                .build();
-        assertArrayEquals(new String[]{"fabric", "neoforge"}, options.loaders);
-    }
-
-    @Test
-    void builder_featured_setsValue() {
-        VersionSearchOptions options = VersionSearchOptions.builder().featured(true).build();
-        assertEquals(Boolean.TRUE, options.featured);
-    }
-
-    @Test
-    void builder_limit_usesZeroForNegative() {
-        VersionSearchOptions options = VersionSearchOptions.builder().limit(-1).build();
-        assertEquals(0, options.limit);
-    }
-
-    @Test
-    void builder_offset_usesZeroForNegative() {
-        VersionSearchOptions options = VersionSearchOptions.builder().offset(-1).build();
-        assertEquals(0, options.offset);
-    }
-
-    @Test
-    void defaultLimit_isTen() {
-        assertEquals(10, new VersionSearchOptions().limit);
-    }
-
-    @Test
-    void defaultOffset_isZero() {
-        assertEquals(0, new VersionSearchOptions().offset);
+    void negativeValues_throw() {
+        assertThrows(IllegalArgumentException.class, () -> VersionSearchOptions.builder().limit(-1));
+        assertThrows(IllegalArgumentException.class, () -> VersionSearchOptions.builder().offset(-1));
     }
 }

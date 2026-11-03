@@ -1,9 +1,9 @@
 package com.dervarex.minified.modrinth;
 
 import com.dervarex.minified.modrinth.loaders.ModLoader;
+import com.dervarex.minified.modrinth.loaders.ShaderLoader;
 import com.dervarex.minified.modrinth.projects.Environment;
 import com.dervarex.minified.modrinth.projects.ProjectType;
-import com.dervarex.minified.modrinth.projects.SideSupport;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -13,150 +13,94 @@ import static org.junit.jupiter.api.Assertions.*;
 class SearchRequestTest {
 
     @Test
-    void builder_setsQuery() {
-        SearchRequest request = SearchRequest.builder().query("sodium").build();
-        assertEquals("sodium", request.getQuery());
-    }
-
-    @Test
-    void builder_setsDefaultIndex() {
+    void defaults() {
         SearchRequest request = SearchRequest.builder().build();
-        assertEquals("relevance", request.getIndex());
+        assertNull(request.getQuery());
+        assertEquals(SearchRequest.SearchIndex.RELEVANCE, request.getIndex());
+        assertEquals(10, request.getLimit());
+        assertEquals(0, request.getOffset());
+        assertTrue(request.getFacets().isEmpty());
     }
 
     @Test
-    void builder_indexString_setsIndex() {
-        SearchRequest request = SearchRequest.builder().index("downloads").build();
-        assertEquals("downloads", request.getIndex());
-    }
-
-    @Test
-    void builder_indexEnum_setsIndex() {
+    void query_andIndex() {
         SearchRequest request = SearchRequest.builder()
+                .query("sodium")
                 .index(SearchRequest.SearchIndex.DOWNLOADS)
                 .build();
-        assertEquals("downloads", request.getIndex());
+        assertEquals("sodium", request.getQuery());
+        assertEquals("downloads", request.getIndex().getApiValue());
     }
 
     @Test
-    void builder_projectType_addsFacet() {
+    void index_mustNotBeNull() {
+        assertThrows(NullPointerException.class, () -> SearchRequest.builder().index(null));
+    }
+
+    @Test
+    void filters_becomeOneFacetGroupEach() {
         SearchRequest request = SearchRequest.builder()
-                .projectType(ProjectType.MOD)
+                .projectTypes(ProjectType.MOD, ProjectType.SHADER)
+                .environments(Environment.CLIENT_ONLY)
+                .categories("optimization")
+                .gameVersions("1.21.11", "1.21.10")
+                .loaders(ModLoader.FABRIC, ShaderLoader.IRIS)
                 .build();
-        assertEquals(ProjectType.MOD, request.projectType);
-        assertEquals(List.of("project_type:mod"), request.facets.get(0));
+
+        assertEquals(List.of(
+                List.of("project_type:mod", "project_type:shader"),
+                List.of("environment:client_only"),
+                List.of("categories:optimization"),
+                List.of("versions:1.21.11", "versions:1.21.10"),
+                List.of("categories:fabric", "categories:iris")
+        ), request.getFacets());
     }
 
     @Test
-    void builder_clientSide_addsFacet() {
+    void facet_dropsBlankNullAndDuplicateValues() {
         SearchRequest request = SearchRequest.builder()
-                .clientSide(SideSupport.REQUIRED)
+                .facet("license", " mit ", null, "", "mit", "apache")
                 .build();
-        assertEquals(SideSupport.REQUIRED, request.clientSide);
-        assertEquals(List.of("client_side:required"), request.facets.get(0));
+        assertEquals(List.of(List.of("license:mit", "license:apache")), request.getFacets());
     }
 
     @Test
-    void builder_serverSide_addsFacet() {
+    void facet_withoutValues_addsNothing() {
         SearchRequest request = SearchRequest.builder()
-                .serverSide(SideSupport.OPTIONAL)
+                .facet("license")
+                .categories((String[]) null)
+                .loaders()
                 .build();
-        assertEquals(SideSupport.OPTIONAL, request.serverSide);
-        assertEquals(List.of("server_side:optional"), request.facets.get(0));
+        assertTrue(request.getFacets().isEmpty());
     }
 
     @Test
-    void builder_environment_addsFacet() {
-        SearchRequest request = SearchRequest.builder()
-                .environment(Environment.CLIENT_ONLY)
-                .build();
-        assertArrayEquals(new String[]{"client_only"}, request.environment);
-        assertEquals(List.of("environment:client_only"), request.facets.get(0));
+    void facets_cantBeChanged() {
+        SearchRequest request = SearchRequest.builder().categories("a").build();
+        assertThrows(UnsupportedOperationException.class, () -> request.getFacets().add(List.of()));
+        assertThrows(UnsupportedOperationException.class, () -> request.getFacets().getFirst().add("b"));
     }
 
     @Test
-    void builder_categories_trimsAndDistincts() {
-        SearchRequest request = SearchRequest.builder()
-                .categories(" combat ", "combat", "magic")
-                .build();
-        assertArrayEquals(new String[]{"combat", "magic"}, request.categories);
-        assertEquals(List.of("categories:combat", "categories:magic"), request.facets.get(0));
+    void limit_andOffset() {
+        SearchRequest request = SearchRequest.builder().limit(100).offset(30).build();
+        assertEquals(100, request.getLimit());
+        assertEquals(30, request.getOffset());
     }
 
     @Test
-    void builder_gameVersions_usesVersionsFacetKey() {
-        SearchRequest request = SearchRequest.builder()
-                .gameVersions("1.20")
-                .build();
-        assertEquals(List.of("versions:1.20"), request.facets.get(0));
+    void limit_outOfRange_throws() {
+        assertThrows(IllegalArgumentException.class, () -> SearchRequest.builder().limit(-1));
+        assertThrows(IllegalArgumentException.class, () -> SearchRequest.builder().limit(SearchRequest.MAX_LIMIT + 1));
+        assertThrows(IllegalArgumentException.class, () -> SearchRequest.builder().offset(-1));
     }
 
     @Test
-    void builder_loadersModLoader_convertsToStrings() {
-        SearchRequest request = SearchRequest.builder()
-                .loaders(ModLoader.FABRIC)
-                .build();
-        assertArrayEquals(new String[]{"fabric"}, request.loaders);
-        assertEquals(List.of("loaders:fabric"), request.facets.get(0));
-    }
-
-    @Test
-    void builder_loadersString_trims() {
-        SearchRequest request = SearchRequest.builder()
-                .loaders(" fabric ", "forge")
-                .build();
-        assertArrayEquals(new String[]{"fabric", "forge"}, request.loaders);
-    }
-
-    @Test
-    void builder_limit_keepsPositiveValue() {
-        SearchRequest request = SearchRequest.builder().limit(20).build();
-        assertEquals(20, request.limit);
-    }
-
-    @Test
-    void builder_limit_usesZeroForNegative() {
-        SearchRequest request = SearchRequest.builder().limit(-5).build();
-        assertEquals(0, request.limit);
-    }
-
-    @Test
-    void builder_offset_usesZeroForNegative() {
-        SearchRequest request = SearchRequest.builder().offset(-1).build();
-        assertEquals(0, request.offset);
-    }
-
-    @Test
-    void builder_facet_addsGroup() {
-        SearchRequest request = SearchRequest.builder()
-                .facet("categories", "combat", "magic")
-                .build();
-        assertEquals(List.of("categories:combat", "categories:magic"), request.facets.get(0));
-    }
-
-    @Test
-    void builder_facet_skipsEmptyValues() {
-        SearchRequest request = SearchRequest.builder()
-                .facet("categories")
-                .build();
-        assertTrue(request.facets.isEmpty());
-    }
-
-    @Test
-    void builder_facets_replacesFacets() {
-        SearchRequest request = SearchRequest.builder()
-                .facet("categories", "combat")
-                .facets(List.of(List.of("loaders:fabric")))
-                .build();
-        assertEquals(1, request.facets.size());
-        assertEquals(List.of("loaders:fabric"), request.facets.get(0));
-    }
-
-    @Test
-    void builder_facets_skipsNullAndEmptyGroups() {
-        SearchRequest request = SearchRequest.builder()
-                .facets(java.util.Arrays.asList(null, List.of(), List.of("a:b")))
-                .build();
-        assertEquals(1, request.facets.size());
+    void builtRequest_doesNotChangeWithTheBuilder() {
+        SearchRequest.Builder builder = SearchRequest.builder().categories("a");
+        SearchRequest first = builder.build();
+        builder.categories("b");
+        assertEquals(1, first.getFacets().size());
+        assertEquals(2, builder.build().getFacets().size());
     }
 }

@@ -1,7 +1,7 @@
 package com.dervarex.minified.modrinth.projects;
 
 /**
- * Replaces clientSide/serverSide as the preferred way to describe where a project or version runs.
+ * Where a project or version runs, on the client, the server or both (it's a bit more complicated though, see below)
  */
 public enum Environment {
     CLIENT_AND_SERVER("client_and_server"),
@@ -35,10 +35,5 @@ public enum Environment {
             }
         }
         return UNKNOWN;
-    }
-
-    @Override
-    public String toString() {
-        return apiValue;
     }
 }

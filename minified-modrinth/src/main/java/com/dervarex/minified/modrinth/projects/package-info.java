@@ -4,20 +4,17 @@
  * {@link com.dervarex.minified.modrinth.Modrinth#projects()}.
  *
  * <h2>Getting projects</h2>
- * Get a project by its ID or name, or several by their IDs:
+ * Get a project by its ID or slug, or several at once:
  * <pre>{@code
  * Project project = modrinth.projects().get("sodium");
- * List<Project> projects = modrinth.projects().getMany("AANobbMI", "gvQqBUqZ");
+ * List<Project> projects = modrinth.projects().getMany("sodium", "iris");
  * }</pre>
- * Projects you get from a client are attached to the Client, so methods that need the API, like
- * {@link com.dervarex.minified.modrinth.projects.Project#getLatestVersion(com.dervarex.minified.modrinth.VersionSearchOptions)},
- * work. On a {@code Project} you created yourself they throw an
- * {@link com.dervarex.minified.modrinth.exceptions.ModrinthStateException}
  *
  * <h2>Searching</h2>
  * <pre>{@code
  * SearchRequest request = SearchRequest.builder()
  *         .query("optimization")
+ *         .loaders(ModLoader.FABRIC)
  *         .limit(20)
  *         .build();
  *
@@ -26,27 +23,24 @@
  *
  * <h2>Checking a project</h2>
  * <pre>{@code
- * if (project.hasLoader(ModLoader.FABRIC) && project.supportsVersion("1.21.11")) {
+ * if (project.hasLoader(ModLoader.FABRIC) && project.supportsGameVersion("1.21.11")) {
  *     // the project supports Fabric with Minecraft 1.21.11
  * }
  *
- * boolean optimization = project.hasTag("optimization");
- * boolean clientOnly = project.supportsEnvironment(Environment.CLIENT_ONLY);
- * boolean usesTelemetry = project.hasDisclosure(DisclosureType.TELEMETRY);
- *
- * GalleryImage featured = project.getFeaturedGallery();
+ * boolean optimization = project.hasCategory("optimization");
+ * boolean clientOnly = project.getEnvironment().contains(Environment.CLIENT_ONLY);
+ * GalleryImage featured = project.getFeaturedImage();
  * }</pre>
  *
  * <h2>Versions of a project</h2>
+ * Versions come from {@link com.dervarex.minified.modrinth.Modrinth#versions()}:
  * <pre>{@code
  * VersionSearchOptions options = VersionSearchOptions.builder()
  *         .gameVersions("1.21.11")
  *         .loaders(ModLoader.FABRIC)
  *         .build();
  *
- * List<Version> versions = modrinth.projects().getVersions("sodium", options);
- * Version latest = modrinth.projects().getLatestVersion("sodium", "1.21.11", ModLoader.FABRIC);
- * Version latestOfProject = project.getLatestVersion("1.21.11", ModLoader.FABRIC);
+ * Version latest = modrinth.versions().getLatest(project.getId(), options);
  * }</pre>
  * @see com.dervarex.minified.modrinth.versions
  */

@@ -57,7 +57,7 @@ class AbstractModrinthClientTest {
     }
 
     private Modrinth modrinth() {
-        return new Modrinth("http://test");
+        return Modrinth.connect("http://test");
     }
 
     @Test
@@ -167,9 +167,16 @@ class AbstractModrinthClientTest {
     }
 
     @Test
-    void getRaw_returnsString() {
-        TestClient client = new TestClient(modrinth(), "hello");
-        assertEquals("hello", client.getRaw("/path", Map.of()));
+    void get_wrapsParserFailures() {
+        TestClient client = new TestClient(modrinth(), "{\"x\":\"not a number\"}");
+        assertThrows(ModrinthSerializationException.class, () -> client.get("/path", obj -> obj.getInt("x")));
+    }
+
+    @Test
+    void toJsonArray_escapesAndSkipsBlankValues() {
+        assertEquals("[\"a\",\"b\\\"c\",\"d\\\\\"]", AbstractModrinthClient.toJsonArray("a", "", null, "b\"c", "d\\"));
+        assertEquals("[]", AbstractModrinthClient.toJsonArray((String[]) null));
+        assertEquals("[\"x\"]", AbstractModrinthClient.toJsonArray(List.of("x")));
     }
 
     @Test
@@ -208,7 +215,7 @@ class AbstractModrinthClientTest {
             eventBus.subscribe(RateLimitedEvent.class, events::add);
             List<ApiRequestEvent> requests = new ArrayList<>();
             eventBus.subscribe(ApiRequestEvent.class, requests::add);
-            Modrinth modrinth = new Modrinth("http://localhost:" + server.getAddress().getPort(), eventBus);
+            Modrinth modrinth = Modrinth.connect("http://localhost:" + server.getAddress().getPort(), eventBus);
 
             ModrinthRateLimitedException limited = assertThrows(ModrinthRateLimitedException.class, () -> modrinth.projects().get("iris"));
             assertEquals(30, limited.getRetryAfterSeconds());
@@ -243,7 +250,7 @@ class AbstractModrinthClientTest {
             List<ApiRequestEvent> requests = new ArrayList<>();
             eventBus.subscribe(ApiRequestEvent.class, requests::add);
             String base = "http://localhost:" + server.getAddress().getPort();
-            new Modrinth(base, eventBus).projects().get("iris");
+            Modrinth.connect(base, eventBus).projects().get("iris");
 
             assertEquals(1, requests.size());
             assertEquals(base + "/project/iris", requests.get(0).url());
@@ -251,7 +258,7 @@ class AbstractModrinthClientTest {
             assertFalse(requests.get(0).duration().isNegative());
 
             requests.clear();
-            assertThrows(ModrinthApiException.class, () -> new Modrinth("http://localhost:1", eventBus).projects().get("iris"));
+            assertThrows(ModrinthApiException.class, () -> Modrinth.connect("http://localhost:1", eventBus).projects().get("iris"));
             assertEquals(-1, requests.get(0).statusCode());
         } finally {
             server.stop(0);

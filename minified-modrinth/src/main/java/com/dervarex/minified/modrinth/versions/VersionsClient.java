@@ -4,150 +4,154 @@ import com.dervarex.minified.modrinth.Modrinth;
 import com.dervarex.minified.modrinth.VersionSearchOptions;
 import com.dervarex.minified.modrinth.internal.AbstractModrinthClient;
 import com.dervarex.minified.modrinth.internal.ModrinthJson;
-import com.dervarex.minified.modrinth.projects.Environment;
-
-import com.dervarex.minified.utils.json.JsonArray;
+import com.dervarex.minified.modrinth.loaders.Loader;
 import com.dervarex.minified.utils.json.JsonObject;
-import com.dervarex.minified.utils.json.JsonValue;
+import org.apiguardian.api.API;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
- * Gets versions by id, project or file hash
+ * Gets versions by ID, project or file hash. Get it from {@link Modrinth#versions()}
  */
 public final class VersionsClient extends AbstractModrinthClient {
+    @API(status = API.Status.INTERNAL)
     public VersionsClient(Modrinth modrinth) {
         super(modrinth);
     }
 
-    /** Gets a version by its ID */
+    /**
+     * Gets a version by its ID
+     *
+     * @throws com.dervarex.minified.modrinth.exceptions.ModrinthNotFoundException if there is no such version
+     */
     public Version get(String id) {
-        Version version = parseVersion(getObject("/version/" + encode(id)));
-        attach(version);
-        return version;
-    }
-
-    /** Gets several versions by their IDs */
-    public List<Version> getMany(String... ids) {
-        Map<String, String> query = query("ids", toJsonArray(ids));
-        return getList("/versions", query, this::parseAndAttach);
+        return get("/version/" + encode(id), this::parse);
     }
 
     /**
-     * Gets all versions of a project
+     * Gets several versions by their IDs, in the same order.
+     */
+    public List<Version> getMany(String... ids) {
+        List<String> wanted = ids == null ? List.of() : List.of(ids);
+        if (wanted.isEmpty()) {
+            return List.of();
+        }
+        Map<String, Version> byId = new LinkedHashMap<>();
+        for (Version version : getList("/versions", query("ids", toJsonArray(wanted)), this::parse)) {
+            byId.put(version.getId(), version);
+        }
+        return wanted.stream().distinct().map(byId::get).filter(Objects::nonNull).toList();
+    }
+
+    /**
+     * Gets a version of a project by its version number, like {@code mc1.21.11-0.8.0}
      *
-     * @return every version of the project, newest first
+     * @throws com.dervarex.minified.modrinth.exceptions.ModrinthNotFoundException if the project has no such version
+     */
+    public Version getByNumber(String projectIdOrSlug, String versionNumber) {
+        return get("/project/" + encode(projectIdOrSlug) + "/version/" + encode(versionNumber), this::parse);
+    }
+
+    /**
+     * Gets all versions of a project, newest first
      */
     public List<Version> getByProject(String projectIdOrSlug) {
-        return getByProject(projectIdOrSlug, null);
-    }
-
-    /** Gets the versions of a project that match the options, newest first. A limit of {@code 0} means no limit. */
-    public List<Version> getByProject(String projectIdOrSlug, VersionSearchOptions options) {
-        Map<String, String> query = new LinkedHashMap<>();
-        if (options != null) {
-            if (options.gameVersions != null && options.gameVersions.length > 0) {
-                query.put("game_versions", toJsonArray(options.gameVersions));
-            }
-            if (options.loaders != null && options.loaders.length > 0) {
-                query.put("loaders", toJsonArray(options.loaders));
-            }
-            if (options.featured != null) {
-                query.put("featured", String.valueOf(options.featured));
-            }
-            // modrinth answers limit=0 with nothing at all, so 0 means no limit here
-            if (options.limit > 0) {
-                query.put("limit", String.valueOf(options.limit));
-            }
-            if (options.offset > 0) {
-                query.put("offset", String.valueOf(options.offset));
-            }
-        }
-        return getList("/project/" + encode(projectIdOrSlug) + "/version", query, this::parseAndAttach);
+        return getByProject(projectIdOrSlug, VersionSearchOptions.builder().build());
     }
 
     /**
-     * Finds a version of a project by its version number, like {@code mc1.21.11-0.8.0}, ignoring case. {@code null} if
-     * there is none
+     * Gets the versions of a project that match the options, newest first
      */
-    public Version getVersionByNumber(String projectIdOrSlug, String versionNumber) {
-        List<Version> versions = getByProject(projectIdOrSlug);
-        for (Version version : versions) {
-            if (versionNumber != null && versionNumber.equalsIgnoreCase(version.versionNumber)) {
-                return version;
-            }
-        }
-        return null;
-    }
-
-    /** Gets the newest version of a project that matches the options, {@code null} if none does. */
-    public Version resolveLatest(String projectIdOrSlug, VersionSearchOptions options) {
-        List<Version> versions = getByProject(projectIdOrSlug, options);
-        return versions.isEmpty() ? null : versions.getFirst();
+    public List<Version> getByProject(String projectIdOrSlug, VersionSearchOptions options) {
+        Objects.requireNonNull(options, "options");
+        return getByProject(projectIdOrSlug, options.getGameVersions(),
+                options.getLoaders().stream().map(Loader::getApiValue).toList(),
+                options.getFeatured(), options.getLimit(), options.getOffset());
     }
 
     /**
-     * Gets the versions that files belong to, by the files sha1 or sha512 hashes
+     * Gets the newest version of a project that matches the options
      *
-     * @return the versions the files with these hashes belong to, in the order of the hashes, unknown ones are left out
+     * @return the version, {@code null} if none matches
+     */
+    public Version getLatest(String projectIdOrSlug, VersionSearchOptions options) {
+        Objects.requireNonNull(options, "options");
+        return getLatest(projectIdOrSlug, options.getGameVersions(),
+                options.getLoaders().stream().map(Loader::getApiValue).toList());
+    }
+
+    /**
+     * Gets the versions that files belong to, by the files' sha1 or sha512 hashes
+     *
+     * @return the versions in the order of the hashes, hashes of unknown files are left out
      */
     public List<Version> fromHashes(String... hashes) {
         return inHashOrder(postObject("/version_files", hashBody(hashes, null)), hashes);
     }
 
     /**
-     * Gets the version a file belongs to, by the file's hash. {@code null} for a blank hash
+     * Gets the version a file belongs to, by the file's sha1 or sha512 hash
      *
-     * @param hash sha1 or sha512 of a file
-     * @return the version the file belongs to
+     * @throws com.dervarex.minified.modrinth.exceptions.ModrinthNotFoundException if Modrinth doesn't know the file
      */
     public Version fromHash(String hash) {
-        if (hash == null || hash.isBlank()) {
-            return null;
-        }
-        return parseAndAttach(getObject("/version_file/" + encode(hash), query("algorithm", algorithmOf(hash))));
+        Objects.requireNonNull(hash, "hash");
+        return get("/version_file/" + encode(hash), query("algorithm", algorithmOf(hash)), this::parse);
     }
 
     /**
-     * Gets the newest version of each file's project, by the files' hashes
+     * Gets the newest version of each file's project, by the files sha1 or sha512 hashes
      *
-     * @return the newest version of the project each file belongs to, no matter the loader or game version
-     */
-    public List<Version> latestFromHashes(String... hashes) {
-        return latestFromHashes(null, hashes);
-    }
-
-    /**
-     * Gets the newest version of each file's project that matches the game versions and loaders, by the files' hashes
-     *
-     * @param options only the game versions and loaders are used
-     * @return the newest version matching the options of the project each file belongs to
+     * @param options only the game versions and loaders are used, empty options for any
+     * @return the versions in the order of the hashes, hashes of unknown files are left out
      */
     public List<Version> latestFromHashes(VersionSearchOptions options, String... hashes) {
+        Objects.requireNonNull(options, "options");
         return inHashOrder(postObject("/version_files/update", hashBody(hashes, options)), hashes);
     }
 
-    /**
-     * Gets the dependencies of a version
-     *
-     * @return the dependencies of the version, modrinth has no extra route for that, they come with the version
-     */
-    public List<VersionDependency> dependencies(String versionId) {
-        VersionDependency[] dependencies = get(versionId).dependencies;
-        return dependencies == null ? List.of() : List.of(dependencies);
+    Version getLatest(String projectIdOrSlug, List<String> gameVersions, List<String> loaders) {
+        List<Version> versions = getByProject(projectIdOrSlug, gameVersions, loaders, null, 1, 0);
+        return versions.isEmpty() ? null : versions.getFirst();
+    }
+
+    private List<Version> getByProject(String projectIdOrSlug, List<String> gameVersions, List<String> loaders,
+                                       Boolean featured, int limit, int offset) {
+        Map<String, String> query = new LinkedHashMap<>();
+        if (!gameVersions.isEmpty()) {
+            query.put("game_versions", toJsonArray(gameVersions));
+        }
+        if (!loaders.isEmpty()) {
+            query.put("loaders", toJsonArray(loaders));
+        }
+        if (featured != null) {
+            query.put("featured", String.valueOf(featured));
+        }
+        if (limit > 0) {
+            query.put("limit", String.valueOf(limit));
+        }
+        if (offset > 0) {
+            query.put("offset", String.valueOf(offset));
+        }
+        return getList("/project/" + encode(projectIdOrSlug) + "/version", query, this::parse);
+    }
+
+    private Version parse(JsonObject json) {
+        return new Version(modrinth, json);
     }
 
     private static String hashBody(String[] hashes, VersionSearchOptions options) {
         StringBuilder body = new StringBuilder("{\"hashes\":").append(toJsonArray(hashes))
                 .append(",\"algorithm\":\"").append(hashes.length == 0 ? "sha1" : algorithmOf(hashes[0])).append('"');
-        if (options != null && options.loaders != null) {
-            body.append(",\"loaders\":").append(toJsonArray(options.loaders));
+        if (options != null && !options.getLoaders().isEmpty()) {
+            body.append(",\"loaders\":").append(toJsonArray(options.getLoaders().stream().map(Loader::getApiValue).toList()));
         }
-        if (options != null && options.gameVersions != null) {
-            body.append(",\"game_versions\":").append(toJsonArray(options.gameVersions));
+        if (options != null && !options.getGameVersions().isEmpty()) {
+            body.append(",\"game_versions\":").append(toJsonArray(options.getGameVersions()));
         }
         return body.append('}').toString();
     }
@@ -162,119 +166,9 @@ public final class VersionsClient extends AbstractModrinthClient {
         for (String hash : hashes) {
             JsonObject version = ModrinthJson.object(byHash, hash);
             if (version != null) {
-                result.add(parseAndAttach(version));
+                result.add(ModrinthJson.parse(version, this::parse));
             }
         }
         return result;
     }
-
-    private Version parseAndAttach(JsonObject object) {
-        Version version = parseVersion(object);
-        attach(version);
-        return version;
-    }
-
-    private Version parseVersion(JsonObject object) {
-        if (object == null) {
-            return null;
-        }
-        Version version = new Version();
-        version.id = ModrinthJson.string(object, "id");
-        version.projectId = ModrinthJson.string(object, "project_id");
-        version.authorId = ModrinthJson.string(object, "author_id");
-        version.name = ModrinthJson.string(object, "name");
-        version.versionNumber = ModrinthJson.string(object, "version_number");
-        version.changelog = ModrinthJson.string(object, "changelog");
-        version.changelogUrl = ModrinthJson.string(object, "changelog_url");
-        version.versionType = VersionType.fromApiValue(ModrinthJson.string(object, "version_type"));
-        version.status = VersionStatus.fromApiValue(ModrinthJson.string(object, "status"));
-        version.requestedStatus = ModrinthJson.string(object, "requested_status");
-        Boolean featured = ModrinthJson.bool(object, "featured");
-        version.featured = featured != null && featured;
-        Long downloads = ModrinthJson.longValue(object, "downloads");
-        version.downloads = downloads == null ? 0L : downloads;
-        version.published = ModrinthJson.instant(object, "date_published");
-        version.gameVersions = ModrinthJson.strings(object, "game_versions");
-        version.loaders = ModrinthJson.strings(object, "loaders");
-        version.environment = Environment.fromApiValue(ModrinthJson.string(object, "environment"));
-        JsonArray dependencies = ModrinthJson.array(object, "dependencies");
-        if (dependencies != null) {
-            version.dependencies = dependencies.values().stream()
-                    .filter(value -> value != null && !value.isNull())
-                    .map(JsonValue::asObject)
-                    .map(this::parseDependency)
-                    .toArray(VersionDependency[]::new);
-        }
-        JsonArray files = ModrinthJson.array(object, "files");
-        if (files != null) {
-            version.files = files.values().stream()
-                    .filter(value -> value != null && !value.isNull())
-                    .map(JsonValue::asObject)
-                    .map(this::parseFile)
-                    .toArray(VersionFile[]::new);
-        }
-        return version;
-    }
-
-    private VersionDependency parseDependency(JsonObject object) {
-        if (object == null) {
-            return null;
-        }
-        VersionDependency dependency = new VersionDependency();
-        dependency.versionId = ModrinthJson.string(object, "version_id");
-        dependency.projectId = ModrinthJson.string(object, "project_id");
-        dependency.fileName = ModrinthJson.string(object, "file_name");
-        dependency.dependencyType = DependencyType.fromApiValue(ModrinthJson.string(object, "dependency_type"));
-        return dependency;
-    }
-
-    private VersionFile parseFile(JsonObject object) {
-        if (object == null) {
-            return null;
-        }
-        VersionFile file = new VersionFile();
-        file.url = ModrinthJson.string(object, "url");
-        file.filename = ModrinthJson.string(object, "filename");
-        Boolean primary = ModrinthJson.bool(object, "primary");
-        file.primary = primary != null && primary;
-        Long size = ModrinthJson.longValue(object, "size");
-        file.size = size == null ? 0L : size;
-        file.fileType = ModrinthJson.string(object, "file_type");
-        JsonObject hashes = ModrinthJson.object(object, "hashes");
-        if (hashes != null) {
-            Map<String, String> map = new LinkedHashMap<>();
-            for (String key : hashes.keys()) {
-                map.put(key, ModrinthJson.string(hashes, key));
-            }
-            file.hashes = map;
-        }
-        return file;
-    }
-
-    private void attach(Version version) {
-        if (version != null) {
-            version.attach(modrinth);
-        }
-    }
-
-    private static String toJsonArray(String... values) {
-        if (values == null || values.length == 0) {
-            return "[]";
-        }
-        StringBuilder builder = new StringBuilder("[");
-        boolean first = true;
-        for (String value : values) {
-            if (value == null || value.isBlank()) {
-                continue;
-            }
-            if (!first) {
-                builder.append(',');
-            }
-            first = false;
-            builder.append('"').append(value.replace("\\", "\\\\").replace("\"", "\\\"")).append('"');
-        }
-        builder.append(']');
-        return builder.toString();
-    }
 }
-

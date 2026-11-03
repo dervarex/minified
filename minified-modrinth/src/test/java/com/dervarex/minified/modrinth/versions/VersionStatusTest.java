@@ -33,7 +33,7 @@ class VersionStatusTest {
     }
 
     @Test
-    void toString_returnsApiValue() {
-        assertEquals("archived", VersionStatus.ARCHIVED.toString());
+    void getApiValue_returnsApiValue() {
+        assertEquals("archived", VersionStatus.ARCHIVED.getApiValue());
     }
 }

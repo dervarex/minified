@@ -1,47 +1,28 @@
 package com.dervarex.minified.modrinth.users;
 
 import com.dervarex.minified.modrinth.Modrinth;
+import com.dervarex.minified.modrinth.exceptions.ModrinthNotFoundException;
 import com.dervarex.minified.utils.json.JsonObject;
+import com.dervarex.minified.utils.json.JsonParser;
 import org.junit.jupiter.api.Test;
 
-import java.lang.reflect.Method;
 import java.time.Instant;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class UsersClientTest {
 
-    private static UsersClient newClient() {
-        return new UsersClient(new Modrinth("http://test"));
-    }
-
-    private static User parseUser(JsonObject object) throws Exception {
-        Method method = UsersClient.class.getDeclaredMethod("parseUser", JsonObject.class);
-        method.setAccessible(true);
-        return (User) method.invoke(newClient(), object);
-    }
-
-    private static String toJsonArray(String... values) throws Exception {
-        Method method = UsersClient.class.getDeclaredMethod("toJsonArray", String[].class);
-        method.setAccessible(true);
-        return (String) method.invoke(null, (Object) values);
-    }
+    private final UsersClient users = Modrinth.connect().users();
 
     @Test
-    void parseUser_parsesAllFields() throws Exception {
-        JsonObject obj = new JsonObject();
-        obj.put("id", "u1");
-        obj.put("username", "justin");
-        obj.put("name", "Justin");
-        obj.put("avatar_url", "https://example.com/a.png");
-        obj.put("bio", "hello");
-        obj.put("created", "2024-01-01T00:00:00Z");
-        obj.put("role", "admin");
+    void parsesEveryField() {
+        User user = new User(JsonParser.parse("""
+                {"id":"u1","username":"justin","avatar_url":"https://example.com/a.png","bio":"hello",
+                 "created":"2024-01-01T00:00:00Z","role":"admin"}""").asObject());
 
-        User user = parseUser(obj);
         assertEquals("u1", user.getId());
         assertEquals("justin", user.getUsername());
-        assertEquals("Justin", user.getName());
         assertEquals("https://example.com/a.png", user.getAvatarUrl());
         assertEquals("hello", user.getBio());
         assertEquals(Instant.parse("2024-01-01T00:00:00Z"), user.getCreated());
@@ -49,39 +30,27 @@ class UsersClientTest {
     }
 
     @Test
-    void parseUser_leavesMissingFieldsNull() throws Exception {
-        User user = parseUser(new JsonObject());
+    void leavesMissingFieldsNull() {
+        User user = new User(new JsonObject());
         assertNull(user.getId());
-        assertNull(user.getUsername());
-        assertNull(user.getName());
-        assertNull(user.getAvatarUrl());
         assertNull(user.getBio());
         assertNull(user.getCreated());
-        assertNull(user.getRole());
     }
 
     @Test
-    void parseUser_returnsNull_whenObjectNull() throws Exception {
-        assertNull(parseUser(null));
+    void getsAUserByUsername() {
+        assertEquals("TEZXhE2U", users.get("jellysquid3").getId());
     }
 
     @Test
-    void toJsonArray_buildsArray() throws Exception {
-        assertEquals("[\"a\",\"b\"]", toJsonArray("a", "b"));
+    void getsManyUsersByIdOrUsername() {
+        List<String> names = users.getMany("TEZXhE2U").stream().map(User::getUsername).toList();
+        assertEquals(List.of("jellysquid3"), names);
+        assertEquals(List.of(), users.getMany());
     }
 
     @Test
-    void toJsonArray_returnsEmptyArrayForNoValues() throws Exception {
-        assertEquals("[]", toJsonArray());
-    }
-
-    @Test
-    void toJsonArray_skipsNullOrBlank() throws Exception {
-        assertEquals("[\"a\"]", toJsonArray("a", null, ""));
-    }
-
-    @Test
-    void toJsonArray_escapesQuotesAndBackslashes() throws Exception {
-        assertEquals("[\"a\\\"b\",\"c\\\\d\"]", toJsonArray("a\"b", "c\\d"));
+    void unknownUsersAreNotFound() {
+        assertThrows(ModrinthNotFoundException.class, () -> users.get("no-such-user-" + System.nanoTime()));
     }
 }

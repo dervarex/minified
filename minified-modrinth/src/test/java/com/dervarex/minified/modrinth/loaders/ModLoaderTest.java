@@ -35,8 +35,8 @@ class ModLoaderTest {
     }
 
     @Test
-    void toString_returnsApiValue() {
-        assertEquals("fabric", ModLoader.FABRIC.toString());
-        assertEquals("quilt", ModLoader.QUILT.toString());
+    void getApiValue_returnsApiValue() {
+        assertEquals("fabric", ModLoader.FABRIC.getApiValue());
+        assertEquals("quilt", ModLoader.QUILT.getApiValue());
     }
 }

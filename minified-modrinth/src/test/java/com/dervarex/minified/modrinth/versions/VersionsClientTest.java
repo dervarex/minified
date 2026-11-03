@@ -2,14 +2,13 @@ package com.dervarex.minified.modrinth.versions;
 
 import com.dervarex.minified.modrinth.Modrinth;
 import com.dervarex.minified.modrinth.VersionSearchOptions;
+import com.dervarex.minified.modrinth.exceptions.ModrinthNotFoundException;
 import com.dervarex.minified.modrinth.loaders.ModLoader;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class VersionsClientTest {
 
@@ -26,14 +25,14 @@ class VersionsClientTest {
 
         assertEquals("1.8.2+1.21.4-fabric", iris.getVersionNumber());
         assertEquals("YL57xq9U", iris.getProjectId());
-        assertEquals(IRIS_SHA1, iris.getPrimaryFile().getHash("sha1"));
+        assertEquals(IRIS_SHA1, iris.getPrimaryFile().getHashes().get("sha1"));
         assertEquals(2665879, iris.getPrimaryFile().getSize());
-        assertEquals(SODIUM, iris.dependencies[0].getVersionId());
+        assertEquals(SODIUM, iris.getDependencies().getFirst().getVersionId());
     }
 
     @Test
     void getsManyVersionsAtOnce() {
-        assertEquals(List.of(IRIS, SODIUM), versions.getMany(IRIS, SODIUM).stream().map(Version::getId).sorted().toList());
+        assertEquals(List.of(IRIS, SODIUM), versions.getMany(IRIS, SODIUM).stream().map(Version::getId).toList());
     }
 
     @Test
@@ -44,12 +43,12 @@ class VersionsClientTest {
                 .build());
 
         assertFalse(found.isEmpty());
-        assertTrue(found.stream().allMatch(version -> version.supportsVersion("1.21.4") && version.hasLoader(ModLoader.FABRIC)));
+        assertTrue(found.stream().allMatch(version -> version.supportsGameVersion("1.21.4") && version.hasLoader(ModLoader.FABRIC)));
     }
 
     @Test
     void findsAVersionByItsNumber() {
-        assertEquals(IRIS, versions.getVersionByNumber("iris", "1.8.2+1.21.4-fabric").getId());
+        assertEquals(IRIS, versions.getByNumber("iris", "1.8.2+1.21.4-fabric").getId());
     }
 
     @Test
@@ -64,7 +63,7 @@ class VersionsClientTest {
 
     @Test
     void findsTheNewestVersionsForFileHashes() {
-        assertFalse(versions.latestFromHashes(IRIS_SHA1).isEmpty());
+        assertFalse(versions.latestFromHashes(VersionSearchOptions.builder().build(), IRIS_SHA1).isEmpty());
     }
 
     @Test
@@ -72,11 +71,37 @@ class VersionsClientTest {
         Version newest = versions.latestFromHashes(VersionSearchOptions.builder().loaders(ModLoader.FABRIC).gameVersions("1.21.4").build(), IRIS_SHA1).getFirst();
 
         assertTrue(newest.hasLoader(ModLoader.FABRIC));
-        assertTrue(newest.supportsVersion("1.21.4"));
+        assertTrue(newest.supportsGameVersion("1.21.4"));
     }
 
     @Test
-    void listsTheDependenciesOfAVersion() {
-        assertEquals(SODIUM, versions.dependencies(IRIS).getFirst().getVersionId());
+    void latestMatchesGameVersionAndLoader() {
+        Version latest = versions.getLatest("iris", VersionSearchOptions.builder()
+                .gameVersions("1.21.4")
+                .loaders(ModLoader.FABRIC)
+                .build());
+
+        assertTrue(latest.supportsGameVersion("1.21.4"));
+        assertTrue(latest.hasLoader(ModLoader.FABRIC));
+    }
+
+    @Test
+    void latestIsNullWhenNothingMatches() {
+        assertNull(versions.getLatest("iris", VersionSearchOptions.builder().gameVersions("0.0.1").build()));
+    }
+
+    @Test
+    void unknownVersionNumbersAreNotFound() {
+        assertThrows(ModrinthNotFoundException.class, () -> versions.getByNumber("iris", "no-such-version"));
+    }
+
+    @Test
+    void limitAndOffsetPage() {
+        VersionSearchOptions.Builder options = VersionSearchOptions.builder().limit(2);
+        List<Version> first = versions.getByProject("iris", options.build());
+        List<Version> second = versions.getByProject("iris", options.offset(1).build());
+
+        assertEquals(2, first.size());
+        assertEquals(first.get(1).getId(), second.get(0).getId());
     }
 }

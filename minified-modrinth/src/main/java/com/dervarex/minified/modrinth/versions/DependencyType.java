@@ -31,10 +31,5 @@ public enum DependencyType {
         }
         return UNKNOWN;
     }
-
-    @Override
-    public String toString() {
-        return apiValue;
-    }
 }
 
