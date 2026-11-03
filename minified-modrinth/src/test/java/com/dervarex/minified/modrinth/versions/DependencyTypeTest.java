@@ -33,7 +33,7 @@ class DependencyTypeTest {
     }
 
     @Test
-    void toString_returnsApiValue() {
-        assertEquals("optional", DependencyType.OPTIONAL.toString());
+    void getApiValue_returnsApiValue() {
+        assertEquals("optional", DependencyType.OPTIONAL.getApiValue());
     }
 }

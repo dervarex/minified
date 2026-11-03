@@ -10,6 +10,7 @@ import com.dervarex.minified.modrinth.events.OutdatedFileReplacedEvent;
 import com.dervarex.minified.modrinth.events.UnverifiedDownloadEvent;
 import com.dervarex.minified.modrinth.exceptions.ModrinthDownloadException;
 import com.dervarex.minified.modrinth.exceptions.ModrinthHashMismatchException;
+import com.dervarex.minified.utils.json.JsonObject;
 import com.sun.net.httpserver.HttpServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -121,7 +122,7 @@ class VersionFileTest {
     @Test
     void downloadsAnywayButTellsTheLauncherWhenTheHashCannotBeChecked() {
         List<UnverifiedDownloadEvent> events = new ArrayList<>();
-        VersionFile file = attached(file("/mod.jar", Map.of("blake3", "0".repeat(64))), events);
+        VersionFile file = file("/mod.jar", Map.of("blake3", "0".repeat(64)), bus(UnverifiedDownloadEvent.class, events));
 
         Path jar = file.download(tempDir);
 
@@ -134,7 +135,7 @@ class VersionFileTest {
     @Test
     void checkedDownloadsPostNoEvent() throws Exception {
         List<UnverifiedDownloadEvent> events = new ArrayList<>();
-        attached(file("/mod.jar", Map.of("sha1", hash("SHA-1"))), events).download(tempDir);
+        file("/mod.jar", Map.of("sha1", hash("SHA-1")), bus(UnverifiedDownloadEvent.class, events)).download(tempDir);
 
         assertTrue(events.isEmpty());
     }
@@ -142,7 +143,7 @@ class VersionFileTest {
     @Test
     void postsStartProgressAndFinish() throws Exception {
         List<Event> events = new ArrayList<>();
-        Path jar = withDownloadEvents(file("/mod.jar", Map.of("sha1", hash("SHA-1"))), events).download(tempDir);
+        Path jar = file("/mod.jar", Map.of("sha1", hash("SHA-1")), downloadEvents(events)).download(tempDir);
 
         DownloadStartedEvent started = assertInstanceOf(DownloadStartedEvent.class, events.get(0));
         assertEquals("mod.jar", started.filename());
@@ -162,7 +163,7 @@ class VersionFileTest {
     void filesThatAreAlreadyThereOnlyPostFinished() throws Exception {
         Files.write(tempDir.resolve("mod.jar"), JAR);
         List<Event> events = new ArrayList<>();
-        withDownloadEvents(file("/mod.jar", Map.of("sha1", hash("SHA-1"))), events).download(tempDir);
+        file("/mod.jar", Map.of("sha1", hash("SHA-1")), downloadEvents(events)).download(tempDir);
 
         assertEquals(1, events.size());
         assertTrue(assertInstanceOf(DownloadFinishedEvent.class, events.get(0)).alreadyPresent());
@@ -171,7 +172,7 @@ class VersionFileTest {
     @Test
     void failedDownloadsDontPostFinished() {
         List<Event> events = new ArrayList<>();
-        VersionFile file = withDownloadEvents(file("/mod.jar", Map.of("sha1", "0".repeat(40))), events);
+        VersionFile file = file("/mod.jar", Map.of("sha1", "0".repeat(40)), downloadEvents(events));
 
         assertThrows(ModrinthHashMismatchException.class, () -> file.download(tempDir));
         assertTrue(events.stream().noneMatch(DownloadFinishedEvent.class::isInstance));
@@ -183,10 +184,7 @@ class VersionFileTest {
         List<OutdatedFileReplacedEvent> events = new ArrayList<>();
         EventBus eventBus = new EventBus();
         eventBus.subscribe(OutdatedFileReplacedEvent.class, events::add);
-        VersionFile file = file("/mod.jar", Map.of("sha1", hash("SHA-1")));
-        Version version = new Version();
-        version.files = new VersionFile[]{file};
-        version.attach(new Modrinth(Modrinth.DEFAULT_BASE_URL, eventBus));
+        VersionFile file = file("/mod.jar", Map.of("sha1", hash("SHA-1")), eventBus);
 
         Path jar = file.download(tempDir);
 
@@ -197,32 +195,32 @@ class VersionFileTest {
                 events.get(0).actualHash());
     }
 
-    private static VersionFile withDownloadEvents(VersionFile file, List<Event> events) {
+    private static EventBus downloadEvents(List<Event> events) {
         EventBus eventBus = new EventBus();
         eventBus.subscribe(DownloadStartedEvent.class, events::add);
         eventBus.subscribe(DownloadProgressEvent.class, events::add);
         eventBus.subscribe(DownloadFinishedEvent.class, events::add);
-        Version version = new Version();
-        version.files = new VersionFile[]{file};
-        version.attach(new Modrinth(Modrinth.DEFAULT_BASE_URL, eventBus));
-        return file;
+        return eventBus;
     }
 
-    private static VersionFile attached(VersionFile file, List<UnverifiedDownloadEvent> events) {
+    private static <E extends Event> EventBus bus(Class<E> type, List<E> events) {
         EventBus eventBus = new EventBus();
-        eventBus.subscribe(UnverifiedDownloadEvent.class, events::add);
-        Version version = new Version();
-        version.files = new VersionFile[]{file};
-        version.attach(new Modrinth(Modrinth.DEFAULT_BASE_URL, eventBus));
-        return file;
+        eventBus.subscribe(type, events::add);
+        return eventBus;
     }
 
     private VersionFile file(String path, Map<String, String> hashes) {
-        VersionFile file = new VersionFile();
-        file.url = baseUrl + path;
-        file.filename = "mod.jar";
-        file.hashes.putAll(hashes);
-        return file;
+        return file(path, hashes, new EventBus());
+    }
+
+    private VersionFile file(String path, Map<String, String> hashes, EventBus eventBus) {
+        JsonObject hashesJson = new JsonObject();
+        hashes.forEach(hashesJson::put);
+        JsonObject json = new JsonObject();
+        json.put("url", baseUrl + path);
+        json.put("filename", "mod.jar");
+        json.put("hashes", hashesJson);
+        return new VersionFile(Modrinth.connect(Modrinth.DEFAULT_BASE_URL, eventBus), json);
     }
 
     private static String hash(String algorithm) throws Exception {

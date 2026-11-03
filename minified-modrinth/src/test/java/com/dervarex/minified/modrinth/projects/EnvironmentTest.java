@@ -33,7 +33,7 @@ class EnvironmentTest {
     }
 
     @Test
-    void toString_returnsApiValue() {
-        assertEquals("server_only", Environment.SERVER_ONLY.toString());
+    void getApiValue_returnsApiValue() {
+        assertEquals("server_only", Environment.SERVER_ONLY.getApiValue());
     }
 }

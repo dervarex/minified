@@ -26,16 +26,14 @@ Modules
     Exceptions -> guides/minified-utils/exceptions/exceptions
     API Endpoints -> guides/minified-utils/api-endpoints/api-endpoints
   Modrinth
-    Modrinth -> guides/minified-modrinth/modrinth
-    Loaders -> guides/minified-modrinth/loaders/loaders
-    Projects
-      Project -> guides/minified-modrinth/projects/project
-      Projects Client -> guides/minified-modrinth/projects/projectsclient
-    Tags -> guides/minified-modrinth/tags/tag
-    Teams -> guides/minified-modrinth/teams/teamsclient
-    Users -> guides/minified-modrinth/users/usersclient
-    Versions -> guides/minified-modrinth/versions/versionsclient
-    Exceptions -> guides/minified-modrinth/exceptions/exceptions
+    Modrinth -> api/com.dervarex.minified.modrinth/
+    Loaders -> api/com.dervarex.minified.modrinth.loaders/
+    Projects -> api/com.dervarex.minified.modrinth.projects/
+    Tags -> api/com.dervarex.minified.modrinth.tags/
+    Teams -> api/com.dervarex.minified.modrinth.teams/
+    Users -> api/com.dervarex.minified.modrinth.users/
+    Versions -> api/com.dervarex.minified.modrinth.versions/
+    Exceptions -> api/com.dervarex.minified.modrinth.exceptions/
   Worlds
     Introduction -> guides/minified-worlds/introduction
     Opening a World -> guides/minified-worlds/opening-a-world

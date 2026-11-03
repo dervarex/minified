@@ -2,99 +2,59 @@ package com.dervarex.minified.modrinth.tags;
 
 import com.dervarex.minified.modrinth.Modrinth;
 import com.dervarex.minified.modrinth.projects.ProjectType;
-import com.dervarex.minified.utils.json.JsonArray;
-import com.dervarex.minified.utils.json.JsonObject;
+import com.dervarex.minified.utils.json.JsonParser;
 import org.junit.jupiter.api.Test;
 
-import java.lang.reflect.Method;
+import java.time.Instant;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class TagsClientTest {
 
-    private static TagsClient newClient() {
-        return new TagsClient(new Modrinth("http://test"));
-    }
+    private final TagsClient tags = Modrinth.connect().tags();
 
-    private static Tag parseTag(JsonObject object) throws Exception {
-        Method method = TagsClient.class.getDeclaredMethod("parseTag", JsonObject.class);
-        method.setAccessible(true);
-        return (Tag) method.invoke(newClient(), object);
-    }
-
-    private static License parseLicense(JsonObject object) throws Exception {
-        // I was too lazy to make TagsClient not final, so we just do reflection
-        Method method = TagsClient.class.getDeclaredMethod("parseLicense", JsonObject.class);
-        method.setAccessible(true);
-        return (License) method.invoke(newClient(), object);
+    @Test
+    void parsesCategories() {
+        Category category = new Category(JsonParser.parse(
+                "{\"icon\":\"<svg/>\",\"name\":\"optimization\",\"project_type\":\"mod\",\"header\":\"categories\"}").asObject());
+        assertEquals("optimization", category.getName());
+        assertEquals("<svg/>", category.getIcon());
+        assertEquals(ProjectType.MOD, category.getProjectType());
+        assertEquals("categories", category.getHeader());
     }
 
     @Test
-    void parseTag_parsesAllFields() throws Exception {
-        JsonObject obj = new JsonObject();
-        obj.put("id", "combat");
-        obj.put("name", "Combat");
-        obj.put("description", "Fight stuff");
-        obj.put("icon", "icon.png");
-        obj.put("header", "header.png");
-        obj.put("value", "combat_value");
-        obj.put("featured", true);
-        obj.put("project_type", "mod");
-
-        Tag tag = parseTag(obj);
-        assertEquals("combat", tag.getId());
-        assertEquals("Combat", tag.getName());
-        assertEquals("Fight stuff", tag.getDescription());
-        assertEquals("icon.png", tag.getIcon());
-        assertEquals("header.png", tag.getHeader());
-        assertEquals("combat_value", tag.getValue());
-        assertTrue(tag.isFeatured());
-        assertEquals(ProjectType.MOD, tag.getProjectType());
+    void parsesLoaders() {
+        LoaderTag loader = new LoaderTag(JsonParser.parse(
+                "{\"icon\":\"<svg/>\",\"name\":\"fabric\",\"supported_project_types\":[\"mod\",\"modpack\"]}").asObject());
+        assertEquals("fabric", loader.getName());
+        assertEquals(List.of(ProjectType.MOD, ProjectType.MODPACK), loader.getSupportedProjectTypes());
     }
 
     @Test
-    void parseTag_featuredFalse_whenFlagFalse() throws Exception {
-        JsonObject obj = new JsonObject();
-        obj.put("featured", false);
-        assertFalse(parseTag(obj).isFeatured());
+    void parsesGameVersions() {
+        GameVersion version = new GameVersion(JsonParser.parse(
+                "{\"version\":\"1.21\",\"version_type\":\"release\",\"date\":\"2024-06-13T00:00:00Z\",\"major\":true}").asObject());
+        assertEquals("1.21", version.getVersion());
+        assertEquals("release", version.getVersionType());
+        assertEquals(Instant.parse("2024-06-13T00:00:00Z"), version.getDate());
+        assertTrue(version.isMajor());
     }
 
     @Test
-    void parseTag_featuredFalse_whenFlagMissing() throws Exception {
-        JsonObject obj = new JsonObject();
-        assertFalse(parseTag(obj).isFeatured());
+    void parsesDonationPlatforms() {
+        DonationPlatform platform = new DonationPlatform(JsonParser.parse("{\"short\":\"bmac\",\"name\":\"Buy Me A Coffee\"}").asObject());
+        assertEquals("bmac", platform.getId());
+        assertEquals("Buy Me A Coffee", platform.getName());
     }
 
     @Test
-    void parseTag_parsesProjectTypes() throws Exception {
-        JsonObject obj = new JsonObject();
-        JsonArray types = new JsonArray();
-        types.add("mod");
-        types.add("modpack");
-        obj.put("project_types", types);
-        assertArrayEquals(new String[]{"mod", "modpack"}, parseTag(obj).getProjectTypes());
-    }
-
-    @Test
-    void parseTag_returnsNull_whenObjectNull() throws Exception {
-        assertNull(parseTag(null));
-    }
-
-    @Test
-    void parseLicense_parsesAllFields() throws Exception {
-        JsonObject obj = new JsonObject();
-        obj.put("id", "mit");
-        obj.put("name", "MIT License");
-        obj.put("url", "https://example.com/mit");
-
-        License license = parseLicense(obj);
-        assertEquals("mit", license.getId());
-        assertEquals("MIT License", license.getName());
-        assertEquals("https://example.com/mit", license.getUrl());
-    }
-
-    @Test
-    void parseLicense_returnsNull_whenObjectNull() throws Exception {
-        assertNull(parseLicense(null));
+    void everyTagRouteWorks() {
+        assertTrue(tags.categories().stream().anyMatch(category -> category.getName().equals("optimization")));
+        assertTrue(tags.loaders().stream().anyMatch(loader -> loader.getName().equals("fabric")));
+        assertTrue(tags.gameVersions().stream().anyMatch(version -> version.getVersion().equals("1.21.11")));
+        assertTrue(tags.donationPlatforms().stream().anyMatch(platform -> platform.getId().equals("patreon")));
+        assertTrue(tags.projectTypes().contains(ProjectType.MOD));
     }
 }

@@ -35,7 +35,7 @@ class ShaderLoaderTest {
     }
 
     @Test
-    void toString_returnsApiValue() {
-        assertEquals("iris", ShaderLoader.IRIS.toString());
+    void getApiValue_returnsApiValue() {
+        assertEquals("iris", ShaderLoader.IRIS.getApiValue());
     }
 }

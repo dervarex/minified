@@ -1,253 +1,266 @@
 package com.dervarex.minified.modrinth.projects;
 
-import com.dervarex.minified.modrinth.Modrinth;
-import com.dervarex.minified.modrinth.exceptions.ModrinthStateException;
-import com.dervarex.minified.modrinth.VersionSearchOptions;
-import com.dervarex.minified.modrinth.loaders.ModLoader;
-import com.dervarex.minified.modrinth.versions.Version;
+import com.dervarex.minified.modrinth.internal.ModrinthJson;
+import com.dervarex.minified.modrinth.loaders.Loader;
+import com.dervarex.minified.utils.json.JsonObject;
 
 import java.time.Instant;
+import java.util.List;
 
 /**
- * Represents a Modrinth project.
+ * A Modrinth project, e.g. a mod, resource pack or shader. Get one from {@link ProjectsClient}.
  */
-public class Project {
+public final class Project {
+    private final String id;
+    private final String slug;
+    private final String title;
+    private final String description;
+    private final String body;
+    private final ProjectType projectType;
+    private final String monetizationStatus;
+    private final String team;
+    private final String organization;
+    private final List<Environment> environment;
+    private final List<String> categories;
+    private final List<String> additionalCategories;
+    private final List<String> versions;
+    private final List<String> gameVersions;
+    private final List<String> loaders;
+    private final long followers;
+    private final long downloads;
+    private final String iconUrl;
+    private final String rawIconUrl;
+    private final Integer color;
+    private final String issuesUrl;
+    private final String sourceUrl;
+    private final String wikiUrl;
+    private final String discordUrl;
+    private final List<DonationUrl> donationUrls;
+    private final License license;
+    private final List<GalleryImage> gallery;
+    private final Instant published;
+    private final Instant updated;
 
-    // IDs
-
-    /** Project ID returned by the detail endpoint. */
-    public String id;
-
-    /** Project ID returned by the search endpoint. */
-    public String projectId;
-
-    public String slug;
-
-    // Basic information
-
-    public String title;
-    public String description;
-
-    /** Detail endpoint only. */
-    public String body;
-
-    /** Legacy field, always null according to the API. */
-    public String bodyUrl;
-
-    public ProjectType projectType;
-    public String monetizationStatus;
-
-    // Ownership
-
-    public String author;
-    public String authorId;
-
-    public String organization;
-    public String organizationId;
-
-    public String team;
-
-    // Compatibility
-
-    public SideSupport clientSide;
-    public SideSupport serverSide;
-
-    /** Preferred over clientSide/serverSide going forward. */
-    public Environment[] environment;
-
-    // Tags
-
-    public String[] categories;
-    public String[] displayCategories;
-    public String[] additionalCategories;
-    public String[] versions;
-    public String[] gameVersions;
-    public String[] loaders;
-
-    /** Search endpoint only. */
-    public DisclosureType[] disclosureTypes;
-
-    // Statistics
-
-    /** Search endpoint. */
-    public long follows;
-
-    /** Detail endpoint. */
-    public long followers;
-
-    public long downloads;
-
-    // Appearance
-
-    public String iconUrl;
-
-    /** Detail endpoint only; the unoptimized icon. */
-    public String rawIconUrl;
-
-    public Integer color;
-
-    // Links
-
-    public String threadId;
-
-    public String issuesUrl;
-    public String sourceUrl;
-    public String wikiUrl;
-    public String discordUrl;
-
-    public DonationUrl[] donationUrls;
-
-    // Metadata
-
-    public com.dervarex.minified.modrinth.projects.ProjectLicense license;
-
-    public GalleryImage[] gallery;
-
-    public Instant published;
-    public Instant updated;
-
-    transient Modrinth client;
-
-    public Project() {
+    Project(JsonObject json) {
+        id = ModrinthJson.string(json, "id");
+        slug = ModrinthJson.string(json, "slug");
+        title = ModrinthJson.string(json, "title");
+        description = ModrinthJson.string(json, "description");
+        body = ModrinthJson.string(json, "body");
+        projectType = ProjectType.fromApiValue(ModrinthJson.string(json, "project_type"));
+        monetizationStatus = ModrinthJson.string(json, "monetization_status");
+        team = ModrinthJson.string(json, "team");
+        organization = ModrinthJson.string(json, "organization");
+        environment = ModrinthJson.list(json, "environment", value -> Environment.fromApiValue(value.asString()));
+        categories = ModrinthJson.strings(json, "categories");
+        additionalCategories = ModrinthJson.strings(json, "additional_categories");
+        versions = ModrinthJson.strings(json, "versions");
+        gameVersions = ModrinthJson.strings(json, "game_versions");
+        loaders = ModrinthJson.strings(json, "loaders");
+        followers = ModrinthJson.number(json, "followers");
+        downloads = ModrinthJson.number(json, "downloads");
+        iconUrl = ModrinthJson.string(json, "icon_url");
+        rawIconUrl = ModrinthJson.string(json, "raw_icon_url");
+        color = ModrinthJson.integer(json, "color");
+        issuesUrl = ModrinthJson.string(json, "issues_url");
+        sourceUrl = ModrinthJson.string(json, "source_url");
+        wikiUrl = ModrinthJson.string(json, "wiki_url");
+        discordUrl = ModrinthJson.string(json, "discord_url");
+        donationUrls = ModrinthJson.objects(json, "donation_urls", DonationUrl::new);
+        JsonObject licenseJson = ModrinthJson.object(json, "license");
+        license = licenseJson == null ? null : new License(licenseJson);
+        gallery = ModrinthJson.objects(json, "gallery", GalleryImage::new);
+        published = ModrinthJson.instant(json, "published");
+        updated = ModrinthJson.instant(json, "updated");
     }
 
-    // Convenience methods
+    /** {@return the ID of the project, like {@code AANobbMI}} */
+    public String getId() {
+        return id;
+    }
 
-    public String[] getTags() {
+    /** {@return the readable identifier of the project, like {@code sodium}} */
+    public String getSlug() {
+        return slug;
+    }
+
+    /** {@return the display name of the project} */
+    public String getTitle() {
+        return title;
+    }
+
+    /** {@return the short description of the project} */
+    public String getDescription() {
+        return description;
+    }
+
+    /** {@return the full description of the project, in Markdown} */
+    public String getBody() {
+        return body;
+    }
+
+    /** {@return what the project is, like a mod or a shader} */
+    public ProjectType getProjectType() {
+        return projectType;
+    }
+
+    /** {@return the monetization status of the project, like {@code monetized}} */
+    public String getMonetizationStatus() {
+        return monetizationStatus;
+    }
+
+    /** {@return the ID of the team behind the project, for {@link com.dervarex.minified.modrinth.teams.TeamsClient#members(String)}} */
+    public String getTeam() {
+        return team;
+    }
+
+    /** {@return the ID of the organization that owns the project, {@code null} if it has none} */
+    public String getOrganization() {
+        return organization;
+    }
+
+    /** {@return where the project runs} */
+    public List<Environment> getEnvironment() {
+        return environment;
+    }
+
+    /** {@return the primary categories of the project, like {@code optimization}} */
+    public List<String> getCategories() {
         return categories;
     }
 
-    public void setTags(String[] tags) {
-        this.categories = tags;
-    }
-
-    public String[] getDisplayTags() {
-        return displayCategories;
-    }
-
-    public String[] getAdditionalTags() {
+    /** {@return the categories of the project that aren't its primary ones} */
+    public List<String> getAdditionalCategories() {
         return additionalCategories;
     }
 
-    public boolean hasTag(String tag) {
-        return contains(categories, tag);
+    /** {@return the IDs of every version of the project} */
+    public List<String> getVersions() {
+        return versions;
     }
 
-    public boolean hasDisplayTag(String tag) {
-        return contains(displayCategories, tag);
+    /** {@return the Minecraft versions the project supports} */
+    public List<String> getGameVersions() {
+        return gameVersions;
     }
 
-    public boolean hasAdditionalTag(String tag) {
-        return contains(additionalCategories, tag);
+    /** {@return the API values of the loaders the project supports, like {@code fabric}} */
+    public List<String> getLoaders() {
+        return loaders;
     }
 
-    public boolean hasLoader(String loader) {
-        return contains(loaders, loader);
+    /** {@return the number of followers} */
+    public long getFollowers() {
+        return followers;
     }
 
-    public boolean hasLoader(ModLoader loader) {
-        return loader != null && hasLoader(loader.getApiValue());
+    /** {@return the total number of downloads} */
+    public long getDownloads() {
+        return downloads;
     }
 
-    public boolean supportsVersion(String version) {
-        return contains(gameVersions, version);
+    /** {@return the URL of the project's icon, {@code null} if it has none} */
+    public String getIconUrl() {
+        return iconUrl;
     }
 
-    public boolean supportsEnvironment(Environment value) {
-        return contains(environment, value);
+    /** {@return the URL of the project's icon before Modrinth optimized it, {@code null} if it has none} */
+    public String getRawIconUrl() {
+        return rawIconUrl;
     }
 
-    public boolean hasDisclosure(DisclosureType value) {
-        return contains(disclosureTypes, value);
+    /** {@return the display color of the project as RGB, {@code null} if it has none} */
+    public Integer getColor() {
+        return color;
     }
 
-    public GalleryImage getFeaturedGallery() {
-        if (gallery == null) {
-            return null;
-        }
-
-        for (GalleryImage image : gallery) {
-            if (image != null && image.featured) {
-                return image;
-            }
-        }
-
-        return null;
+    /** {@return the URL of the project's issue tracker, {@code null} if it has none} */
+    public String getIssuesUrl() {
+        return issuesUrl;
     }
 
-    public com.dervarex.minified.modrinth.projects.ProjectLicense getLicense() {
+    /** {@return the URL of the project's source code, {@code null} if it has none} */
+    public String getSourceUrl() {
+        return sourceUrl;
+    }
+
+    /** {@return the URL of the project's wiki, {@code null} if it has none} */
+    public String getWikiUrl() {
+        return wikiUrl;
+    }
+
+    /** {@return the invite URL of the project's Discord server, {@code null} if it has none} */
+    public String getDiscordUrl() {
+        return discordUrl;
+    }
+
+    /** {@return the donation links of the project} */
+    public List<DonationUrl> getDonationUrls() {
+        return donationUrls;
+    }
+
+    /** {@return the license of the project} */
+    public License getLicense() {
         return license;
     }
 
-    public void setLicense(com.dervarex.minified.modrinth.projects.ProjectLicense license) {
-        this.license = license;
+    /** {@return the images in the project's gallery} */
+    public List<GalleryImage> getGallery() {
+        return gallery;
     }
 
-    public Version getLatestVersion(String gameVersion, ModLoader... loaders) {
-        return getLatestVersion(new String[]{gameVersion}, loaders == null ? null : toStrings(loaders));
+    /** {@return when the project was published} */
+    public Instant getPublished() {
+        return published;
     }
 
-    public Version getLatestVersion(String[] gameVersions, String... loaders) {
-        ensureClient();
-        VersionSearchOptions.Builder builder = VersionSearchOptions.builder();
-        builder.gameVersions(gameVersions);
-        builder.loaders(loaders);
-        return client.versions().resolveLatest(id != null ? id : projectId, builder.build());
+    /** {@return when the project was last updated} */
+    public Instant getUpdated() {
+        return updated;
     }
 
-    public Version getLatestVersion(VersionSearchOptions options) {
-        ensureClient();
-        return client.versions().resolveLatest(id != null ? id : projectId, options);
+    /**
+     * Checks whether the project has a category, primary or additional
+     *
+     * @param category the category name, like {@code optimization}
+     * @return whether the project has it
+     */
+    public boolean hasCategory(String category) {
+        return categories.contains(category) || additionalCategories.contains(category);
     }
 
-    private static String[] toStrings(ModLoader[] loaders) {
-        String[] values = new String[loaders.length];
-        int count = 0;
-        for (ModLoader loader : loaders) {
-            if (loader != null) {
-                values[count++] = loader.toString();
-            }
-        }
-        String[] result = new String[count];
-        System.arraycopy(values, 0, result, 0, count);
-        return result;
+    /**
+     * Checks whether the project supports a loader
+     *
+     * @param loader the loader
+     * @return whether the project supports it, {@code false} for {@code null}
+     */
+    public boolean hasLoader(Loader loader) {
+        return loader != null && loaders.contains(loader.getApiValue());
     }
 
-    private void ensureClient() {
-        if (client == null) {
-            throw new ModrinthStateException("This project is not attached to a Modrinth client");
-        }
+    /**
+     * Checks whether the project supports a Minecraft version
+     *
+     * @param gameVersion the Minecraft version, like {@code 1.21.11}
+     * @return whether the project supports it
+     */
+    public boolean supportsGameVersion(String gameVersion) {
+        return gameVersions.contains(gameVersion);
     }
 
-    void attach(Modrinth client) {
-        this.client = client;
+    /** {@return the gallery image marked as featured, {@code null} if there is none} */
+    public GalleryImage getFeaturedImage() {
+        return gallery.stream().filter(GalleryImage::isFeatured).findFirst().orElse(null);
     }
 
-    private static boolean contains(String[] array, String value) {
-        if (array == null || value == null) {
-            return false;
-        }
-
-        for (String entry : array) {
-            if (value.equals(entry)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private static <T> boolean contains(T[] array, T value) {
-        if (array == null || value == null) {
-            return false;
-        }
-
-        for (T entry : array) {
-            if (value.equals(entry)) {
-                return true;
-            }
-        }
-
-        return false;
+    /**
+     * Describes the project, for logging purposes
+     *
+     * @return the slug and ID
+     */
+    @Override
+    public String toString() {
+        return "Project{" + slug + ", " + id + "}";
     }
 }

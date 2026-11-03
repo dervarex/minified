@@ -18,7 +18,7 @@ import java.time.Duration;
 public record ApiRequestEvent(String method, String url, int statusCode, Duration duration) implements Event {
 
     /**
-     * @return true for 2xx status codes
+     * {@return true for 2xx status codes}
      */
     public boolean successful() {
         return statusCode >= 200 && statusCode < 300;

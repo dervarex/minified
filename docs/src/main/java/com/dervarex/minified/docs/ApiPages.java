@@ -75,7 +75,7 @@ final class ApiPages {
         }
     }
 
-    // ------------------------------------------------------------------ index & module & package
+    // index & module & package
 
     private Page indexPage() {
         String from = "api/";
@@ -191,12 +191,12 @@ final class ApiPages {
             b.append(Layout.badge("internal", "internal", "Not exported by the module, may change without notice"));
         }
         b.append("</div></div>");
-        String body = comments.body(doc, from);
+        List<TocEntry> toc = new ArrayList<>();
+        String body = headingAnchors(comments.body(doc, from), toc);
         if (!body.isEmpty()) {
             b.append("<div class=\"api-description\">").append(body).append("</div>");
         }
 
-        List<TocEntry> toc = new ArrayList<>();
         Map<String, List<TypeElement>> byKind = new LinkedHashMap<>();
         for (String kind : List.of("interface", "class", "abstract class", "record", "enum", "exception", "annotation")) {
             byKind.put(kind, new ArrayList<>());
@@ -226,6 +226,23 @@ final class ApiPages {
                 eyebrow);
     }
 
+    private static final java.util.regex.Pattern HEADING =
+            java.util.regex.Pattern.compile("(?is)<h([2-4])>(.*?)</h\\1>");
+
+    private static String headingAnchors(String html, List<TocEntry> toc) {
+        java.util.regex.Matcher m = HEADING.matcher(html);
+        StringBuilder out = new StringBuilder();
+        while (m.find()) {
+            int level = Integer.parseInt(m.group(1));
+            String text = Html.stripTags(m.group(2)).trim();
+            String id = Html.slug(text);
+            toc.add(new TocEntry(level, id, text));
+            m.appendReplacement(out, java.util.regex.Matcher.quoteReplacement(
+                    "<h" + level + " id=\"" + id + "\">" + m.group(2) + "</h" + level + ">"));
+        }
+        return m.appendTail(out).toString();
+    }
+
     private static String plural(String kind) {
         return switch (kind) {
             case "class" -> "Classes";
@@ -251,8 +268,6 @@ final class ApiPages {
         }
         return b.append("</div></a>").toString();
     }
-
-    // ------------------------------------------------------------------ type pages
 
     private Page typePage(TypeElement type, PackageDoc pkg) {
         String from = site.typePaths.get(type);
@@ -585,7 +600,7 @@ final class ApiPages {
         return "<span class=\"type-badge\">" + Html.esc(sig.plain(type)) + "</span>";
     }
 
-    // ------------------------------------------------------------------ members
+    // members
 
     private Member field(VariableElement field, String from) {
         DocComments.Doc doc = comments.find(field);
@@ -603,9 +618,16 @@ final class ApiPages {
         DocComments.Doc doc = comments.find(m);
         String signature = sig.executable(m, from);
         List<String[]> params = new ArrayList<>();
+        DocComments.Doc recordDoc = m.getKind() == ElementKind.CONSTRUCTOR
+                && m.getEnclosingElement().getKind() == ElementKind.RECORD
+                ? comments.find(m.getEnclosingElement()) : null;
         for (VariableElement p : m.getParameters()) {
-            params.add(new String[]{p.getSimpleName().toString(), sig.type(p.asType(), from),
-                    comments.param(doc, p.getSimpleName().toString(), from)});
+            String name = p.getSimpleName().toString();
+            String description = comments.param(doc, name, from);
+            if (description.isEmpty() && recordDoc != null) {
+                description = comments.param(recordDoc, name, from);
+            }
+            params.add(new String[]{name, sig.type(p.asType(), from), description});
         }
         for (TypeParameterElement p : m.getTypeParameters()) {
             String description = comments.typeParam(doc, p.getSimpleName().toString(), from);

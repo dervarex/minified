@@ -7,136 +7,179 @@ import com.dervarex.minified.modrinth.events.DependencyDownloadedEvent;
 import com.dervarex.minified.modrinth.events.DependencyResolvedEvent;
 import com.dervarex.minified.modrinth.events.DependencySkippedEvent;
 import com.dervarex.minified.modrinth.exceptions.ModrinthDependencyResolutionException;
-import com.dervarex.minified.modrinth.exceptions.ModrinthStateException;
-import com.dervarex.minified.modrinth.loaders.ModLoader;
+import com.dervarex.minified.modrinth.internal.ModrinthJson;
+import com.dervarex.minified.modrinth.loaders.Loader;
 import com.dervarex.minified.modrinth.projects.Environment;
-import com.dervarex.minified.modrinth.projects.Project;
+import com.dervarex.minified.utils.json.JsonObject;
 
 import java.nio.file.Path;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-public class Version {
-    public String id;
-    public String projectId;
-    public String authorId;
-    public String name;
-    public String versionNumber;
-    public String changelog;
-    public String changelogUrl;
-    public VersionType versionType;
-    public VersionStatus status;
-    public String requestedStatus;
-    public boolean featured;
-    public long downloads;
-    public Instant published;
-    public String[] gameVersions;
-    public String[] loaders;
-    public Environment environment;
-    public VersionDependency[] dependencies;
-    public VersionFile[] files;
+/**
+ * A version of a project, with its files and dependencies. Get one from {@link VersionsClient}, it can download
+ * itself and resolve its dependencies
+ * <p>
+ * Lists are empty when Modrinth has nothing for them, not (how you might expect it) null :)
+ */
+public final class Version {
+    private final Modrinth modrinth;
+    private final String id;
+    private final String projectId;
+    private final String authorId;
+    private final String name;
+    private final String versionNumber;
+    private final String changelog;
+    private final VersionType versionType;
+    private final VersionStatus status;
+    private final boolean featured;
+    private final long downloads;
+    private final Instant published;
+    private final List<String> gameVersions;
+    private final List<String> loaders;
+    private final Environment environment;
+    private final List<VersionDependency> dependencies;
+    private final List<VersionFile> files;
 
-    transient Modrinth client;
-
-    public Version() {
+    Version(Modrinth modrinth, JsonObject json) {
+        this.modrinth = modrinth;
+        id = ModrinthJson.string(json, "id");
+        projectId = ModrinthJson.string(json, "project_id");
+        authorId = ModrinthJson.string(json, "author_id");
+        name = ModrinthJson.string(json, "name");
+        versionNumber = ModrinthJson.string(json, "version_number");
+        changelog = ModrinthJson.string(json, "changelog");
+        versionType = VersionType.fromApiValue(ModrinthJson.string(json, "version_type"));
+        status = VersionStatus.fromApiValue(ModrinthJson.string(json, "status"));
+        featured = ModrinthJson.bool(json, "featured");
+        downloads = ModrinthJson.number(json, "downloads");
+        published = ModrinthJson.instant(json, "date_published");
+        gameVersions = ModrinthJson.strings(json, "game_versions");
+        loaders = ModrinthJson.strings(json, "loaders");
+        environment = Environment.fromApiValue(ModrinthJson.string(json, "environment"));
+        dependencies = ModrinthJson.objects(json, "dependencies", VersionDependency::new);
+        files = ModrinthJson.objects(json, "files", file -> new VersionFile(modrinth, file));
     }
 
+    /** {@return the ID of the version} */
     public String getId() {
         return id;
     }
 
+    /** {@return the ID of the project this is a version of} */
     public String getProjectId() {
         return projectId;
     }
 
+    /** {@return the ID of the user who published the version} */
     public String getAuthorId() {
         return authorId;
     }
 
+    /** {@return the display name of the version} */
     public String getName() {
         return name;
     }
 
+    /** {@return the version number, like {@code mc1.21.11-0.8.0}} */
     public String getVersionNumber() {
         return versionNumber;
     }
 
+    /** {@return the changelog, in Markdown, {@code null} if there is none} */
+    public String getChangelog() {
+        return changelog;
+    }
+
+    /** {@return the release channel of the version} */
     public VersionType getVersionType() {
         return versionType;
     }
 
+    /** {@return whether the version is listed, unlisted, archived and so on} */
     public VersionStatus getStatus() {
         return status;
     }
 
+    /** {@return whether the version is featured on the project page} */
     public boolean isFeatured() {
         return featured;
     }
 
+    /** {@return the number of downloads} */
     public long getDownloads() {
         return downloads;
     }
 
+    /** {@return when the version was published} */
     public Instant getPublished() {
         return published;
     }
 
-    public String[] getGameVersions() {
+    /** {@return the Minecraft versions the version supports} */
+    public List<String> getGameVersions() {
         return gameVersions;
     }
 
-    public String[] getLoaders() {
+    /** {@return the API values of the loaders the version supports, like {@code fabric}} */
+    public List<String> getLoaders() {
         return loaders;
     }
 
+    /** {@return where the version runs} */
     public Environment getEnvironment() {
         return environment;
     }
 
-    public VersionFile[] getFiles() {
+    /** {@return the dependencies as Modrinth lists them, see {@link #resolveDependencies()} to get the actual versions} */
+    public List<VersionDependency> getDependencies() {
+        return dependencies;
+    }
+
+    /** {@return the files of the version} */
+    public List<VersionFile> getFiles() {
         return files;
     }
 
+    /** {@return the primary file, or the first one if none is marked primary, {@code null} if there are no files} */
     public VersionFile getPrimaryFile() {
-        if (files == null || files.length == 0) {
-            return null;
-        }
-        for (VersionFile file : files) {
-            if (file != null && file.primary) {
-                return file;
-            }
-        }
-        return files[0];
+        return files.stream().filter(VersionFile::isPrimary).findFirst()
+                .orElse(files.isEmpty() ? null : files.getFirst());
     }
 
-    public boolean hasLoader(ModLoader loader) {
-        return loader != null && hasLoader(loader.getApiValue());
+    /**
+     * Checks whether the version supports a loader
+     *
+     * @param loader the loader
+     * @return whether the version supports it, {@code false} for {@code null}
+     */
+    public boolean hasLoader(Loader loader) {
+        return loader != null && loaders.contains(loader.getApiValue());
     }
 
-    public boolean hasLoader(String loader) {
-        if (loaders == null || loader == null) {
-            return false;
-        }
-        for (String entry : loaders) {
-            if (loader.equalsIgnoreCase(entry)) {
-                return true;
-            }
-        }
-        return false;
+    /**
+     * Checks if the version supports a Minecraft version
+     *
+     * @param gameVersion the Minecraft version, like {@code 1.21.11}
+     * @return whether the version supports it
+     */
+    public boolean supportsGameVersion(String gameVersion) {
+        return gameVersions.contains(gameVersion);
     }
 
-    public boolean supportsVersion(String version) {
-        if (gameVersions == null || version == null) {
-            return false;
-        }
-        for (String entry : gameVersions) {
-            if (version.equalsIgnoreCase(entry)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
+    /**
+     * Downloads the primary file into a directory, see {@link VersionFile#download(Path)}
+     *
+     * @param directory where to put the file, created if it doesn't exist
+     * @return the downloaded file
+     * @throws ModrinthDependencyResolutionException if the version has no files
+     */
     public Path download(Path directory) {
         VersionFile file = getPrimaryFile();
         if (file == null) {
@@ -145,12 +188,24 @@ public class Version {
         return file.download(directory);
     }
 
+    /**
+     * Resolves the required dependencies, and theirs, to the versions that should be installed with this one.
+     *
+     * @return every version to install, each once, without this one
+     */
     public List<Version> resolveDependencies() {
         return resolveDependencies(true, false);
     }
 
+    /**
+     * Resolves the dependencies to the versions that should be installed with this one. A dependency on a project
+     * resolves to its newest version for the game versions and loaders of this version.
+     * <br>
+     * @param recursive       also resolve the dependencies of the dependencies
+     * @param includeOptional also resolve optional dependencies
+     * @return every version to install, each once, without this one
+     */
     public List<Version> resolveDependencies(boolean recursive, boolean includeOptional) {
-        ensureClient();
         LinkedHashMap<String, Version> resolved = new LinkedHashMap<>();
         LinkedHashSet<String> visiting = new LinkedHashSet<>();
         resolveDependenciesInternal(this, resolved, visiting, recursive, includeOptional);
@@ -158,16 +213,41 @@ public class Version {
         return new ArrayList<>(resolved.values());
     }
 
+    /**
+     * Resolves the required dependencies like {@link #resolveDependencies()} and downloads each of them into a
+     * directory, posting a {@link DependencyDownloadedEvent} after each
+     *
+     * @param directory where to put the files, created if it doesn't exist
+     * @return the downloaded files
+     */
+    public List<Path> downloadDependencies(Path directory) {
+        List<Version> dependencies = resolveDependencies(true, false);
+        List<Path> paths = new ArrayList<>();
+        for (Version dependency : dependencies) {
+            Path file = dependency.download(directory);
+            paths.add(file);
+            post(new DependencyDownloadedEvent(this, dependency, file, paths.size(), dependencies.size()));
+        }
+        return paths;
+    }
+
+    /**
+     * Describes the version, for logging purposes.
+     *
+     * @return the version number and ID
+     */
+    @Override
+    public String toString() {
+        return "Version{" + versionNumber + ", " + id + "}";
+    }
+
     private void postConflicts(Collection<Version> resolved) {
         List<Version> installed = new ArrayList<>();
         installed.add(this);
         installed.addAll(resolved);
         for (Version declaredBy : installed) {
-            if (declaredBy.dependencies == null) {
-                continue;
-            }
             for (VersionDependency dependency : declaredBy.dependencies) {
-                if (dependency == null || dependency.dependencyType != DependencyType.INCOMPATIBLE) {
+                if (dependency.getDependencyType() != DependencyType.INCOMPATIBLE) {
                     continue;
                 }
                 for (Version candidate : installed) {
@@ -180,27 +260,11 @@ public class Version {
     }
 
     private static boolean matches(VersionDependency dependency, Version candidate) {
-        if (dependency.versionId != null && !dependency.versionId.isBlank()) {
-            return dependency.versionId.equals(candidate.id);
+        if (dependency.getVersionId() != null && !dependency.getVersionId().isBlank()) {
+            return dependency.getVersionId().equals(candidate.id);
         }
-        return dependency.projectId != null && !dependency.projectId.isBlank()
-                && dependency.projectId.equals(candidate.projectId);
-    }
-
-    public List<Path> downloadDependencies(Path directory) {
-        List<Version> dependencies = resolveDependencies(true, false);
-        List<Path> paths = new ArrayList<>();
-        for (Version dependency : dependencies) {
-            Path file = dependency.download(directory);
-            paths.add(file);
-            post(new DependencyDownloadedEvent(this, dependency, file, paths.size(), dependencies.size()));
-        }
-        return paths;
-    }
-
-    public Project getProject() {
-        ensureClient();
-        return client.projects().get(projectId);
+        return dependency.getProjectId() != null && !dependency.getProjectId().isBlank()
+                && dependency.getProjectId().equals(candidate.projectId);
     }
 
     private void resolveDependenciesInternal(Version current,
@@ -208,16 +272,10 @@ public class Version {
                                              Set<String> visiting,
                                              boolean recursive,
                                              boolean includeOptional) {
-        if (current.dependencies == null) {
-            return;
-        }
         visiting.add(current.id);
         for (VersionDependency dependency : current.dependencies) {
-            if (dependency == null) {
-                continue;
-            }
             // incompatible ones are mods that must NOT be there, embedded ones already are inside the jar
-            DependencySkippedEvent.Reason skipReason = skipReason(dependency.dependencyType, includeOptional);
+            DependencySkippedEvent.Reason skipReason = skipReason(dependency.getDependencyType(), includeOptional);
             if (skipReason != null) {
                 post(new DependencySkippedEvent(current, dependency, skipReason));
                 continue;
@@ -256,38 +314,17 @@ public class Version {
         };
     }
 
-    private void post(Event event) {
-        if (client != null) {
-            client.getEventBus().post(event);
-        }
-    }
-
     private Version resolveDependency(VersionDependency dependency) {
-        if (dependency.versionId != null && !dependency.versionId.isBlank()) {
-            return client.versions().get(dependency.versionId);
+        if (dependency.getVersionId() != null && !dependency.getVersionId().isBlank()) {
+            return modrinth.versions().get(dependency.getVersionId());
         }
-        if (dependency.projectId != null && !dependency.projectId.isBlank()) {
-            Project project = client.projects().get(dependency.projectId);
-            return project.getLatestVersion(gameVersions, loaders);
+        if (dependency.getProjectId() != null && !dependency.getProjectId().isBlank()) {
+            return modrinth.versions().getLatest(dependency.getProjectId(), gameVersions, loaders);
         }
         return null;
     }
 
-    private void ensureClient() {
-        if (client == null) {
-            throw new ModrinthStateException("This version is not attached to a Modrinth client");
-        }
-    }
-
-    void attach(Modrinth client) {
-        this.client = client;
-        if (files != null) {
-            for (VersionFile file : files) {
-                if (file != null) {
-                    file.attach(this);
-                }
-            }
-        }
+    private void post(Event event) {
+        modrinth.getEventBus().post(event);
     }
 }
-

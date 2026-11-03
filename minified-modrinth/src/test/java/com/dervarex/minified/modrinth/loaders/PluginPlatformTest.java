@@ -35,7 +35,7 @@ class PluginPlatformTest {
     }
 
     @Test
-    void toString_returnsApiValue() {
-        assertEquals("velocity", PluginPlatform.VELOCITY.toString());
+    void getApiValue_returnsApiValue() {
+        assertEquals("velocity", PluginPlatform.VELOCITY.getApiValue());
     }
 }

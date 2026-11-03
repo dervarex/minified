@@ -2,20 +2,36 @@ package com.dervarex.minified.modrinth.loaders;
 
 import org.apiguardian.api.API;
 
+/**
+ * Mod loaders that Modrinth knows,and the value the API uses
+ */
 @API(status = API.Status.STABLE)
-public enum ModLoader {
+public enum ModLoader implements Loader {
+    /** Fabric, a lightweight and widely used modding toolchain. */
     FABRIC("fabric"),
+    /** Forge, one of the oldest and largest Minecraft modding platforms out there */
     FORGE("forge"),
+    /** NeoForge, a modern modding platform originally forked from Forge */
     NEOFORGE("neoforge"),
+    /** Babric, a Fabric based modding toolchain for beta versions */
     BABRIC("babric"),
+    /** Mods for "Better Than Adventure!" */
     BTA("bta"),
+    /** Mods loaded through a Java agent */
     JAVA_AGENT("javaagent"),
+    /** Legacy Fabric */
     LEGACY_FABRIC("legacyfabric"),
+    /** LiteLoader, a lightweight loader that was used mostly client side */
     LITE_LOADER("liteloader"),
+    /** Risugami's ModLoader, one of the first loaders */
     RISUGAMIS_MODLOADER("risugamis-modloader"),
+    /** NilLoader, a lightweight loader for modifying older Minecraft versions */
     NIL_LOADER("nilloader"),
-    ORNITHE("ornithe"), // Still convinced this is a typo; whoever named this had one chance...
+    /** Ornithe, a modding ecosystem for older Minecraft versions */
+    ORNITHE("ornithe"),
+    /** Quilt, a Fabric fork with its own ecosystem. */
     QUILT("quilt"),
+    /** Rift, a lightweight mod loader built for Minecraft 1.13 */
     RIFT("rift");
 
     private final String apiValue;
@@ -24,11 +40,18 @@ public enum ModLoader {
         this.apiValue = apiValue;
     }
 
-    @API(status = API.Status.INTERNAL)
+    @Override
     public String getApiValue() {
         return apiValue;
     }
 
+    /**
+     * Finds the loader for a value of the Modrinth API, ignores casing
+     *
+     * @param value the API value, like {@code fabric}
+     * @return the loader, {@code null} for {@code null}
+     * @throws IllegalArgumentException if the value is no known loader
+     */
     @API(status = API.Status.INTERNAL)
     public static ModLoader fromApiValue(String value) {
         if (value == null) {
@@ -40,10 +63,5 @@ public enum ModLoader {
             }
         }
         throw new IllegalArgumentException("Unknown mod loader: " + value);
-    }
-
-    @Override
-    public String toString() {
-        return apiValue;
     }
 }

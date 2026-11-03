@@ -375,14 +375,24 @@ final class Site {
      * Finds a documented type by simple or nested name, e.g. {@code LaunchConfiguration.Builder}
      */
     TypeElement findType(String name) {
+        return findType(name, null);
+    }
+
+    TypeElement findType(String name, String preferredModule) {
         List<TypeElement> found = typesByName.get(name);
         if (found == null) {
             TypeElement byFqn = elements.getTypeElement(name);
             return byFqn != null && typePaths.containsKey(byFqn) ? byFqn : null;
         }
-        return found.size() == 1 ? found.get(0) : found.stream()
-                .filter(t -> typePackages.get(t).exported())
-                .findFirst().orElse(found.get(0));
+        if (found.size() == 1) {
+            return found.get(0);
+        }
+        return found.stream()
+                .filter(t -> typePackages.get(t).module().name().equals(preferredModule))
+                .findFirst()
+                .orElseGet(() -> found.stream()
+                        .filter(t -> typePackages.get(t).exported())
+                        .findFirst().orElse(found.get(0)));
     }
 
     // ------------------------------------------------------------------ output

@@ -18,8 +18,8 @@ class ProjectTypeTest {
     }
 
     @Test
-    void fromApiValue_throws_whenUnknown() {
-        assertThrows(IllegalArgumentException.class, () -> ProjectType.fromApiValue("not_real"));
+    void fromApiValue_returnsUnknown_whenUnknown() {
+        assertEquals(ProjectType.UNKNOWN, ProjectType.fromApiValue("not_real"));
     }
 
     @Test
@@ -33,7 +33,7 @@ class ProjectTypeTest {
     }
 
     @Test
-    void toString_returnsApiValue() {
-        assertEquals("modpack", ProjectType.MODPACK.toString());
+    void getApiValue_returnsApiValue() {
+        assertEquals("modpack", ProjectType.MODPACK.getApiValue());
     }
 }

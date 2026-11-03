@@ -8,8 +8,11 @@ import com.dervarex.minified.modrinth.events.DependencyDownloadedEvent;
 import com.dervarex.minified.modrinth.events.DependencyResolvedEvent;
 import com.dervarex.minified.modrinth.events.DependencySkippedEvent;
 import com.dervarex.minified.modrinth.events.DependencySkippedEvent.Reason;
-import com.dervarex.minified.modrinth.exceptions.ModrinthStateException;
+import com.dervarex.minified.modrinth.exceptions.ModrinthDependencyResolutionException;
 import com.dervarex.minified.modrinth.loaders.ModLoader;
+import com.dervarex.minified.modrinth.loaders.PluginLoader;
+import com.dervarex.minified.modrinth.projects.Environment;
+import com.dervarex.minified.utils.json.JsonParser;
 import com.sun.net.httpserver.HttpServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -35,129 +38,93 @@ class VersionTest {
         servers.forEach(server -> server.stop(0));
     }
 
+    private static Version parsed(String json) {
+        return new Version(Modrinth.connect("http://unused"), JsonParser.parse(json).asObject());
+    }
+
     @Test
-    void getters_returnSetValues() {
-        Version version = new Version();
-        version.id = "v1";
-        version.projectId = "p1";
-        version.authorId = "a1";
-        version.name = "Version 1";
-        version.versionNumber = "1.0.0";
-        version.featured = true;
-        version.downloads = 42L;
-        version.published = Instant.parse("2024-01-01T00:00:00Z");
+    void readsEveryField() {
+        Version version = parsed("""
+                {"id":"v1","project_id":"p1","author_id":"a1","name":"Version 1","version_number":"1.0.0",
+                 "changelog":"fixed","version_type":"beta","status":"listed","featured":true,"downloads":42,
+                 "date_published":"2024-01-01T00:00:00Z","game_versions":["1.21.11"],"loaders":["fabric"],
+                 "environment":"client_only","dependencies":[{"project_id":"p2","dependency_type":"required"}],
+                 "files":[{"url":"https://cdn/a.jar","filename":"a.jar","primary":true,"size":7,
+                           "file_type":null,"hashes":{"sha1":"abc"}}]}""");
 
         assertEquals("v1", version.getId());
         assertEquals("p1", version.getProjectId());
         assertEquals("a1", version.getAuthorId());
         assertEquals("Version 1", version.getName());
         assertEquals("1.0.0", version.getVersionNumber());
+        assertEquals("fixed", version.getChangelog());
+        assertEquals(VersionType.BETA, version.getVersionType());
+        assertEquals(VersionStatus.LISTED, version.getStatus());
         assertTrue(version.isFeatured());
         assertEquals(42L, version.getDownloads());
         assertEquals(Instant.parse("2024-01-01T00:00:00Z"), version.getPublished());
+        assertEquals(List.of("1.21.11"), version.getGameVersions());
+        assertEquals(List.of("fabric"), version.getLoaders());
+        assertEquals(Environment.CLIENT_ONLY, version.getEnvironment());
+        assertEquals("p2", version.getDependencies().getFirst().getProjectId());
+
+        VersionFile file = version.getFiles().getFirst();
+        assertEquals("https://cdn/a.jar", file.getUrl());
+        assertEquals("a.jar", file.getFilename());
+        assertTrue(file.isPrimary());
+        assertEquals(7, file.getSize());
+        assertNull(file.getFileType());
+        assertEquals(Map.of("sha1", "abc"), file.getHashes());
+    }
+
+    @Test
+    void missingListsAreEmpty() {
+        Version version = parsed("{\"id\":\"v1\"}");
+        assertTrue(version.getFiles().isEmpty());
+        assertTrue(version.getDependencies().isEmpty());
+        assertTrue(version.getLoaders().isEmpty());
+        assertNull(version.getPrimaryFile());
     }
 
     @Test
     void getPrimaryFile_returnsPrimaryFile() {
-        Version version = new Version();
-        VersionFile first = new VersionFile();
-        first.primary = false;
-        VersionFile second = new VersionFile();
-        second.primary = true;
-        version.files = new VersionFile[]{first, second};
-        assertEquals(second, version.getPrimaryFile());
+        Version version = parsed("{\"files\":[{\"filename\":\"a\",\"primary\":false},{\"filename\":\"b\",\"primary\":true}]}");
+        assertEquals("b", version.getPrimaryFile().getFilename());
     }
 
     @Test
     void getPrimaryFile_returnsFirst_whenNoPrimary() {
-        Version version = new Version();
-        VersionFile first = new VersionFile();
-        first.primary = false;
-        VersionFile second = new VersionFile();
-        second.primary = false;
-        version.files = new VersionFile[]{first, second};
-        assertEquals(first, version.getPrimaryFile());
+        Version version = parsed("{\"files\":[{\"filename\":\"a\"},{\"filename\":\"b\"}]}");
+        assertEquals("a", version.getPrimaryFile().getFilename());
     }
 
     @Test
-    void getPrimaryFile_returnsNull_whenNoFiles() {
-        Version version = new Version();
-        assertNull(version.getPrimaryFile());
-    }
-
-    @Test
-    void getPrimaryFile_returnsNull_whenFilesEmpty() {
-        Version version = new Version();
-        version.files = new VersionFile[0];
-        assertNull(version.getPrimaryFile());
-    }
-
-    @Test
-    void hasLoaderString_returnsTrue_whenMatch() {
-        Version version = new Version();
-        version.loaders = new String[]{"fabric"};
-        assertTrue(version.hasLoader("fabric"));
-    }
-
-    @Test
-    void hasLoaderString_ignoresCase() {
-        Version version = new Version();
-        version.loaders = new String[]{"fabric"};
-        assertTrue(version.hasLoader("FABRIC"));
-    }
-
-    @Test
-    void hasLoaderString_returnsFalse_whenNoMatch() {
-        Version version = new Version();
-        version.loaders = new String[]{"fabric"};
-        assertFalse(version.hasLoader("forge"));
-    }
-
-    @Test
-    void hasLoaderString_returnsFalse_whenNull() {
-        Version version = new Version();
-        assertFalse(version.hasLoader((String) null));
-    }
-
-    @Test
-    void hasLoader_ModLoader_returnsTrue() {
-        Version version = new Version();
-        version.loaders = new String[]{"fabric"};
+    void hasLoader() {
+        Version version = parsed("{\"loaders\":[\"fabric\",\"paper\"]}");
         assertTrue(version.hasLoader(ModLoader.FABRIC));
+        assertTrue(version.hasLoader(PluginLoader.PAPER));
+        assertFalse(version.hasLoader(ModLoader.FORGE));
+        assertFalse(version.hasLoader(null));
     }
 
     @Test
-    void hasLoader_ModLoader_returnsFalse_whenLoaderNull() {
-        Version version = new Version();
-        version.loaders = new String[]{"fabric"};
-        assertFalse(version.hasLoader((ModLoader) null));
+    void supportsGameVersion() {
+        Version version = parsed("{\"game_versions\":[\"1.20\"]}");
+        assertTrue(version.supportsGameVersion("1.20"));
+        assertFalse(version.supportsGameVersion("1.19"));
+        assertFalse(version.supportsGameVersion(null));
     }
 
     @Test
-    void supportsVersion_returnsTrue_whenMatch() {
-        Version version = new Version();
-        version.gameVersions = new String[]{"1.20"};
-        assertTrue(version.supportsVersion("1.20"));
+    void unknownValues_becomeUnknown() {
+        Version version = parsed("{\"version_type\":\"nightly\",\"status\":\"hidden\"}");
+        assertEquals(VersionType.UNKNOWN, version.getVersionType());
+        assertEquals(VersionStatus.UNKNOWN, version.getStatus());
     }
 
     @Test
-    void supportsVersion_ignoresCase() {
-        Version version = new Version();
-        version.gameVersions = new String[]{"1.20"};
-        assertTrue(version.supportsVersion("1.20"));
-    }
-
-    @Test
-    void supportsVersion_returnsFalse_whenNoMatch() {
-        Version version = new Version();
-        version.gameVersions = new String[]{"1.20"};
-        assertFalse(version.supportsVersion("1.19"));
-    }
-
-    @Test
-    void supportsVersion_returnsFalse_whenNull() {
-        Version version = new Version();
-        assertFalse(version.supportsVersion(null));
+    void download_withoutFiles_throws(@TempDir Path tempDir) {
+        assertThrows(ModrinthDependencyResolutionException.class, () -> parsed("{\"id\":\"v1\"}").download(tempDir));
     }
 
     @Test
@@ -192,11 +159,6 @@ class VersionTest {
                 "a", version("a", "required:root")));
 
         assertEquals(List.of("a"), ids(modrinth.versions().get("root").resolveDependencies()));
-    }
-
-    @Test
-    void resolveDependencies_needsAClient() {
-        assertThrows(ModrinthStateException.class, () -> new Version().resolveDependencies());
     }
 
     @Test
@@ -317,7 +279,7 @@ class VersionTest {
         eventBus.subscribe(DependencyDownloadedEvent.class, events::add);
         eventBus.subscribe(DependencyConflictEvent.class, events::add);
         Modrinth plain = fakeModrinth(versions);
-        return new Modrinth(plain.getBaseUrl(), eventBus);
+        return Modrinth.connect(plain.getBaseUrl(), eventBus);
     }
 
     private static List<String> describe(List<Event> events) {
@@ -354,7 +316,7 @@ class VersionTest {
         });
         server.start();
         servers.add(server);
-        return new Modrinth("http://localhost:" + server.getAddress().getPort());
+        return Modrinth.connect("http://localhost:" + server.getAddress().getPort());
     }
 
     private static String version(String id, String... dependencies) {

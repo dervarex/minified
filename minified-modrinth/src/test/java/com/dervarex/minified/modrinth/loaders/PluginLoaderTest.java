@@ -33,7 +33,7 @@ class PluginLoaderTest {
     }
 
     @Test
-    void toString_returnsApiValue() {
-        assertEquals("paper", PluginLoader.PAPER.toString());
+    void getApiValue_returnsApiValue() {
+        assertEquals("paper", PluginLoader.PAPER.getApiValue());
     }
 }

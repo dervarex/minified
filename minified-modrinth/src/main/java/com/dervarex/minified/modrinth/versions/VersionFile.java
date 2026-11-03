@@ -1,6 +1,7 @@
 package com.dervarex.minified.modrinth.versions;
 
 import com.dervarex.minified.events.Event;
+import com.dervarex.minified.modrinth.Modrinth;
 import com.dervarex.minified.modrinth.events.DownloadFinishedEvent;
 import com.dervarex.minified.modrinth.events.DownloadProgressEvent;
 import com.dervarex.minified.modrinth.events.DownloadStartedEvent;
@@ -8,6 +9,9 @@ import com.dervarex.minified.modrinth.events.OutdatedFileReplacedEvent;
 import com.dervarex.minified.modrinth.events.UnverifiedDownloadEvent;
 import com.dervarex.minified.modrinth.exceptions.ModrinthDownloadException;
 import com.dervarex.minified.modrinth.exceptions.ModrinthHashMismatchException;
+import com.dervarex.minified.modrinth.internal.ModrinthJson;
+import com.dervarex.minified.utils.json.JsonObject;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -19,47 +23,69 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public class VersionFile {
-    public Map<String, String> hashes = new LinkedHashMap<>();
-    public String url;
-    public String filename;
-    public boolean primary;
-    public long size;
-    public String fileType;
+/**
+ * A file of a version, with its hashes. Get it from {@link Version#getFiles()}.
+ */
+public final class VersionFile {
+    private final Modrinth modrinth;
+    private final String url;
+    private final String filename;
+    private final boolean primary;
+    private final long size;
+    private final String fileType;
+    private final Map<String, String> hashes;
 
-    transient Version owner;
-
-    public VersionFile() {
+    VersionFile(Modrinth modrinth, JsonObject json) {
+        this.modrinth = modrinth;
+        url = ModrinthJson.string(json, "url");
+        filename = ModrinthJson.string(json, "filename");
+        primary = ModrinthJson.bool(json, "primary");
+        size = ModrinthJson.number(json, "size");
+        fileType = ModrinthJson.string(json, "file_type");
+        hashes = ModrinthJson.stringMap(json, "hashes");
     }
 
+    /** {@return the download URL} */
     public String getUrl() {
         return url;
     }
 
+    /** {@return the file name, like {@code sodium-fabric-0.8.0.jar}} */
     public String getFilename() {
         return filename;
     }
 
+    /** {@return whether this is the main file of the version} */
     public boolean isPrimary() {
         return primary;
     }
 
+    /** {@return the size in bytes} */
     public long getSize() {
         return size;
     }
 
+    /** {@return the kind of extra file, like {@code required-resource-pack}, {@code null} for normal files} */
     public String getFileType() {
         return fileType;
     }
 
+    /** {@return the hashes of the file by algorithm, like {@code sha1} and {@code sha512}} */
     public Map<String, String> getHashes() {
         return hashes;
     }
 
+    /**
+     * Downloads the file into a directory and checks it against its hash.
+     *
+     * @param directory where to put the file, created if it doesn't exist
+     * @return the downloaded file
+     * @throws ModrinthDownloadException if the download fails
+     * @throws ModrinthHashMismatchException if the downloaded file doesn't match its hash
+     */
     public Path download(Path directory) {
         Objects.requireNonNull(directory, "directory");
         if (url == null || url.isBlank()) {
@@ -140,19 +166,8 @@ public class VersionFile {
         post(new DownloadProgressEvent(resolveFilename(), url, progress, downloadedBytes, totalBytes));
     }
 
-    // if there's no eventbus we can't tell anyone
     private void post(Event event) {
-        if (owner != null && owner.client != null) {
-            owner.client.getEventBus().post(event);
-        }
-    }
-
-    public boolean hasHash(String name) {
-        return hashes != null && name != null && hashes.containsKey(name);
-    }
-
-    public String getHash(String name) {
-        return hashes == null || name == null ? null : hashes.get(name);
+        modrinth.getEventBus().post(event);
     }
 
     private String resolveFilename() {
@@ -163,7 +178,7 @@ public class VersionFile {
     }
 
     private String selectSupportedHash() {
-        if (hashes == null || hashes.isEmpty()) {
+        if (hashes.isEmpty()) {
             return null;
         }
         for (String candidate : new String[]{"sha512", "sha256", "sha1", "sha384", "sha224", "md5"}) {
@@ -188,13 +203,7 @@ public class VersionFile {
         if (expected == null || expected.isBlank() || isKnownAlgorithm(hashName)) {
             return;
         }
-        UnverifiedDownloadEvent event = new UnverifiedDownloadEvent(resolveFilename(), url, hashName, destination);
-        if (owner != null && owner.client != null) {
-            owner.client.getEventBus().post(event);
-        } else {
-            // not attached to a client, so no eventbus here
-            System.err.println("Could not verify " + resolveFilename() + ": unknown hash algorithm " + hashName);
-        }
+        post(new UnverifiedDownloadEvent(resolveFilename(), url, hashName, destination));
     }
 
     private static boolean isKnownAlgorithm(String algorithm) {
@@ -235,10 +244,6 @@ public class VersionFile {
             builder.append(Character.forDigit(value & 0xF, 16));
         }
         return builder.toString();
-    }
-
-    void attach(Version version) {
-        this.owner = version;
     }
 }
 
