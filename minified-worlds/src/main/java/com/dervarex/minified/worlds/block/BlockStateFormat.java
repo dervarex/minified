@@ -27,11 +27,16 @@ public enum BlockStateFormat {
      */
     public static final int ID_PROPERTIES_SINCE = 5006;
 
+    /**
+     * @param dataVersion data version of the world
+     * {@return the BlockStateFormat for the given data version}
+     */
     public static BlockStateFormat forDataVersion(int dataVersion) {
         return dataVersion >= ID_PROPERTIES_SINCE ? ID_PROPERTIES : NAME_PROPERTIES;
     }
 
     /**
+     * @param state {@link BlockState} that should be converted to Nbt
      * @return an {@link NbtString} or an {@link NbtCompound}
      */
     public NbtTag toNbt(BlockState state) {

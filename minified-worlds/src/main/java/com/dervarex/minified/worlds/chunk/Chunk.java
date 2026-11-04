@@ -13,6 +13,10 @@ import java.util.Set;
 import java.util.TreeSet;
 import org.apiguardian.api.API;
 
+/**
+ * One 16x16 Chunk of a world. Gets and sets blocks across all of its
+ * {@link ChunkSection sections} and creates missing sections when a block is set in one
+ */
 @API(status = API.Status.STABLE)
 public class Chunk {
     private static final String DEFAULT_FALLBACK_BIOME = "minecraft:plains";
@@ -28,6 +32,7 @@ public class Chunk {
 
     /**
      * Wraps a chunk's NBT as it comes out of a region file
+     * @param root the chunk's NBT
      * @throws IllegalArgumentException if a section's palette and data don't add up
      */
     public Chunk(NbtCompound root) {
@@ -49,30 +54,45 @@ public class Chunk {
                 .orElse(BlockStateFormat.ID_PROPERTIES);
     }
 
+    /** {@return the x of the chunk, in chunks, so the block x divided by 16} */
     public int chunkX() { return chunkX; }
+
+    /** {@return the z of the chunk, in chunks, so the block z divided by 16} */
     public int chunkZ() { return chunkZ; }
+
+    /** {@return the chunk's NBT with every change made so far} */
     public NbtCompound raw() { return root; }
 
-    /**
-     * @return how this chunk's palettes store blocks
-     */
+    /** {@return how this chunk's palettes store blocks} */
     public BlockStateFormat blockStateFormat() { return blockStateFormat; }
 
-    /**
-     * @return the Y of every section {@link #setBlock} changed something in
-     */
+    /** {@return the Y of every section {@link #setBlock} changed something in} */
     public Set<Integer> editedSections() { return Collections.unmodifiableSet(editedSections); }
 
+    /**
+     * Gets a block. <br>
+     * Since only the lowest 4 bits count, the world coordinates should work too for x and z.
+     *
+     * @param x the x inside the chunk
+     * @param y the world height
+     * @param z the z inside the chunk
+     * @return the block, air if its section doesn't exist
+     */
     public BlockState getBlock(int x, int y, int z) {
         ChunkSection section = sections.get((byte) (y >> 4));
         return section == null ? BlockState.of("minecraft:air") : section.getBlock(x, y, z);
     }
 
     /**
-     * Sets a block and automatically creates the target section
-     * (as air, with a resolved biome) if it doesn't exist yet
-     * Light and heightmaps get thrown out, Minecraft redoes them on load. A chest that turns into stone takes its
-     * items with it, a chest you place gets no block entity though, the game makes one once it needs it
+     * Sets a block and automatically creates the target section (as air, with a resolved biome) if it doesn't exist yet
+     * Light and heightmaps get thrown out, Minecraft does that for us. A chest that turns into stone takes its
+     * items with it, a chest you place gets no block entity though, again, Minecraft will do that. <br>
+     * Since only the lowest 4 bits count, the world coordinates should work too for x and z.
+     *
+     * @param x the x inside the chunk
+     * @param y the world height
+     * @param z the z inside the chunk
+     * @param state the block to place
      */
     public void setBlock(int x, int y, int z, BlockState state) {
         byte sectionY = (byte) (y >> 4);
@@ -119,6 +139,7 @@ public class Chunk {
     /**
      * Creates a new, empty (air) section at the given Y.
      *
+     * @param sectionY the Y of the section, so the block y divided by 16
      * @param biome the biome to fill the new section with. If null, it looks at the
      *              section(s) directly above/below within this chunk, if both exist, their
      *              predominant biomes (calculated via {@link ChunkSection#predominantBiome}
@@ -127,6 +148,7 @@ public class Chunk {
      *              immediate neighbor exists, this searches outward for the nearest existing
      *              section in either direction. If this chunk has no sections at all yet,
      *              it falls back to "minecraft:plains".
+     * @return the new section
      * @throws IllegalStateException if a section already exists at this Y
      */
     public ChunkSection createSection(int sectionY, String biome) {
