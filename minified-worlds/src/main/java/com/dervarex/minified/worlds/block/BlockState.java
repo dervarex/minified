@@ -17,8 +17,8 @@ import org.apiguardian.api.API;
 @API(status = API.Status.STABLE)
 public record BlockState(String name, Map<String, String> properties) {
     /**
-     * @param name the name of the minecraft block, e.g. "minecraft:diamond_block"
      * {@return BlockState with the given name and an empty list of properties}
+     * @param name the name of the minecraft block, e.g. "minecraft:diamond_block"
      */
     public static BlockState of(String name) {
         return new BlockState(name, Map.of());

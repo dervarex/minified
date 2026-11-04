@@ -1,16 +1,7 @@
-## block.BlockState
-
-`minified-worlds/src/main/java/com/dervarex/minified/worlds/block/BlockState.java`
-
-- [ ] L23 `of(String)`: no description, @return  
-  `public static BlockState of(String name)`
-
 ## block.BlockStateFormat
 
 `minified-worlds/src/main/java/com/dervarex/minified/worlds/block/BlockStateFormat.java`
 
-- [ ] L34 `forDataVersion(int)`: no description, @return  
-  `public static BlockStateFormat forDataVersion(int dataVersion)`
 - [ ] L42 `toNbt(BlockState)`: no description  
   `public NbtTag toNbt(BlockState state)`
 
