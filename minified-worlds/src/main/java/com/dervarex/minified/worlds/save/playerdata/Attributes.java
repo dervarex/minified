@@ -7,12 +7,20 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apiguardian.api.API;
 
+/**
+ * The attributes of a player, like max health or speed
+ */
 @Getter
 @Setter
 @API(status = API.Status.STABLE)
 public class Attributes {
     Attribute[] attributes;
 
+    /**
+     * Reads the attributes from NBT
+     * @param nbt the player's attributes list
+     * @return the attributes
+     */
     public static Attributes fromNbtList(NbtList nbt) {
         Attributes attributesNbt = new Attributes();
         attributesNbt.attributes = new Attribute[nbt.size()];
@@ -27,6 +35,7 @@ public class Attributes {
         return attributesNbt;
     }
 
+    /** {@return the attributes as NBT} */
     public NbtList toNbtList() {
         NbtList list = new NbtList((byte) 10); // 10 = compound tag id
         for (Attribute attribute : attributes) {

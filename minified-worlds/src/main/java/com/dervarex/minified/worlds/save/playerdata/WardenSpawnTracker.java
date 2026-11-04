@@ -7,6 +7,9 @@ import lombok.Setter;
 import org.jetbrains.annotations.Nullable;
 import org.apiguardian.api.API;
 
+/**
+ * How close a player is to summoning a warden
+ */
 @Getter
 @Setter
 @API(status = API.Status.STABLE)
@@ -22,6 +25,11 @@ public class WardenSpawnTracker {
     @Setter(AccessLevel.NONE)
     private NbtCompound raw;
 
+    /**
+     * Reads the tracker from NBT
+     * @param nbt the player's warden_spawn_tracker compound
+     * @return the tracker
+     */
     public static WardenSpawnTracker fromNbt(NbtCompound nbt) {
         WardenSpawnTracker tracker = new WardenSpawnTracker();
         tracker.raw = nbt.copy();
@@ -37,6 +45,7 @@ public class WardenSpawnTracker {
         return tracker;
     }
 
+    /** {@return the tracker as NBT} */
     public NbtCompound toNbt() {
         NbtCompound nbt = raw != null ? raw.copy() : new NbtCompound();
         if(cooldownTicks != null) {

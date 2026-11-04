@@ -10,6 +10,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import org.apiguardian.api.API;
 
+/**
+ * The advancements of a player, from advancements/&lt;uuid&gt;.json
+ */
 @Getter
 @API(status = API.Status.STABLE)
 public class Advancements {
@@ -17,6 +20,11 @@ public class Advancements {
     private int dataVersion;
     private final Map<String, Advancement> advancements = new LinkedHashMap<>();
 
+    /**
+     * Reads the advancements from JSON
+     * @param json the content of the player's advancements file
+     * @return the advancements
+     */
     public static Advancements fromJson(JsonObject json) {
         Advancements result = new Advancements();
 
@@ -37,6 +45,7 @@ public class Advancements {
         return result;
     }
 
+    /** {@return the advancements as JSON, like in the advancements file} */
     public JsonObject toJson() {
         JsonObject root = new JsonObject();
 
@@ -48,12 +57,20 @@ public class Advancements {
         return root;
     }
 
+    /**
+     * One advancement and when each of its criteria was done
+     */
     @Getter
     @Setter
     public static class Advancement {
         private boolean done;
         private final Map<String, String> criteria = new LinkedHashMap<>();
 
+        /**
+         * Reads an advancement from JSON
+         * @param json the advancement's JSON
+         * @return the advancement
+         */
         public static Advancement fromJson(JsonObject json) {
             Advancement adv = new Advancement();
 
@@ -73,6 +90,7 @@ public class Advancements {
             return adv;
         }
 
+        /** {@return the advancement as JSON} */
         public JsonObject toJson() {
             JsonObject json = new JsonObject();
             json.put("done", done);
@@ -86,6 +104,10 @@ public class Advancements {
             return json;
         }
 
+        /**
+         * {@return when a criterion was done, or null if it wasn't}
+         * @param criterionKey the criterion
+         */
         @Nullable
         public String getCriterionDate(String criterionKey) {
             return criteria.get(criterionKey);

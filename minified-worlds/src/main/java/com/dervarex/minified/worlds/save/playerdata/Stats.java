@@ -9,6 +9,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import org.apiguardian.api.API;
 
+/**
+ * The statistics of a player, from stats/&lt;uuid&gt;.json
+ */
 @Getter
 @API(status = API.Status.STABLE)
 public class Stats {
@@ -16,6 +19,11 @@ public class Stats {
     private int dataVersion;
     private final Map<String, Map<String, Integer>> categories = new LinkedHashMap<>();
 
+    /**
+     * Reads the statistics from JSON
+     * @param json the content of the player's stats file
+     * @return the statistics
+     */
     public static Stats fromJson(JsonObject json) {
         Stats result = new Stats();
 
@@ -48,6 +56,7 @@ public class Stats {
         return result;
     }
 
+    /** {@return the statistics as JSON, like in the stats file} */
     public JsonObject toJson() {
         JsonObject root = new JsonObject();
         JsonObject statsObj = new JsonObject();
@@ -68,6 +77,11 @@ public class Stats {
         return root;
     }
 
+    /**
+     * {@return a statistic, 0 if the player doesn't have it}
+     * @param category the category, like minecraft:mined
+     * @param statName the statistic
+     */
     public int getStat(String category, String statName) {
         Map<String, Integer> categoryMap = categories.get(category);
         if (categoryMap == null) {
