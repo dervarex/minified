@@ -36,6 +36,7 @@ public enum BlockStateFormat {
     }
 
     /**
+     * Converts a {@link BlockState} to Nbt
      * @param state {@link BlockState} that should be converted to Nbt
      * @return an {@link NbtString} or an {@link NbtCompound}
      */

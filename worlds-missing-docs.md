@@ -1,56 +1,8 @@
-## block.BlockStateFormat
-
-`minified-worlds/src/main/java/com/dervarex/minified/worlds/block/BlockStateFormat.java`
-
-- [ ] L42 `toNbt(BlockState)`: no description  
-  `public NbtTag toNbt(BlockState state)`
-
 ## chunk.package-info
 
 `minified-worlds/src/main/java/com/dervarex/minified/worlds/chunk/package-info.java`
 
 - [ ] package `com.dervarex.minified.worlds.chunk` has no package description
-
-## dimension.Dimension
-
-`minified-worlds/src/main/java/com/dervarex/minified/worlds/dimension/Dimension.java`
-
-- [ ] L26 `Dimension`: no description  
-  `public sealed class Dimension permits Overworld, Nether, End`
-- [ ] L35 `Dimension.Versioned`: no description, @param dataVersion (record component), @param data (record component)  
-  `public record Versioned<T>(int dataVersion, T data) {}`
-- [ ] L35 `Versioned(int,Object)`: @param dataVersion, @param data  
-  `public record Versioned<T>(int dataVersion, T data) {}`
-- [ ] L38 `Dimension(File,DimensionType)`: @param worldFolder, @param type  
-  `public Dimension(File worldFolder, DimensionType type)`
-- [ ] L45 `Dimension(File)`: @param worldFolder  
-  `public Dimension(File worldFolder)`
-- [ ] L54 `dimensionFolder(RegionCategory)`: no description, @param category, @return  
-  `protected File dimensionFolder(RegionCategory category)`
-- [ ] L95 `readChunkData(int,int)`: no description, @param chunkX, @param chunkZ, @return, @throws  
-  `public NbtCompound readChunkData(int chunkX, int chunkZ) throws IOException`
-- [ ] L99 `readPoiData(int,int)`: no description, @param chunkX, @param chunkZ, @return, @throws  
-  `public NbtCompound readPoiData(int chunkX, int chunkZ) throws IOException`
-- [ ] L103 `readEntityData(int,int)`: no description, @param chunkX, @param chunkZ, @return, @throws  
-  `public NbtCompound readEntityData(int chunkX, int chunkZ) throws IOException`
-- [ ] L112 `readChunk(int,int)`: @param chunkX, @param chunkZ, @return, @throws  
-  `public Chunk readChunk(int chunkX, int chunkZ) throws IOException`
-- [ ] L121 `readPoi(int,int)`: @param chunkX, @param chunkZ, @return, @throws  
-  `public PoiData readPoi(int chunkX, int chunkZ) throws IOException`
-- [ ] L130 `readEntities(int,int)`: @param chunkX, @param chunkZ, @return, @throws  
-  `public EntityData readEntities(int chunkX, int chunkZ) throws IOException`
-- [ ] L143 `saveChunkData(Chunk)`: @param chunk  
-  `public void saveChunkData(Chunk chunk) throws IOException`
-- [ ] L174 `savePoiData(int,int,NbtCompound)`: @param chunkX, @param chunkZ, @param poiData  
-  `public void savePoiData(int chunkX, int chunkZ, NbtCompound poiData) throws IOException`
-- [ ] L185 `savePoiData(int,int,PoiData)`: @param chunkX, @param chunkZ, @param poiData, @throws  
-  `public void savePoiData(int chunkX, int chunkZ, PoiData poiData) throws IOException`
-- [ ] L195 `saveEntityData(int,int,NbtCompound)`: @param chunkX, @param chunkZ, @param entityData  
-  `public void saveEntityData(int chunkX, int chunkZ, NbtCompound entityData) throws IOException`
-- [ ] L206 `saveEntityData(int,int,EntityData)`: @param chunkX, @param chunkZ, @param entityData, @throws  
-  `public void saveEntityData(int chunkX, int chunkZ, EntityData entityData) throws IOException`
-- [ ] L213 `close()`: @throws  
-  `public void close() throws IOException`
 
 ## dimension.DimensionType
 
@@ -63,6 +15,8 @@
 
 `minified-worlds/src/main/java/com/dervarex/minified/worlds/dimension/End.java`
 
+- [ ] L16 `End`: no description  
+  `public final class End extends Dimension`
 - [ ] L21 `End(File)`: @param worldFolder  
   `public End(File worldFolder)`
 - [ ] L38 `getEnderDragonFight()`: @return  
@@ -609,24 +563,24 @@
   `public static Attributes fromNbtList(NbtList nbt)`
 - [ ] L30 `toNbtList()`: no description, @return  
   `public NbtList toNbtList()`
-- [ ] L46 `Attributes.Attribute`: no description  
-  `public static class Attribute`
 
 ## save.playerdata.Inventory
 
 `minified-worlds/src/main/java/com/dervarex/minified/worlds/save/playerdata/Inventory.java`
 
+- [ ] L13 `Inventory`: no description  
+  `public class Inventory`
 - [ ] L16 `fromNbtList(NbtList)`: no description, @param nbt, @return  
   `public static Inventory fromNbtList(NbtList nbt)`
 - [ ] L31 `toNbtList()`: no description, @return  
   `public NbtList toNbtList()`
-- [ ] L48 `Inventory.InventoryItem`: no description  
-  `public static class InventoryItem`
 
 ## save.playerdata.Player
 
 `minified-worlds/src/main/java/com/dervarex/minified/worlds/save/playerdata/Player.java`
 
+- [ ] L19 `Player`: no description  
+  `public class Player`
 - [ ] L116 `fromNbt(NbtCompound,JsonObject,JsonObject)`: no description, @param nbt, @param advancements, @param statistics, @return  
   `public static Player fromNbt(@NotNull NbtCompound nbt, @Nullable JsonObject advancements, @Nullable JsonObject statistics)`
 - [ ] L252 `toNbt()`: no description, @return  
