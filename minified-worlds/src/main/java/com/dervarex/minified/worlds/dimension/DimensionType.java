@@ -3,6 +3,9 @@ package com.dervarex.minified.worlds.dimension;
 import java.io.File;
 import org.apiguardian.api.API;
 
+/**
+ * Which vanilla dimension type the {@link Dimension} is
+ */
 @API(status = API.Status.STABLE)
 public enum DimensionType {
     Overworld("overworld"),
