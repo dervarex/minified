@@ -6,6 +6,9 @@ import lombok.Setter;
 import org.jetbrains.annotations.Nullable;
 import org.apiguardian.api.API;
 
+/**
+ * When the next wandering trader spawns, from wandering_trader.dat
+ */
 @Getter
 @Setter
 @API(status = API.Status.STABLE)
@@ -16,6 +19,11 @@ public class WanderingTrader {
     @Nullable
     private Integer spawnDelay;
 
+    /**
+     * Reads the wandering trader data from NBT
+     * @param nbt the content of wandering_trader.dat
+     * @return the wandering trader data
+     */
     public static WanderingTrader fromNbt(NbtCompound nbt) {
         WanderingTrader result = new WanderingTrader();
         result.dataVersion = nbt.getInt("DataVersion");
@@ -32,6 +40,7 @@ public class WanderingTrader {
         return result;
     }
 
+    /** {@return the wandering trader data as NBT, like in wandering_trader.dat} */
     public NbtCompound toNbt() {
         NbtCompound data = new NbtCompound();
         if (spawnChance != null) {

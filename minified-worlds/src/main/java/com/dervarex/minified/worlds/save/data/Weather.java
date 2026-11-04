@@ -6,6 +6,9 @@ import lombok.Setter;
 import org.jetbrains.annotations.Nullable;
 import org.apiguardian.api.API;
 
+/**
+ * The weather of a world, from weather.dat
+ */
 @Getter
 @Setter
 @API(status = API.Status.STABLE)
@@ -22,6 +25,11 @@ public class Weather {
     @Nullable
     private Boolean thundering;
 
+    /**
+     * Reads the weather from NBT
+     * @param nbt the content of weather.dat
+     * @return the weather
+     */
     public static Weather fromNbt(NbtCompound nbt) {
         Weather result = new Weather();
         result.dataVersion = nbt.getInt("DataVersion");
@@ -47,6 +55,7 @@ public class Weather {
         return result;
     }
 
+    /** {@return the weather as NBT, like in weather.dat} */
     public NbtCompound toNbt() {
         NbtCompound data = new NbtCompound();
         if (raining != null) {

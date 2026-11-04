@@ -15,6 +15,11 @@ public class WorldLockedException extends IOException {
      */
     private final transient Path lockFile;
 
+    /**
+     * @param message the message
+     * @param lockFile the session.lock file
+     * @param cause why it couldn't be locked
+     */
     public WorldLockedException(String message, Path lockFile, Throwable cause) {
         super(message, cause);
         this.lockFile = lockFile;

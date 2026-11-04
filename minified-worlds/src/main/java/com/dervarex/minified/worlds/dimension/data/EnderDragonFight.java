@@ -9,6 +9,9 @@ import lombok.Setter;
 import org.jetbrains.annotations.Nullable;
 import org.apiguardian.api.API;
 
+/**
+ * The ender dragon fight of the End, from ender_dragon_fight.dat
+ */
 @Getter
 @Setter
 @API(status = API.Status.STABLE)
@@ -29,6 +32,11 @@ public class EnderDragonFight {
     @Setter(AccessLevel.NONE)
     private NbtCompound raw;
 
+    /**
+     * Reads the fight from NBT
+     * @param nbt the content of ender_dragon_fight.dat
+     * @return the fight
+     */
     public static EnderDragonFight fromNbt(NbtCompound nbt) {
         EnderDragonFight dragonFight = new EnderDragonFight();
         dragonFight.raw = nbt.copy();
@@ -55,6 +63,7 @@ public class EnderDragonFight {
         return dragonFight;
     }
 
+    /** {@return the fight as NBT, like in ender_dragon_fight.dat} */
     public NbtCompound toNbt() {
         NbtCompound compound = raw != null ? raw.copy() : new NbtCompound();
         compound.setInt("DataVersion", dataVersion);

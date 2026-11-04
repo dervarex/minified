@@ -7,6 +7,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import org.apiguardian.api.API;
 
+/**
+ * The game rules of a world, from game_rules.dat
+ */
 @Getter
 @API(status = API.Status.STABLE)
 public class GameRules {
@@ -15,6 +18,11 @@ public class GameRules {
     private final Map<String, Boolean> booleanGamerules = new LinkedHashMap<>();
     private final Map<String, Integer> integerGamerules = new LinkedHashMap<>();
 
+    /**
+     * Reads the game rules from NBT
+     * @param nbt the content of game_rules.dat
+     * @return the game rules
+     */
     public static GameRules fromNbt(NbtCompound nbt) {
         GameRules result = new GameRules();
         result.dataVersion = nbt.getInt("DataVersion");
@@ -32,6 +40,8 @@ public class GameRules {
         }
         return result;
     }
+
+    /** {@return the game rules as NBT, like in game_rules.dat} */
     public NbtCompound toNbt() {
         NbtCompound data = new NbtCompound();
         for (Map.Entry<String, Boolean> entry : booleanGamerules.entrySet()) {
@@ -46,16 +56,36 @@ public class GameRules {
         return root;
     }
 
+    /**
+     * Sets a game rule that has a number
+     * @param key the game rule
+     * @param value the number
+     */
     public void putIntegerGamerule(String key, int value) {
         integerGamerules.put(key, value);
     }
+
+    /**
+     * Removes a game rule that has a number
+     * @param key the game rule
+     */
     public void removeIntegerGamerule(String key) {
         integerGamerules.remove(key);
     }
 
+    /**
+     * Sets a game rule that's on or off
+     * @param key the game rule
+     * @param value true to turn it on
+     */
     public void putBooleanGamerule(String key, boolean value) {
         booleanGamerules.put(key, value);
     }
+
+    /**
+     * Removes a game rule that's on or off
+     * @param key the game rule
+     */
     public void removeBooleanGamerule(String key) {
         booleanGamerules.remove(key);
     }

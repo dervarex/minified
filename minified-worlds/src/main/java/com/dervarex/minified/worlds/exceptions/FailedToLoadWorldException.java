@@ -14,6 +14,11 @@ public class FailedToLoadWorldException extends RuntimeException {
      */
     private final transient Path path;
 
+    /**
+     * @param message the message
+     * @param path the world folder or file that couldn't be read
+     * @param cause why it couldn't be read
+     */
     public FailedToLoadWorldException(String message, Path path, Throwable cause) {
         super(message, cause);
         this.path = path;

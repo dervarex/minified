@@ -8,6 +8,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import org.apiguardian.api.API;
 
+/**
+ * The random sequences of a world, from random_sequences.dat
+ */
 @Getter
 @API(status = API.Status.STABLE)
 public class RandomSequences {
@@ -17,6 +20,11 @@ public class RandomSequences {
     private int salt;
     private final Map<String, long[]> sequences = new LinkedHashMap<>();
 
+    /**
+     * Reads the random sequences from NBT
+     * @param nbt the content of random_sequences.dat
+     * @return the random sequences
+     */
     public static RandomSequences fromNbt(NbtCompound nbt) {
         RandomSequences result = new RandomSequences();
         result.dataVersion = nbt.getInt("DataVersion");
@@ -34,6 +42,8 @@ public class RandomSequences {
         }
         return result;
     }
+
+    /** {@return the random sequences as NBT, like in random_sequences.dat} */
     public NbtCompound toNbt() {
         NbtCompound sequencesCompound = new NbtCompound();
         for (Map.Entry<String, long[]> entry : sequences.entrySet()) {
@@ -50,9 +60,19 @@ public class RandomSequences {
         return root;
     }
 
+    /**
+     * Adds or replaces a random sequence
+     * @param key the sequence's id
+     * @param value the sequence's source
+     */
     public void putSequence(String key, long[] value) {
         sequences.put(key, value);
     }
+
+    /**
+     * Removes a random sequence
+     * @param key the sequence's id
+     */
     public void removeSequence(String key) {
         sequences.remove(key);
     }

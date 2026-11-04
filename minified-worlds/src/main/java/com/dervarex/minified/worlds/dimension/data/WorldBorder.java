@@ -2,6 +2,9 @@ package com.dervarex.minified.worlds.dimension.data;
 
 import org.apiguardian.api.API;
 
+/**
+ * The world border
+ */
 @API(status = API.Status.STABLE)
 public class WorldBorder {
     int damagePerBlock;

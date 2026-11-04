@@ -9,6 +9,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import org.apiguardian.api.API;
 
+/**
+ * The seed and generator of each dimension, from world_gen_settings.dat
+ */
 @Getter
 @API(status = API.Status.STABLE)
 public class WorldGenSettings {
@@ -22,6 +25,11 @@ public class WorldGenSettings {
     private boolean generateStructures;
     private final Map<String, Dimension> dimensions = new LinkedHashMap<>();
 
+    /**
+     * Reads the settings from NBT
+     * @param nbt the content of world_gen_settings.dat
+     * @return the settings
+     */
     public static WorldGenSettings fromNbt(NbtCompound nbt) {
         WorldGenSettings result = new WorldGenSettings();
         result.dataVersion = nbt.getInt("DataVersion");
@@ -51,6 +59,7 @@ public class WorldGenSettings {
         return result;
     }
 
+    /** {@return the settings as NBT, like in world_gen_settings.dat} */
     public NbtCompound toNbt() {
         NbtCompound data = new NbtCompound();
         data.setLong("seed", seed);
@@ -69,6 +78,9 @@ public class WorldGenSettings {
         return root;
     }
 
+    /**
+     * The type and generator of one dimension
+     */
     @Getter
     @Setter
     public static class Dimension {
@@ -77,6 +89,11 @@ public class WorldGenSettings {
         @Nullable
         private Generator generator;
 
+        /**
+         * Reads a dimension from NBT
+         * @param nbt the dimension's NBT
+         * @return the dimension
+         */
         public static Dimension fromNbt(NbtCompound nbt) {
             Dimension dim = new Dimension();
             if (nbt.has("type")) {
@@ -88,6 +105,7 @@ public class WorldGenSettings {
             return dim;
         }
 
+        /** {@return the dimension as NBT} */
         public NbtCompound toNbt() {
             NbtCompound nbt = new NbtCompound();
             if (type != null) {
@@ -100,6 +118,9 @@ public class WorldGenSettings {
         }
     }
 
+    /**
+     * The generator of a dimension
+     */
     @Getter
     @Setter
     public static class Generator {
@@ -110,6 +131,11 @@ public class WorldGenSettings {
         @Nullable
         private BiomeSource biomeSource;
 
+        /**
+         * Reads a generator from NBT
+         * @param nbt the generator's NBT
+         * @return the generator
+         */
         public static Generator fromNbt(NbtCompound nbt) {
             Generator gen = new Generator();
             if (nbt.has("type")) {
@@ -124,6 +150,7 @@ public class WorldGenSettings {
             return gen;
         }
 
+        /** {@return the generator as NBT} */
         public NbtCompound toNbt() {
             NbtCompound nbt = new NbtCompound();
             if (type != null) {
@@ -139,6 +166,9 @@ public class WorldGenSettings {
         }
     }
 
+    /**
+     * Where a generator gets its biomes from
+     */
     @Getter
     @Setter
     public static class BiomeSource {
@@ -147,6 +177,11 @@ public class WorldGenSettings {
         @Nullable
         private String preset;
 
+        /**
+         * Reads a biome source from NBT
+         * @param nbt the biome source's NBT
+         * @return the biome source
+         */
         public static BiomeSource fromNbt(NbtCompound nbt) {
             BiomeSource bs = new BiomeSource();
             if (nbt.has("type")) {
@@ -158,6 +193,7 @@ public class WorldGenSettings {
             return bs;
         }
 
+        /** {@return the biome source as NBT} */
         public NbtCompound toNbt() {
             NbtCompound nbt = new NbtCompound();
             if (type != null) {

@@ -8,6 +8,9 @@ import lombok.Setter;
 import org.jetbrains.annotations.Nullable;
 import org.apiguardian.api.API;
 
+/**
+ * The world spawn
+ */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -41,6 +44,11 @@ public class Spawn {
         return 0.0f;
     }
 
+    /**
+     * Reads the spawn from NBT
+     * @param spawnNbt the spawn compound of level.dat
+     * @return the spawn
+     */
     public static Spawn fromNbt(NbtCompound spawnNbt) {
         Spawn spawn = new Spawn();
         spawn.raw = spawnNbt.copy();
@@ -72,6 +80,7 @@ public class Spawn {
         return spawn;
     }
 
+    /** {@return the spawn as NBT, like in level.dat} */
     public NbtCompound toNbt() {
         NbtCompound nbt = raw != null ? raw.copy() : new NbtCompound();
         if (dimension != null) {

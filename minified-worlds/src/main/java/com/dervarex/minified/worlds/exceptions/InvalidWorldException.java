@@ -14,6 +14,10 @@ public class InvalidWorldException extends RuntimeException {
      */
     private final transient Path worldDirectory;
 
+    /**
+     * @param message the message
+     * @param worldDirectory the folder that was given as the world
+     */
     public InvalidWorldException(String message, Path worldDirectory) {
         super(message);
         this.worldDirectory = worldDirectory;

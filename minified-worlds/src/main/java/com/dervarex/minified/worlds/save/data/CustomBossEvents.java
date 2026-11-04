@@ -8,6 +8,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import org.apiguardian.api.API;
 
+/**
+ * The boss bars made with /bossbar, from custom_boss_events.dat
+ */
 @Getter
 @API(status = API.Status.STABLE)
 public class CustomBossEvents {
@@ -15,6 +18,11 @@ public class CustomBossEvents {
     private int dataVersion;
     private final Map<String, BossEvent> events = new LinkedHashMap<>();
 
+    /**
+     * Reads the boss bars from NBT
+     * @param nbt the content of custom_boss_events.dat
+     * @return the boss bars
+     */
     public static CustomBossEvents fromNbt(NbtCompound nbt) {
         CustomBossEvents result = new CustomBossEvents();
         result.dataVersion = nbt.getInt("DataVersion");
@@ -28,6 +36,8 @@ public class CustomBossEvents {
         }
         return result;
     }
+
+    /** {@return the boss bars as NBT, like in custom_boss_events.dat} */
     public NbtCompound toNbt() {
         NbtCompound data = new NbtCompound();
         for (Map.Entry<String, BossEvent> entry : events.entrySet()) {
@@ -39,9 +49,19 @@ public class CustomBossEvents {
         return root;
     }
 
+    /**
+     * Adds or replaces a boss bar
+     * @param id the boss bar's id
+     * @param event the boss bar
+     */
     public void putEvent(String id, BossEvent event) {
         events.put(id, event);
     }
+
+    /**
+     * Removes a boss bar
+     * @param id the boss bar's id
+     */
     public void removeEvent(String id) {
         events.remove(id);
     }

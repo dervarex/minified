@@ -16,6 +16,10 @@ public class PoiData {
     private final Map<Integer, NbtCompound> sectionTags = new HashMap<>();
     private final Map<Integer, List<PoiRecord>> records = new HashMap<>();
 
+    /**
+     * Wraps a chunk's POI NBT
+     * @param root the chunk's POI NBT
+     */
     public PoiData(NbtCompound root) {
         this.root = root;
         NbtCompound sections = root.getCompound("Sections");
@@ -35,16 +39,20 @@ public class PoiData {
         }
     }
 
+    /** {@return the chunk's POI NBT with every change made so far} */
     public NbtCompound raw() { return root; }
 
-    /** All POI records across every section in this chunk. */
+    /** {@return all POI records across every section in this chunk} */
     public List<PoiRecord> records() {
         List<PoiRecord> all = new ArrayList<>();
         for (List<PoiRecord> sectionRecords : records.values()) all.addAll(sectionRecords);
         return all;
     }
 
-    /** POI records within just one section Y, or an empty list if that section has none */
+    /**
+     * {@return the POI records within just one section Y, or an empty list if that section has none}
+     * @param sectionY the Y of the section, so the block y divided by 16
+     */
     public List<PoiRecord> records(int sectionY) {
         return List.copyOf(records.getOrDefault(sectionY, List.of()));
     }
@@ -53,6 +61,13 @@ public class PoiData {
      * Adds a new POI record to the given section y, creating that section
      * (with Valid=true) if it doesn't exist in this chunk.
      * Links the POI to both in memory list and to the NBT.
+     * @param sectionY the Y of the section, so the block y divided by 16
+     * @param x the block x
+     * @param y the block y
+     * @param z the block z
+     * @param type the POI type
+     * @param freeTickets how many more villagers can claim it
+     * @return the new record
      */
     public PoiRecord addRecord(int sectionY, int x, int y, int z, String type, int freeTickets) {
         NbtCompound recordTag = new NbtCompound();

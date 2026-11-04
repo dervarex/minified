@@ -8,6 +8,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import org.apiguardian.api.API;
 
+/**
+ * The total ticks of each dimension, from world_clocks.dat
+ */
 @Getter
 @API(status = API.Status.STABLE)
 public class WorldClocks {
@@ -15,6 +18,11 @@ public class WorldClocks {
     private int dataVersion;
     private final Map<String, Long> clocks = new LinkedHashMap<>();
 
+    /**
+     * Reads the world clocks from NBT
+     * @param nbt the content of world_clocks.dat
+     * @return the world clocks
+     */
     public static WorldClocks fromNbt(NbtCompound nbt) {
         WorldClocks result = new WorldClocks();
         result.dataVersion = nbt.getInt("DataVersion");
@@ -32,6 +40,7 @@ public class WorldClocks {
         return result;
     }
 
+    /** {@return the world clocks as NBT, like in world_clocks.dat} */
     public NbtCompound toNbt() {
         NbtCompound data = new NbtCompound();
 

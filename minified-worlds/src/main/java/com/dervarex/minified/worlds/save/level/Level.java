@@ -56,6 +56,11 @@ public class Level {
 
     public Level() {}
 
+    /**
+     * Reads level.dat
+     * @param nbt the content of level.dat
+     * @return the level
+     */
     public static Level fromNbt(NbtCompound nbt) {
         NbtCompound data = nbt.getCompound("Data");
         Level level = new Level();
@@ -97,9 +102,7 @@ public class Level {
         return level;
     }
 
-    /**
-     * Everything {@link #fromNbt} read, with your changes on top
-     */
+    /** {@return everything {@link #fromNbt} read, with your changes on top} */
     public NbtCompound toNbt() {
         NbtCompound root = raw != null ? raw.copy() : new NbtCompound();
         NbtCompound data = child(root, "Data");

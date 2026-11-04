@@ -20,6 +20,10 @@ public class EntityData {
     private final NbtList entitiesList;
     private final List<Entity> entities = new ArrayList<>();
 
+    /**
+     * Wraps a chunk's entity NBT
+     * @param root the chunk's entity NBT
+     */
     public EntityData(NbtCompound root) {
         this.root = root;
         this.entitiesList = root.getList("Entities");
@@ -32,13 +36,16 @@ public class EntityData {
         }
     }
 
+    /** {@return the chunk's entity NBT with every change made so far} */
     public NbtCompound raw() { return root; }
 
+    /** {@return the entities of the chunk} */
     public List<Entity> entities() { return List.copyOf(entities); }
 
     /**
      * Adds a new entity to this chunk's entity list, wiring it into
      * both the in-memory list and the underlying NBT.
+     * @param entityData the entity's NBT
      * @return entity wrapped as an Entity or LivingEntity depending on whether it
      * carries "Health".
      */

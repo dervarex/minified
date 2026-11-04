@@ -2,6 +2,9 @@ package com.dervarex.minified.worlds.dimension.region;
 
 import org.apiguardian.api.API;
 
+/**
+ * The kinds of region files a dimension has
+ */
 @API(status = API.Status.STABLE)
 public enum RegionCategory {
     REGION("region"),

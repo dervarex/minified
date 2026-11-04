@@ -8,6 +8,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import org.apiguardian.api.API;
 
+/**
+ * The stopwatches of a world, from stopwatches.dat
+ */
 @Getter
 @API(status = API.Status.STABLE)
 public class StopWatches {
@@ -15,6 +18,11 @@ public class StopWatches {
     private int dataVersion;
     private final Map<String, Long> stopwatches = new LinkedHashMap<>();
 
+    /**
+     * Reads the stopwatches from NBT
+     * @param nbt the content of stopwatches.dat
+     * @return the stopwatches
+     */
     public static StopWatches fromNbt(NbtCompound nbt) {
         StopWatches result = new StopWatches();
         result.dataVersion = nbt.getInt("DataVersion");

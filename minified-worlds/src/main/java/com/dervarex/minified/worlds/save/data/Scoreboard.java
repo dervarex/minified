@@ -13,6 +13,9 @@ import java.util.List;
 import java.util.Map;
 import org.apiguardian.api.API;
 
+/**
+ * The scoreboard of a world, from scoreboard.dat
+ */
 @Getter
 @Setter
 @API(status = API.Status.STABLE)
@@ -23,6 +26,9 @@ public class Scoreboard {
     private final List<Objective> objectives = new ArrayList<>();
     private final List<PlayerScore> playerScores = new ArrayList<>();
 
+    /**
+     * A scoreboard objective, made with /scoreboard objectives
+     */
     @Getter
     @Setter
     public static class Objective {
@@ -32,6 +38,11 @@ public class Scoreboard {
         @Nullable
         private String renderType;
 
+        /**
+         * Reads an objective from NBT
+         * @param compound the objective's NBT
+         * @return the objective
+         */
         public static Objective fromNbt(NbtCompound compound) {
             Objective obj = new Objective();
             obj.setName(compound.getString("Name"));
@@ -43,6 +54,7 @@ public class Scoreboard {
             return obj;
         }
 
+        /** {@return the objective as NBT} */
         public NbtCompound toNbt() {
             NbtCompound compound = new NbtCompound();
             compound.setString("Name", name);
@@ -55,6 +67,9 @@ public class Scoreboard {
         }
     }
 
+    /**
+     * The score of a player in one objective
+     */
     @Getter
     @Setter
     public static class PlayerScore {
@@ -63,6 +78,11 @@ public class Scoreboard {
         private int score;
         private boolean locked;
 
+        /**
+         * Reads a score from NBT
+         * @param compound the score's NBT
+         * @return the score
+         */
         public static PlayerScore fromNbt(NbtCompound compound) {
             PlayerScore ps = new PlayerScore();
             ps.setName(compound.getString("Name"));
@@ -72,6 +92,7 @@ public class Scoreboard {
             return ps;
         }
 
+        /** {@return the score as NBT} */
         public NbtCompound toNbt() {
             NbtCompound compound = new NbtCompound();
             compound.setString("Name", name);
@@ -82,6 +103,11 @@ public class Scoreboard {
         }
     }
 
+    /**
+     * Reads the scoreboard from NBT
+     * @param nbt the content of scoreboard.dat
+     * @return the scoreboard
+     */
     public static Scoreboard fromNbt(NbtCompound nbt) {
         Scoreboard result = new Scoreboard();
         result.dataVersion = nbt.getInt("DataVersion");
@@ -116,6 +142,7 @@ public class Scoreboard {
         return result;
     }
 
+    /** {@return the scoreboard as NBT, like in scoreboard.dat} */
     public NbtCompound toNbt() {
         NbtCompound data = new NbtCompound();
 
@@ -144,26 +171,51 @@ public class Scoreboard {
         return root;
     }
 
+    /**
+     * Shows an objective in a display slot
+     * @param key the display slot
+     * @param value the objective's name
+     */
     public void putDisplaySlot(String key, String value) {
         displaySlots.put(key, value);
     }
 
+    /**
+     * Clears a display slot
+     * @param key the display slot
+     */
     public void removeDisplaySlot(String key) {
         displaySlots.remove(key);
     }
 
+    /**
+     * Adds an objective
+     * @param objective the objective
+     */
     public void addObjective(Objective objective) {
         objectives.add(objective);
     }
 
+    /**
+     * Removes an objective
+     * @param objective the objective
+     */
     public void removeObjective(Objective objective) {
         objectives.remove(objective);
     }
 
+    /**
+     * Adds a player's score
+     * @param playerScore the score
+     */
     public void addPlayerScore(PlayerScore playerScore) {
         playerScores.add(playerScore);
     }
 
+    /**
+     * Removes a player's score
+     * @param playerScore the score
+     */
     public void removePlayerScore(PlayerScore playerScore) {
         playerScores.remove(playerScore);
     }

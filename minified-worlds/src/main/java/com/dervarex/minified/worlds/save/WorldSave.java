@@ -76,6 +76,12 @@ public class WorldSave {
     private final List<NbtFile> nbtFiles = new ArrayList<>();
     private final List<JsonFileState> jsonFiles = new ArrayList<>();
 
+    /**
+     * Reads a world and its .dat files
+     * @param worldDirectory the folder with level.dat in it
+     * @throws InvalidWorldException if the folder isn't a Minecraft world
+     * @throws FailedToLoadWorldException if a file of the world can't be read
+     */
     public WorldSave(Path worldDirectory) {
         this.worldDirectory = worldDirectory;
         Path dataDirectory = worldDirectory.resolve("data").resolve("minecraft");
@@ -171,30 +177,47 @@ public class WorldSave {
         jsonFiles.add(new JsonFileState(file, content, json == null ? null : json.toJson()));
     }
 
+    /** {@return the custom boss events} */
     public Optional<CustomBossEvents> getCustomBossEvents() {
         return Optional.ofNullable(customBossEvents);
     }
+
+    /** {@return the game rules} */
     public Optional<GameRules> getGameRules() {
         return Optional.ofNullable(gameRules);
     }
+
+    /** {@return the random sequences} */
     public Optional<RandomSequences> getRandomSequences() {
         return Optional.ofNullable(randomSequences);
     }
+
+    /** {@return the scoreboard} */
     public Optional<Scoreboard> getScoreboard() {
         return Optional.ofNullable(scoreboard);
     }
+
+    /** {@return the stopwatches} */
     public Optional<StopWatches> getStopWatches() {
         return Optional.ofNullable(stopWatches);
     }
+
+    /** {@return the wandering trader} */
     public Optional<WanderingTrader> getWanderingTrader() {
         return Optional.ofNullable(wanderingTrader);
     }
+
+    /** {@return the weather} */
     public Optional<Weather> getWeather() {
         return Optional.ofNullable(weather);
     }
+
+    /** {@return the world clocks} */
     public Optional<WorldClocks> getWorldClocks() {
         return Optional.ofNullable(worldClocks);
     }
+
+    /** {@return the world gen settings} */
     public Optional<WorldGenSettings> getWorldGenSettings() {
         return Optional.ofNullable(worldGenSettings);
     }
