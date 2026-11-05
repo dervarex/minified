@@ -1,6 +1,6 @@
 # minified-utils: missing docs in the generated docs site
 
-Generated from `./gradlew :docs:docs`: every "No description." and every empty description row on the minified-utils pages, one line per member with what's missing. 406 members in 56 files.
+Generated from `./gradlew :docs:docs`: every "No description." and every empty description row on the minified-utils pages, one line per member with what's missing. 398 members in 55 files.
 
 ## ApiEndpoints
 
@@ -42,27 +42,6 @@ Generated from `./gradlew :docs:docs`: every "No description." and every empty d
   `public static final String NEOFORGE_LEGACY_DIRECTORY_API_URL = "https://maven.neoforged.net/api/maven/details/releases/net/neoforged/forge";`
 - [ ] L50 `PROFILE_ENDPOINT`: no description  
   `public static final String PROFILE_ENDPOINT = "https://sessionserver.mojang.com/session/minecraft/profile/";`
-
-## cli.Parser
-
-`minified-utils/src/main/java/com/dervarex/minified/utils/cli/Parser.java`
-
-- [ ] L21 `Parser.NoArgCommand`: no description  
-  `public interface NoArgCommand`
-- [ ] L26 `Parser.OneArgCommand`: no description  
-  `public interface OneArgCommand<T>`
-- [ ] L27 `execute(Object)`: @param arg  
-  `void execute(T arg);`
-- [ ] L31 `Parser.TwoArgCommand`: no description  
-  `public interface TwoArgCommand<T, U>`
-- [ ] L32 `execute(Object,Object)`: @param arg1, @param arg2  
-  `void execute(T arg1, U arg2);`
-- [ ] L36 `Parser.ThreeArgCommand`: no description  
-  `public interface ThreeArgCommand<T, U, V>`
-- [ ] L37 `execute(Object,Object,Object)`: @param arg1, @param arg2, @param arg3  
-  `void execute(T arg1, U arg2, V arg3);`
-- [ ] L45 `execute(String[])`: @param args  
-  `void execute(String... args);`
 
 ## cli.package-info
 

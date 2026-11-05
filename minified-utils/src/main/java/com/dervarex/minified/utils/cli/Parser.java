@@ -17,23 +17,50 @@ public class Parser {
     private String program = "program";
     private String description = "";
 
+    /**
+     * Callback for an argument without values
+     */
     @FunctionalInterface
     public interface NoArgCommand {
         void execute();
     }
 
+    /**
+     * Callback for an argument with one value
+     */
     @FunctionalInterface
     public interface OneArgCommand<T> {
+        /**
+         * Runs the command
+         * @param arg the value
+         */
         void execute(T arg);
     }
 
+    /**
+     * Callback for an argument with two values
+     */
     @FunctionalInterface
     public interface TwoArgCommand<T, U> {
+        /**
+         * Runs the command
+         * @param arg1 the first value
+         * @param arg2 the second value
+         */
         void execute(T arg1, U arg2);
     }
 
+    /**
+     * Callback for an argument with three values
+     */
     @FunctionalInterface
     public interface ThreeArgCommand<T, U, V> {
+        /**
+         * Runs the command
+         * @param arg1 the first value
+         * @param arg2 the second value
+         * @param arg3 the third value
+         */
         void execute(T arg1, U arg2, V arg3);
     }
 
@@ -42,6 +69,10 @@ public class Parser {
      */
     @FunctionalInterface
     public interface VarArgsCommand {
+        /**
+         * Runs the command
+         * @param args the values
+         */
         void execute(String... args);
     }
 
