@@ -4,11 +4,7 @@ import java.util.*;
 import java.util.function.Consumer;
 
 /**
- * CLI Parsing Utility.
- * Usage:
- * 1. Create an {@link Parser} Object (with or without prefixes as argument)
- * 2. Register your CLI arguments using {@link Parser#register}
- * 3. Give the Parser the String[] args object that you get in your main method
+ * Command line argument parser
  */
 public class Parser {
 
