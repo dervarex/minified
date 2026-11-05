@@ -2,6 +2,7 @@ package com.dervarex.minified.worlds.save.playerdata;
 
 import com.dervarex.minified.utils.json.JsonObject;
 import com.dervarex.minified.utils.json.JsonValue;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -19,6 +20,10 @@ public class Stats {
     private int dataVersion;
     private final Map<String, Map<String, Integer>> categories = new LinkedHashMap<>();
 
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    private JsonObject raw;
+
     /**
      * Reads the statistics from JSON
      * @param json the content of the player's stats file
@@ -26,6 +31,7 @@ public class Stats {
      */
     public static Stats fromJson(JsonObject json) {
         Stats result = new Stats();
+        result.raw = RawJson.copy(json);
 
         if (json.has("DataVersion")) {
             result.dataVersion = json.get("DataVersion").asInt();
@@ -58,8 +64,10 @@ public class Stats {
 
     /** {@return the statistics as JSON, like in the stats file} */
     public JsonObject toJson() {
-        JsonObject root = new JsonObject();
-        JsonObject statsObj = new JsonObject();
+        JsonObject root = RawJson.copyOrNew(raw);
+        JsonValue existing = root.get("stats");
+        JsonObject statsObj = existing != null && existing.isObject() ? existing.asObject() : new JsonObject();
+        RawJson.removeMissingObjects(statsObj, categories.keySet());
 
         for (Map.Entry<String, Map<String, Integer>> categoryEntry : categories.entrySet()) {
             JsonObject categoryObj = new JsonObject();
