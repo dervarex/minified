@@ -94,6 +94,21 @@ class DimensionTest {
     }
 
     @Test
+    void dimensionFromItsFolderReadsFromThatFolder(@TempDir Path worldDir) throws IOException {
+        createRegionFolder(worldDir, "the_nether", "region");
+        new Nether(worldDir.toFile()).saveChunkData(new Chunk(chunkNbt(2, 3)));
+
+        Dimension dimension = new Dimension(worldDir.resolve("dimensions/minecraft/the_nether").toFile());
+        assertNotNull(dimension.readChunk(2, 3));
+        dimension.close();
+    }
+
+    @Test
+    void dimensionFromAnUnknownFolderThrows(@TempDir Path worldDir) {
+        assertThrows(IllegalArgumentException.class, () -> new Dimension(worldDir.toFile()));
+    }
+
+    @Test
     void testGetDimensionTypeFromFolderName() {
         File endFolder = new File("some/path/the_end");
         assertEquals(DimensionType.End, DimensionType.fromFolder(endFolder));

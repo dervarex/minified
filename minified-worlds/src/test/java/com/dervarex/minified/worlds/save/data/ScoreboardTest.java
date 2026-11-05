@@ -70,6 +70,17 @@ class ScoreboardTest {
     }
 
     @Test
+    void readingWithoutDataGivesAnEmptyScoreboard() {
+        NbtCompound nbt = new NbtCompound();
+        nbt.setInt("DataVersion", 4000);
+
+        Scoreboard scoreboard = Scoreboard.fromNbt(nbt);
+
+        assertTrue(scoreboard.getObjectives().isEmpty());
+        assertTrue(scoreboard.getPlayerScores().isEmpty());
+    }
+
+    @Test
     void testAddAndRemoveDisplaySlot() {
         Scoreboard scoreboard = new Scoreboard();
         scoreboard.putDisplaySlot("sidebar", "kills");

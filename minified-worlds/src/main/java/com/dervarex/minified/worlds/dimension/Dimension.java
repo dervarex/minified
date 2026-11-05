@@ -52,11 +52,15 @@ public sealed class Dimension permits Overworld, Nether, End {
     }
     /**
      * Like {@link #Dimension(File, DimensionType)}, but here we're building the {@link DimensionType} Object ourselves using the folders name
-     * @param worldFolder the world's folder
+     * @param dimensionFolder the dimension's folder, like dimensions/minecraft/the_nether
+     * @throws IllegalArgumentException if the folder isn't a vanilla dimension
      */
-    public Dimension(File worldFolder) {
-        this.worldFolder = worldFolder;
-        this.type = DimensionType.fromFolder(worldFolder);
+    public Dimension(File dimensionFolder) {
+        this.type = DimensionType.fromFolder(dimensionFolder);
+        if (type == null) {
+            throw new IllegalArgumentException(dimensionFolder + " isn't a vanilla dimension folder");
+        }
+        this.worldFolder = dimensionFolder.getAbsoluteFile().getParentFile().getParentFile().getParentFile();
     }
 
     private static long regionKey(int regionX, int regionZ) {

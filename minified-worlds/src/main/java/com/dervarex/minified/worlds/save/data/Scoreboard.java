@@ -130,7 +130,7 @@ public class Scoreboard {
         result.raw = nbt.copy();
         result.dataVersion = nbt.getInt("DataVersion");
 
-        NbtCompound data = nbt.getCompound("data");
+        NbtCompound data = nbt.has("data") ? nbt.getCompound("data") : new NbtCompound();
 
         if (data.has("DisplaySlots")) {
             NbtCompound slots = data.getCompound("DisplaySlots");
