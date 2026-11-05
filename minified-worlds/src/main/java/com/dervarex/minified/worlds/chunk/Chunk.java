@@ -15,7 +15,8 @@ import org.apiguardian.api.API;
 
 /**
  * One 16x16 Chunk of a world. Gets and sets blocks across all of its
- * {@link ChunkSection sections} and creates missing sections when a block is set in one
+ * {@link ChunkSection sections} and creates missing sections when a block is set in one <br>
+ * Biomes are on {@link ChunkSection}
  */
 @API(status = API.Status.STABLE)
 public class Chunk {

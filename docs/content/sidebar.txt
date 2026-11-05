@@ -35,8 +35,10 @@ Modules
     Versions -> api/com.dervarex.minified.modrinth.versions/
     Exceptions -> api/com.dervarex.minified.modrinth.exceptions/
   Worlds
-    Introduction -> guides/minified-worlds/introduction
-    Opening a World -> guides/minified-worlds/opening-a-world
-    Dimensions and Chunks -> guides/minified-worlds/dimensions-and-chunks
-    Entities and Points of Interest -> guides/minified-worlds/entities-and-poi
+    Worlds -> api/minified-worlds/
+    Opening a World -> api/com.dervarex.minified.worlds.save/
+    Dimensions -> api/com.dervarex.minified.worlds.dimension/
+    Chunks -> api/com.dervarex.minified.worlds.chunk/
+    Entities -> api/com.dervarex.minified.worlds.entity/
+    Points of Interest -> api/com.dervarex.minified.worlds.poi/
 @api

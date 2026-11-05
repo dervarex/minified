@@ -20,7 +20,8 @@ import org.apiguardian.api.API;
 /**
  * Represents a Base Minecraft World.
  * Extended by {@link Overworld}, {@link Nether} and {@link End}
- * If anyone would need a CustomDimension (modded worlds maybe?), we could do that, but I'm keeping it simple for now
+ * If anyone would need a CustomDimension (modded worlds maybe?), we could do that, but I'm keeping it simple for now <br>
+ * Keeps region files open, {@link #close()} it when you're done
  */
 @API(status = API.Status.STABLE)
 public sealed class Dimension permits Overworld, Nether, End {

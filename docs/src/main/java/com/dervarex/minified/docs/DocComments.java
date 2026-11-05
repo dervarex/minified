@@ -253,6 +253,8 @@ final class DocComments {
         private final String from;
         private final StringBuilder out = new StringBuilder();
         private StringBuilder pre;
+        // from <pre class="...">, java by default
+        private String preLang;
 
         Renderer(Doc doc, String from) {
             this.doc = doc;
@@ -265,7 +267,7 @@ final class DocComments {
 
         String finish() {
             if (pre != null) {
-                out.append(codeBlock(pre.toString()));
+                out.append(codeBlock(pre.toString(), preLang));
             }
             return out.toString().trim();
         }
@@ -290,6 +292,12 @@ final class DocComments {
                 case StartElementTree start -> {
                     if (start.getName().contentEquals("pre")) {
                         pre = new StringBuilder();
+                        preLang = "java";
+                        for (DocTree attribute : start.getAttributes()) {
+                            if (attribute instanceof AttributeTree a && a.getName().contentEquals("class")) {
+                                preLang = Html.unescape(render(doc, a.getValue(), from)).trim();
+                            }
+                        }
                         return;
                     }
                     out.append('<').append(start.getName());
@@ -305,7 +313,7 @@ final class DocComments {
                 }
                 case EndElementTree end -> {
                     if (end.getName().contentEquals("pre") && pre != null) {
-                        out.append(codeBlock(pre.toString()));
+                        out.append(codeBlock(pre.toString(), preLang));
                         pre = null;
                     } else {
                         out.append("</").append(end.getName()).append('>');
@@ -365,8 +373,8 @@ final class DocComments {
         }
     }
 
-    private String codeBlock(String code) {
-        return Layout.codeFrame(Highlighter.highlight(Html.dedent(code), "java"), "java", null);
+    private String codeBlock(String code, String lang) {
+        return Layout.codeFrame(Highlighter.highlight(Html.dedent(code), lang), lang, null);
     }
 
     // ------------------------------------------------------------------ references

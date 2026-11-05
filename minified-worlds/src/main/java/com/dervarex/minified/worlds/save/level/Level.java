@@ -20,29 +20,39 @@ import org.apiguardian.api.API;
 @Getter
 @API(status = API.Status.STABLE)
 public class Level {
+    /** The difficulty, hardcore is hard and {@link hardcore} = true */
     @Nullable
     private Difficulty difficulty;
+    /** If the world is hardcore ({@link difficulty} = hard then) */
     private boolean hardcore;
     private boolean locked;
+    /** The datapacks that are toggled on */
     @Nullable
     private String[] enabledDatapacks;
+    /** The datapacks that are toggled off */
     @Nullable
     private String[] disabledDatapacks;
+    /** The world spawn */
     @Nullable
     private Spawn spawn;
+    /** The version in which world was last played in */
     @Nullable
     private Version version;
     @Nullable
     private String[] enabledFeatures; // only there when experiments are turned on
     @Nullable
     private String[] serverBrands;
+    /** If cheats are on */
     private boolean allowCommands;
     private int dataVersion;
+    /** The default game mode, 0 survival, 1 creative, 2 adventure, 3 spectator */
     private int gameType;
     private byte initialized;
     private long lastPlayed;
+    /** The world's name, like on the Select World screen */
     @Nullable
     private String levelName;
+    /** The world time, in ticks */
     private long time;
     private int nbtVersion;
     private boolean modded;

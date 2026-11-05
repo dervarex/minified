@@ -41,7 +41,8 @@ import org.apiguardian.api.API;
 /**
  * Represents a world.
  * Note: Fields are marked nullable to prevent NullPointerExceptions,
- * although Minecraft usually generates default Nbt Structures when loading a World.
+ * although Minecraft usually generates default Nbt Structures when loading a World. <br>
+ * Chunks, entities and POIs are in {@link com.dervarex.minified.worlds.dimension.Dimension}
  */
 @API(status = API.Status.STABLE)
 public class WorldSave {
@@ -225,7 +226,9 @@ public class WorldSave {
     /**
      * Writes whatever changed since loading (or the last save): level.dat, data/minecraft and the players.
      * level.dat and the player files keep a .dat_old, like Minecraft does. Chunks go through
-     * {@link com.dervarex.minified.worlds.dimension.Dimension#saveChunkData} instead
+     * {@link com.dervarex.minified.worlds.dimension.Dimension#saveChunkData} instead. <br>
+     * Files are written to a temporary file first, then moved over the old one.
+     * Data we don't know about (mod data, a player's ender chest, ...) stays untouched
      * @throws IOException if writing fails, or Minecraft has the world open right now
      */
     public void save() throws IOException {

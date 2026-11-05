@@ -99,6 +99,30 @@ final class ApiPages {
                 List.of(), SECTION, false, null);
     }
 
+    /**
+     * Doc of the package every package of a module is in, like com.dervarex.minified.worlds
+     */
+    private String rootPackageDoc(ModuleDoc module, String from) {
+        String[] common = null;
+        int length = 0;
+        for (PackageDoc pkg : module.packages()) {
+            String[] parts = pkg.name().split("\\.");
+            if (common == null) {
+                common = parts;
+                length = parts.length;
+                continue;
+            }
+            int i = 0;
+            while (i < length && i < parts.length && common[i].equals(parts[i])) i++;
+            length = i;
+        }
+        if (common == null || length == 0) {
+            return "";
+        }
+        var root = site.elements.getPackageElement(String.join(".", java.util.Arrays.copyOf(common, length)));
+        return root == null ? "" : comments.body(comments.find(root), from);
+    }
+
     private String moduleDescription(ModuleDoc module) {
         Path intro = site.config.content().resolve("modules").resolve(module.name() + ".md");
         if (Files.exists(intro)) {
@@ -124,7 +148,8 @@ final class ApiPages {
             b.append(md.html());
             toc.addAll(md.toc());
         } else {
-            b.append("<p>").append(Html.esc(moduleDescription(module))).append("</p>");
+            String rootDoc = rootPackageDoc(module, from);
+            b.append(rootDoc.isEmpty() ? "<p>" + Html.esc(moduleDescription(module)) + "</p>" : rootDoc);
         }
 
         b.append("<h2 id=\"installation\">Installation</h2>");
