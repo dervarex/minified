@@ -32,7 +32,9 @@ public class WanderingTrader {
     public static WanderingTrader fromNbt(NbtCompound nbt) {
         WanderingTrader result = new WanderingTrader();
         result.raw = nbt.copy();
-        result.dataVersion = nbt.getInt("DataVersion");
+        if (nbt.has("DataVersion")) {
+            result.dataVersion = nbt.getInt("DataVersion");
+        }
 
         if (nbt.has("data")) {
             NbtCompound data = nbt.getCompound("data");
@@ -61,7 +63,11 @@ public class WanderingTrader {
             data.remove("spawn_delay");
         }
 
-        root.setInt("DataVersion", dataVersion);
+        if (dataVersion != null) {
+            root.setInt("DataVersion", dataVersion);
+        } else {
+            root.remove("DataVersion");
+        }
         return root;
     }
 }

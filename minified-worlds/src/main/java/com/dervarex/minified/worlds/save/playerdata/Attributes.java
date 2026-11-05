@@ -38,7 +38,9 @@ public class Attributes {
     /** {@return the attributes as NBT} */
     public NbtList toNbtList() {
         NbtList list = new NbtList((byte) 10); // 10 = compound tag id
+        if (attributes == null) return list;
         for (Attribute attribute : attributes) {
+            if (attribute == null) continue;
             NbtCompound entry = attribute.raw != null ? attribute.raw.copy() : new NbtCompound();
             entry.setString("id", attribute.id);
             entry.setDouble("base", attribute.base);

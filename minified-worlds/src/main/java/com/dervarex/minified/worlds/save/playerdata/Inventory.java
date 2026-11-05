@@ -39,7 +39,9 @@ public class Inventory {
     /** {@return the inventory as NBT} */
     public NbtList toNbtList() {
         NbtList list = new NbtList((byte) 10); // 10 = compound tag id
+        if (items == null) return list;
         for (InventoryItem item : items) {
+            if (item == null) continue;
             NbtCompound entry = item.raw != null ? item.raw.copy() : new NbtCompound();
             entry.setString("id", item.id);
             entry.setInt("count", item.count);

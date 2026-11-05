@@ -118,4 +118,54 @@ class RawNbtKeptTest {
         assertFalse(written.has("rain_time"));
         assertTrue(written.has("future_field"));
     }
+
+    @Test
+    void textComponentNamesStay() {
+        NbtCompound text = new NbtCompound();
+        text.setString("text", "Boss");
+        text.setString("color", "red");
+        NbtCompound event = new NbtCompound();
+        event.setCompound("Name", text);
+
+        BossEvent read = BossEvent.fromNbt(event);
+        assertNull(read.getName());
+        assertEquals("red", read.toNbt().getCompound("Name").getString("color"));
+
+        read.setName("Plain");
+        assertEquals("Plain", read.toNbt().getString("Name"));
+    }
+
+    @Test
+    void objectiveWithComponentDisplayNameReads() {
+        NbtCompound objective = new NbtCompound();
+        objective.setString("Name", "kills");
+        objective.setCompound("DisplayName", new NbtCompound());
+        objective.setString("CriteriaName", "dummy");
+
+        Scoreboard.Objective read = Scoreboard.Objective.fromNbt(objective);
+
+        assertNull(read.getDisplayName());
+        assertTrue(read.toNbt().get("DisplayName").orElseThrow() instanceof NbtCompound);
+    }
+
+    @Test
+    void inlineGeneratorSettingsStay() {
+        NbtCompound settings = new NbtCompound();
+        settings.setInt("sea_level", 40);
+        NbtCompound generator = new NbtCompound();
+        generator.setString("type", "minecraft:noise");
+        generator.setCompound("settings", settings);
+
+        WorldGenSettings.Generator read = WorldGenSettings.Generator.fromNbt(generator);
+
+        assertNull(read.getSettings());
+        assertEquals(40, read.toNbt().getCompound("settings").getInt("sea_level"));
+    }
+
+    @Test
+    void noDataVersionWritesNone() {
+        assertFalse(new Weather().toNbt().has("DataVersion"));
+        assertFalse(new WanderingTrader().toNbt().has("DataVersion"));
+        assertNull(Weather.fromNbt(new NbtCompound()).getDataVersion());
+    }
 }

@@ -79,7 +79,7 @@ public class Level {
         if (data.has("difficulty_settings")) {
             NbtCompound difficultySettings = data.getCompound("difficulty_settings");
             if (difficultySettings.has("difficulty")) {
-                level.difficulty = Difficulty.valueOf(difficultySettings.getString("difficulty"));
+                level.difficulty = difficultyOf(difficultySettings.getString("difficulty"));
             }
             level.hardcore = difficultySettings.has("hardcore") && difficultySettings.getBoolean("hardcore");
             level.locked = difficultySettings.has("locked") && difficultySettings.getBoolean("locked");
@@ -163,9 +163,18 @@ public class Level {
         return created;
     }
 
+    // null for stuff that isn't vanilla
+    private static Difficulty difficultyOf(String name) {
+        for (Difficulty difficulty : Difficulty.values()) {
+            if (difficulty.name().equals(name)) return difficulty;
+        }
+        return null;
+    }
+
     private static String[] nbtListToStringArray(NbtCompound compound, String key) {
         if (!compound.has(key)) return null;
         return compound.getList(key).elements().stream()
+                .filter(NbtString.class::isInstance)
                 .map(NbtString.class::cast)
                 .map(NbtString::value)
                 .toArray(String[]::new);

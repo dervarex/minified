@@ -88,8 +88,8 @@ public class Spawn {
         } else {
             nbt.remove("dimension");
         }
-        nbt.setFloat("pitch", pitch);
-        nbt.setFloat("yaw", yaw);
+        if (pitch != 0 || nbt.has("pitch")) nbt.setFloat("pitch", pitch);
+        if (yaw != 0 || nbt.has("yaw")) nbt.setFloat("yaw", yaw);
         if (pos != null) {
             nbt.setIntArray("pos", pos);
         } else {

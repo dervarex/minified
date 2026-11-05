@@ -139,6 +139,7 @@ public class WorldGenSettings {
     public static class Generator {
         @Nullable
         private String type;
+        /** The noise settings id, null if they're written in the file */
         @Nullable
         private String settings;
         @Nullable
@@ -159,9 +160,7 @@ public class WorldGenSettings {
             if (nbt.has("type")) {
                 gen.type = nbt.getString("type");
             }
-            if (nbt.has("settings")) {
-                gen.settings = nbt.getString("settings");
-            }
+            gen.settings = RawNbt.stringOrNull(nbt, "settings");
             if (nbt.has("biome_source")) {
                 gen.biomeSource = BiomeSource.fromNbt(nbt.getCompound("biome_source"));
             }
@@ -176,11 +175,7 @@ public class WorldGenSettings {
             } else {
                 nbt.remove("type");
             }
-            if (settings != null) {
-                nbt.setString("settings", settings);
-            } else {
-                nbt.remove("settings");
-            }
+            RawNbt.setStringOrKeep(nbt, "settings", settings);
             if (biomeSource != null) {
                 nbt.setCompound("biome_source", biomeSource.toNbt());
             } else {

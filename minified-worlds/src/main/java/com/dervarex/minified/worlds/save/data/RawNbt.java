@@ -1,6 +1,7 @@
 package com.dervarex.minified.worlds.save.data;
 
 import com.dervarex.minified.utils.nbt.tag.NbtCompound;
+import com.dervarex.minified.utils.nbt.tag.NbtString;
 import com.dervarex.minified.utils.nbt.tag.NbtTag;
 
 import java.util.Map;
@@ -21,6 +22,18 @@ final class RawNbt {
         NbtCompound created = new NbtCompound();
         parent.setCompound(key, created);
         return created;
+    }
+
+    static String stringOrNull(NbtCompound compound, String key) {
+        return compound.get(key).orElse(null) instanceof NbtString string ? string.value() : null;
+    }
+
+    static void setStringOrKeep(NbtCompound compound, String key, String value) {
+        if (value != null) {
+            compound.setString(key, value);
+        } else if (compound.get(key).orElse(null) instanceof NbtString) {
+            compound.remove(key);
+        }
     }
 
     // removes the entries we model that aren't in keep anymore

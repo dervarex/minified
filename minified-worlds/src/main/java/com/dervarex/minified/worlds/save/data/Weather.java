@@ -38,7 +38,9 @@ public class Weather {
     public static Weather fromNbt(NbtCompound nbt) {
         Weather result = new Weather();
         result.raw = nbt.copy();
-        result.dataVersion = nbt.getInt("DataVersion");
+        if (nbt.has("DataVersion")) {
+            result.dataVersion = nbt.getInt("DataVersion");
+        }
 
         if (nbt.has("data")) {
             NbtCompound data = nbt.getCompound("data");
@@ -91,7 +93,11 @@ public class Weather {
             data.remove("thundering");
         }
 
-        root.setInt("DataVersion", dataVersion);
+        if (dataVersion != null) {
+            root.setInt("DataVersion", dataVersion);
+        } else {
+            root.remove("DataVersion");
+        }
         return root;
     }
 }

@@ -38,6 +38,8 @@ public class Scoreboard {
     @Setter
     public static class Objective {
         private String name;
+        /** The display name, null if it isn't plain text */
+        @Nullable
         private String displayName;
         private String criteriaName;
         @Nullable
@@ -56,7 +58,7 @@ public class Scoreboard {
             Objective obj = new Objective();
             obj.raw = compound.copy();
             obj.setName(compound.getString("Name"));
-            obj.setDisplayName(compound.getString("DisplayName"));
+            obj.setDisplayName(RawNbt.stringOrNull(compound, "DisplayName"));
             obj.setCriteriaName(compound.getString("CriteriaName"));
             if (compound.has("RenderType")) {
                 obj.setRenderType(compound.getString("RenderType"));
@@ -68,7 +70,7 @@ public class Scoreboard {
         public NbtCompound toNbt() {
             NbtCompound compound = RawNbt.copyOrNew(raw);
             compound.setString("Name", name);
-            compound.setString("DisplayName", displayName);
+            RawNbt.setStringOrKeep(compound, "DisplayName", displayName);
             compound.setString("CriteriaName", criteriaName);
             if (renderType != null) {
                 compound.setString("RenderType", renderType);

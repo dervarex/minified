@@ -4,6 +4,7 @@ import com.dervarex.minified.utils.nbt.tag.NbtCompound;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import org.jetbrains.annotations.Nullable;
 import org.apiguardian.api.API;
 
 /**
@@ -13,6 +14,8 @@ import org.apiguardian.api.API;
 @Setter
 @API(status = API.Status.STABLE)
 public class BossEvent {
+    /** the name, null if it isn't plain text */
+    @Nullable
     private String name;
     private boolean visible;
 
@@ -28,9 +31,7 @@ public class BossEvent {
     public static BossEvent fromNbt(NbtCompound nbt) {
         BossEvent event = new BossEvent();
         event.raw = nbt.copy();
-        if (nbt.has("Name")) {
-            event.name = nbt.getString("Name");
-        }
+        event.name = RawNbt.stringOrNull(nbt, "Name");
         if (nbt.has("Visible")) {
             event.visible = nbt.getByte("Visible") != 0;
         }
@@ -40,11 +41,7 @@ public class BossEvent {
     /** {@return the boss bar as NBT} */
     public NbtCompound toNbt() {
         NbtCompound compound = RawNbt.copyOrNew(raw);
-        if (name != null) {
-            compound.setString("Name", name);
-        } else {
-            compound.remove("Name");
-        }
+        RawNbt.setStringOrKeep(compound, "Name", name);
         compound.setByte("Visible", (byte) (visible ? 1 : 0));
         return compound;
     }

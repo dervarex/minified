@@ -76,4 +76,12 @@ class SpawnTest {
         assertEquals(original.getYaw(), parsed.getYaw());
         assertArrayEquals(original.getPos(), parsed.getPos());
     }
+
+    @Test
+    void missingAnglesAreNotAdded() {
+        NbtCompound written = Spawn.fromNbt(new NbtCompound()).toNbt();
+
+        assertFalse(written.has("pitch"));
+        assertFalse(written.has("yaw"));
+    }
 }
