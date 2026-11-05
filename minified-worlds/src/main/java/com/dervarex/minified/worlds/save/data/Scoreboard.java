@@ -3,6 +3,7 @@ package com.dervarex.minified.worlds.save.data;
 import com.dervarex.minified.utils.nbt.tag.NbtCompound;
 import com.dervarex.minified.utils.nbt.tag.NbtList;
 import com.dervarex.minified.utils.nbt.tag.NbtTag;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.Nullable;
@@ -26,6 +27,10 @@ public class Scoreboard {
     private final List<Objective> objectives = new ArrayList<>();
     private final List<PlayerScore> playerScores = new ArrayList<>();
 
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    private NbtCompound raw;
+
     /**
      * A scoreboard objective, made with /scoreboard objectives
      */
@@ -38,6 +43,10 @@ public class Scoreboard {
         @Nullable
         private String renderType;
 
+        @Getter(AccessLevel.NONE)
+        @Setter(AccessLevel.NONE)
+        private NbtCompound raw;
+
         /**
          * Reads an objective from NBT
          * @param compound the objective's NBT
@@ -45,6 +54,7 @@ public class Scoreboard {
          */
         public static Objective fromNbt(NbtCompound compound) {
             Objective obj = new Objective();
+            obj.raw = compound.copy();
             obj.setName(compound.getString("Name"));
             obj.setDisplayName(compound.getString("DisplayName"));
             obj.setCriteriaName(compound.getString("CriteriaName"));
@@ -56,12 +66,14 @@ public class Scoreboard {
 
         /** {@return the objective as NBT} */
         public NbtCompound toNbt() {
-            NbtCompound compound = new NbtCompound();
+            NbtCompound compound = RawNbt.copyOrNew(raw);
             compound.setString("Name", name);
             compound.setString("DisplayName", displayName);
             compound.setString("CriteriaName", criteriaName);
             if (renderType != null) {
                 compound.setString("RenderType", renderType);
+            } else {
+                compound.remove("RenderType");
             }
             return compound;
         }
@@ -78,6 +90,10 @@ public class Scoreboard {
         private int score;
         private boolean locked;
 
+        @Getter(AccessLevel.NONE)
+        @Setter(AccessLevel.NONE)
+        private NbtCompound raw;
+
         /**
          * Reads a score from NBT
          * @param compound the score's NBT
@@ -85,6 +101,7 @@ public class Scoreboard {
          */
         public static PlayerScore fromNbt(NbtCompound compound) {
             PlayerScore ps = new PlayerScore();
+            ps.raw = compound.copy();
             ps.setName(compound.getString("Name"));
             ps.setObjective(compound.getString("Objective"));
             ps.setScore(compound.getInt("Score"));
@@ -94,7 +111,7 @@ public class Scoreboard {
 
         /** {@return the score as NBT} */
         public NbtCompound toNbt() {
-            NbtCompound compound = new NbtCompound();
+            NbtCompound compound = RawNbt.copyOrNew(raw);
             compound.setString("Name", name);
             compound.setString("Objective", objective);
             compound.setInt("Score", score);
@@ -110,6 +127,7 @@ public class Scoreboard {
      */
     public static Scoreboard fromNbt(NbtCompound nbt) {
         Scoreboard result = new Scoreboard();
+        result.raw = nbt.copy();
         result.dataVersion = nbt.getInt("DataVersion");
 
         NbtCompound data = nbt.getCompound("data");
@@ -144,13 +162,14 @@ public class Scoreboard {
 
     /** {@return the scoreboard as NBT, like in scoreboard.dat} */
     public NbtCompound toNbt() {
-        NbtCompound data = new NbtCompound();
+        NbtCompound root = RawNbt.copyOrNew(raw);
+        NbtCompound data = RawNbt.child(root, "data");
 
-        NbtCompound displaySlotsCompound = new NbtCompound();
+        NbtCompound displaySlotsCompound = RawNbt.child(data, "DisplaySlots");
+        RawNbt.removeMissing(displaySlotsCompound, displaySlots.keySet(), tag -> true);
         for (Map.Entry<String, String> entry : displaySlots.entrySet()) {
             displaySlotsCompound.setString(entry.getKey(), entry.getValue());
         }
-        data.setCompound("DisplaySlots", displaySlotsCompound);
 
         NbtList objectivesList = new NbtList((byte) 10);
         for (Objective obj : objectives) {
@@ -164,8 +183,6 @@ public class Scoreboard {
         }
         data.setList("PlayerScores", playerScoresList);
 
-        NbtCompound root = new NbtCompound();
-        root.setCompound("data", data);
         root.setInt("DataVersion", dataVersion);
 
         return root;

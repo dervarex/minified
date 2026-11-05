@@ -1,6 +1,7 @@
 package com.dervarex.minified.worlds.save.data;
 
 import com.dervarex.minified.utils.nbt.tag.*;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -18,6 +19,10 @@ public class WorldClocks {
     private int dataVersion;
     private final Map<String, Long> clocks = new LinkedHashMap<>();
 
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    private NbtCompound raw;
+
     /**
      * Reads the world clocks from NBT
      * @param nbt the content of world_clocks.dat
@@ -25,6 +30,7 @@ public class WorldClocks {
      */
     public static WorldClocks fromNbt(NbtCompound nbt) {
         WorldClocks result = new WorldClocks();
+        result.raw = nbt.copy();
         result.dataVersion = nbt.getInt("DataVersion");
 
         if (nbt.has("data")) {
@@ -42,16 +48,13 @@ public class WorldClocks {
 
     /** {@return the world clocks as NBT, like in world_clocks.dat} */
     public NbtCompound toNbt() {
-        NbtCompound data = new NbtCompound();
+        NbtCompound root = RawNbt.copyOrNew(raw);
+        NbtCompound data = RawNbt.child(root, "data");
+        RawNbt.removeMissing(data, clocks.keySet(), tag -> tag instanceof NbtCompound c && c.has("total_ticks"));
 
         for (Map.Entry<String, Long> entry : clocks.entrySet()) {
-            NbtCompound dimensionCompound = new NbtCompound();
-            dimensionCompound.setLong("total_ticks", entry.getValue());
-            data.setCompound(entry.getKey(), dimensionCompound);
+            RawNbt.child(data, entry.getKey()).setLong("total_ticks", entry.getValue());
         }
-
-        NbtCompound root = new NbtCompound();
-        root.setCompound("data", data);
         root.setInt("DataVersion", dataVersion);
         return root;
     }

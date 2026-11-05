@@ -1,6 +1,7 @@
 package com.dervarex.minified.worlds.save.data;
 
 import com.dervarex.minified.utils.nbt.tag.NbtCompound;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.Nullable;
@@ -19,6 +20,10 @@ public class WanderingTrader {
     @Nullable
     private Integer spawnDelay;
 
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    private NbtCompound raw;
+
     /**
      * Reads the wandering trader data from NBT
      * @param nbt the content of wandering_trader.dat
@@ -26,6 +31,7 @@ public class WanderingTrader {
      */
     public static WanderingTrader fromNbt(NbtCompound nbt) {
         WanderingTrader result = new WanderingTrader();
+        result.raw = nbt.copy();
         result.dataVersion = nbt.getInt("DataVersion");
 
         if (nbt.has("data")) {
@@ -42,16 +48,19 @@ public class WanderingTrader {
 
     /** {@return the wandering trader data as NBT, like in wandering_trader.dat} */
     public NbtCompound toNbt() {
-        NbtCompound data = new NbtCompound();
+        NbtCompound root = RawNbt.copyOrNew(raw);
+        NbtCompound data = RawNbt.child(root, "data");
         if (spawnChance != null) {
             data.setInt("spawn_chance", spawnChance);
+        } else {
+            data.remove("spawn_chance");
         }
         if (spawnDelay != null) {
             data.setInt("spawn_delay", spawnDelay);
+        } else {
+            data.remove("spawn_delay");
         }
 
-        NbtCompound root = new NbtCompound();
-        root.setCompound("data", data);
         root.setInt("DataVersion", dataVersion);
         return root;
     }

@@ -2,6 +2,7 @@ package com.dervarex.minified.worlds.save.data;
 
 import com.dervarex.minified.utils.nbt.tag.NbtCompound;
 import com.dervarex.minified.utils.nbt.tag.NbtTag;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import java.util.LinkedHashMap;
@@ -20,6 +21,10 @@ public class RandomSequences {
     private int salt;
     private final Map<String, long[]> sequences = new LinkedHashMap<>();
 
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    private NbtCompound raw;
+
     /**
      * Reads the random sequences from NBT
      * @param nbt the content of random_sequences.dat
@@ -27,6 +32,7 @@ public class RandomSequences {
      */
     public static RandomSequences fromNbt(NbtCompound nbt) {
         RandomSequences result = new RandomSequences();
+        result.raw = nbt.copy();
         result.dataVersion = nbt.getInt("DataVersion");
         if (nbt.has("data")) {
             NbtCompound data = nbt.getCompound("data");
@@ -45,17 +51,14 @@ public class RandomSequences {
 
     /** {@return the random sequences as NBT, like in random_sequences.dat} */
     public NbtCompound toNbt() {
-        NbtCompound sequencesCompound = new NbtCompound();
-        for (Map.Entry<String, long[]> entry : sequences.entrySet()) {
-            NbtCompound sequenceCompound = new NbtCompound();
-            sequenceCompound.setLongArray("source", entry.getValue());
-            sequencesCompound.setCompound(entry.getKey(), sequenceCompound);
-        }
-        NbtCompound data = new NbtCompound();
+        NbtCompound root = RawNbt.copyOrNew(raw);
+        NbtCompound data = RawNbt.child(root, "data");
         data.setInt("salt", salt);
-        data.setCompound("sequences", sequencesCompound);
-        NbtCompound root = new NbtCompound();
-        root.setCompound("data", data);
+        NbtCompound sequencesCompound = RawNbt.child(data, "sequences");
+        RawNbt.removeMissing(sequencesCompound, sequences.keySet(), tag -> tag instanceof NbtCompound);
+        for (Map.Entry<String, long[]> entry : sequences.entrySet()) {
+            RawNbt.child(sequencesCompound, entry.getKey()).setLongArray("source", entry.getValue());
+        }
         root.setInt("DataVersion", dataVersion);
         return root;
     }
