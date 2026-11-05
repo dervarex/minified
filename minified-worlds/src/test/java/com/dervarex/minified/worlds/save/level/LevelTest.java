@@ -183,4 +183,20 @@ class LevelTest {
         assertFalse(data.has("singleplayer_uuid"));
         assertFalse(data.has("ServerBrands"));
     }
+
+    @Test
+    void unknownDifficultyIsNullAndKept() {
+        NbtCompound difficulty = new NbtCompound();
+        difficulty.setString("difficulty", "some_mod:nightmare");
+        NbtCompound data = new NbtCompound();
+        data.setCompound("difficulty_settings", difficulty);
+        NbtCompound root = new NbtCompound();
+        root.setCompound("Data", data);
+
+        Level level = Level.fromNbt(root);
+
+        assertNull(level.getDifficulty());
+        assertEquals("some_mod:nightmare", level.toNbt().getCompound("Data")
+                .getCompound("difficulty_settings").getString("difficulty"));
+    }
 }

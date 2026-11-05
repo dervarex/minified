@@ -6,6 +6,9 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apiguardian.api.API;
 
+/**
+ * What a player is allowed to do, like flying or building
+ */
 @Getter
 @Setter
 @API(status = API.Status.STABLE)
@@ -22,6 +25,11 @@ public class Abilities {
     @Setter(AccessLevel.NONE)
     private NbtCompound raw;
 
+    /**
+     * Reads the abilities from NBT
+     * @param nbt the player's abilities compound
+     * @return the abilities
+     */
     public static Abilities fromNbt(NbtCompound nbt) {
         Abilities abilities = new Abilities();
         abilities.raw = nbt.copy();
@@ -49,6 +57,7 @@ public class Abilities {
         return abilities;
     }
 
+    /** {@return the abilities as NBT} */
     public NbtCompound toNbt() {
         NbtCompound nbt = raw != null ? raw.copy() : new NbtCompound();
         nbt.setFloat("walkSpeed", walkSpeed);

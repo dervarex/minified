@@ -8,6 +8,9 @@ import lombok.Setter;
 import org.jetbrains.annotations.Nullable;
 import org.apiguardian.api.API;
 
+/**
+ * The Minecraft version the world was last played in
+ */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -24,6 +27,11 @@ public class Version {
     @Setter(AccessLevel.NONE)
     private NbtCompound raw;
 
+    /**
+     * Reads the version from NBT
+     * @param versionNbt the Version compound of level.dat
+     * @return the version
+     */
     public static Version fromNbt(NbtCompound versionNbt) {
         Version version = new Version();
         version.raw = versionNbt.copy();
@@ -42,6 +50,7 @@ public class Version {
         return version;
     }
 
+    /** {@return the version as NBT, like in level.dat} */
     public NbtCompound toNbt() {
         NbtCompound nbt = raw != null ? raw.copy() : new NbtCompound();
         nbt.setInt("Id", id);

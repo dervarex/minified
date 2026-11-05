@@ -12,12 +12,20 @@ import com.dervarex.minified.worlds.exceptions.FailedToLoadWorldException;
 import org.jetbrains.annotations.Nullable;
 import org.apiguardian.api.API;
 
+/**
+ * The End dimension with its ender dragon fight
+ */
 @API(status = API.Status.STABLE)
 public final class End extends Dimension {
 
     @Nullable
     private final EnderDragonFight enderDragonFight;
 
+    /**
+     * Opens the End and reads its ender dragon fight
+     * @param worldFolder the world's folder
+     * @throws FailedToLoadWorldException if the ender dragon fight can't be read
+     */
     public End(File worldFolder) {
         super(worldFolder, DimensionType.End);
 
@@ -35,6 +43,7 @@ public final class End extends Dimension {
         }
     }
 
+    /** {@return the ender dragon fight} */
     public Optional<EnderDragonFight> getEnderDragonFight() {
         return Optional.ofNullable(enderDragonFight);
     }

@@ -20,29 +20,39 @@ import org.apiguardian.api.API;
 @Getter
 @API(status = API.Status.STABLE)
 public class Level {
+    /** The difficulty, hardcore is hard and {@link hardcore} = true */
     @Nullable
     private Difficulty difficulty;
+    /** If the world is hardcore ({@link difficulty} = hard then) */
     private boolean hardcore;
     private boolean locked;
+    /** The datapacks that are toggled on */
     @Nullable
     private String[] enabledDatapacks;
+    /** The datapacks that are toggled off */
     @Nullable
     private String[] disabledDatapacks;
+    /** The world spawn */
     @Nullable
     private Spawn spawn;
+    /** The version in which world was last played in */
     @Nullable
     private Version version;
     @Nullable
     private String[] enabledFeatures; // only there when experiments are turned on
     @Nullable
     private String[] serverBrands;
+    /** If cheats are on */
     private boolean allowCommands;
     private int dataVersion;
+    /** The default game mode, 0 survival, 1 creative, 2 adventure, 3 spectator */
     private int gameType;
     private byte initialized;
     private long lastPlayed;
+    /** The world's name, like on the Select World screen */
     @Nullable
     private String levelName;
+    /** The world time, in ticks */
     private long time;
     private int nbtVersion;
     private boolean modded;
@@ -56,6 +66,11 @@ public class Level {
 
     public Level() {}
 
+    /**
+     * Reads level.dat
+     * @param nbt the content of level.dat
+     * @return the level
+     */
     public static Level fromNbt(NbtCompound nbt) {
         NbtCompound data = nbt.getCompound("Data");
         Level level = new Level();
@@ -64,7 +79,7 @@ public class Level {
         if (data.has("difficulty_settings")) {
             NbtCompound difficultySettings = data.getCompound("difficulty_settings");
             if (difficultySettings.has("difficulty")) {
-                level.difficulty = Difficulty.valueOf(difficultySettings.getString("difficulty"));
+                level.difficulty = difficultyOf(difficultySettings.getString("difficulty"));
             }
             level.hardcore = difficultySettings.has("hardcore") && difficultySettings.getBoolean("hardcore");
             level.locked = difficultySettings.has("locked") && difficultySettings.getBoolean("locked");
@@ -97,9 +112,7 @@ public class Level {
         return level;
     }
 
-    /**
-     * Everything {@link #fromNbt} read, with your changes on top
-     */
+    /** {@return everything {@link #fromNbt} read, with your changes on top} */
     public NbtCompound toNbt() {
         NbtCompound root = raw != null ? raw.copy() : new NbtCompound();
         NbtCompound data = child(root, "Data");
@@ -150,9 +163,18 @@ public class Level {
         return created;
     }
 
+    // null for stuff that isn't vanilla
+    private static Difficulty difficultyOf(String name) {
+        for (Difficulty difficulty : Difficulty.values()) {
+            if (difficulty.name().equals(name)) return difficulty;
+        }
+        return null;
+    }
+
     private static String[] nbtListToStringArray(NbtCompound compound, String key) {
         if (!compound.has(key)) return null;
         return compound.getList(key).elements().stream()
+                .filter(NbtString.class::isInstance)
                 .map(NbtString.class::cast)
                 .map(NbtString::value)
                 .toArray(String[]::new);

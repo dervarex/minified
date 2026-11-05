@@ -33,6 +33,8 @@ public class ChunkSection {
 
     /**
      * Parses an existing section (read from a chunk's sections list)
+     *
+     * @param sectionTag the section's NBT
      * @throws IllegalArgumentException if a palette and its data don't add up
      */
     public ChunkSection(NbtCompound sectionTag) {
@@ -41,6 +43,8 @@ public class ChunkSection {
 
     /**
      * Like {@link #ChunkSection(NbtCompound)}
+     *
+     * @param sectionTag the section's NBT
      * @param format how new blocks get written, null to just copy whatever the palette does
      */
     public ChunkSection(NbtCompound sectionTag, BlockStateFormat format) {
@@ -63,12 +67,13 @@ public class ChunkSection {
         }
     }
 
+    /** {@return the Y of the section, so the block y divided by 16} */
     public byte sectionY() { return sectionY; }
+
+    /** {@return the section's NBT with every change made so far} */
     public NbtCompound raw() { return raw; }
 
-    /**
-     * @return how new blocks get written into the palette
-     */
+    /** {@return how new blocks get written into the palette} */
     public BlockStateFormat blockStateFormat() { return format; }
 
     private static int localBlockIndex(int x, int y, int z) {
@@ -82,13 +87,28 @@ public class ChunkSection {
         return by * 16 + bz * 4 + bx;
     }
 
+    /**
+     * Gets a block.
+     * Since only the lowest 4 bits count, the world coordinates should work too
+     *
+     * @param x the x inside the section
+     * @param y the y inside the section
+     * @param z the z inside the section
+     * @return the block
+     */
     public BlockState getBlock(int x, int y, int z) {
         if (data == null) return palette.get(0);
         return palette.get(readPacked(data, bitsPerBlock, localBlockIndex(x, y, z)));
     }
 
     /**
-     * Sets a block in this section and nothing else, {@link Chunk#setBlock} also cleans up after itself
+     * Sets a block in this section and nothing else, {@link Chunk#setBlock} also cleans up after itself.
+     * Since only the lowest 4 bits count, the world coordinates should work too.
+     *
+     * @param x the x inside the section
+     * @param y the y inside the section
+     * @param z the z inside the section
+     * @param state the block to place
      */
     public void setBlock(int x, int y, int z, BlockState state) {
         int paletteIndex = palette.indexOf(state);
@@ -99,12 +119,30 @@ public class ChunkSection {
         writePacked(data, bitsPerBlock, localBlockIndex(x, y, z), paletteIndex);
     }
 
+    /**
+     * Gets the biome at a position. Biomes are stored per 4x4x4 cell, so all blocks in one cell share it.
+     * Since only the lowest 4 bits count, the world coordinates should work too.
+     *
+     * @param x the x inside the section
+     * @param y the y inside the section
+     * @param z the z inside the section
+     * @return the biome, like {@code minecraft:plains}, null if the section has no biomes
+     */
     public String getBiome(int x, int y, int z) {
         if (biomePalette.isEmpty()) return null;
         if (biomeData == null) return biomePalette.get(0);
         return biomePalette.get(readPacked(biomeData, bitsPerBiome, localBiomeIndex(x, y, z)));
     }
 
+    /**
+     * Sets the biome of the 4x4x4 cell a position is in.
+     * Since only the lowest 4 bits count, the world coordinates should work too
+     *
+     * @param x the x inside the section
+     * @param y the y inside the section
+     * @param z the z inside the section
+     * @param biome the biome, like {@code minecraft:plains}
+     */
     public void setBiome(int x, int y, int z, String biome) {
         int index = biomePalette.indexOf(biome);
         if (index == -1) {
@@ -115,7 +153,7 @@ public class ChunkSection {
     }
 
     /**
-     * Adds a state to the palette, repacks the data if it needs more bits now
+     * Adds a state to the palette
      */
     private int addBlock(BlockState state) {
         palette.add(state);
@@ -132,7 +170,7 @@ public class ChunkSection {
     }
 
     /**
-     * {@link #addBlock}, but for biomes
+     * like {@link #addBlock}, but for biomes
      */
     private int addBiome(String biome) {
         biomePalette.add(biome);
@@ -150,9 +188,9 @@ public class ChunkSection {
     }
 
     /**
-     * @return the most common biome across this section's 4x4x4 biome grid.
-     * Returns null if this section has no biome data (should never happen for
-     * sections created via {@link #createEmpty}, since those always get a biome).
+     * Finds the most common biome across this section's 4x4x4 biome grid.
+     *
+     * @return the biome, null if this section has no biome data (never the case for sections made with {@link #createEmpty})
      */
     public String predominantBiome() {
         if (biomePalette.isEmpty()) return null;
@@ -256,6 +294,10 @@ public class ChunkSection {
     /**
      * Builds a new, empty section at the given Y, with a single-block palette (air)
      *  and a single-entry biome palette (given biome), in the current block state format
+     *
+     * @param sectionY the Y of the section, so the block y divided by 16
+     * @param biome    the biome of the whole section, like {@code minecraft:plains}
+     * @return the new section
      */
     public static ChunkSection createEmpty(byte sectionY, String biome) {
         return createEmpty(sectionY, biome, BlockStateFormat.ID_PROPERTIES);
@@ -263,7 +305,11 @@ public class ChunkSection {
 
     /**
      * Like {@link #createEmpty(byte, String)}
+     *
+     * @param sectionY the Y of the section, so the block y divided by 16
+     * @param biome    the biome of the whole section, like {@code minecraft:plains}
      * @param format should match the chunk's DataVersion, see {@link BlockStateFormat#forDataVersion}
+     * @return the new section
      */
     public static ChunkSection createEmpty(byte sectionY, String biome, BlockStateFormat format) {
         NbtCompound raw = new NbtCompound();

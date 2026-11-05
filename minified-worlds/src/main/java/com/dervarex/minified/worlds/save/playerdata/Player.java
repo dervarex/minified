@@ -13,6 +13,9 @@ import org.apiguardian.api.API;
 
 // a31ccf30-00e4-4928-a590-e366c90af710.dat (<player-uuid>.dat)
 
+/**
+ * A player of a world, from players/data/&lt;uuid&gt;.dat
+ */
 @Getter
 @Setter
 @API(status = API.Status.STABLE)
@@ -113,6 +116,13 @@ public class Player {
     @Setter(AccessLevel.NONE)
     NbtCompound raw; // EnderItems and everything else we don't model live in here, nobody wants to lose their ender chest
 
+    /**
+     * Reads a player from their files
+     * @param nbt the content of the player's .dat file
+     * @param advancements the content of the player's advancements file
+     * @param statistics the content of the player's stats file
+     * @return the player
+     */
     public static Player fromNbt(@NotNull NbtCompound nbt, @Nullable JsonObject advancements, @Nullable JsonObject statistics) {
         Player player = new Player();
         player.raw = nbt.copy();
@@ -249,6 +259,7 @@ public class Player {
         return player;
     }
 
+    /** {@return the player as NBT, like in the player's .dat file} */
     public NbtCompound toNbt() {
         NbtCompound nbt = raw != null ? raw.copy() : new NbtCompound();
 

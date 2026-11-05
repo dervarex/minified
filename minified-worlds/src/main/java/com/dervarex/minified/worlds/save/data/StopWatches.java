@@ -1,6 +1,7 @@
 package com.dervarex.minified.worlds.save.data;
 
 import com.dervarex.minified.utils.nbt.tag.*;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -8,6 +9,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import org.apiguardian.api.API;
 
+/**
+ * The stopwatches of a world, from stopwatches.dat
+ */
 @Getter
 @API(status = API.Status.STABLE)
 public class StopWatches {
@@ -15,8 +19,18 @@ public class StopWatches {
     private int dataVersion;
     private final Map<String, Long> stopwatches = new LinkedHashMap<>();
 
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    private NbtCompound raw;
+
+    /**
+     * Reads the stopwatches from NBT
+     * @param nbt the content of stopwatches.dat
+     * @return the stopwatches
+     */
     public static StopWatches fromNbt(NbtCompound nbt) {
         StopWatches result = new StopWatches();
+        result.raw = nbt.copy();
         result.dataVersion = nbt.getInt("DataVersion");
 
         if (nbt.has("data")) {
@@ -41,16 +55,14 @@ public class StopWatches {
      * @return the created NbtCompound
      */
     public NbtCompound toNbt() {
-        NbtCompound data = new NbtCompound();
-        NbtCompound stopwatchesCompound = new NbtCompound();
+        NbtCompound root = RawNbt.copyOrNew(raw);
+        NbtCompound data = RawNbt.child(root, "data");
+        NbtCompound stopwatchesCompound = RawNbt.child(data, "stopwatches");
+        RawNbt.removeMissing(stopwatchesCompound, stopwatches.keySet(), tag -> tag instanceof NbtLong);
 
         for (Map.Entry<String, Long> entry : stopwatches.entrySet()) {
             stopwatchesCompound.setLong(entry.getKey(), entry.getValue());
         }
-        data.setCompound("stopwatches", stopwatchesCompound);
-
-        NbtCompound root = new NbtCompound();
-        root.setCompound("data", data);
         root.setInt("DataVersion", dataVersion);
         return root;
     }

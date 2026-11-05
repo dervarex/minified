@@ -14,14 +14,23 @@ import java.util.HashMap;
 import java.util.Map;
 import org.apiguardian.api.API;
 
+/**
+ * A world's session.lock, the file Minecraft locks while the world is open <br>
+ * {@code isLocked()} is only a snapshot, use {@link #acquire(Path)} to acquire the lock (so mc doesn't mess with our stuff)
+ */
 @Getter
 @API(status = API.Status.STABLE)
 public class SessionLock {
     // java only lets a JVM lock a file once, so all handles for a world share one
     private static final Map<Path, Held> HELD = new HashMap<>();
 
+    /** Whether the world was open when this was made */
     private final boolean locked;
 
+    /**
+     * Checks if the session.lock is taken right now
+     * @param path the session.lock file
+     */
     public SessionLock(Path path) {
         boolean isLocked;
         try (FileChannel channel = FileChannel.open(path, StandardOpenOption.WRITE)) {
@@ -45,6 +54,7 @@ public class SessionLock {
      * Every write in minified-worlds takes it anyway, take it yourself if you keep a world open for longer (an editor, say).
      * Taking it twice is fine. Disk I/O, creates session.lock if it's missing
      * @param worldDirectory the folder with level.dat in it
+     * @return the handle, close it to give the lock back
      * @throws WorldLockedException if Minecraft (or something else) has the world open
      * @throws IOException if the lock file can't be opened
      */

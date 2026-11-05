@@ -11,15 +11,23 @@ import org.apiguardian.api.API;
 /**
  * A block with its properties, e.g. minecraft:oak_log with axis=x.
  * No properties means the block's default state, since 5006 Minecraft doesn't even store them for that one
+ * @param name name of the minecraft block, e.g. "minecraft:diamond_block"
+ * @param properties properties of the block
  */
 @API(status = API.Status.STABLE)
 public record BlockState(String name, Map<String, String> properties) {
+    /**
+     * {@return BlockState with the given name and an empty list of properties}
+     * @param name the name of the minecraft block, e.g. "minecraft:diamond_block"
+     */
     public static BlockState of(String name) {
         return new BlockState(name, Map.of());
     }
 
     /**
      * Reads a palette entry
+     * @param tag nbt tag to parse the BlockState from
+     * @return BlockState parsed from the given {@link NbtTag} {@code nbt}
      * @throws IllegalArgumentException if it's no block state at all
      */
     public static BlockState fromNbt(NbtTag tag) {

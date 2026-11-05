@@ -2,6 +2,7 @@ package com.dervarex.minified.worlds.save.playerdata;
 
 import com.dervarex.minified.utils.json.JsonObject;
 import com.dervarex.minified.utils.json.JsonValue;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.Nullable;
@@ -10,6 +11,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import org.apiguardian.api.API;
 
+/**
+ * The advancements of a player, from advancements/&lt;uuid&gt;.json
+ */
 @Getter
 @API(status = API.Status.STABLE)
 public class Advancements {
@@ -17,8 +21,18 @@ public class Advancements {
     private int dataVersion;
     private final Map<String, Advancement> advancements = new LinkedHashMap<>();
 
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    private JsonObject raw;
+
+    /**
+     * Reads the advancements from JSON
+     * @param json the content of the player's advancements file
+     * @return the advancements
+     */
     public static Advancements fromJson(JsonObject json) {
         Advancements result = new Advancements();
+        result.raw = RawJson.copy(json);
 
         if (json.has("DataVersion")) {
             result.dataVersion = json.get("DataVersion").asInt();
@@ -37,8 +51,10 @@ public class Advancements {
         return result;
     }
 
+    /** {@return the advancements as JSON, like in the advancements file} */
     public JsonObject toJson() {
-        JsonObject root = new JsonObject();
+        JsonObject root = RawJson.copyOrNew(raw);
+        RawJson.removeMissingObjects(root, advancements.keySet());
 
         for (Map.Entry<String, Advancement> entry : advancements.entrySet()) {
             root.put(entry.getKey(), entry.getValue().toJson());
@@ -48,14 +64,27 @@ public class Advancements {
         return root;
     }
 
+    /**
+     * One advancement and when each of its criteria was done
+     */
     @Getter
     @Setter
     public static class Advancement {
         private boolean done;
         private final Map<String, String> criteria = new LinkedHashMap<>();
 
+        @Getter(AccessLevel.NONE)
+        @Setter(AccessLevel.NONE)
+        private JsonObject raw;
+
+        /**
+         * Reads an advancement from JSON
+         * @param json the advancement's JSON
+         * @return the advancement
+         */
         public static Advancement fromJson(JsonObject json) {
             Advancement adv = new Advancement();
+            adv.raw = RawJson.copy(json);
 
             if (json.has("done")) {
                 adv.done = json.get("done").asBoolean();
@@ -73,8 +102,9 @@ public class Advancements {
             return adv;
         }
 
+        /** {@return the advancement as JSON} */
         public JsonObject toJson() {
-            JsonObject json = new JsonObject();
+            JsonObject json = RawJson.copyOrNew(raw);
             json.put("done", done);
 
             JsonObject criteriaObj = new JsonObject();
@@ -86,6 +116,10 @@ public class Advancements {
             return json;
         }
 
+        /**
+         * {@return when a criterion was done, or null if it wasn't}
+         * @param criterionKey the criterion
+         */
         @Nullable
         public String getCriterionDate(String criterionKey) {
             return criteria.get(criterionKey);

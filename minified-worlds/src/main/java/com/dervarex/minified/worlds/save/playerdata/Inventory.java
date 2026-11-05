@@ -7,12 +7,20 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apiguardian.api.API;
 
+/**
+ * The inventory of a player
+ */
 @Getter
 @Setter
 @API(status = API.Status.STABLE)
 public class Inventory {
     InventoryItem[] items;
 
+    /**
+     * Reads the inventory from NBT
+     * @param nbt the player's Inventory list
+     * @return the inventory
+     */
     public static Inventory fromNbtList(NbtList nbt) {
         Inventory inventory = new Inventory();
         inventory.items = new InventoryItem[nbt.size()];
@@ -28,9 +36,12 @@ public class Inventory {
         return inventory;
     }
 
+    /** {@return the inventory as NBT} */
     public NbtList toNbtList() {
         NbtList list = new NbtList((byte) 10); // 10 = compound tag id
+        if (items == null) return list;
         for (InventoryItem item : items) {
+            if (item == null) continue;
             NbtCompound entry = item.raw != null ? item.raw.copy() : new NbtCompound();
             entry.setString("id", item.id);
             entry.setInt("count", item.count);

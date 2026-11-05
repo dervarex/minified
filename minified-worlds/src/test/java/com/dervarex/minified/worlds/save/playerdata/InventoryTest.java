@@ -41,4 +41,10 @@ class InventoryTest {
         assertEquals(64, parsed.getItems()[0].count);
         assertEquals((byte) 9, parsed.getItems()[0].slot);
     }
+
+    @Test
+    void emptyInventoryAndAttributesWrite() {
+        assertEquals(0, new Inventory().toNbtList().size());
+        assertEquals(0, new Attributes().toNbtList().size());
+    }
 }

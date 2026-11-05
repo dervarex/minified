@@ -8,6 +8,9 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apiguardian.api.API;
 
+/**
+ * The recipes a player has unlocked
+ */
 @Getter
 @Setter
 @API(status = API.Status.STABLE)
@@ -20,6 +23,11 @@ public class RecipeBook {
     @Setter(AccessLevel.NONE)
     private NbtCompound raw;
 
+    /**
+     * Reads the recipe book from NBT
+     * @param nbt the player's recipeBook compound
+     * @return the recipe book
+     */
     public static RecipeBook fromNbt(NbtCompound nbt) {
         RecipeBook recipeBook = new RecipeBook();
         recipeBook.raw = nbt.copy();
@@ -45,6 +53,7 @@ public class RecipeBook {
         return recipeBook;
     }
 
+    /** {@return the recipe book as NBT} */
     public NbtCompound toNbt() {
         NbtCompound nbt = raw != null ? raw.copy() : new NbtCompound();
 

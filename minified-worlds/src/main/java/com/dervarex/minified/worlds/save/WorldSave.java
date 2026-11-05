@@ -41,7 +41,8 @@ import org.apiguardian.api.API;
 /**
  * Represents a world.
  * Note: Fields are marked nullable to prevent NullPointerExceptions,
- * although Minecraft usually generates default Nbt Structures when loading a World.
+ * although Minecraft usually generates default Nbt Structures when loading a World. <br>
+ * Chunks, entities and POIs are in {@link com.dervarex.minified.worlds.dimension.Dimension}
  */
 @API(status = API.Status.STABLE)
 public class WorldSave {
@@ -76,6 +77,12 @@ public class WorldSave {
     private final List<NbtFile> nbtFiles = new ArrayList<>();
     private final List<JsonFileState> jsonFiles = new ArrayList<>();
 
+    /**
+     * Reads a world and its .dat files
+     * @param worldDirectory the folder with level.dat in it
+     * @throws InvalidWorldException if the folder isn't a Minecraft world
+     * @throws FailedToLoadWorldException if a file of the world can't be read
+     */
     public WorldSave(Path worldDirectory) {
         this.worldDirectory = worldDirectory;
         Path dataDirectory = worldDirectory.resolve("data").resolve("minecraft");
@@ -171,30 +178,47 @@ public class WorldSave {
         jsonFiles.add(new JsonFileState(file, content, json == null ? null : json.toJson()));
     }
 
+    /** {@return the custom boss events} */
     public Optional<CustomBossEvents> getCustomBossEvents() {
         return Optional.ofNullable(customBossEvents);
     }
+
+    /** {@return the game rules} */
     public Optional<GameRules> getGameRules() {
         return Optional.ofNullable(gameRules);
     }
+
+    /** {@return the random sequences} */
     public Optional<RandomSequences> getRandomSequences() {
         return Optional.ofNullable(randomSequences);
     }
+
+    /** {@return the scoreboard} */
     public Optional<Scoreboard> getScoreboard() {
         return Optional.ofNullable(scoreboard);
     }
+
+    /** {@return the stopwatches} */
     public Optional<StopWatches> getStopWatches() {
         return Optional.ofNullable(stopWatches);
     }
+
+    /** {@return the wandering trader} */
     public Optional<WanderingTrader> getWanderingTrader() {
         return Optional.ofNullable(wanderingTrader);
     }
+
+    /** {@return the weather} */
     public Optional<Weather> getWeather() {
         return Optional.ofNullable(weather);
     }
+
+    /** {@return the world clocks} */
     public Optional<WorldClocks> getWorldClocks() {
         return Optional.ofNullable(worldClocks);
     }
+
+    /** {@return the world gen settings} */
     public Optional<WorldGenSettings> getWorldGenSettings() {
         return Optional.ofNullable(worldGenSettings);
     }
@@ -202,7 +226,9 @@ public class WorldSave {
     /**
      * Writes whatever changed since loading (or the last save): level.dat, data/minecraft and the players.
      * level.dat and the player files keep a .dat_old, like Minecraft does. Chunks go through
-     * {@link com.dervarex.minified.worlds.dimension.Dimension#saveChunkData} instead
+     * {@link com.dervarex.minified.worlds.dimension.Dimension#saveChunkData} instead. <br>
+     * Files are written to a temporary file first, then moved over the old one.
+     * Data we don't know about (mod data, a player's ender chest, ...) stays untouched
      * @throws IOException if writing fails, or Minecraft has the world open right now
      */
     public void save() throws IOException {

@@ -20,7 +20,8 @@ import org.apiguardian.api.API;
 /**
  * Represents a Base Minecraft World.
  * Extended by {@link Overworld}, {@link Nether} and {@link End}
- * If anyone would need a CustomDimension (modded worlds maybe?), we could do that, but I'm keeping it simple for now
+ * If anyone would need a CustomDimension (modded worlds maybe?), we could do that, but I'm keeping it simple for now <br>
+ * Keeps region files open, {@link #close()} it when you're done
  */
 @API(status = API.Status.STABLE)
 public sealed class Dimension permits Overworld, Nether, End {
@@ -32,25 +33,45 @@ public sealed class Dimension permits Overworld, Nether, End {
     private final Map<Long, RegionFile> regionFiles = new HashMap<>();
     private final Map<Long, RegionFile> poiFiles = new HashMap<>();
     private final Map<Long, RegionFile> entityFiles = new HashMap<>();
+    /**
+     * A value together with the DataVersion of the file it was read from
+     * @param dataVersion the DataVersion of the file
+     * @param data the value
+     * @param <T> the type of the value
+     */
     public record Versioned<T>(int dataVersion, T data) {}
 
-
+    /**
+     * Opens a dimension of a world.
+     * @param worldFolder the world's folder, the one with the level.dat in it
+     * @param type which dimension this is
+     */
     public Dimension(File worldFolder, DimensionType type) {
         this.worldFolder = worldFolder;
         this.type = type;
     }
     /**
-     * Like above, but here we're building the {@link DimensionType} Object ourselves, using the folder name
+     * Like {@link #Dimension(File, DimensionType)}, but here we're building the {@link DimensionType} Object ourselves using the folders name
+     * @param dimensionFolder the dimension's folder, like dimensions/minecraft/the_nether
+     * @throws IllegalArgumentException if the folder isn't a vanilla dimension
      */
-    public Dimension(File worldFolder) {
-        this.worldFolder = worldFolder;
-        this.type = DimensionType.fromFolder(worldFolder);
+    public Dimension(File dimensionFolder) {
+        this.type = DimensionType.fromFolder(dimensionFolder);
+        if (type == null) {
+            throw new IllegalArgumentException(dimensionFolder + " isn't a vanilla dimension folder");
+        }
+        this.worldFolder = dimensionFolder.getAbsoluteFile().getParentFile().getParentFile().getParentFile();
     }
 
     private static long regionKey(int regionX, int regionZ) {
         return ((long) regionX << 32) | (regionZ & 0xFFFFFFFFL);
     }
 
+    /**
+     * Finds the folder of one kind of region file, like {@code dimensions/minecraft/overworld/region}
+     * @param category which kind of region files
+     * @return the folder, it may not exist yet
+     */
     protected File dimensionFolder(RegionCategory category) {
         return new File(
                 new File(new File(new File(worldFolder, "dimensions"), "minecraft"), type.dimensionName),
@@ -92,14 +113,37 @@ public sealed class Dimension permits Overworld, Nether, End {
         return opened;
     }
 
+    /**
+     * Reads a chunk's raw NBT from its region file
+     * @param chunkX the chunk's x, in chunks, so the block x divided by 16
+     * @param chunkZ the chunk's z, in chunks, so the block z divided by 16
+     * @return the chunk's NBT, null if the chunk hasn't been generated yet
+     * @throws IOException if the region file can't be read
+     */
     public NbtCompound readChunkData(int chunkX, int chunkZ) throws IOException {
         RegionFile region = getRegionFile(regionFiles, RegionCategory.REGION, chunkX >> 5, chunkZ >> 5);
         return region == null ? null : region.readChunk(chunkX, chunkZ);
     }
+
+    /**
+     * Reads a chunk's POI NBT
+     * @param chunkX the chunk's x, in chunks, so the block x divided by 16
+     * @param chunkZ the chunk's z, in chunks, so the block z divided by 16
+     * @return the POI NBT, null if the chunk has none
+     * @throws IOException if the region file can't be read
+     */
     public NbtCompound readPoiData(int chunkX, int chunkZ) throws IOException {
         RegionFile poi = getRegionFile(poiFiles, RegionCategory.POI, chunkX >> 5, chunkZ >> 5);
         return poi == null ? null : poi.readChunk(chunkX, chunkZ);
     }
+
+    /**
+     * Reads a chunk's raw entity NBT from the entities folder
+     * @param chunkX the chunk's x, in chunks, so the block x divided by 16
+     * @param chunkZ the chunk's z, in chunks, so the block z divided by 16
+     * @return the entity NBT, null if the chunk has none
+     * @throws IOException if the region file can't be read
+     */
     public NbtCompound readEntityData(int chunkX, int chunkZ) throws IOException {
         RegionFile entities = getRegionFile(entityFiles, RegionCategory.ENTITIES, chunkX >> 5, chunkZ >> 5);
         return entities == null ? null : entities.readChunk(chunkX, chunkZ);
@@ -107,7 +151,11 @@ public sealed class Dimension permits Overworld, Nether, End {
 
     /**
      * Like {@link #readChunkData}, but wrapped in a {@link Chunk} for simplified
-     * access compared to raw NBT. Returns null when the Chunk has not been generated yet.
+     * access compared to raw NBT.
+     * @param chunkX the chunk's x, in chunks, so the block x divided by 16
+     * @param chunkZ the chunk's z, in chunks, so the block z divided by 16
+     * @return the chunk, null if it hasn't been generated yet
+     * @throws IOException if the region file can't be read
      */
     public Chunk readChunk(int chunkX, int chunkZ) throws IOException {
         NbtCompound raw = readChunkData(chunkX, chunkZ);
@@ -116,7 +164,11 @@ public sealed class Dimension permits Overworld, Nether, End {
 
     /**
      * Like {@link #readPoiData}, but wrapped in a {@link PoiData} for simplified
-     * access compared to raw NBT. Returns null when the Chunk has not been generated yet.
+     * access compared to raw NBT.
+     * @param chunkX the chunk's x, in chunks, so the block x divided by 16
+     * @param chunkZ the chunk's z, in chunks, so the block z divided by 16
+     * @return the POI data, null if the chunk has none
+     * @throws IOException if the region file can't be read
      */
     public PoiData readPoi(int chunkX, int chunkZ) throws IOException {
         NbtCompound raw = readPoiData(chunkX, chunkZ);
@@ -125,7 +177,11 @@ public sealed class Dimension permits Overworld, Nether, End {
 
     /**
      * Like {@link #readEntityData}, but wrapped in an {@link EntityData} for simplified
-     * access compared to raw NBT. Returns null when the Chunk has not been generated yet.
+     * access compared to raw NBT.
+     * @param chunkX the chunk's x, in chunks, so the block x divided by 16
+     * @param chunkZ the chunk's z, in chunks, so the block z divided by 16
+     * @return the entities, null if the chunk has none
+     * @throws IOException if the region file can't be read
      */
     public EntityData readEntities(int chunkX, int chunkZ) throws IOException {
         NbtCompound raw = readEntityData(chunkX, chunkZ);
@@ -138,6 +194,7 @@ public sealed class Dimension permits Overworld, Nether, End {
      * (chunk.chunkX()/chunkZ()) determine where it's written.
      * Also makes Minecraft rebuild the pois (beds, job sites, ...) of every section {@link Chunk#setBlock} touched
      * Takes the world's {@link SessionLock} while writing
+     * @param chunk the chunk to write
      * @throws IOException if writing fails, or Minecraft has the world open right now
      */
     public void saveChunkData(Chunk chunk) throws IOException {
@@ -169,6 +226,9 @@ public sealed class Dimension permits Overworld, Nether, End {
      * Converts and writes POI (point of interest) data for the given chunk to its
      * region file, creating the file if it doesn't exist yet.
      * Takes the world's {@link SessionLock} while writing
+     * @param chunkX the chunk's x, in chunks, so the block x divided by 16
+     * @param chunkZ the chunk's z, in chunks, so the block z divided by 16
+     * @param poiData the POI NBT to write
      * @throws IOException if writing fails, or Minecraft has the world open right now
      */
     public void savePoiData(int chunkX, int chunkZ, NbtCompound poiData) throws IOException {
@@ -181,6 +241,10 @@ public sealed class Dimension permits Overworld, Nether, End {
     /**
      * Like {@link #savePoiData(int, int, NbtCompound)}, but takes a {@link PoiData}
      * instead of requiring a .raw() call.
+     * @param chunkX the chunk's x, in chunks, so the block x divided by 16
+     * @param chunkZ the chunk's z, in chunks, so the block z divided by 16
+     * @param poiData the POI data to write
+     * @throws IOException if writing fails, or Minecraft has the world open right now
      */
     public void savePoiData(int chunkX, int chunkZ, PoiData poiData) throws IOException {
         savePoiData(chunkX, chunkZ, poiData.raw());
@@ -190,6 +254,9 @@ public sealed class Dimension permits Overworld, Nether, End {
      * Converts and writes Entity data for the given chunk to its
      * region file, creating the file if it doesn't exist yet.
      * Takes the world's {@link SessionLock} while writing
+     * @param chunkX the chunk's x, in chunks, so the block x divided by 16
+     * @param chunkZ the chunk's z, in chunks, so the block z divided by 16
+     * @param entityData the entity NBT to write
      * @throws IOException if writing fails, or Minecraft has the world open right now
      */
     public void saveEntityData(int chunkX, int chunkZ, NbtCompound entityData) throws IOException {
@@ -202,6 +269,10 @@ public sealed class Dimension permits Overworld, Nether, End {
     /**
      * Like {@link #saveEntityData(int, int, NbtCompound)}, but takes an
      * {@link EntityData} instead of requiring a .raw() call.
+     * @param chunkX the chunk's x, in chunks, so the block x divided by 16
+     * @param chunkZ the chunk's z, in chunks, so the block z divided by 16
+     * @param entityData the entities to write
+     * @throws IOException if writing fails, or Minecraft has the world open right now
      */
     public void saveEntityData(int chunkX, int chunkZ, EntityData entityData) throws IOException {
         saveEntityData(chunkX, chunkZ, entityData.raw());
@@ -209,6 +280,7 @@ public sealed class Dimension permits Overworld, Nether, End {
 
     /**
      * Closes all RegionFiles
+     * @throws IOException if a region file can't be closed
      */
     public void close() throws IOException {
         for (RegionFile r : regionFiles.values()) r.close();
