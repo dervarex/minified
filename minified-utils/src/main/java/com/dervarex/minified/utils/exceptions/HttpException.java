@@ -15,6 +15,9 @@ import java.util.*;
 @API(status = API.Status.STABLE)
 public class HttpException extends Exception {
 
+    /**
+     * The HTTP method of the failed request
+     */
     public enum Method { GET, POST, PUT, DELETE, HEAD, PATCH, OPTIONS, TRACE, CONNECT }
 
     private final long timestampEpochMillis = System.currentTimeMillis();
@@ -27,6 +30,11 @@ public class HttpException extends Exception {
     private final String requestId;
     private final boolean transientFailure; // e.g., 429/503
 
+    /**
+     * Use {@link Builder} instead of this one
+     *
+     * @param b the builder
+     */
     public HttpException(Builder b) {
         super(buildMessage(b), b.cause);
         this.statusCode = b.statusCode;
@@ -72,18 +80,33 @@ public class HttpException extends Exception {
      * {@return the response headers}
      */
     public Map<String, String> getResponseHeaders() { return responseHeaders; }
+    /**
+     * {@return a copy of the raw response body}
+     */
     public byte[] getResponseBody() { return responseBody.clone(); }
     /**
      * {@return when it happened, in epoch millis}
      */
     public long getTimestampEpochMillis() { return timestampEpochMillis; }
+    /**
+     * {@return when it happened}
+     */
     public Instant getTimestampInstant() { return Instant.ofEpochMilli(timestampEpochMillis); }
     /**
      * {@return the request id}
      */
     public String getRequestId() { return requestId; }
+    /**
+     * {@return true if trying again later could work, like with 429 or 503}
+     */
     public boolean isTransientFailure() { return transientFailure; }
 
+    /**
+     * The response body as text, cut off after {@code maxChars} characters
+     *
+     * @param maxChars after how many characters we should cut off
+     * @return the snippet, empty without a body
+     */
     public String responseSnippet(int maxChars) {
         if (responseBody.length == 0) return "";
         String s = new String(responseBody, StandardCharsets.UTF_8);
@@ -91,6 +114,9 @@ public class HttpException extends Exception {
         return s.substring(0, Math.max(0, maxChars)) + "…";
     }
 
+    /**
+     * {@return a readable summary with status, url, time and the start of the response}
+     */
     public String toUserFriendlyMessage() {
         StringBuilder sb = new StringBuilder();
         sb.append("HTTP error ").append(statusCode);
@@ -106,6 +132,9 @@ public class HttpException extends Exception {
         return sb.toString();
     }
 
+    /**
+     * {@return everything as JSON}
+     */
     public String toJson() {
         StringBuilder h = new StringBuilder("{");
         boolean first = true;
@@ -132,6 +161,9 @@ public class HttpException extends Exception {
         return s == null ? "null" : new JsonString(s).toJson();
     }
 
+    /**
+     * Builds an {@link HttpException}
+     */
     public static class Builder {
         private int statusCode = -1;
         private String statusMessage = "";
@@ -171,11 +203,48 @@ public class HttpException extends Exception {
          * @return this builder
          */
         public Builder url(String u) { this.url = u; return this; }
+        /**
+         * Adds a response header
+         *
+         * @param k the header name
+         * @param v the header value
+         * @return this builder
+         */
         public Builder header(String k, String v) { this.responseHeaders.put(Objects.toString(k, ""), Objects.toString(v, "")); return this; }
+        /**
+         * Adds response headers
+         *
+         * @param m the headers, null is ignored
+         * @return this builder
+         */
         public Builder headers(Map<String,String> m) { if (m!=null) m.forEach(this::header); return this; }
+        /**
+         * Sets the response body
+         *
+         * @param b the raw body, null means empty
+         * @return this builder
+         */
         public Builder body(byte[] b) { this.responseBody = b == null ? new byte[0] : b.clone(); return this; }
+        /**
+         * Like above, but as UTF-8 text
+         *
+         * @param s the body, null means empty
+         * @return this builder
+         */
         public Builder body(String s) { this.responseBody = s == null ? new byte[0] : s.getBytes(StandardCharsets.UTF_8); return this; }
+        /**
+         * Sets the request id
+         *
+         * @param id the request id, null means empty
+         * @return this builder
+         */
         public Builder requestId(String id) { this.requestId = id == null ? "" : id; return this; }
+        /**
+         * Sets if trying again later could work
+         *
+         * @param tf true if it's temporary
+         * @return this builder
+         */
         public Builder transientFailure(boolean tf) { this.transientFailure = tf; return this; }
         /**
          * Sets the cause
