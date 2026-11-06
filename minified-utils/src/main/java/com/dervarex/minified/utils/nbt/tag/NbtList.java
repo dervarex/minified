@@ -9,6 +9,9 @@ public final class NbtList implements NbtTag {
     private final byte elementId;
     private final List<NbtTag> elements = new ArrayList<>();
 
+    /**
+     * @param elementId the tag id of the elements
+     */
     public NbtList(byte elementId) {
         this.elementId = elementId;
     }

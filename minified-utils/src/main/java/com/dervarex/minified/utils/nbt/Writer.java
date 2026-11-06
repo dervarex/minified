@@ -21,7 +21,7 @@ public class Writer {
      * Writes the given NBT tree to a file, Gzip compressed (like the original Minecraft nbt files)
      * Goes through a temp file, so a crash halfway through doesn't leave you with half a level.dat
      * @param file target file
-     * @param nbt root compound, e.g. as returned by Parser.readFile
+     * @param nbt root compound
      * @throws IOException if writing fails, the old file is still fine then
      */
     public static void writeFile(File file, NbtCompound nbt) throws IOException {
@@ -30,6 +30,8 @@ public class Writer {
 
     /**
      * Like {@link #writeFile(File, NbtCompound)}, but the old file is copied to {@code backup} first (think level.dat_old)
+     * @param file target file
+     * @param nbt root compound
      * @throws IOException if writing or copying fails, the old file is still fine then
      */
     public static void writeFile(File file, NbtCompound nbt, File backup) throws IOException {
@@ -41,6 +43,8 @@ public class Writer {
      * formats that don't expect Gzip (e.g. individual chunk payloads
      * that are compressed at the region-file level instead).
      * Also goes through a temp file
+     * @param file target file
+     * @param nbt root compound
      */
     public static void writeFileUncompressed(File file, NbtCompound nbt) throws IOException {
         write(file, nbt, false, null);

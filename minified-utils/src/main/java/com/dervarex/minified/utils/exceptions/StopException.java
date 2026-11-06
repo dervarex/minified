@@ -45,12 +45,27 @@ public class StopException extends RuntimeException {
 
     private static String nvl(String s) { return s == null ? "" : s; }
 
+    /**
+     * {@return when it happened, in epoch millis}
+     */
     public long getTimestampEpochMillis() { return timestampEpochMillis; }
     public Instant getTimestampInstant() { return Instant.ofEpochMilli(timestampEpochMillis); }
+    /**
+     * {@return the reason}
+     */
     public String getReason() { return reason; }
+    /**
+     * {@return the code}
+     */
     public String getCode() { return code; }
+    /**
+     * {@return the severity}
+     */
     public Severity getSeverity() { return severity; }
     public boolean isRecoverable() { return recoverable; }
+    /**
+     * {@return the metadata}
+     */
     public Map<String, String> getMetadata() { return metadata; }
 
     public String toUserFriendlyMessage() {
@@ -108,13 +123,40 @@ public class StopException extends RuntimeException {
         private final Map<String, String> metadata = new LinkedHashMap<>();
         private Throwable cause;
 
+        /**
+         * Sets the reason
+         *
+         * @param r the reason
+         * @return this builder
+         */
         public Builder reason(String r) { this.reason = r; return this; }
+        /**
+         * Sets the code
+         *
+         * @param c the code
+         * @return this builder
+         */
         public Builder code(String c) { this.code = c; return this; }
+        /**
+         * Sets the severity
+         *
+         * @param s the severity
+         * @return this builder
+         */
         public Builder severity(Severity s) { this.severity = s; return this; }
         public Builder recoverable(boolean r) { this.recoverable = r; return this; }
         public Builder meta(String k, String v) { this.metadata.put(k, v); return this; }
         public Builder metadata(Map<String,String> m) { if (m!=null) m.forEach(this::meta); return this; }
+        /**
+         * Sets the cause
+         *
+         * @param t the cause
+         * @return this builder
+         */
         public Builder cause(Throwable t) { this.cause = t; return this; }
+        /**
+         * {@return a new {@link StopException}}
+         */
         public StopException build() { return new StopException(this); }
     }
 }

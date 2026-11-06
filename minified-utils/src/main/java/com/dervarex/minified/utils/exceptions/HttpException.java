@@ -52,14 +52,35 @@ public class HttpException extends Exception {
 
     private static String nvl(String s) { return s == null ? "" : s; }
 
+    /**
+     * {@return the status code}
+     */
     public int getStatusCode() { return statusCode; }
+    /**
+     * {@return the status message}
+     */
     public String getStatusMessage() { return statusMessage; }
+    /**
+     * {@return the method}
+     */
     public Method getMethod() { return method; }
+    /**
+     * {@return the url}
+     */
     public String getUrl() { return url; }
+    /**
+     * {@return the response headers}
+     */
     public Map<String, String> getResponseHeaders() { return responseHeaders; }
     public byte[] getResponseBody() { return responseBody.clone(); }
+    /**
+     * {@return when it happened, in epoch millis}
+     */
     public long getTimestampEpochMillis() { return timestampEpochMillis; }
     public Instant getTimestampInstant() { return Instant.ofEpochMilli(timestampEpochMillis); }
+    /**
+     * {@return the request id}
+     */
     public String getRequestId() { return requestId; }
     public boolean isTransientFailure() { return transientFailure; }
 
@@ -122,9 +143,33 @@ public class HttpException extends Exception {
         private boolean transientFailure = false;
         private Throwable cause;
 
+        /**
+         * Sets the status code
+         *
+         * @param code the status code
+         * @return this builder
+         */
         public Builder status(int code) { this.statusCode = code; return this; }
+        /**
+         * Sets the status message
+         *
+         * @param msg the status message
+         * @return this builder
+         */
         public Builder statusMessage(String msg) { this.statusMessage = msg; return this; }
+        /**
+         * Sets the method
+         *
+         * @param m the method
+         * @return this builder
+         */
         public Builder method(Method m) { this.method = m; return this; }
+        /**
+         * Sets the url
+         *
+         * @param u the url
+         * @return this builder
+         */
         public Builder url(String u) { this.url = u; return this; }
         public Builder header(String k, String v) { this.responseHeaders.put(Objects.toString(k, ""), Objects.toString(v, "")); return this; }
         public Builder headers(Map<String,String> m) { if (m!=null) m.forEach(this::header); return this; }
@@ -132,7 +177,16 @@ public class HttpException extends Exception {
         public Builder body(String s) { this.responseBody = s == null ? new byte[0] : s.getBytes(StandardCharsets.UTF_8); return this; }
         public Builder requestId(String id) { this.requestId = id == null ? "" : id; return this; }
         public Builder transientFailure(boolean tf) { this.transientFailure = tf; return this; }
+        /**
+         * Sets the cause
+         *
+         * @param t the cause
+         * @return this builder
+         */
         public Builder cause(Throwable t) { this.cause = t; return this; }
+        /**
+         * {@return a new {@link HttpException}}
+         */
         public HttpException build() { return new HttpException(this); }
     }
 }

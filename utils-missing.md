@@ -1,6 +1,6 @@
 # minified-utils: missing docs in the generated docs site
 
-Generated from `./gradlew :docs:docs`: every "No description." and every empty description row on the minified-utils pages, one line per member with what's missing. 373 members in 50 files.
+Generated from `./gradlew :docs:docs`: every "No description." and every empty description row on the minified-utils pages, one line per member with what's missing. 324 members in 50 files.
 
 ## exceptions.HttpException
 
@@ -10,126 +10,78 @@ Generated from `./gradlew :docs:docs`: every "No description." and every empty d
   `public enum Method { GET, POST, PUT, DELETE, HEAD, PATCH, OPTIONS, TRACE, CONNECT }`
 - [ ] L30 `HttpException(Builder)`: @param b  
   `public HttpException(Builder b)`
-- [ ] L55 `getStatusCode()`: no description, @return  
-  `public int getStatusCode() { return statusCode; }`
-- [ ] L56 `getStatusMessage()`: no description, @return  
-  `public String getStatusMessage() { return statusMessage; }`
-- [ ] L57 `getMethod()`: no description, @return  
-  `public Method getMethod() { return method; }`
-- [ ] L58 `getUrl()`: no description, @return  
-  `public String getUrl() { return url; }`
-- [ ] L59 `getResponseHeaders()`: no description, @return  
-  `public Map<String, String> getResponseHeaders() { return responseHeaders; }`
-- [ ] L60 `getResponseBody()`: no description, @return  
+- [ ] L75 `getResponseBody()`: no description, @return  
   `public byte[] getResponseBody() { return responseBody.clone(); }`
-- [ ] L61 `getTimestampEpochMillis()`: no description, @return  
-  `public long getTimestampEpochMillis() { return timestampEpochMillis; }`
-- [ ] L62 `getTimestampInstant()`: no description, @return  
+- [ ] L80 `getTimestampInstant()`: no description, @return  
   `public Instant getTimestampInstant() { return Instant.ofEpochMilli(timestampEpochMillis); }`
-- [ ] L63 `getRequestId()`: no description, @return  
-  `public String getRequestId() { return requestId; }`
-- [ ] L64 `isTransientFailure()`: no description, @return  
+- [ ] L85 `isTransientFailure()`: no description, @return  
   `public boolean isTransientFailure() { return transientFailure; }`
-- [ ] L66 `responseSnippet(int)`: no description, @param maxChars, @return  
+- [ ] L87 `responseSnippet(int)`: no description, @param maxChars, @return  
   `public String responseSnippet(int maxChars)`
-- [ ] L73 `toUserFriendlyMessage()`: no description, @return  
+- [ ] L94 `toUserFriendlyMessage()`: no description, @return  
   `public String toUserFriendlyMessage()`
-- [ ] L88 `toJson()`: no description, @return  
+- [ ] L109 `toJson()`: no description, @return  
   `public String toJson()`
-- [ ] L114 `HttpException.Builder`: no description  
+- [ ] L135 `HttpException.Builder`: no description  
   `public static class Builder`
-- [ ] L125 `status(int)`: no description, @param code, @return  
-  `public Builder status(int code) { this.statusCode = code; return this; }`
-- [ ] L126 `statusMessage(String)`: no description, @param msg, @return  
-  `public Builder statusMessage(String msg) { this.statusMessage = msg; return this; }`
-- [ ] L127 `method(Method)`: no description, @param m, @return  
-  `public Builder method(Method m) { this.method = m; return this; }`
-- [ ] L128 `url(String)`: no description, @param u, @return  
-  `public Builder url(String u) { this.url = u; return this; }`
-- [ ] L129 `header(String,String)`: no description, @param k, @param v, @return  
+- [ ] L174 `header(String,String)`: no description, @param k, @param v, @return  
   `public Builder header(String k, String v) { this.responseHeaders.put(Objects.toString(k, ""), Objects.toString(v, "")); return this; }`
-- [ ] L130 `headers(Map)`: no description, @param m, @return  
+- [ ] L175 `headers(Map)`: no description, @param m, @return  
   `public Builder headers(Map<String,String> m) { if (m!=null) m.forEach(this::header); return this; }`
-- [ ] L131 `body(String)`: no description, @param s, @return  
+- [ ] L176 `body(String)`: no description, @param s, @return  
   `public Builder body(byte[] b) { this.responseBody = b == null ? new byte[0] : b.clone(); return this; }`
-- [ ] L131 `body(byte[])`: no description, @param b, @return  
+- [ ] L176 `body(byte[])`: no description, @param b, @return  
   `public Builder body(byte[] b) { this.responseBody = b == null ? new byte[0] : b.clone(); return this; }`
-- [ ] L133 `requestId(String)`: no description, @param id, @return  
+- [ ] L178 `requestId(String)`: no description, @param id, @return  
   `public Builder requestId(String id) { this.requestId = id == null ? "" : id; return this; }`
-- [ ] L134 `transientFailure(boolean)`: no description, @param tf, @return  
+- [ ] L179 `transientFailure(boolean)`: no description, @param tf, @return  
   `public Builder transientFailure(boolean tf) { this.transientFailure = tf; return this; }`
-- [ ] L135 `cause(Throwable)`: no description, @param t, @return  
-  `public Builder cause(Throwable t) { this.cause = t; return this; }`
-- [ ] L136 `build()`: no description, @return  
-  `public HttpException build() { return new HttpException(this); }`
 
 ## exceptions.NoConnectionException
 
 `minified-utils/src/main/java/com/dervarex/minified/utils/exceptions/NoConnectionException.java`
 
-- [ ] L47 `getActionContext()`: no description, @return  
-  `public String getActionContext() { return actionContext; }`
-- [ ] L48 `wasDnsResolved()`: no description, @return  
+- [ ] L51 `wasDnsResolved()`: no description, @return  
   `public boolean wasDnsResolved() { return dnsResolved; }`
-- [ ] L49 `wasAnyTcpReachable()`: no description, @return  
+- [ ] L52 `wasAnyTcpReachable()`: no description, @return  
   `public boolean wasAnyTcpReachable() { return tcpAnyReachable; }`
-- [ ] L50 `wasAnyHttpReachable()`: no description, @return  
+- [ ] L53 `wasAnyHttpReachable()`: no description, @return  
   `public boolean wasAnyHttpReachable() { return httpAnyReachable; }`
-- [ ] L51 `getTimestampEpochMillis()`: no description, @return  
-  `public long getTimestampEpochMillis() { return timestampEpochMillis; }`
-- [ ] L52 `getTimestampInstant()`: no description, @return  
+- [ ] L58 `getTimestampInstant()`: no description, @return  
   `public Instant getTimestampInstant() { return Instant.ofEpochMilli(timestampEpochMillis); }`
-- [ ] L53 `getProbeResults()`: no description, @return  
-  `public Map<String, ProbeResult> getProbeResults() { return probeResults; }`
-- [ ] L54 `getSuggestions()`: no description, @return  
-  `public List<String> getSuggestions() { return suggestions; }`
-- [ ] L55 `getActiveOs()`: no description, @return  
-  `public String getActiveOs() { return activeOs; }`
-- [ ] L56 `getNetworkInterfaceSummary()`: no description, @return  
-  `public String getNetworkInterfaceSummary() { return networkInterfaceSummary; }`
-- [ ] L57 `getRootCause()`: no description, @return  
-  `public Throwable getRootCause() { return rootCause; }`
-- [ ] L59 `toUserFriendlyMessage()`: no description, @return  
+- [ ] L80 `toUserFriendlyMessage()`: no description, @return  
   `public String toUserFriendlyMessage()`
-- [ ] L72 `toString()`: no description, @return  
+- [ ] L93 `toString()`: no description, @return  
   `cachedMessage = sb.toString();`
-- [ ] L76 `toJson()`: no description, @return  
+- [ ] L97 `toJson()`: no description, @return  
   `public String toJson()`
-- [ ] L101 `NoConnectionException.ProbeResult`: no description  
+- [ ] L122 `NoConnectionException.ProbeResult`: no description  
   `public static final class ProbeResult`
-- [ ] L101 `toString()`: no description, @return  
+- [ ] L122 `toString()`: no description, @return  
   `public static final class ProbeResult`
-- [ ] L102 `NoConnectionException.ProbeResult.Type`: no description  
+- [ ] L123 `NoConnectionException.ProbeResult.Type`: no description  
   `public enum Type { DNS, TCP, HTTP }`
-- [ ] L108 `ProbeResult(Type,boolean,long,String,String)`: @param type, @param success, @param latencyMillis, @param target, @param detail  
+- [ ] L129 `ProbeResult(Type,boolean,long,String,String)`: @param type, @param success, @param latencyMillis, @param target, @param detail  
   `public ProbeResult(Type type, boolean success, long latencyMillis, String target, String detail)`
-- [ ] L111 `toJson()`: no description, @return  
+- [ ] L132 `toJson()`: no description, @return  
   `public String toJson()`
-- [ ] L123 `NoConnectionException.Builder`: no description  
+- [ ] L144 `NoConnectionException.Builder`: no description  
   `public static class Builder`
-- [ ] L133 `action(String)`: no description, @param ctx, @return  
-  `public Builder action(String ctx) { this.actionContext = ctx; return this; }`
-- [ ] L134 `dnsResolved(boolean)`: no description, @param v, @return  
+- [ ] L161 `dnsResolved(boolean)`: no description, @param v, @return  
   `public Builder dnsResolved(boolean v) { this.dnsResolved = v; return this; }`
-- [ ] L135 `tcpAny(boolean)`: no description, @param v, @return  
+- [ ] L162 `tcpAny(boolean)`: no description, @param v, @return  
   `public Builder tcpAny(boolean v) { this.tcpAnyReachable = v; return this; }`
-- [ ] L136 `httpAny(boolean)`: no description, @param v, @return  
+- [ ] L163 `httpAny(boolean)`: no description, @param v, @return  
   `public Builder httpAny(boolean v) { this.httpAnyReachable = v; return this; }`
-- [ ] L137 `addProbe(String,ProbeResult)`: no description, @param key, @param pr, @return  
+- [ ] L164 `addProbe(String,ProbeResult)`: no description, @param key, @param pr, @return  
   `public Builder addProbe(String key, ProbeResult pr) { this.probeResults.put(key, pr); return this; }`
-- [ ] L138 `addSuggestion(String)`: no description, @param s, @return  
+- [ ] L165 `addSuggestion(String)`: no description, @param s, @return  
   `public Builder addSuggestion(String s) { if (s!=null && !s.isBlank()) suggestions.add(s); return this; }`
-- [ ] L139 `suggestions(Collection)`: no description, @param s, @return  
+- [ ] L166 `suggestions(Collection)`: no description, @param s, @return  
   `public Builder suggestions(Collection<String> s) { s.forEach(this::addSuggestion); return this; }`
-- [ ] L140 `os(String)`: no description, @param os, @return  
-  `public Builder os(String os) { this.activeOs = os; return this; }`
-- [ ] L141 `netIfaces(String)`: no description, @param summary, @return  
-  `public Builder netIfaces(String summary) { this.networkInterfaceSummary = summary; return this; }`
-- [ ] L142 `cause(Throwable)`: no description, @param t, @return  
-  `public Builder cause(Throwable t) { this.rootCause = t; return this; }`
-- [ ] L143 `build()`: no description, @return  
+- [ ] L188 `build()`: no description, @return  
   `public NoConnectionException build() { if (suggestions.isEmpty()) autoPopulateSuggestions(); return new NoConnectionException(this); }`
-- [ ] L153 `throwIfOffline(String,Supplier)`: no description, @param action, @param quickCheck, @throws ?  
+- [ ] L198 `throwIfOffline(String,Supplier)`: no description, @param action, @param quickCheck, @throws ?  
   `public static void throwIfOffline(String action, java.util.function.Supplier<Boolean> quickCheck) throws NoConnectionException`
 
 ## exceptions.OfflineModeNeedsNetworkException
@@ -148,11 +100,7 @@ Generated from `./gradlew :docs:docs`: every "No description." and every empty d
   `public OfflineModeNeedsNetworkException(String message, Reason reason, Throwable cause)`
 - [ ] L52 `OfflineModeNeedsNetworkException(String,Reason,List,Throwable)`: @param message, @param reason, @param missingResources, @param cause  
   `public OfflineModeNeedsNetworkException(String message, Reason reason, List<String> missingResources, Throwable cause)`
-- [ ] L60 `getReason()`: no description, @return  
-  `public Reason getReason()`
-- [ ] L64 `getMissingResources()`: no description, @return  
-  `public List<String> getMissingResources()`
-- [ ] L68 `hasMissingResources()`: no description, @return  
+- [ ] L74 `hasMissingResources()`: no description, @return  
   `public boolean hasMissingResources()`
 
 ## exceptions.StopException
@@ -161,48 +109,28 @@ Generated from `./gradlew :docs:docs`: every "No description." and every empty d
 
 - [ ] L20 `StopException.Severity`: no description  
   `public enum Severity { INFO, WARNING, ERROR, FATAL }`
-- [ ] L48 `getTimestampEpochMillis()`: no description, @return  
-  `public long getTimestampEpochMillis() { return timestampEpochMillis; }`
-- [ ] L49 `getTimestampInstant()`: no description, @return  
+- [ ] L52 `getTimestampInstant()`: no description, @return  
   `public Instant getTimestampInstant() { return Instant.ofEpochMilli(timestampEpochMillis); }`
-- [ ] L50 `getReason()`: no description, @return  
-  `public String getReason() { return reason; }`
-- [ ] L51 `getCode()`: no description, @return  
-  `public String getCode() { return code; }`
-- [ ] L52 `getSeverity()`: no description, @return  
-  `public Severity getSeverity() { return severity; }`
-- [ ] L53 `isRecoverable()`: no description, @return  
+- [ ] L65 `isRecoverable()`: no description, @return  
   `public boolean isRecoverable() { return recoverable; }`
-- [ ] L54 `getMetadata()`: no description, @return  
-  `public Map<String, String> getMetadata() { return metadata; }`
-- [ ] L56 `toUserFriendlyMessage()`: no description, @return  
+- [ ] L71 `toUserFriendlyMessage()`: no description, @return  
   `public String toUserFriendlyMessage()`
-- [ ] L69 `toJson()`: no description, @return  
+- [ ] L84 `toJson()`: no description, @return  
   `public String toJson()`
-- [ ] L93 `userCancel(String)`: no description, @param reason, @return  
+- [ ] L108 `userCancel(String)`: no description, @param reason, @return  
   `public static StopException userCancel(String reason)`
-- [ ] L96 `preconditionFailed(String)`: no description, @param reason, @return  
+- [ ] L111 `preconditionFailed(String)`: no description, @param reason, @return  
   `public static StopException preconditionFailed(String reason)`
-- [ ] L99 `fatal(String)`: no description, @param reason, @return  
+- [ ] L114 `fatal(String)`: no description, @param reason, @return  
   `public static StopException fatal(String reason)`
-- [ ] L103 `StopException.Builder`: no description  
+- [ ] L118 `StopException.Builder`: no description  
   `public static class Builder`
-- [ ] L111 `reason(String)`: no description, @param r, @return  
-  `public Builder reason(String r) { this.reason = r; return this; }`
-- [ ] L112 `code(String)`: no description, @param c, @return  
-  `public Builder code(String c) { this.code = c; return this; }`
-- [ ] L113 `severity(Severity)`: no description, @param s, @return  
-  `public Builder severity(Severity s) { this.severity = s; return this; }`
-- [ ] L114 `recoverable(boolean)`: no description, @param r, @return  
+- [ ] L147 `recoverable(boolean)`: no description, @param r, @return  
   `public Builder recoverable(boolean r) { this.recoverable = r; return this; }`
-- [ ] L115 `meta(String,String)`: no description, @param k, @param v, @return  
+- [ ] L148 `meta(String,String)`: no description, @param k, @param v, @return  
   `public Builder meta(String k, String v) { this.metadata.put(k, v); return this; }`
-- [ ] L116 `metadata(Map)`: no description, @param m, @return  
+- [ ] L149 `metadata(Map)`: no description, @param m, @return  
   `public Builder metadata(Map<String,String> m) { if (m!=null) m.forEach(this::meta); return this; }`
-- [ ] L117 `cause(Throwable)`: no description, @param t, @return  
-  `public Builder cause(Throwable t) { this.cause = t; return this; }`
-- [ ] L118 `build()`: no description, @return  
-  `public StopException build() { return new StopException(this); }`
 
 ## http.HttpResponse
 
@@ -310,29 +238,25 @@ Generated from `./gradlew :docs:docs`: every "No description." and every empty d
   `public void save() throws IOException`
 - [ ] L25 `toJson()`: no description, @return  
   `Files.writeString(path, root.toJson(), StandardCharsets.UTF_8);`
-- [ ] L44 `getRoot()`: no description, @return  
-  `public JsonValue getRoot() { return root; }`
-- [ ] L46 `getPath()`: no description, @return  
-  `public Path getPath() { return path; }`
-- [ ] L48 `isObject()`: no description, @return  
+- [ ] L54 `isObject()`: no description, @return  
   `public boolean isObject() { return root.isObject(); }`
-- [ ] L50 `isArray()`: no description, @return  
+- [ ] L56 `isArray()`: no description, @return  
   `public boolean isArray() { return root.isArray(); }`
-- [ ] L52 `asObject()`: no description, @return  
+- [ ] L58 `asObject()`: no description, @return  
   `public JsonObject asObject() { return root.asObject(); }`
-- [ ] L54 `asArray()`: no description, @return  
+- [ ] L60 `asArray()`: no description, @return  
   `public JsonArray asArray() { return root.asArray(); }`
-- [ ] L56 `get(String)`: no description, @param key, @return  
+- [ ] L62 `get(String)`: no description, @param key, @return  
   `public JsonValue get(String key) { return asObject().get(key); }`
-- [ ] L58 `getString(String)`: no description, @param key, @return  
+- [ ] L64 `getString(String)`: no description, @param key, @return  
   `public String getString(String key) { return asObject().getString(key); }`
-- [ ] L60 `getNumber(String)`: no description, @param key, @return  
+- [ ] L66 `getNumber(String)`: no description, @param key, @return  
   `public java.math.BigDecimal getNumber(String key) { return asObject().getNumber(key); }`
-- [ ] L62 `getBoolean(String)`: no description, @param key, @return  
+- [ ] L68 `getBoolean(String)`: no description, @param key, @return  
   `public Boolean getBoolean(String key) { return asObject().getBoolean(key); }`
-- [ ] L64 `getObject(String)`: no description, @param key, @return  
+- [ ] L70 `getObject(String)`: no description, @param key, @return  
   `public JsonObject getObject(String key) { return asObject().getObject(key); }`
-- [ ] L66 `getArray(String)`: no description, @param key, @return  
+- [ ] L72 `getArray(String)`: no description, @param key, @return  
   `public JsonArray getArray(String key) { return asObject().getArray(key); }`
 
 ## json.JsonNull
@@ -438,8 +362,6 @@ Generated from `./gradlew :docs:docs`: every "No description." and every empty d
   `public class JsonParseException extends RuntimeException`
 - [ ] L6 `JsonParseException(String,int)`: @param message, @param position  
   `public JsonParseException(String message, int position)`
-- [ ] L11 `getPosition()`: @return  
-  `public int getPosition() { return position; }`
 
 ## json.JsonParser
 
@@ -559,9 +481,9 @@ Generated from `./gradlew :docs:docs`: every "No description." and every empty d
 
 - [ ] L18 `Writer`: no description  
   `public class Writer`
-- [ ] L27 `writeFile(File,NbtCompound,File)`: @param file, @param nbt, @param backup  
+- [ ] L27 `writeFile(File,NbtCompound,File)`: @param backup  
   `public static void writeFile(File file, NbtCompound nbt) throws IOException`
-- [ ] L45 `writeFileUncompressed(File,NbtCompound)`: @param file, @param nbt, @throws ?  
+- [ ] L49 `writeFileUncompressed(File,NbtCompound)`: @throws ?  
   `public static void writeFileUncompressed(File file, NbtCompound nbt) throws IOException`
 
 ## nbt.tag.NbtBoolean
@@ -733,19 +655,17 @@ Generated from `./gradlew :docs:docs`: every "No description." and every empty d
 
 - [ ] L8 `NbtList`: no description  
   `public final class NbtList implements NbtTag`
-- [ ] L12 `NbtList(byte)`: @param elementId  
-  `public NbtList(byte elementId)`
-- [ ] L16 `id()`: no description, @return  
+- [ ] L19 `id()`: no description, @return  
   `public byte id() { return 9; }`
-- [ ] L17 `elementId()`: no description, @return  
+- [ ] L20 `elementId()`: no description, @return  
   `public byte elementId() { return elementId; }`
-- [ ] L19 `add(NbtTag)`: no description, @param tag  
+- [ ] L22 `add(NbtTag)`: no description, @param tag  
   `public void add(NbtTag tag)`
-- [ ] L26 `elements()`: no description, @return  
+- [ ] L29 `elements()`: no description, @return  
   `public List<NbtTag> elements()`
-- [ ] L30 `size()`: no description, @return  
+- [ ] L33 `size()`: no description, @return  
   `public int size() { return elements.size(); }`
-- [ ] L33 `copy()`: @return  
+- [ ] L36 `copy()`: @return  
   `public NbtList copy()`
 
 ## nbt.tag.NbtLong
@@ -824,11 +744,9 @@ Generated from `./gradlew :docs:docs`: every "No description." and every empty d
 
 - [ ] L6 `OS`: no description  
   `public enum OS`
-- [ ] L18 `getName()`: no description, @return  
-  `public String getName()`
-- [ ] L23 `toString()`: no description, @return  
+- [ ] L26 `toString()`: no description, @return  
   `public String toString()`
-- [ ] L27 `getCurrentOS()`: no description, @return  
+- [ ] L30 `getCurrentOS()`: no description, @return  
   `public static OS getCurrentOS()`
 
 ## os.package-info
@@ -878,25 +796,9 @@ Generated from `./gradlew :docs:docs`: every "No description." and every empty d
   `public static Builder builder() { return new Builder(); }`
 - [ ] L52 `Shortcut.Builder`: no description  
   `public static final class Builder`
-- [ ] L64 `name(String)`: no description, @param name, @return  
-  `public Builder name(String name) { this.name = name; return this; }`
-- [ ] L65 `shortcutPath(Path)`: no description, @param p, @return  
-  `public Builder shortcutPath(Path p) { this.shortcutPath = p; return this; }`
-- [ ] L66 `execPath(Path)`: no description, @param p, @return  
-  `public Builder execPath(Path p) { this.execPath = p; return this; }`
-- [ ] L67 `directory(Path)`: no description, @param p, @return  
-  `public Builder directory(Path p) { this.directory = p; return this; }`
-- [ ] L68 `icon(Path)`: no description, @param p, @return  
-  `public Builder icon(Path p) { this.icon = p; return this; }`
-- [ ] L69 `os(OS)`: no description, @param os, @return  
-  `public Builder os(OS os) { this.os = os; return this; }`
-- [ ] L70 `arguments(String)`: no description, @param a, @return  
-  `public Builder arguments(String a) { this.arguments = a; return this; }`
-- [ ] L71 `terminal(boolean)`: no description, @param t, @return  
+- [ ] L113 `terminal(boolean)`: no description, @param t, @return  
   `public Builder terminal(boolean t) { this.terminal = t; return this; }`
-- [ ] L72 `comment(String)`: no description, @param c, @return  
-  `public Builder comment(String c) { this.comment = c; return this; }`
-- [ ] L74 `build()`: no description, @return  
+- [ ] L122 `build()`: no description, @return  
   `public Shortcut build()`
 
 ## shortcut.package-info

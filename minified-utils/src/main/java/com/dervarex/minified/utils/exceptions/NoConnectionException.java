@@ -44,16 +44,37 @@ public class NoConnectionException extends Exception {
         return "No internet connection (" + b.actionContext + ") - DNS=" + b.dnsResolved + ", TCP=" + b.tcpAnyReachable + ", HTTP=" + b.httpAnyReachable;
     }
 
+    /**
+     * {@return the action context}
+     */
     public String getActionContext() { return actionContext; }
     public boolean wasDnsResolved() { return dnsResolved; }
     public boolean wasAnyTcpReachable() { return tcpAnyReachable; }
     public boolean wasAnyHttpReachable() { return httpAnyReachable; }
+    /**
+     * {@return when it happened, in epoch millis}
+     */
     public long getTimestampEpochMillis() { return timestampEpochMillis; }
     public Instant getTimestampInstant() { return Instant.ofEpochMilli(timestampEpochMillis); }
+    /**
+     * {@return the probe results}
+     */
     public Map<String, ProbeResult> getProbeResults() { return probeResults; }
+    /**
+     * {@return the suggestions}
+     */
     public List<String> getSuggestions() { return suggestions; }
+    /**
+     * {@return the os}
+     */
     public String getActiveOs() { return activeOs; }
+    /**
+     * {@return the network interface summary}
+     */
     public String getNetworkInterfaceSummary() { return networkInterfaceSummary; }
+    /**
+     * {@return the root cause}
+     */
     public Throwable getRootCause() { return rootCause; }
 
     public String toUserFriendlyMessage() {
@@ -130,6 +151,12 @@ public class NoConnectionException extends Exception {
         private String activeOs = System.getProperty("os.name");
         private String networkInterfaceSummary = "";
         private Throwable rootCause;
+        /**
+         * Sets the action context
+         *
+         * @param ctx the action context
+         * @return this builder
+         */
         public Builder action(String ctx) { this.actionContext = ctx; return this; }
         public Builder dnsResolved(boolean v) { this.dnsResolved = v; return this; }
         public Builder tcpAny(boolean v) { this.tcpAnyReachable = v; return this; }
@@ -137,8 +164,26 @@ public class NoConnectionException extends Exception {
         public Builder addProbe(String key, ProbeResult pr) { this.probeResults.put(key, pr); return this; }
         public Builder addSuggestion(String s) { if (s!=null && !s.isBlank()) suggestions.add(s); return this; }
         public Builder suggestions(Collection<String> s) { s.forEach(this::addSuggestion); return this; }
+        /**
+         * Sets the os
+         *
+         * @param os the os
+         * @return this builder
+         */
         public Builder os(String os) { this.activeOs = os; return this; }
+        /**
+         * Sets the network interface summary
+         *
+         * @param summary the network interface summary
+         * @return this builder
+         */
         public Builder netIfaces(String summary) { this.networkInterfaceSummary = summary; return this; }
+        /**
+         * Sets the root cause
+         *
+         * @param t the root cause
+         * @return this builder
+         */
         public Builder cause(Throwable t) { this.rootCause = t; return this; }
         public NoConnectionException build() { if (suggestions.isEmpty()) autoPopulateSuggestions(); return new NoConnectionException(this); }
         private void autoPopulateSuggestions() {

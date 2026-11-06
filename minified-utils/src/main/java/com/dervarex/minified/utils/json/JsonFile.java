@@ -41,8 +41,14 @@ public final class JsonFile {
         this.root = JsonParser.parse(payload);
     }
 
+    /**
+     * {@return the root}
+     */
     public JsonValue getRoot() { return root; }
 
+    /**
+     * {@return the path}
+     */
     public Path getPath() { return path; }
 
     public boolean isObject() { return root.isObject(); }

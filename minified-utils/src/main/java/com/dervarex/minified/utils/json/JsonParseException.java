@@ -8,6 +8,9 @@ public class JsonParseException extends RuntimeException {
         this.position = position;
     }
 
+    /**
+     * {@return the position}
+     */
     public int getPosition() { return position; }
 }
 

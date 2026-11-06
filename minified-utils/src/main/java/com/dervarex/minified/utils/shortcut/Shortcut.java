@@ -61,14 +61,62 @@ public final class Shortcut {
         private boolean terminal;
         private String comment;
 
+        /**
+         * Sets the name
+         *
+         * @param name the name
+         * @return this builder
+         */
         public Builder name(String name) { this.name = name; return this; }
+        /**
+         * Sets the shortcut path
+         *
+         * @param p the shortcut path
+         * @return this builder
+         */
         public Builder shortcutPath(Path p) { this.shortcutPath = p; return this; }
+        /**
+         * Sets the program the shortcut runs
+         *
+         * @param p the program the shortcut runs
+         * @return this builder
+         */
         public Builder execPath(Path p) { this.execPath = p; return this; }
+        /**
+         * Sets the directory
+         *
+         * @param p the directory
+         * @return this builder
+         */
         public Builder directory(Path p) { this.directory = p; return this; }
+        /**
+         * Sets the icon
+         *
+         * @param p the icon
+         * @return this builder
+         */
         public Builder icon(Path p) { this.icon = p; return this; }
+        /**
+         * Sets the os
+         *
+         * @param os the os
+         * @return this builder
+         */
         public Builder os(OS os) { this.os = os; return this; }
+        /**
+         * Sets the arguments
+         *
+         * @param a the arguments
+         * @return this builder
+         */
         public Builder arguments(String a) { this.arguments = a; return this; }
         public Builder terminal(boolean t) { this.terminal = t; return this; }
+        /**
+         * Sets the comment
+         *
+         * @param c the comment
+         * @return this builder
+         */
         public Builder comment(String c) { this.comment = c; return this; }
 
         public Shortcut build() {

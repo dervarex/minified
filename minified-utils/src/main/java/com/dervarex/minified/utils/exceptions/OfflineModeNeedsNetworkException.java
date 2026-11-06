@@ -57,10 +57,16 @@ public class OfflineModeNeedsNetworkException extends RuntimeException {
                 : Collections.emptyList();
     }
 
+    /**
+     * {@return the reason}
+     */
     public Reason getReason() {
         return reason;
     }
 
+    /**
+     * {@return the missing resources}
+     */
     public List<String> getMissingResources() {
         return missingResources;
     }
