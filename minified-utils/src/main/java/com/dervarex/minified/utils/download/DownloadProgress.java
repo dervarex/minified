@@ -15,11 +15,20 @@ public final class DownloadProgress {
     private final long totalBytes;
     private final Consumer<Double> consumer;
 
+    /**
+     * @param totalBytes size of everything that gets downloaded
+     * @param consumer receives the progress from 0 to 1
+     */
     public DownloadProgress(long totalBytes, Consumer<Double> consumer) {
         this.totalBytes = totalBytes;
         this.consumer = consumer;
     }
 
+    /**
+     * Adds downloaded bytes and passes the new progress to the consumer
+     *
+     * @param bytes the bytes downloaded since the last call
+     */
     public void addBytes(long bytes) {
         consumer.accept(downloaded.addAndGet(bytes) / (double) totalBytes);
     }
