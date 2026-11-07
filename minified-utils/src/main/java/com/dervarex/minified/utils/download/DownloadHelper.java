@@ -334,9 +334,9 @@ public class DownloadHelper {
      *
      * @param manifestUrl URL of the version manifest
      * @param type download type, usually {@code client} or {@code server}
-     * @return the prepared download request
      * @throws HttpException if the manifest request fails
      * @throws IOException if the manifest cannot be read
+     * @return the prepared download request
      */
     public static HttpRequest prepareClientRequest(String manifestUrl, String type) throws HttpException, IOException {
         JsonFile json = new JsonFile(HttpUtil.get(manifestUrl));
