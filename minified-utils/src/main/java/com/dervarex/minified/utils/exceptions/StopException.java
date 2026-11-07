@@ -17,6 +17,9 @@ import java.util.StringJoiner;
 @API(status = API.Status.STABLE)
 public class StopException extends RuntimeException {
 
+    /**
+     * How severe the stop is
+     */
     public enum Severity { INFO, WARNING, ERROR, FATAL }
 
     private final long timestampEpochMillis = System.currentTimeMillis();
@@ -45,14 +48,38 @@ public class StopException extends RuntimeException {
 
     private static String nvl(String s) { return s == null ? "" : s; }
 
+    /**
+     * {@return when it happened, in epoch millis}
+     */
     public long getTimestampEpochMillis() { return timestampEpochMillis; }
+    /**
+     * {@return when it happened}
+     */
     public Instant getTimestampInstant() { return Instant.ofEpochMilli(timestampEpochMillis); }
+    /**
+     * {@return the reason}
+     */
     public String getReason() { return reason; }
+    /**
+     * {@return the code}
+     */
     public String getCode() { return code; }
+    /**
+     * {@return the severity}
+     */
     public Severity getSeverity() { return severity; }
+    /**
+     * {@return true if trying again later could work}
+     */
     public boolean isRecoverable() { return recoverable; }
+    /**
+     * {@return the metadata}
+     */
     public Map<String, String> getMetadata() { return metadata; }
 
+    /**
+     * {@return a readable summary with reason, code, severity and details}
+     */
     public String toUserFriendlyMessage() {
         StringBuilder sb = new StringBuilder();
         sb.append("Operation stopped: ").append(reason).append('\n');
@@ -66,6 +93,9 @@ public class StopException extends RuntimeException {
         return sb.toString();
     }
 
+    /**
+     * {@return everything as JSON}
+     */
     public String toJson() {
         StringBuilder meta = new StringBuilder("{");
         boolean first = true;
@@ -90,16 +120,37 @@ public class StopException extends RuntimeException {
     }
 
     // Convenience factories
+    /**
+     * The user cancelled, recoverable
+     *
+     * @param reason why
+     * @return a new {@link StopException}
+     */
     public static StopException userCancel(String reason) {
         return new Builder().severity(Severity.INFO).code("USER_CANCEL").reason(reason).recoverable(true).build();
     }
+    /**
+     * Something needed wasn't there, recoverable
+     *
+     * @param reason why
+     * @return a new {@link StopException}
+     */
     public static StopException preconditionFailed(String reason) {
         return new Builder().severity(Severity.WARNING).code("PRECONDITION_FAILED").reason(reason).recoverable(true).build();
     }
+    /**
+     * A stop that can't be recovered
+     *
+     * @param reason why
+     * @return a new {@link StopException}
+     */
     public static StopException fatal(String reason) {
         return new Builder().severity(Severity.FATAL).code("FATAL_STOP").reason(reason).recoverable(false).build();
     }
 
+    /**
+     * Builds a {@link StopException}
+     */
     public static class Builder {
         private String reason = "";
         private String code = "";
@@ -108,13 +159,59 @@ public class StopException extends RuntimeException {
         private final Map<String, String> metadata = new LinkedHashMap<>();
         private Throwable cause;
 
+        /**
+         * Sets the reason
+         *
+         * @param r the reason
+         * @return this builder
+         */
         public Builder reason(String r) { this.reason = r; return this; }
+        /**
+         * Sets the code
+         *
+         * @param c the code
+         * @return this builder
+         */
         public Builder code(String c) { this.code = c; return this; }
+        /**
+         * Sets the severity
+         *
+         * @param s the severity
+         * @return this builder
+         */
         public Builder severity(Severity s) { this.severity = s; return this; }
+        /**
+         * Sets if trying again later could work
+         *
+         * @param r true if it could
+         * @return this builder
+         */
         public Builder recoverable(boolean r) { this.recoverable = r; return this; }
+        /**
+         * Adds a detail
+         *
+         * @param k the name
+         * @param v the value
+         * @return this builder
+         */
         public Builder meta(String k, String v) { this.metadata.put(k, v); return this; }
+        /**
+         * Adds details
+         *
+         * @param m the details, null is ignored
+         * @return this builder
+         */
         public Builder metadata(Map<String,String> m) { if (m!=null) m.forEach(this::meta); return this; }
+        /**
+         * Sets the cause
+         *
+         * @param t the cause
+         * @return this builder
+         */
         public Builder cause(Throwable t) { this.cause = t; return this; }
+        /**
+         * {@return a new {@link StopException}}
+         */
         public StopException build() { return new StopException(this); }
     }
 }

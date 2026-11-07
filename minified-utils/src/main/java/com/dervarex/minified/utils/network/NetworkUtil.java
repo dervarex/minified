@@ -7,6 +7,9 @@ import java.io.IOException;
 import java.net.*;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Checks if there's a working internet connection
+ */
 @API(status = API.Status.STABLE)
 public class NetworkUtil {
     private static final boolean fakeOffline = false; // used for debug purposes currently
@@ -30,7 +33,7 @@ public class NetworkUtil {
      *     System.out.println("You do not have a network connection");
      * }
      * }</pre>
-     * The result is remembered for a few seconds
+     * The result is remembered for 15 seconds
      * @param action a short description of the action that requires connectivity, e.g. "Login"
      * @throws NoConnectionException if there is no connection
      */

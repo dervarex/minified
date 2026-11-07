@@ -7,12 +7,17 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Deep equality check for parsed nbt trees (arrays,
- * lists and such would be something like "I@35399441"
- * else, which changes without the data actually changing)
+ * Equality check for parsed nbt trees
  */
 public class NbtEquals {
 
+    /**
+     * Compares two tags
+     *
+     * @param a the first tag
+     * @param b the second tag
+     * @return true if they hold the same data
+     */
     public static boolean deepEquals(NbtTag a, NbtTag b) {
         if (a == b) return true;
         if (a == null || b == null) return false;

@@ -25,8 +25,7 @@ import java.util.concurrent.Future;
 import java.util.function.LongConsumer;
 
 /**
- * Download helper for downloading files and verifying SHA-1 checksums.
- * Recently moved over from the Launch module, be careful.
+ * Download helper for downloading files and verifying SHA-1 checksums
  */
 @API(status = API.Status.STABLE)
 public class DownloadHelper {
@@ -45,6 +44,17 @@ public class DownloadHelper {
         return download(url, path, expectedSha1, pool, client, bytes -> {});
     }
 
+    /**
+     * Like above, but with progress
+     *
+     * @param url the download URL
+     * @param path target file path
+     * @param expectedSha1 expected SHA-1 checksum
+     * @param pool executor service for the download task
+     * @param client HTTP client used for the request
+     * @param progressConsumer receives the number of bytes read for each chunk
+     * @return a Future for the download task
+     */
     public static Future<?> download(
             String url,
             Path path,
@@ -68,10 +78,29 @@ public class DownloadHelper {
         return download(url, path, expectedSha1, HttpClient.newHttpClient());
     }
 
+    /**
+     * Like above, but with your own HTTP client
+     *
+     * @param url the url to download from
+     * @param path the path to save the file to
+     * @param expectedSha1 the expected sha1 value of the file
+     * @param client HTTP client used for the request
+     * @return true if the file was downloaded or already exists with the correct sha1, false if the sha1 is wrong after downloading
+     */
     public static boolean download(String url, Path path, String expectedSha1, HttpClient client) {
         return downloadInternal(url, path, expectedSha1, client, bytes -> {});
     }
 
+    /**
+     * Like above, but with progress
+     *
+     * @param url the url to download from
+     * @param path the path to save the file to
+     * @param expectedSha1 the expected sha1 value of the file
+     * @param client HTTP client used for the request
+     * @param progressConsumer receives the number of bytes read for each chunk
+     * @return true if the file was downloaded or already exists with the correct sha1, false if the sha1 is wrong after downloading
+     */
     public static boolean download(
             String url,
             Path path,
@@ -305,9 +334,9 @@ public class DownloadHelper {
      *
      * @param manifestUrl URL of the version manifest
      * @param type download type, usually {@code client} or {@code server}
-     * @return the prepared download request
      * @throws HttpException if the manifest request fails
      * @throws IOException if the manifest cannot be read
+     * @return the prepared download request
      */
     public static HttpRequest prepareClientRequest(String manifestUrl, String type) throws HttpException, IOException {
         JsonFile json = new JsonFile(HttpUtil.get(manifestUrl));

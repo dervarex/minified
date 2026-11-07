@@ -19,12 +19,12 @@ Modules
     Configuration -> guides/minified-launch/configuration
     Versions -> guides/minified-launch/versions/versions
   Utils
-    JSON -> guides/minified-utils/json/json
-    HTTP -> guides/minified-utils/http/http
-    Network -> guides/minified-utils/network/network
-    Downloads & Hashing -> guides/minified-utils/downloads/downloads
-    Exceptions -> guides/minified-utils/exceptions/exceptions
-    API Endpoints -> guides/minified-utils/api-endpoints/api-endpoints
+    JSON -> api/com.dervarex.minified.utils.json/
+    HTTP -> api/com.dervarex.minified.utils.http/
+    Network -> api/com.dervarex.minified.utils.network/
+    Downloads -> api/com.dervarex.minified.utils.download/
+    Hashing -> api/com.dervarex.minified.utils.sha/
+    API Endpoints -> api/com.dervarex.minified.utils/ApiEndpoints/
   Modrinth
     Modrinth -> api/com.dervarex.minified.modrinth/
     Loaders -> api/com.dervarex.minified.modrinth.loaders/
