@@ -31,6 +31,13 @@ public class RegionFile implements Closeable {
         this.raf = raf;
     }
 
+    /**
+     * Opens an existing region file
+     *
+     * @param file the .mca file
+     * @throws IOException if the file can't be opened
+     * @return the region file
+     */
     public static RegionFile open(File file) throws IOException {
         RandomAccessFile raf = new RandomAccessFile(file, "rw");
         RegionFile region = new RegionFile(raf);
@@ -42,6 +49,10 @@ public class RegionFile implements Closeable {
      * Creates a new, empty region file (a zeroed 8192-byte header, no chunks)
      * and opens it. Use this instead of open() if the .mca file doesn't exist yet,
      * e.g. the first time a chunk is written to a region that was not yet generated
+     *
+     * @param file the .mca file
+     * @throws IOException if the file can't be created
+     * @return the region file
      */
     public static RegionFile create(File file) throws IOException {
         RandomAccessFile raf = new RandomAccessFile(file, "rw");
@@ -77,11 +88,25 @@ public class RegionFile implements Closeable {
         return (chunkX & 31) + (chunkZ & 31) * 32;
     }
 
+    /**
+     * {@return true if the chunk exists in this region}
+     *
+     * @param chunkX the chunk x, only the lowest 5 bits count
+     * @param chunkZ the chunk z, only the lowest 5 bits count
+     */
     public boolean hasChunk(int chunkX, int chunkZ) {
         int idx = chunkIndex(chunkX, chunkZ);
         return offsets[idx] != 0 && sectorCounts[idx] != 0;
     }
 
+    /**
+     * {@return the chunk's NBT, null if it doesn't exist}
+     *
+     * @param chunkX the chunk x, only the lowest 5 bits count
+     * @param chunkZ the chunk z, only the lowest 5 bits count
+     * @throws IOException if the chunk can't be read
+     * @throws NbtFormatException if it isn't valid NBT
+     */
     public NbtCompound readChunk(int chunkX, int chunkZ) throws IOException {
         int idx = chunkIndex(chunkX, chunkZ);
         if (!hasChunk(chunkX, chunkZ)) return null;
@@ -129,6 +154,9 @@ public class RegionFile implements Closeable {
      * Data is always written with Zlib compression, even if the original chunk was
      * read with different compression. Updates header fields with location and timestamp.
      *
+     * @param chunkX the chunk x, only the lowest 5 bits count
+     * @param chunkZ the chunk z, only the lowest 5 bits count
+     * @param chunkData the chunk's NBT
      * @throws IOException if the serialized+compressed chunk needs more than 255 sectors
      *                      (~1MB compressed), the region file format's own hard limit
      */
@@ -197,6 +225,11 @@ public class RegionFile implements Closeable {
         raf.writeInt(unixTimestamp);
     }
 
+    /**
+     * Closes the file
+     *
+     * @throws IOException if closing fails
+     */
     @Override
     public void close() throws IOException {
         raf.close();

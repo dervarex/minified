@@ -6,10 +6,19 @@ import com.dervarex.minified.utils.json.JsonValue;
 import java.io.IOException;
 import java.util.ArrayList;
 
+/**
+ * Minecraft version lists from the version manifest
+ */
 public final class VersionListProvider {
     private VersionListProvider() {
     }
 
+    /**
+     * {@return every version id, newest first}
+     *
+     * @throws HttpException if the request fails
+     * @throws IOException if the response can't be read
+     */
     public static ArrayList<String> getVersions() throws HttpException, IOException {
         ArrayList<String> versions = new ArrayList<>();
         for (JsonValue version : VersionManifestClient.getVersions()) {
@@ -18,6 +27,12 @@ public final class VersionListProvider {
         return versions;
     }
 
+    /**
+     * {@return every release version id, newest first}
+     *
+     * @throws HttpException if the request fails
+     * @throws IOException if the response can't be read
+     */
     public static ArrayList<String> getReleaseVersions() throws HttpException, IOException {
         ArrayList<String> versions = new ArrayList<>();
         for (JsonValue version : VersionManifestClient.getVersions()) {
@@ -34,11 +49,23 @@ public final class VersionListProvider {
         return versions;
     }
 
+    /**
+     * {@return the latest release}
+     *
+     * @throws HttpException if the request fails
+     * @throws IOException if the response can't be read
+     */
     public static String getLatestReleaseVersion() throws HttpException, IOException {
         return VersionManifestClient.getManifest()
                 .get("latest").asObject().get("release").asString();
     }
 
+    /**
+     * {@return the latest snapshot}
+     *
+     * @throws HttpException if the request fails
+     * @throws IOException if the response can't be read
+     */
     public static String getLatestSnapshotVersion() throws HttpException, IOException {
         return VersionManifestClient.getManifest()
                 .get("latest").asObject().get("snapshot").asString();

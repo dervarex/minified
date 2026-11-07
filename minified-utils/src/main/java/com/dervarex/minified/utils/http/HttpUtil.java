@@ -22,15 +22,45 @@ public final class HttpUtil {
 
     private HttpUtil() {}
 
+    /**
+     * GET with a 10 second timeout
+     *
+     * @param url the url
+     * @throws IOException if the connection fails
+     * @throws HttpException if the status isn't 2xx
+     * @return the body as UTF-8 text
+     */
     public static String get(String url) throws IOException, HttpException {
         return get(url, DEFAULT_TIMEOUT_MS);
     }
 
+    /**
+     * Like above, but with your own timeout
+     *
+     * @param url the url
+     * @param timeoutMs the connect and read timeout in ms
+     * @throws IOException if the connection fails
+     * @throws HttpException if the status isn't 2xx
+     * @return the body as UTF-8 text
+     */
     public static String get(String url, int timeoutMs) throws IOException, HttpException {
         HttpResponse response = request("GET", url, Map.of(), null, timeoutMs, timeoutMs);
         return response.getBodyAsString();
     }
 
+    /**
+     * Sends any request
+     *
+     * @param method the method, like GET or POST
+     * @param url the url
+     * @param headers the request headers, null for none
+     * @param body the request body, null or empty for none
+     * @param connectTimeoutMs the connect timeout in ms
+     * @param readTimeoutMs the read timeout in ms
+     * @throws IOException if the connection fails
+     * @throws HttpException if the status isn't 2xx
+     * @return the response
+     */
     public static HttpResponse request(String method,
                                        String url,
                                        Map<String, String> headers,
@@ -67,6 +97,16 @@ public final class HttpUtil {
         return response;
     }
 
+    /**
+     * Sends JSON, with Content-Type and Accept set to application/json and a 10 second timeout
+     *
+     * @param method the method, like POST
+     * @param url the url
+     * @param jsonBody the JSON, null for none
+     * @throws IOException if the connection fails
+     * @throws HttpException if the status isn't 2xx
+     * @return the response
+     */
     public static HttpResponse requestJson(String method, String url, String jsonBody) throws IOException, HttpException {
         byte[] body = jsonBody == null ? new byte[0] : jsonBody.getBytes(StandardCharsets.UTF_8);
         Map<String, String> headers = new LinkedHashMap<>();

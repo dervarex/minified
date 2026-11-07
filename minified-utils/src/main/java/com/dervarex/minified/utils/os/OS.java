@@ -15,6 +15,9 @@ public enum OS {
         this.name = name;
     }
 
+    /**
+     * {@return the name}
+     */
     public String getName() {
         return name;
     }
