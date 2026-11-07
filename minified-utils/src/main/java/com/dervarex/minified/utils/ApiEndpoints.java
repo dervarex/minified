@@ -76,7 +76,6 @@ public final class ApiEndpoints {
     // Quilt
     /**
      * Mostly the same as the {@link FABRIC_LOADER_META_URL}, but for Quilt with file sizes and hashes.
-     * <p>
      * <pre>{@code
      *   {
      *     "maven": "org.quiltmc:quilt-loader:0.31.0-beta.6",
@@ -99,42 +98,40 @@ public final class ApiEndpoints {
      * File Host for all Forge Loaders (not directly browsable). <br>
      * One subdirectory for every Loader Version (e.g. {@code 1.20.1-47.3.39}). <br>
      * Every of those Files has Maven checksums: md5, sha1, sha256 and sha512.
-     * <p>
-     * <h3>Changelog</h3>
+     * <h4>Changelog</h4>
      * <ul>
      *   <li>{@code forge-{version}-changelog.txt} Changelog for the Loader Version</li>
      * </ul>
      *
-     * <h3>Installer</h3>
+     * <h4>Installer</h4>
      * <ul>
      *   <li>{@code forge-{version}-installer.jar} the Forge installer jar</li>
      * </ul>
      *
-     * <h3>POM (Maven)</h3>
+     * <h4>POM (Maven)</h4>
      * <ul>
      *   <li>{@code forge-{version}.pom} Maven POM file</li>
      * </ul>
      *
-     * <h3>Sources</h3>
+     * <h4>Sources</h4>
      * <ul>
      *   <li>{@code forge-{version}-sources.jar} Forge sources jar</li>
      * </ul>
      *
-     * <h3>Universal</h3>
+     * <h4>Universal</h4>
      * <ul>
      *   <li>{@code forge-{version}-universal.jar} universal jar for Forge</li>
      * </ul>
      *
-     * <h3>UserDev (Development)</h3>
+     * <h4>UserDev (Development)</h4>
      * <ul>
      *   <li>{@code forge-{version}-userdev.jar} dev kit for ForgeGradle, containing Access Transformers, patches, Forge Sided Annotation Stripper (SAS), and joined Minecraft sources</li>
      * </ul>
      *
-     * <h3>MDK (Mod Development Kit)</h3>
+     * <h4>MDK (Mod Development Kit)</h4>
      * <ul>
      *   <li>{@code forge-{version}-mdk.zip} example mod workspace</li>
      * </ul>
-     * <p>
      */
     public static final String FORGE_INSTALLER_BASE_URL = "https://maven.minecraftforge.net/net/minecraftforge/forge/";
     /**
@@ -159,38 +156,37 @@ public final class ApiEndpoints {
      * File Host for all Neoforge Loaders.
      * One subdirectory is one Loader Version (beta versions get their own ones too). <br>
      * Every of those Files has hashes: md5, sha1, sha256 and sha512.
-     * <p>
-     * <h3>Changelog</h3>
+     * <h4>Changelog</h4>
      * <ul>
      *   <li>{@code neoforge-20.4.167-changelog.txt} Changelog for the Loader Version</li>
      *   <li>{@code ...changelog.txt.asc} PGP Signature for the Changelog </li>
      * </ul>
      *
-     * <h3>Installer</h3>
+     * <h4>Installer</h4>
      * <ul>
      *   <li>{@code neoforge-20.4.167-installer.jar} the neoforge installer jar </li>
      *   <li>{@code ...installer.jar.asc} PGP Signature for the Installer </li>
      * </ul>
      *
-     * <h3>POM (Maven)</h3>
+     * <h4>POM (Maven)</h4>
      * <ul>
      *   <li>{@code neoforge-20.4.167.pom} maven pom file </li>
      *   <li>{@code ...pom.asc} PGP Signature for the pom file </li>
      * </ul>
      *
-     * <h3>Sources</h3>
+     * <h4>Sources</h4>
      * <ul>
      *   <li>{@code neoforge-20.4.167-sources.jar} neoforge sources jar </li>
      *   <li>{@code ...sources.jar.asc} PGP Signature for the sources jar </li>
      * </ul>
      *
-     * <h3>Universal</h3>
+     * <h4>Universal</h4>
      * <ul>
      *   <li>{@code neoforge-20.4.167-universal.jar} universal installer for neoforge </li>
      *   <li>{@code ...universal.jar.asc} PGP Signature for the universal installer </li>
      * </ul>
      *
-     * <h3>UserDev</h3>
+     * <h4>UserDev</h4>
      * <ul>
      *   <li>{@code neoforge-20.4.167-userdev.jar} dev kit containing access transformers, patches, and joined Minecraft sources for modding</li>
      *   <li>{@code ...userdev.jar.asc} PGP Signature for the dev kit </li>
