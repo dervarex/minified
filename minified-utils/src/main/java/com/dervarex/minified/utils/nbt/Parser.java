@@ -7,6 +7,9 @@ import java.io.*;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.InflaterInputStream;
 
+/**
+ * Reads NBT files
+ */
 public class Parser {
 
     static final int TAG_End = 0, TAG_Byte = 1, TAG_Short = 2, TAG_Int = 3,
@@ -17,6 +20,9 @@ public class Parser {
     /**
      * Parse the given .nbt file
      * @param file the file to parse, has to end with .nbt
+     * @throws IOException if the file can't be read
+     * @throws NbtFormatException if it isn't valid NBT
+     * @return the root compound
      */
     public static NbtCompound readFile(File file) throws IOException {
         try (PushbackInputStream pb = new PushbackInputStream(new BufferedInputStream(

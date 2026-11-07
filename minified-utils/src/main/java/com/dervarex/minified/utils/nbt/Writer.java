@@ -15,6 +15,9 @@ import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.PosixFileAttributeView;
 import java.util.zip.GZIPOutputStream;
 
+/**
+ * Writes NBT files
+ */
 public class Writer {
 
     /**
@@ -32,6 +35,7 @@ public class Writer {
      * Like {@link #writeFile(File, NbtCompound)}, but the old file is copied to {@code backup} first (think level.dat_old)
      * @param file target file
      * @param nbt root compound
+     * @param backup where the old file gets copied to
      * @throws IOException if writing or copying fails, the old file is still fine then
      */
     public static void writeFile(File file, NbtCompound nbt, File backup) throws IOException {
@@ -45,6 +49,7 @@ public class Writer {
      * Also goes through a temp file
      * @param file target file
      * @param nbt root compound
+     * @throws IOException if writing fails, the old file is still fine then
      */
     public static void writeFileUncompressed(File file, NbtCompound nbt) throws IOException {
         write(file, nbt, false, null);

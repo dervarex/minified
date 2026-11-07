@@ -7,10 +7,17 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Map;
 
+/**
+ * Writes NBT tags into a stream
+ */
 public class NbtWriter {
 
     /**
      * Writes a compounds entries followed by TAG_End
+     *
+     * @param out the stream
+     * @param compound the compound
+     * @throws IOException if writing fails
      */
     public static void writeCompound(DataOutputStream out, NbtCompound compound) throws IOException {
         for (Map.Entry<String, NbtTag> entry : compound.asMap().entrySet()) {
