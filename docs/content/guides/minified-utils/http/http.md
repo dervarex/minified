@@ -139,4 +139,4 @@ val text = response.getBodyAsString()
 
 ## 3. Error handling
 
-`HttpUtil.request(...)` (and everything built on it) throws `HttpException` for any response outside the `2xx` range, it does not return an `HttpResponse` with an error status code for you to check manually. See the <a href="/guides/minified-utils/exceptions/exceptions" class="link">Exceptions guide</a> for the full `HttpException` API, including `toUserFriendlyMessage()` for displaying failures to end users and `isTransientFailure()` for deciding whether a retry makes sense (true for `429`/`502`/`503`/`504`).
+`HttpUtil.request(...)` (and everything built on it) throws `HttpException` for any response outside the `2xx` range, it does not return an `HttpResponse` with an error status code for you to check manually. See the <a href="/exceptions/utils/httpexception/" class="link">HttpException page</a> for the full API, including `toUserFriendlyMessage()` for displaying failures to end users and `isTransientFailure()` for deciding whether a retry makes sense (true for `429`/`502`/`503`/`504`).
