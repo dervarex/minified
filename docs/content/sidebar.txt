@@ -20,10 +20,11 @@ Modules
     Versions -> guides/minified-launch/versions/versions
   Utils
     JSON -> api/com.dervarex.minified.utils.json/
-    HTTP -> guides/minified-utils/http/http
-    Network -> guides/minified-utils/network/network
-    Downloads & Hashing -> guides/minified-utils/downloads/downloads
-    API Endpoints -> guides/minified-utils/api-endpoints/api-endpoints
+    HTTP -> api/com.dervarex.minified.utils.http/
+    Network -> api/com.dervarex.minified.utils.network/
+    Downloads -> api/com.dervarex.minified.utils.download/
+    Hashing -> api/com.dervarex.minified.utils.sha/
+    API Endpoints -> api/com.dervarex.minified.utils/ApiEndpoints/
   Modrinth
     Modrinth -> api/com.dervarex.minified.modrinth/
     Loaders -> api/com.dervarex.minified.modrinth.loaders/
