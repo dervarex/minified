@@ -2,6 +2,11 @@ package com.dervarex.minified.utils.os;
 
 import org.apiguardian.api.API;
 
+/**
+ * Represents an Operating System.
+ * <p>
+ * Use {@link getCurrentOS} for getting the Operating System of the User.
+ */
 @API(status = API.Status.STABLE)
 public enum OS {
     WINDOWS("windows"),
@@ -16,20 +21,26 @@ public enum OS {
     }
 
     /**
-     * {@return the name}
+     * {@return the operating system's name}
      */
     public String getName() {
         return name;
     }
 
+    /**
+     * Returns the operating system's name, same as {@link getName()}
+     * @return the operating system's name
+     */
     @Override
     public String toString() {
         return name;
     }
 
+    /**
+     * {@return the current os of the user, where this project is running}
+     */
     public static OS getCurrentOS() {
         String os = System.getProperty("os.name").toLowerCase();
-        // "darwin" contains "win", so mac has to come first
         if (os.contains("mac") || os.contains("darwin")) {
             return OS.MACOS;
         } else if (os.contains("win")) {
