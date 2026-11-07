@@ -16,6 +16,15 @@ import java.security.NoSuchAlgorithmException;
 public class Hasher {
     private static final char[] HEX = "0123456789abcdef".toCharArray();
 
+    /**
+     * Generates the SHA-1 has of the file at the given path and returns it as a lowercase hexadecimal string.
+     * <p>Since the file is streamed using an 8 KiB buffer, this should work for large files too without nuking the memory.
+     * @param path file to compute the SHA-1 hash of, may not be null
+     * @return the SHA-1 hash of the file contents, as a lowercase hexadecimal string (40 characters)
+     * @throws IOException if the file can't be opened or read
+     * @throws NullPointerException if {@code path} is {@code null}
+     * @throws IllegalStateException if the JVM does not support the SHA-1 algorithm (should not happen on any normal JVM)
+     */
     public static String sha1(Path path) throws IOException {
         MessageDigest digest;
 
@@ -37,6 +46,23 @@ public class Hasher {
         return bytesToHex(digest.digest());
     }
 
+    /**
+     * Generates the SHA hash of the file at the given path using the given sha algorithm
+     * and returns it as a lowercase hexadecimal string.
+     * <p>Since the file is streamed using an 8 KiB buffer, this should work for large files too without nuking the memory.
+     *
+     * <p><strong>Security note:</strong> SHA-1 ({@code hashbits == 1}) is considered
+     * cryptographically broken and must not be used for collision-resistant purposes
+     * such as digital signatures or certificate validation. Prefer {@code 256} or
+     * stronger for security-sensitive use.
+     *
+     * @param path file to compute the SHA hash of, may not be null
+     * @param hashbits the SHA variant to use, e.g. {@code 1} for SHA-1 or {@code 256} for SHA-256
+     * @return the SHA-1 hash of the file contents, as a lowercase hexadecimal string
+     * @throws NoSuchAlgorithmException if your JVM doesn't support that hash algorithm
+     * @throws IOException if the file could not be opened or read
+     * @throws NullPointerException if {@code path} is {@code null}
+     */
     public static String sha(Path path, int hashbits) throws Exception {
 
         MessageDigest digest = MessageDigest.getInstance("SHA-" + hashbits);
@@ -54,6 +80,13 @@ public class Hasher {
         return bytesToHex(digest.digest());
     }
 
+    /**
+     * Encodes the given byte array as a lowercase hexadecimal string
+     *
+     * @param bytes the bytes to encode, may not be {@code null}
+     * @return a lowercase hexadecimal string of length {@code 2 * bytes.length}
+     * @throws NullPointerException if {@code bytes} is {@code null}
+     */
     public static String bytesToHex(byte[] bytes) {
 
         char[] chars = new char[bytes.length * 2];
