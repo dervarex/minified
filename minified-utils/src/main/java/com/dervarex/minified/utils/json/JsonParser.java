@@ -6,15 +6,28 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Parses JSON text into {@link JsonValue}s
+ */
 public final class JsonParser {
     private final String input;
     private int index;
 
+    /**
+     * @param input the JSON text, null counts as empty
+     */
     public JsonParser(String input) {
         this.input = input == null ? "" : input;
         this.index = 0;
     }
 
+    /**
+     * Parses JSON text
+     *
+     * @param input the JSON text, null counts as empty
+     * @throws JsonParseException if it isn't valid JSON
+     * @return the parsed value
+     */
     public static JsonValue parse(String input) {
         return new JsonParser(input).parseRoot();
     }
