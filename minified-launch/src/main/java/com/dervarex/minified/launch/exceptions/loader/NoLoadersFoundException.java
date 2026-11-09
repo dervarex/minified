@@ -15,11 +15,24 @@ public class NoLoadersFoundException extends RuntimeException {
    */
   private final String loader;
 
+  /**
+   * Creates the exception
+   *
+   * @param message what went wrong
+   * @param loader  the loader in uppercase, like FABRIC
+   */
   public NoLoadersFoundException(String message, String loader) {
     super(message);
     this.loader = loader;
   }
 
+  /**
+   * Creates the exception
+   *
+   * @param message what went wrong
+   * @param loader  the loader in uppercase, like FABRIC
+   * @param cause   the original error
+   */
   public NoLoadersFoundException(String message, String loader, Throwable cause) {
     super(message, cause);
     this.loader = loader;

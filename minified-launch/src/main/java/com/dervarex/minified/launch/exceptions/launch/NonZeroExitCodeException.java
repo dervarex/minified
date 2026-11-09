@@ -10,6 +10,12 @@ public class NonZeroExitCodeException extends RuntimeException {
 
     private final int exitCode;
 
+    /**
+     * Creates the exception
+     *
+     * @param message  what went wrong
+     * @param exitCode the game's exit code
+     */
     public NonZeroExitCodeException(String message, int exitCode) {
         super(message);
         this.exitCode = exitCode;

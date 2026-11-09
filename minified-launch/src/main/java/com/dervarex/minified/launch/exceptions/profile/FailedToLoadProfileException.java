@@ -7,6 +7,12 @@ import org.apiguardian.api.API;
  */
 @API(status = API.Status.STABLE)
 public class FailedToLoadProfileException extends RuntimeException {
+    /**
+     * Creates the exception
+     *
+     * @param message what went wrong
+     * @param t       the original error
+     */
     public FailedToLoadProfileException(String message, Throwable t) {
         super(message, t);
     }
