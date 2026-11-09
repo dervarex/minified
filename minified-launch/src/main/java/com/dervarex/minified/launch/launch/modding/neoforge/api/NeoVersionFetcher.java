@@ -28,6 +28,9 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Fetches NeoForge versions
+ */
 @API(status = API.Status.STABLE)
 public final class NeoVersionFetcher {
 
@@ -39,14 +42,29 @@ public final class NeoVersionFetcher {
     private final AtomicReference<List<String>> cachedDirectoryVersions = new AtomicReference<>();
 
     /**
+     * Creates a fetcher with an empty cache
+     */
+    public NeoVersionFetcher() {}
+
+    /**
+     * {@return the latest NeoForge version for the Minecraft version}
+     *
      * @param minecraftVersion minecraft version
-     * @return latest neoforge loader version for given minecraft version
+     * @throws NoLoadersFoundException if there's none
+     * @throws FailedToReadMetadataException if the versions can't be fetched
      */
     @API(status = API.Status.STABLE)
     public String getLatest(String minecraftVersion) {
         return resolveLoaderVersion(minecraftVersion);
     }
 
+    /**
+     * {@return the version itself if it's a NeoForge version, otherwise the latest NeoForge version for it}
+     *
+     * @param versionOrMinecraftVersion a NeoForge or Minecraft version
+     * @throws NoLoadersFoundException if nothing matches
+     * @throws FailedToReadMetadataException if the versions can't be fetched
+     */
     @API(status = API.Status.STABLE)
     public String resolveLoaderVersion(String versionOrMinecraftVersion) {
         String resolved = resolveFrom(getAllVersions(), versionOrMinecraftVersion);
@@ -76,7 +94,10 @@ public final class NeoVersionFetcher {
     }
 
     /**
-     * @return all neoforge versions
+     * {@return all NeoForge versions}
+     *
+     * @throws FailedToReadMetadataException if the versions can't be fetched
+     * @throws MalformedMetadataException if the response has no versions
      */
     @API(status = API.Status.STABLE)
     public List<String> getAllVersions() {
@@ -231,8 +252,9 @@ public final class NeoVersionFetcher {
     }
 
     /**
+     * {@return true if the version was published as {@code net.neoforged:forge} (only used for Minecraft 1.20.1)}
+     *
      * @param neoForgeVersion a NeoForge version
-     * @return true if the version was published as {@code net.neoforged:forge} (only used for Minecraft 1.20.1)
      */
     @API(status = API.Status.INTERNAL, consumers = {"com.dervarex.minified.launch.*"})
     public static boolean isLegacyVersion(String neoForgeVersion) {

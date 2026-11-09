@@ -28,7 +28,14 @@ public class ForgeVersionFetcher {
     private JsonObject cachedPromotions;
 
     /**
-     * @return available forge versions
+     * Creates a fetcher with an empty cache
+     */
+    public ForgeVersionFetcher() {}
+
+    /**
+     * {@return all Forge versions}
+     *
+     * @throws FailedToFetchVersionsException if the request fails
      */
     @API(status = API.Status.STABLE)
     public List<String> getAvailableVersions() {
@@ -59,8 +66,10 @@ public class ForgeVersionFetcher {
     }
 
     /**
+     * {@return the Forge versions for the Minecraft version}
+     *
      * @param minecraftVersion minecraft version
-     * @return forge versions for specified minecraft version
+     * @throws FailedToFetchVersionsException if the request fails
      */
     @API(status = API.Status.STABLE)
     public List<String> getVersionsForMinecraft(String minecraftVersion) {
@@ -70,6 +79,12 @@ public class ForgeVersionFetcher {
                 .toList();
     }
 
+    /**
+     * {@return the latest Forge version for the Minecraft version}
+     *
+     * @param minecraftVersion minecraft version
+     * @throws FailedToFetchPromotionsException if the request fails
+     */
     @API(status = API.Status.STABLE)
     public String getLatest(String minecraftVersion) {
         JsonObject promos = getPromotions();
@@ -81,6 +96,12 @@ public class ForgeVersionFetcher {
         return toMavenVersion(minecraftVersion, forgeVersion);
     }
 
+    /**
+     * {@return the recommended Forge version for the Minecraft version, or null if there's none}
+     *
+     * @param minecraftVersion minecraft version
+     * @throws FailedToFetchPromotionsException if the request fails
+     */
     @API(status = API.Status.STABLE)
     public String getRecommended(String minecraftVersion) {
         JsonObject promos = getPromotions();

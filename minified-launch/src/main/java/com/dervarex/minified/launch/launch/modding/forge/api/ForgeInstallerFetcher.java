@@ -9,8 +9,9 @@ import org.apiguardian.api.API;
 @API(status = API.Status.STABLE)
 public class ForgeInstallerFetcher {
     /**
+     * {@return the forge installer download url for the given loader version}
+     *
      * @param loaderVersion loader version to fetch the loader of
-     * @return the forge installer download url for the given loader version
      */
     @API(status = API.Status.STABLE)
     public static String getInstallerLink(String loaderVersion) {

@@ -3,14 +3,18 @@ package com.dervarex.minified.launch.launch.modding.neoforge.api;
 import com.dervarex.minified.utils.ApiEndpoints;
 import org.apiguardian.api.API;
 
+/**
+ * Links to the NeoForge installers
+ */
 @API(status = API.Status.STABLE)
 public final class NeoInstallerFetcher {
     private NeoInstallerFetcher() {
     }
 
     /**
+     * {@return direct link to the neoforge installer}
+     *
      * @param neoForgeVersion neoforge version
-     * @return direct link to the neoforge installer
      */
     @API(status = API.Status.STABLE)
     public static String getInstallerLink(String neoForgeVersion) {

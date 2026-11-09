@@ -26,6 +26,9 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.function.Consumer;
 
+/**
+ * Injects itself into the NeoForge installer and lets it do the work
+ */
 @API(status = API.Status.INTERNAL, consumers = {"com.dervarex.minified.launch.*"})
 public class NeoInstallerInjector {
     private static final String INSTALLER_FILE_NAME = "neoforge-installer.jar";

@@ -43,14 +43,22 @@ public final class LegacyForgeInstaller {
     }
 
     /**
+     * {@return true if the installer is a legacy (v1) installer}
+     *
      * @param installer the downloaded installer jar
-     * @return true if the installer is a legacy (v1) installer
      */
     public static boolean isLegacyInstaller(Path installer) {
         JsonObject profile = readInstallProfile(installer);
         return profile != null && profile.has("install") && profile.has("versionInfo");
     }
 
+    /**
+     * Extracts the universal jar and writes the version JSON
+     *
+     * @param installer the downloaded installer jar
+     * @param config the launch configuration
+     * @throws ForgePreparationException if the installer can't be read
+     */
     public static void install(Path installer, LaunchConfiguration config) {
         JsonObject profile = readInstallProfile(installer);
         if (profile == null) {

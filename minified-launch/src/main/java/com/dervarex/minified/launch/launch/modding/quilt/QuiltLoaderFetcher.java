@@ -14,12 +14,18 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+/**
+ * Fetches Quilt loader versions and profile JSONs
+ */
 @API(status = API.Status.STABLE)
 public class QuiltLoaderFetcher {
 
     /**
+     * {@return the latest Quilt loader version for the Minecraft version}
+     *
      * @param minecraftVersion minecraft version
-     * @return latest quilt loader version for specified minecraft version
+     * @throws NoLoadersFoundException if Quilt lists no loaders for it
+     * @throws Exception if the request fails
      */
     @API(status = API.Status.STABLE)
     public static String getLatestLoaderVersion(
@@ -36,7 +42,7 @@ public class QuiltLoaderFetcher {
             throw new NoLoadersFoundException(
                     "No Quilt loaders found for Minecraft "
                             + minecraftVersion,
-                    minecraftVersion
+                    "QUILT"
             );
         }
 
@@ -115,6 +121,13 @@ public class QuiltLoaderFetcher {
         return 0;
     }
 
+    /**
+     * {@return the profile JSON of the Quilt loader for the Minecraft version}
+     *
+     * @param minecraftVersion minecraft version
+     * @param loaderVersion quilt loader version
+     * @throws Exception if the request fails
+     */
     @API(status = API.Status.STABLE)
     public static JsonObject getProfileJson(
             String minecraftVersion,
@@ -134,6 +147,13 @@ public class QuiltLoaderFetcher {
                 .asObject();
     }
 
+    /**
+     * {@return the profile JSON of the latest Quilt loader for the Minecraft version}
+     *
+     * @param minecraftVersion minecraft version
+     * @throws NoLoadersFoundException if Quilt lists no loaders for it
+     * @throws Exception if a request fails
+     */
     @API(status = API.Status.STABLE)
     public static JsonObject getLatestProfile(
             String minecraftVersion

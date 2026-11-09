@@ -6,6 +6,9 @@ import com.dervarex.minified.launch.launch.internal.CacheManager;
 import com.dervarex.minified.utils.json.JsonObject;
 import org.apiguardian.api.API;
 
+/**
+ * Loads the Quilt profile JSON, from the cache if possible
+ */
 @API(status = API.Status.STABLE)
 public class QuiltProfileJsonLoader {
 

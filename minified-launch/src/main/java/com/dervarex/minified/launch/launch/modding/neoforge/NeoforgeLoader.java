@@ -10,11 +10,17 @@ import org.apiguardian.api.API;
  */
 @API(status = API.Status.STABLE)
 public record NeoforgeLoader(String mcVersion, String loaderVersion) implements Loader {
+    /**
+     * {@return a URL to the NeoForge icon}
+     */
     @Override
     public String iconUrl() {
         return "https://raw.githubusercontent.com/dervarex/loader-logos/main/neoforge/neoforge.png";
     }
 
+    /**
+     * {@return NEOFORGE}
+     */
     @Override
     public String name() { return "NEOFORGE"; }
 }
