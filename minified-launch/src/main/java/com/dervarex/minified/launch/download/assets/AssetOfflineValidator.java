@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Checks that all assets are there before an offline launch
+ * Validates the Assets when the User is offline.
  */
 public final class AssetOfflineValidator {
 
@@ -21,6 +21,7 @@ public final class AssetOfflineValidator {
 
     /**
      * Validates the Assets while the User is offline
+     * Needs a Cached Version JSON to work
      * @param version minecraft version to use
      * @param assetsDir directory where the assets have been downloaded to
      */

@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
 /**
- * Downloads the client jar
+ * Downloads the Client Jar, the one which actually is minecraft
  */
 public class ClientDownloader {
 

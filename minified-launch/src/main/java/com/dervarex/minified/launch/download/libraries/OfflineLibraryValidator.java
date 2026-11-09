@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Checks that all libraries are there before an offline launch
+ * Validates the Libraries when the User is offline.
  */
 public final class OfflineLibraryValidator {
 
@@ -32,6 +32,7 @@ public final class OfflineLibraryValidator {
 
     /**
      * Validates the Libraries while the User is offline
+     * Needs a Cached Version JSON to work
      * @param version minecraft version to use
      * @param loader loader to be used for validation
      * @param librariesDir directory where the libraries have been downloaded to
