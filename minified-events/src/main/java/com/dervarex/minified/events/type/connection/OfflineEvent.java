@@ -8,4 +8,8 @@ import org.apiguardian.api.API;
  */
 @API(status = API.Status.STABLE)
 public class OfflineEvent implements Event {
+    /**
+     * Creates the event
+     */
+    public OfflineEvent() {}
 }
