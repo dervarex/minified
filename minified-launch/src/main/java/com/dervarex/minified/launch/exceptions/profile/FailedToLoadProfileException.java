@@ -16,4 +16,13 @@ public class FailedToLoadProfileException extends RuntimeException {
     public FailedToLoadProfileException(String message, Throwable t) {
         super(message, t);
     }
+
+    /**
+     * Creates the exception
+     *
+     * @param message what went wrong
+     */
+    public FailedToLoadProfileException(String message) {
+        super(message);
+    }
 }

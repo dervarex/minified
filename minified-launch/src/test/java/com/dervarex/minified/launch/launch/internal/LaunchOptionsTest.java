@@ -49,7 +49,8 @@ class LaunchOptionsTest {
 
         assertEquals("", options.getVariables().get("assets_index_name"));
         assertEquals("release", options.getVariables().get("version_type"));
-        assertEquals(Map.of("has_custom_resolution", false, "is_demo_user", false), options.getFeatures());
+        assertEquals(Map.of("has_custom_resolution", false, "is_demo_user", false, "is_quick_play_multiplayer", false),
+                options.getFeatures());
     }
 
     @Test

@@ -17,6 +17,7 @@ Modules
   Launch
     Basics -> guides/minified-launch/basics
     Configuration -> guides/minified-launch/configuration
+    Profiles -> guides/minified-launch/profiles
     Versions -> guides/minified-launch/versions/versions
   Utils
     JSON -> api/com.dervarex.minified.utils.json/

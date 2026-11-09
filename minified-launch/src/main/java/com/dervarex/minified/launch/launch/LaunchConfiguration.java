@@ -9,7 +9,9 @@ import org.apiguardian.api.API;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -51,6 +53,7 @@ public class LaunchConfiguration {
     // Flags
     private boolean demoUser = false;
     private boolean customResolution = false;
+    private boolean fullscreen = false;
 
     // Paths
     private Path jarFile;            // required
@@ -63,6 +66,11 @@ public class LaunchConfiguration {
     // Launch options
     @Getter(AccessLevel.NONE)
     private final List<String> extraJvmArgs = new ArrayList<>();
+    @Getter(AccessLevel.NONE)
+    private final List<String> extraGameArgs = new ArrayList<>();
+    @Getter(AccessLevel.NONE)
+    private final Map<String, String> environmentVariables = new LinkedHashMap<>();
+    private String serverAddress = null; // host or host:port, joined right after the game started
     private Loader loader = null;
 
     // Game output
@@ -88,6 +96,20 @@ public class LaunchConfiguration {
      */
     public List<String> getExtraJvmArgs() {
         return Collections.unmodifiableList(extraJvmArgs);
+    }
+
+    /**
+     * {@return the extra game args, read-only}
+     */
+    public List<String> getExtraGameArgs() {
+        return Collections.unmodifiableList(extraGameArgs);
+    }
+
+    /**
+     * {@return the environment variables for the game process, read-only}
+     */
+    public Map<String, String> getEnvironmentVariables() {
+        return Collections.unmodifiableMap(environmentVariables);
     }
 
     /**
@@ -214,6 +236,17 @@ public class LaunchConfiguration {
             return this;
         }
 
+        /**
+         * Starts the game in fullscreen, false by default
+         *
+         * @param fullscreen whether to start in fullscreen
+         * @return this builder
+         */
+        public Builder fullscreen(boolean fullscreen) {
+            config.fullscreen = fullscreen;
+            return this;
+        }
+
         // Paths
         /**
          * Sets where the client jar goes, required
@@ -304,6 +337,67 @@ public class LaunchConfiguration {
             if (args != null) {
                 config.extraJvmArgs.addAll(args);
             }
+            return this;
+        }
+
+        /**
+         * Adds an arg to the end of the game args
+         *
+         * @param arg the arg, for example {@code --demo}
+         * @return this builder
+         */
+        public Builder extraGameArg(String arg) {
+            config.extraGameArgs.add(arg);
+            return this;
+        }
+
+        /**
+         * Adds args to the end of the game args, null is ignored
+         *
+         * @param args the args
+         * @return this builder
+         */
+        public Builder extraGameArgs(List<String> args) {
+            if (args != null) {
+                config.extraGameArgs.addAll(args);
+            }
+            return this;
+        }
+
+        /**
+         * Sets an environment variable for the game process, it wins over the launcher's own environment
+         *
+         * @param name the variable name
+         * @param value the value
+         * @return this builder
+         */
+        public Builder environmentVariable(String name, String value) {
+            config.environmentVariables.put(name, value);
+            return this;
+        }
+
+        /**
+         * Sets environment variables for the game process, null is ignored
+         *
+         * @param variables the variables
+         * @return this builder
+         */
+        public Builder environmentVariables(Map<String, String> variables) {
+            if (variables != null) {
+                config.environmentVariables.putAll(variables);
+            }
+            return this;
+        }
+
+        /**
+         * Joins a multiplayer server as soon as the game has started
+         * Uses quick play on 1.20 and newer, {@code --server}/{@code --port} on older versions, does not work before 1.6
+         *
+         * @param serverAddress {@code host} or {@code host:port}, null to disable
+         * @return this builder
+         */
+        public Builder serverAddress(String serverAddress) {
+            config.serverAddress = serverAddress;
             return this;
         }
 
