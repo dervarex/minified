@@ -14,5 +14,10 @@ import org.apiguardian.api.API;
 @FunctionalInterface
 @API(status = API.Status.STABLE)
 public interface LoginStateChangeListener {
+    /**
+     * Gets called when the login state changes
+     *
+     * @param newState the new state
+     */
     void onStateChanged(LoginState newState);
 }

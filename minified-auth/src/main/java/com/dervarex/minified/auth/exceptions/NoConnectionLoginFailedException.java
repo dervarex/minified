@@ -8,6 +8,12 @@ import org.apiguardian.api.API;
  */
 @API(status = API.Status.STABLE)
 public class NoConnectionLoginFailedException extends LoginFailedException {
+    /**
+     * Creates the exception for a login without connection
+     *
+     * @param message the message for the user
+     * @param t       the original {@code NoConnectionException}
+     */
     public NoConnectionLoginFailedException(String message, Throwable t) {
         super(message, t);
     }

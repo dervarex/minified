@@ -19,6 +19,9 @@ import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.util.Base64;
 
+/**
+ * Encrypts and decrypts the saved session
+ */
 @API(status = API.Status.INTERNAL, consumers = {"com.dervarex.minified.auth.*"})
 public class Encryptor {
     private static final Gson GSON = new Gson();

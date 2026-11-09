@@ -34,6 +34,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
+/**
+ * Logs users in with their Microsoft account and saves the session encrypted
+ */
 public class AuthManager {
 
     private static final Map<String, User> session = new ConcurrentHashMap<>();
@@ -64,9 +67,16 @@ public class AuthManager {
         KEY_FILE = BASE_DIR.resolve("master.key");
         prepareKeyDirectories();
     }
+
+    /**
+     * Like {@link #init(Path, EventBus)}, but with a new {@link EventBus}
+     *
+     * @param baseDir the directory where the key and session files will be stored
+     * @throws AuthInitException if the directory can't be created or the master key can't be loaded or created
+     */
     @API(status = API.Status.STABLE)
-    public static void init(Path BaseDir) {
-        init(BaseDir, new EventBus());
+    public static void init(Path baseDir) {
+        init(baseDir, new EventBus());
     }
 
     /**
@@ -97,6 +107,13 @@ public class AuthManager {
         KEY_FILE = BASE_DIR.resolve("master.key");
         prepareKeyDirectories();
     }
+
+    /**
+     * Like {@link #init(String, EventBus)}, but with a new {@link EventBus}
+     *
+     * @param launcherName the launcher name used to create the application directory
+     * @throws AuthInitException if the directory can't be created or the master key can't be loaded or created
+     */
     @API(status = API.Status.STABLE)
     public static void init(String launcherName) {
         init(launcherName, new EventBus());
@@ -141,6 +158,7 @@ public class AuthManager {
      *
      * @throws NoConnectionLoginFailedException if there is no internet connection
      * @throws LoginFailedException if the login failed for any other reason
+     * @return the logged-in user
      */
     @API(status = API.Status.STABLE)
     public static User login() {
@@ -302,7 +320,7 @@ public class AuthManager {
     }
 
     /**
-     * @return The current login state as a JSON string, which can be used for UI display or debugging purposes.
+     * {@return the current login state as JSON}
      */
     @API(status=API.Status.STABLE)
     public static synchronized String getLoginStateJson() {
@@ -470,9 +488,9 @@ public class AuthManager {
     }
 
     /**
-     * @return if there is a saved session on disk(uses the directories given in {@code init(BaseDir)}
+     * {@return true if a session is saved in the directory given to init}
      * <p>
-     * Note that this does not check if the session is still valid.
+     * Doesn't check if the session is still valid
      */
     @API(status = API.Status.STABLE)
     public static boolean hasSessionSaved() {
@@ -482,20 +500,30 @@ public class AuthManager {
     }
 
     /**
-     * @return the currently logged-in user, or null if no session is active.
+     * {@return the logged-in user, or null if nobody is logged in}
      * <p>
-     * Note that this does not check if the session is still valid.
+     * Doesn't check if the session is still valid
      */
     @API(status = API.Status.STABLE)
     public static User getUser() {
         return session.values().stream().findFirst().orElse(null);
     }
 
+    /**
+     * Adds a listener that gets called on every login state change
+     *
+     * @param listener the listener to add
+     */
     @API(status = API.Status.STABLE)
     public static void addStateChangeListener(LoginStateChangeListener listener) {
         listeners.add(listener);
     }
 
+    /**
+     * Removes a listener added with {@link #addStateChangeListener(LoginStateChangeListener)}
+     *
+     * @param listener the listener to remove
+     */
     @API(status = API.Status.STABLE)
     public static void removeStateChangeListener(LoginStateChangeListener listener) {
         listeners.remove(listener);
@@ -511,6 +539,19 @@ public class AuthManager {
         }
     }
 
-    // Async login state management
-    public enum LoginStatus {IDLE, STARTING, PENDING, SUCCESS, ERROR}
+    /**
+     * Where the login currently is
+     */
+    public enum LoginStatus {
+        /** No login running */
+        IDLE,
+        /** The login thread started, but there's no code yet */
+        STARTING,
+        /** Waiting for the user to enter the code */
+        PENDING,
+        /** Logged in */
+        SUCCESS,
+        /** The login failed, see {@link LoginState#message} */
+        ERROR
+    }
 }

@@ -7,6 +7,12 @@ import org.apiguardian.api.API;
  */
 @API(status = API.Status.STABLE)
 public class LoginFailedException extends RuntimeException {
+    /**
+     * Creates the exception for a failed login
+     *
+     * @param message what went wrong
+     * @param t       the original error
+     */
     public LoginFailedException(String message, Throwable t) {
         super(message, t);
     }

@@ -17,28 +17,52 @@ public final class Skin {
     private final SkinModel model;
     private final String capeUrl;
 
+    /**
+     * Creates a skin
+     *
+     * @param skinUrl the skin texture URL
+     * @param model   the player model
+     * @param capeUrl the cape texture URL, or null
+     */
     public Skin(String skinUrl, SkinModel model, String capeUrl) {
         this.skinUrl = skinUrl;
         this.model = model;
         this.capeUrl = capeUrl;
     }
 
+    /**
+     * {@return the skin texture URL}
+     */
     public String skinUrl() {
         return skinUrl;
     }
 
+    /**
+     * {@return the player model}
+     */
     public SkinModel model() {
         return model;
     }
 
+    /**
+     * {@return the cape texture URL, or null if there's no cape}
+     */
     public String capeUrl() {
         return capeUrl;
     }
 
+    /**
+     * {@return true if there's a cape}
+     */
     public boolean hasCape() {
         return capeUrl != null;
     }
 
+    /**
+     * {@return true if it's a skin with the same URLs and model}
+     *
+     * @param o the other object
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -49,11 +73,17 @@ public final class Skin {
                 && Objects.equals(capeUrl, other.capeUrl);
     }
 
+    /**
+     * {@return the hash code of the URLs and model}
+     */
     @Override
     public int hashCode() {
         return Objects.hash(skinUrl, model, capeUrl);
     }
 
+    /**
+     * {@return the URLs and model}
+     */
     @Override
     public String toString() {
         return "Skin[" +

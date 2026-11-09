@@ -14,6 +14,11 @@ public enum SkinModel {
     /** The slim/Alex arm model. */
     SLIM;
 
+    /**
+     * {@return {@link #SLIM} for "slim", {@link #CLASSIC} for anything else}
+     *
+     * @param model the model name from the skin's metadata
+     */
     public static SkinModel fromString(String model) {
         return "slim".equalsIgnoreCase(model) ? SLIM : CLASSIC;
     }
