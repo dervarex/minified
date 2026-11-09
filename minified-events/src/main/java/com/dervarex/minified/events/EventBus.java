@@ -66,6 +66,10 @@ public final class EventBus {
      * Posting an Event Update
      * This one's mostly used internally for posting event updates,
      * but can be used by the Launcher to Stop the Game for example
+     * <p>
+     * If a listener throws, the other listeners still run and the exception goes to the
+     * {@link Thread.UncaughtExceptionHandler} of the posting thread
+     *
      * @param event the event
      * @param <T>   the event type
      */
@@ -77,8 +81,8 @@ public final class EventBus {
             try {
                 ((EventListener<T>) listener).onEvent(event);
             } catch (RuntimeException e) {
-                System.err.println("Listener for " + event.getClass().getSimpleName() + " threw:");
-                e.printStackTrace();
+                Thread thread = Thread.currentThread();
+                thread.getUncaughtExceptionHandler().uncaughtException(thread, e);
             }
         }
     }
