@@ -5,12 +5,20 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Splits the {@code minecraftArguments} string of versions before 1.13
+ */
 public final class LegacyMinecraftArgumentsParser {
     private static final Pattern TOKEN_PATTERN = Pattern.compile("\"([^\"]*)\"|(\\S+)");
 
     private LegacyMinecraftArgumentsParser() {
     }
 
+    /**
+     * {@return the single args, without their quotes}
+     *
+     * @param minecraftArguments the {@code minecraftArguments} string, can be null
+     */
     public static List<String> parse(String minecraftArguments) {
         List<String> result = new ArrayList<>();
 

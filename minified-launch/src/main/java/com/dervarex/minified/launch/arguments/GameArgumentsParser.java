@@ -9,12 +9,22 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Parses the game args of a version JSON
+ */
 public final class GameArgumentsParser {
     private static final String OS_NAME = getMinecraftOsName();
 
     private GameArgumentsParser() {
     }
 
+    /**
+     * {@return the game args, with the placeholders replaced}
+     *
+     * @param arguments the "game" array of a version JSON
+     * @param variables values for the {@code ${...}} placeholders
+     * @param features feature flags for the rules, like {@code is_demo_user}
+     */
     public static List<String> parse(
             JsonArray arguments,
             Map<String, String> variables,
