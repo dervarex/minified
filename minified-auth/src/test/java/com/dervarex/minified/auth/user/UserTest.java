@@ -102,10 +102,10 @@ class UserTest {
     }
 
     @Test
-    void toString_containsAllFields() {
+    void toString_masksTokenAndSession() {
         String s = createUser(UUID_A, "Notch", "token123").toString();
         assertTrue(s.contains("Notch"));
-        assertTrue(s.contains("token123"));
+        assertFalse(s.contains("token123"));
         assertTrue(s.contains("uuid="));
         assertTrue(s.contains("serializedSession="));
     }

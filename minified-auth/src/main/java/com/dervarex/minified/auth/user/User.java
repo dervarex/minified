@@ -90,14 +90,14 @@ public final class User implements MinecraftAccount {
     }
 
     /**
-     * {@return all fields, including the access token}
+     * {@return the UUID and name, the token and session are masked}
      */
     @Override
     public String toString() {
         return "User[" +
                 "uuid=" + uuid + ", " +
                 "username=" + username + ", " +
-                "accessToken=" + accessToken + ", " +
-                "serializedSession=" + serializedSession + ']';
+                "accessToken=***, " +
+                "serializedSession=***]";
     }
 }
