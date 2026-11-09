@@ -1,5 +1,6 @@
 package com.dervarex.minified.launch.launch.modding.forge.api;
 
+import com.dervarex.minified.launch.exceptions.loader.NoLoadersFoundException;
 import com.dervarex.minified.launch.exceptions.loader.forge.FailedToFetchPromotionsException;
 import com.dervarex.minified.launch.exceptions.version.FailedToFetchVersionsException;
 import com.dervarex.minified.utils.ApiEndpoints;
@@ -83,11 +84,15 @@ public class ForgeVersionFetcher {
      * {@return the latest Forge version for the Minecraft version}
      *
      * @param minecraftVersion minecraft version
+     * @throws NoLoadersFoundException if Forge has no build for the Minecraft version
      * @throws FailedToFetchPromotionsException if the request fails
      */
     @API(status = API.Status.STABLE)
     public String getLatest(String minecraftVersion) {
         JsonObject promos = getPromotions();
+        if (!promos.containsKey(minecraftVersion + "-latest")) {
+            throw new NoLoadersFoundException("No Forge version found for Minecraft " + minecraftVersion, "FORGE");
+        }
 
         String forgeVersion = promos
                 .get(minecraftVersion + "-latest")
@@ -100,11 +105,15 @@ public class ForgeVersionFetcher {
      * {@return the recommended Forge version for the Minecraft version, or null if there's none}
      *
      * @param minecraftVersion minecraft version
+     * @throws NoLoadersFoundException if Forge has no build for the Minecraft version
      * @throws FailedToFetchPromotionsException if the request fails
      */
     @API(status = API.Status.STABLE)
     public String getRecommended(String minecraftVersion) {
         JsonObject promos = getPromotions();
+        if (!promos.containsKey(minecraftVersion + "-latest") && !promos.containsKey(minecraftVersion + "-recommended")) {
+            throw new NoLoadersFoundException("No Forge version found for Minecraft " + minecraftVersion, "FORGE");
+        }
 
         if (!promos.containsKey(minecraftVersion + "-recommended")) {
             return null;

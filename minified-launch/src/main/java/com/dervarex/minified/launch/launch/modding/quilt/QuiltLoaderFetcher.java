@@ -3,6 +3,7 @@ package com.dervarex.minified.launch.launch.modding.quilt;
 import com.dervarex.minified.launch.exceptions.loader.NoLoadersFoundException;
 import com.dervarex.minified.launch.exceptions.version.FailedToFetchVersionsException;
 import com.dervarex.minified.utils.ApiEndpoints;
+import com.dervarex.minified.utils.exceptions.HttpException;
 import com.dervarex.minified.utils.http.HttpUtil;
 import com.dervarex.minified.utils.json.JsonArray;
 import com.dervarex.minified.utils.json.JsonObject;
@@ -32,11 +33,19 @@ public class QuiltLoaderFetcher {
             String minecraftVersion
     ) throws Exception {
 
-        JsonArray loaders = JsonParser
-                .parse(HttpUtil.get(
-                        ApiEndpoints.QUILT_LOADER_META_URL + "/" + minecraftVersion
-                ))
-                .asArray();
+        JsonArray loaders;
+        try {
+            loaders = JsonParser
+                    .parse(HttpUtil.get(
+                            ApiEndpoints.QUILT_LOADER_META_URL + "/" + minecraftVersion
+                    ))
+                    .asArray();
+        } catch (HttpException e) {
+            if (e.getStatusCode() == 404) {
+                throw new NoLoadersFoundException("No Quilt loaders found for Minecraft " + minecraftVersion, "QUILT", e);
+            }
+            throw e;
+        }
 
         if (loaders.size() == 0) {
             throw new NoLoadersFoundException(
@@ -126,6 +135,7 @@ public class QuiltLoaderFetcher {
      *
      * @param minecraftVersion minecraft version
      * @param loaderVersion quilt loader version
+     * @throws NoLoadersFoundException if Quilt doesn't have the loader for the Minecraft version
      * @throws Exception if the request fails
      */
     @API(status = API.Status.STABLE)
@@ -142,9 +152,16 @@ public class QuiltLoaderFetcher {
                         + loaderVersion
                         + "/profile/json";
 
-        return JsonParser
-                .parse(HttpUtil.get(url))
-                .asObject();
+        try {
+            return JsonParser
+                    .parse(HttpUtil.get(url))
+                    .asObject();
+        } catch (HttpException e) {
+            if (e.getStatusCode() == 404) {
+                throw new NoLoadersFoundException("No Quilt loader " + loaderVersion + " for Minecraft " + minecraftVersion, "QUILT", e);
+            }
+            throw e;
+        }
     }
 
     /**

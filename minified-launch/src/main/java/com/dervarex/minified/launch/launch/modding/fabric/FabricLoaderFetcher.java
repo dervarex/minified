@@ -2,6 +2,7 @@ package com.dervarex.minified.launch.launch.modding.fabric;
 
 import com.dervarex.minified.launch.exceptions.loader.NoLoadersFoundException;
 import com.dervarex.minified.utils.ApiEndpoints;
+import com.dervarex.minified.utils.exceptions.HttpException;
 import com.dervarex.minified.utils.http.HttpUtil;
 import com.dervarex.minified.utils.json.JsonArray;
 import com.dervarex.minified.utils.json.JsonObject;
@@ -43,6 +44,7 @@ public class FabricLoaderFetcher {
      *
      * @param minecraftVersion minecraft version
      * @param loaderVersion FabricMC loader version
+     * @throws NoLoadersFoundException if Fabric doesn't have the loader for the Minecraft version
      * @throws Exception if the request fails
      */
     @API(status = API.Status.STABLE)
@@ -59,9 +61,16 @@ public class FabricLoaderFetcher {
                         + loaderVersion
                         + "/profile/json";
 
-        return JsonParser
-                .parse(HttpUtil.get(url))
-                .asObject();
+        try {
+            return JsonParser
+                    .parse(HttpUtil.get(url))
+                    .asObject();
+        } catch (HttpException e) {
+            if (e.getStatusCode() == 400) {
+                throw new NoLoadersFoundException("No Fabric loader " + loaderVersion + " for Minecraft " + minecraftVersion, "FABRIC", e);
+            }
+            throw e;
+        }
     }
 
     /**
