@@ -22,7 +22,10 @@ public final class LegacyAssets {
     }
 
     /**
-     * @return the directory the game expects as {@code ${game_assets}}
+     * {@return the directory the game expects as {@code ${game_assets}}}
+     *
+     * @param versionJson the version JSON
+     * @param config the launch configuration
      */
     public static Path resolveGameAssetsDirectory(JsonFile versionJson, LaunchConfiguration config) {
         Path assetsDir = config.getAssetsDirectory().toAbsolutePath();

@@ -5,6 +5,8 @@ import org.apiguardian.api.API;
 
 /**
  * Gets fired when the Game's exit code isn't zero, which most likely indicates a crash or any other issues
+ *
+ * @param exitCode the game's exit code
  */
 @API(status = API.Status.STABLE)
 public record NonZeroExitCodeEvent(int exitCode) implements Event {

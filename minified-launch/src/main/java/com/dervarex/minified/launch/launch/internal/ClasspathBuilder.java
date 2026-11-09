@@ -27,8 +27,18 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+/**
+ * Builds the classpath from the version JSON and the loader profile
+ */
 @API(status = API.Status.INTERNAL, consumers = {"com.dervarex.minified.launch.*"})
 public class ClasspathBuilder {
+    /**
+     * {@return the classpath}
+     *
+     * @param versionJson the vanilla version JSON
+     * @param config the launch configuration
+     * @param online is the user online?
+     */
     public static String buildClasspath(JsonFile versionJson, LaunchConfiguration config, boolean online) {
         String separator = System.getProperty("os.name").toLowerCase().contains("win") ? ";" : ":";
 

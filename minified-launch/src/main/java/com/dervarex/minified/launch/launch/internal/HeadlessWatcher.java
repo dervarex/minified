@@ -55,6 +55,9 @@ public final class HeadlessWatcher {
     }
 
     /**
+     * {@return a watcher with the markers and timeout of the launch configuration}
+     *
+     * @param launchConfig the launch configuration
      * @param logsNoMarkers true for versions before 1.6, they get the LWJGL window marker
      */
     public static HeadlessWatcher forLaunch(LaunchConfiguration launchConfig, boolean logsNoMarkers) {
@@ -69,6 +72,8 @@ public final class HeadlessWatcher {
     /**
      * Waits until the game logs one of the headless markers, then stops it
      *
+     * @param process the game's process
+     * @throws InterruptedException if the thread gets interrupted while waiting
      * @return 0 if a marker was reached without the game crashing, 124 on timeout, otherwise a non-zero exit code
      */
     public int watch(Process process) throws InterruptedException {

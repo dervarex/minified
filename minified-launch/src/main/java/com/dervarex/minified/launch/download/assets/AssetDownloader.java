@@ -32,6 +32,9 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
+/**
+ * Downloads the assets
+ */
 public class AssetDownloader {
 
     private final ExecutorService pool;
@@ -41,10 +44,22 @@ public class AssetDownloader {
             .connectTimeout(Duration.ofSeconds(10))
             .build();
 
+    /**
+     * Creates the downloader
+     *
+     * @param downloadThreads the amount of threads to use for downloading
+     */
     public AssetDownloader(int downloadThreads) {
         this.pool = Executors.newFixedThreadPool(downloadThreads);
     }
 
+    /**
+     * Downloads the assets
+     *
+     * @param version the game version
+     * @param assetsDir the directory the assets should be downloaded to
+     * @param context internal launching context
+     */
     public void downloadAssets(String version, Path assetsDir, LaunchContext context) {
         downloadAssets(version, assetsDir, progress -> {}, context);
     }

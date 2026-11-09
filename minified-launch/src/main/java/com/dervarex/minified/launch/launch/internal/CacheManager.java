@@ -16,6 +16,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+/**
+ * Caches version JSONs and loader profiles, so the game can launch offline
+ */
 @API(status = API.Status.INTERNAL, consumers = {"com.dervarex.minified.launch.*"})
 public class CacheManager {
     private static Path cacheRoot() {
@@ -40,6 +43,15 @@ public class CacheManager {
     }
     /**
      * Loads a loader profile from the cache or from the {@link com.dervarex.minified.launch.launch.Launcher.ProfileSupplier} if it ain't cached yet
+     *
+     * @param version the minecraft version
+     * @param loaderName the loader name in lowercase, like fabric
+     * @param loaderVersion the loader version
+     * @param online is the user online?
+     * @param supplier fetches the profile
+     * @throws OfflineModeNeedsNetworkException if it isn't cached and the user is offline
+     * @throws FailedToCacheException if the profile can't be cached
+     * @return the loader profile
      */
     public static JsonObject loadProfileJson(
             String version,
@@ -73,6 +85,14 @@ public class CacheManager {
         }
         return profile;
     }
+    /**
+     * {@return the version JSON, from the cache if it's there}
+     *
+     * @param version the minecraft version
+     * @param online is the user online?
+     * @throws OfflineModeNeedsNetworkException if it isn't cached and the user is offline
+     * @throws IOException if fetching or caching it fails
+     */
     public static JsonFile loadVersionJson(String version, boolean online) throws IOException {
         Path cachePath = CacheManager.cachedVersionJsonPath(version);
 

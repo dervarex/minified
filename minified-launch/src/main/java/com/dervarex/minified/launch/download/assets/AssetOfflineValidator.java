@@ -11,6 +11,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Checks that all assets are there before an offline launch
+ */
 public final class AssetOfflineValidator {
 
     private AssetOfflineValidator() {

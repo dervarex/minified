@@ -17,7 +17,8 @@ public class FabricProfileJsonLoader {
      * @param version minecraft version
      * @param launchConfig launch configuration given by the launcher
      * @param online is the user online?
-     * @throws FailedToLoadLoaderProfileException if it's neither cached nor fetchable
+     * @throws com.dervarex.minified.utils.exceptions.OfflineModeNeedsNetworkException if it isn't cached and the user is offline
+     * @throws FailedToLoadLoaderProfileException if fetching it fails
      */
     @API(status = API.Status.INTERNAL, consumers = {"com.dervarex.minified.launch.*"})
     public static JsonObject loadFabricProfileJson(String version, LaunchConfiguration launchConfig, boolean online) {

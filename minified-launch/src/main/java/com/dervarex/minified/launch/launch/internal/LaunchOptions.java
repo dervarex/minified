@@ -48,6 +48,15 @@ public final class LaunchOptions {
         return new LaunchOptions();
     }
 
+    /**
+     * {@return the launch options for the placeholders in the version JSON}
+     *
+     * @param user the logged-in user, or null for offline mode
+     * @param version the minecraft version
+     * @param launchConfig the launch configuration
+     * @param versionJson the vanilla version JSON
+     * @param classpathString the classpath
+     */
     public static LaunchOptions buildLaunchOptions(User user, String version, LaunchConfiguration launchConfig, JsonFile versionJson, String classpathString) {
         return
                 LaunchOptions.create()

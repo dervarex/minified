@@ -32,6 +32,12 @@ public final class LaunchContext {
     private boolean finished;
     private volatile boolean stopRequested;
 
+    /**
+     * Creates the context for one launch, call it on the thread that launches
+     *
+     * @param user the logged-in user, or null for offline mode
+     * @param launchConfiguration the launch configuration
+     */
     public LaunchContext(User user, LaunchConfiguration launchConfiguration) {
         this.user = user;
         this.launchConfiguration = launchConfiguration;
@@ -40,6 +46,8 @@ public final class LaunchContext {
 
     /**
      * Stops the launch and whatever it's doing right now
+     *
+     * @param force true to kill the game instead of asking it to close
      */
     public synchronized void requestStop(boolean force) {
         if (finished) {
@@ -57,11 +65,16 @@ public final class LaunchContext {
         }
     }
 
+    /**
+     * {@return true if the launch should stop}
+     */
     public boolean isStopRequested() {
         return stopRequested;
     }
 
     /**
+     * Checkpoint between launch steps
+     *
      * @throws StopRequestedException if the launch should stop before the game was started
      */
     public void throwIfStopRequested() {
@@ -72,6 +85,9 @@ public final class LaunchContext {
 
     /**
      * Runs a step that may be interrupted when the launch is stopped without leaving behind Problems. Installing Java or Forge can't be interupted
+     *
+     * @param step the step to run
+     * @throws StopRequestedException if the launch was stopped before or during the step
      */
     public void runInterruptibly(Runnable step) {
         synchronized (this) {
@@ -93,6 +109,11 @@ public final class LaunchContext {
 
     /**
      * Starts the game, unless the launch was stopped already
+     *
+     * @param processBuilder the game's process builder
+     * @throws StopRequestedException if the launch was stopped already
+     * @throws IOException if the process can't be started
+     * @return the game's process
      */
     public synchronized Process startProcess(ProcessBuilder processBuilder) throws IOException {
         throwIfStopRequested();
@@ -100,6 +121,9 @@ public final class LaunchContext {
         return process;
     }
 
+    /**
+     * {@return true if the game process was started}
+     */
     public synchronized boolean isProcessStarted() {
         return process != null;
     }

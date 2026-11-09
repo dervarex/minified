@@ -12,8 +12,13 @@ import org.apiguardian.api.API;
 @API(status = API.Status.STABLE)
 public record GameOutputEvent(String line, Stream stream) implements Event {
 
+    /**
+     * The output stream a line came from
+     */
     public enum Stream {
+        /** Standard output */
         STDOUT,
+        /** Standard error */
         STDERR
     }
 }

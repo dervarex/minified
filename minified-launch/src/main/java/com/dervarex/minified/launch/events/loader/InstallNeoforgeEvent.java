@@ -17,6 +17,9 @@ public record InstallNeoforgeEvent(
         String loaderVersion
 ) implements Event {
 
+    /**
+     * The installation phase
+     */
     public enum Stage {
         /** Initial environment checks and directory setup */
         PREPARING,

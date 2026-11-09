@@ -23,6 +23,9 @@ import java.time.Duration;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
+/**
+ * Downloads the client jar
+ */
 public class ClientDownloader {
 
     /**
@@ -30,6 +33,8 @@ public class ClientDownloader {
      * @param version the game version
      * @param path    the full path to the jar including the file name, for example /home/dervarex/client.jar
      * @param context internal launching context
+     * @throws HttpException if the server responds with an error
+     * @throws IOException if the download fails
      */
     public void downloadClient(String version, Path path, @Nullable LaunchContext context)
             throws HttpException, IOException {
@@ -42,6 +47,8 @@ public class ClientDownloader {
      * @param path    the full path to the jar including the file name, for example /home/dervarex/client.jar
      * @param progressConsumer receives the number of bytes read for each chunk
      * @param context internal launching context
+     * @throws HttpException if the server responds with an error
+     * @throws IOException if the download fails
      */
     public void downloadClient(String version, Path path, Consumer<Double> progressConsumer, @Nullable LaunchContext context)
             throws HttpException, IOException {

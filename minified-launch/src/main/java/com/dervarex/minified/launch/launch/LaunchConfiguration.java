@@ -83,6 +83,9 @@ public class LaunchConfiguration {
         this.eventBus = eventBus != null ? eventBus : new EventBus();
     }
 
+    /**
+     * {@return the extra JVM args, read-only}
+     */
     public List<String> getExtraJvmArgs() {
         return Collections.unmodifiableList(extraJvmArgs);
     }
@@ -111,33 +114,64 @@ public class LaunchConfiguration {
         return jarFile.toAbsolutePath().getParent();
     }
 
+    /**
+     * Builds a {@link LaunchConfiguration}, see the class docs for an example
+     */
     public static class Builder {
 
         private final LaunchConfiguration config;
         private EventBus eventBus = new EventBus();
 
+        /**
+         * Creates a builder with the defaults
+         */
         public Builder() {
             this.config = new LaunchConfiguration(eventBus);
         }
 
         // Memory
+        /**
+         * Sets the minimum RAM, 2048 by default
+         *
+         * @param minRam the minimum RAM in MB
+         * @return this builder
+         */
         public Builder minRam(int minRam) {
             config.minRam = minRam;
             return this;
         }
 
+        /**
+         * Sets the maximum RAM, 4096 by default
+         *
+         * @param maxRam the maximum RAM in MB
+         * @return this builder
+         */
         public Builder maxRam(int maxRam) {
             config.maxRam = maxRam;
             return this;
         }
 
         // Downloads
+        /**
+         * Sets how many files get downloaded at once, 5 by default
+         *
+         * @param threads the amount of download threads
+         * @return this builder
+         */
         public Builder downloadThreads(int threads) {
             config.downloadThreads = threads;
             return this;
         }
 
         // Resolution
+        /**
+         * Sets the window size, without it the game picks its own
+         *
+         * @param width the width in pixels
+         * @param height the height in pixels
+         * @return this builder
+         */
         public Builder resolution(int width, int height) {
             config.resolutionWidth = width;
             config.resolutionHeight = height;
@@ -146,38 +180,80 @@ public class LaunchConfiguration {
         }
 
         // Launcher metadata
+        /**
+         * Sets the launcher name the game gets told about
+         *
+         * @param name the launcher name
+         * @return this builder
+         */
         public Builder launcherName(String name) {
             config.launcherName = name;
             return this;
         }
 
+        /**
+         * Sets the launcher version the game gets told about
+         *
+         * @param version the launcher version
+         * @return this builder
+         */
         public Builder launcherVersion(String version) {
             config.launcherVersion = version;
             return this;
         }
 
         // Flags
+        /**
+         * Launches the demo, false by default
+         *
+         * @param demo whether to launch the demo
+         * @return this builder
+         */
         public Builder isDemoUser(boolean demo) {
             config.demoUser = demo;
             return this;
         }
 
         // Paths
+        /**
+         * Sets where the client jar goes, required
+         *
+         * @param jarFile the path to the client jar
+         * @return this builder
+         */
         public Builder jarFile(Path jarFile) {
             config.jarFile = jarFile;
             return this;
         }
 
+        /**
+         * Sets where the libraries go, required
+         *
+         * @param librariesDirectory the libraries directory
+         * @return this builder
+         */
         public Builder librariesDirectory(Path librariesDirectory) {
             config.librariesDirectory = librariesDirectory;
             return this;
         }
 
+        /**
+         * Sets where the assets go, required
+         *
+         * @param assetsDirectory the assets directory
+         * @return this builder
+         */
         public Builder assetsDirectory(Path assetsDirectory) {
             config.assetsDirectory = assetsDirectory;
             return this;
         }
 
+        /**
+         * Sets where native libraries get extracted to
+         *
+         * @param nativesDirectory the natives directory, defaults to {@code <jarFile's parent directory>/natives}
+         * @return this builder
+         */
         public Builder nativesDirectory(Path nativesDirectory) {
             config.nativesDirectory = nativesDirectory;
             return this;
@@ -188,23 +264,42 @@ public class LaunchConfiguration {
          * and the loader files installed next to it.
          *
          * @param gameDirectory where saves, mods, options and logs go, defaults to the jar's parent directory
+         * @return this builder
          */
         public Builder gameDirectory(Path gameDirectory) {
             config.gameDirectory = gameDirectory;
             return this;
         }
 
+        /**
+         * Uses your own Java instead of the one we download
+         *
+         * @param customJavaExecutable the path to the java executable
+         * @return this builder
+         */
         public Builder customJavaExecutable(Path customJavaExecutable) {
             config.customJavaExecutable = customJavaExecutable;
             return this;
         }
 
         // Launch options
+        /**
+         * Adds a JVM arg
+         *
+         * @param arg the arg, like {@code -XX:+UseG1GC}
+         * @return this builder
+         */
         public Builder extraJvmArg(String arg) {
             config.extraJvmArgs.add(arg);
             return this;
         }
 
+        /**
+         * Adds JVM args, null is ignored
+         *
+         * @param args the args
+         * @return this builder
+         */
         public Builder extraJvmArgs(List<String> args) {
             if (args != null) {
                 config.extraJvmArgs.addAll(args);
@@ -212,6 +307,12 @@ public class LaunchConfiguration {
             return this;
         }
 
+        /**
+         * Sets the loader and Minecraft version, required
+         *
+         * @param loader the loader, like {@code new VanillaLoader("1.21.11")}
+         * @return this builder
+         */
         public Builder loader(Loader loader) {
             config.loader = loader;
             return this;
@@ -224,6 +325,7 @@ public class LaunchConfiguration {
          * gets posted as a {@code GameOutputEvent}
          *
          * @param captureGameOutput whether to capture the output, false by default
+         * @return this builder
          */
         public Builder captureGameOutput(boolean captureGameOutput) {
             config.captureGameOutput = captureGameOutput;
@@ -231,16 +333,34 @@ public class LaunchConfiguration {
         }
 
         // Headless test options
+        /**
+         * Stops the game once it reached the main menu, used for tests
+         *
+         * @param headless whether to run headless, false by default
+         * @return this builder
+         */
         public Builder headless(boolean headless) {
             config.headless = headless;
             return this;
         }
 
+        /**
+         * Sets how long a headless game gets to reach the main menu, 180 by default
+         *
+         * @param headlessTimeoutSeconds the timeout in seconds
+         * @return this builder
+         */
         public Builder headlessTimeoutSeconds(int headlessTimeoutSeconds) {
             config.headlessTimeoutSeconds = headlessTimeoutSeconds;
             return this;
         }
 
+        /**
+         * Sets the log lines that count as reaching the main menu in headless mode
+         *
+         * @param headlessMarker comma separated parts of log lines, null for the defaults
+         * @return this builder
+         */
         public Builder headlessMarker(String headlessMarker) {
             config.headlessMarker = headlessMarker;
             return this;
@@ -251,6 +371,7 @@ public class LaunchConfiguration {
          * Only uses the custom username if offline mode is enabled.
          *
          * @param username the username to use
+         * @return this builder
          */
         public Builder offlineUsername(String username) {
             config.offlineUsername = username;
@@ -258,11 +379,22 @@ public class LaunchConfiguration {
         }
 
         // Events
+        /**
+         * Sets the event bus everything gets posted to
+         *
+         * @param eventBus the event bus, null creates a new one
+         * @return this builder
+         */
         public Builder eventBus(EventBus eventBus) {
             this.eventBus = eventBus != null ? eventBus : new EventBus();
             return this;
         }
 
+        /**
+         * {@return the launch configuration}
+         *
+         * @throws NullPointerException if jarFile, librariesDirectory, assetsDirectory or loader is missing
+         */
         public LaunchConfiguration build() {
             config.eventBus = eventBus;
 

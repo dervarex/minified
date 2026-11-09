@@ -22,6 +22,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Checks that all libraries are there before an offline launch
+ */
 public final class OfflineLibraryValidator {
 
     private OfflineLibraryValidator() {
