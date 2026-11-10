@@ -54,7 +54,7 @@ Configure how Minecraft is downloaded, prepared, and launched.
   <summary class="fields-summary">
     <span>
       <strong>Configuration Fields</strong>
-      <small>17 available fields</small>
+      <small>21 available fields</small>
     </span>
 
     <span class="fields-chevron" aria-hidden="true">›</span>
@@ -186,6 +186,40 @@ Configure how Minecraft is downloaded, prepared, and launched.
         <span class="badge optional">Optional</span>
       </div>
       <p>Additional JVM arguments passed to the Minecraft process.</p>
+    </div>
+
+    <div class="field-card">
+      <div class="field-header">
+        <code>extraGameArgs</code>
+        <span class="badge optional">Optional</span>
+      </div>
+      <p>Additional game arguments, appended after the ones from the version JSON.</p>
+    </div>
+
+    <div class="field-card">
+      <div class="field-header">
+        <code>environmentVariables</code>
+        <span class="badge optional">Optional</span>
+      </div>
+      <p>Environment variables for the Minecraft process. They win over the launcher's own environment.</p>
+    </div>
+
+    <div class="field-card">
+      <div class="field-header">
+        <code>fullscreen</code>
+        <span class="badge optional">Optional</span>
+      </div>
+      <p>Starts the game in fullscreen. Ignored before 1.6.</p>
+      <span class="field-meta">Default: <code>false</code></span>
+    </div>
+
+    <div class="field-card">
+      <div class="field-header">
+        <code>serverAddress</code>
+        <span class="badge optional">Optional</span>
+      </div>
+      <p>A server to join as soon as the game has started, <code>host</code> or <code>host:port</code>. Uses quick play on 1.20+, <code>--server</code>/<code>--port</code> on older versions. Ignored before 1.6.</p>
+      <span class="field-meta">Default: <code>null</code></span>
     </div>
 
     <div class="field-card required-card">

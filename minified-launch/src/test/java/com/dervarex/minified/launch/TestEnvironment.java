@@ -1,5 +1,7 @@
 package com.dervarex.minified.launch;
 
+import com.dervarex.minified.launch.events.launch.GameOutputEvent;
+import com.dervarex.minified.launch.events.launch.HeadlessStopEvent;
 import com.dervarex.minified.launch.launch.LaunchConfiguration;
 import com.dervarex.minified.launch.launch.modding.Loader;
 import com.dervarex.minified.launch.launch.modding.fabric.FabricLoader;
@@ -48,7 +50,10 @@ public final class TestEnvironment {
             }
         }
 
-        return builder.build();
+        LaunchConfiguration config = builder.build();
+        config.getEventBus().subscribe(GameOutputEvent.class, event -> System.out.println(event.line()));
+        config.getEventBus().subscribe(HeadlessStopEvent.class, event -> System.out.println("[minified-headless] " + event.reason()));
+        return config;
     }
 
     private static Loader resolveLoader(String name, String mcVersion) {

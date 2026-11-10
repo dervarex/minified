@@ -39,6 +39,10 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.14.0'
 }
 
+tasks.withType(Test).configureEach {
+    jvmArgs '--add-modules', 'jdk.httpserver'
+}
+
 test {
     useJUnitPlatform {
         def include = System.getProperty('groups')

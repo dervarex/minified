@@ -26,6 +26,28 @@ class EventBusTest {
     }
 
     @Test
+    void throwingListenerGoesToTheUncaughtExceptionHandler() {
+        IllegalStateException failure = new IllegalStateException("broken listener");
+        List<Throwable> handled = new ArrayList<>();
+        Thread thread = Thread.currentThread();
+        Thread.UncaughtExceptionHandler previous = thread.getUncaughtExceptionHandler();
+        thread.setUncaughtExceptionHandler((t, e) -> handled.add(e));
+        try {
+            eventBus.subscribe(CheckConnectionEvent.class, event -> {
+                throw failure;
+            });
+            eventBus.subscribe(CheckConnectionEvent.class, event -> heard.add("second"));
+
+            eventBus.post(new CheckConnectionEvent());
+        } finally {
+            thread.setUncaughtExceptionHandler(previous);
+        }
+
+        assertEquals(List.of(failure), handled);
+        assertEquals(List.of("second"), heard);
+    }
+
+    @Test
     void listenersOnlyHearTheirOwnEvent() {
         eventBus.subscribe(CheckConnectionEvent.class, event -> heard.add("checking"));
 

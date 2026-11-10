@@ -105,4 +105,51 @@ class ArgumentsBuilderTest {
         assertEquals(List.of("--demo", "--brew"), second);
         assertEquals("{\"arguments\":{\"game\":[\"--demo\"]}}", versionJson.toJson());
     }
+
+    @Test
+    void newVersionsJoinTheServerThroughQuickPlay() {
+        LaunchConfiguration config = optionsConfig().serverAddress("play.example.com:25566").build();
+        JsonFile versionJson = new JsonFile("""
+                { "arguments": { "game": [
+                    { "rules": [{ "action": "allow", "features": { "is_quick_play_multiplayer": true } }],
+                      "value": ["--quickPlayMultiplayer", "${quickPlayMultiplayer}"] }
+                ] } }
+                """);
+        LaunchOptions options = LaunchOptions.buildLaunchOptions(null, "1.21.11", config, versionJson, "client.jar");
+
+        assertEquals(List.of("--quickPlayMultiplayer", "play.example.com:25566"),
+                ArgumentsBuilder.buildGameArguments(versionJson, options, VANILLA, "1.21.11", config, false));
+        assertEquals(List.of(), ArgumentsBuilder.buildExtraGameArguments(versionJson, config, false));
+    }
+
+    @Test
+    void olderVersionsJoinTheServerWithServerAndPort() {
+        JsonFile versionJson = new JsonFile("{ \"arguments\": { \"game\": [] } }");
+
+        assertEquals(List.of("--fullscreen", "--server", "play.example.com", "--port", "25566", "--extra"),
+                ArgumentsBuilder.buildExtraGameArguments(versionJson,
+                        optionsConfig().fullscreen(true).serverAddress("play.example.com:25566").extraGameArg("--extra").build(), false));
+        assertEquals(List.of("--server", "play.example.com", "--port", "25565"),
+                ArgumentsBuilder.buildExtraGameArguments(versionJson, optionsConfig().serverAddress("play.example.com").build(), false));
+        assertEquals(List.of("--server", "[::1]", "--port", "25566"),
+                ArgumentsBuilder.buildExtraGameArguments(versionJson, optionsConfig().serverAddress("[::1]:25566").build(), false));
+        assertEquals(List.of("--server", "::1", "--port", "25565"),
+                ArgumentsBuilder.buildExtraGameArguments(versionJson, optionsConfig().serverAddress("::1").build(), false));
+    }
+
+    @Test
+    void versionsBeforeOneSixOnlyGetTheExtraArguments() {
+        LaunchConfiguration config = optionsConfig().fullscreen(true).serverAddress("play.example.com").extraGameArg("--extra").build();
+
+        assertEquals(List.of("--extra"),
+                ArgumentsBuilder.buildExtraGameArguments(new JsonFile("{ \"minecraftArguments\": \"\" }"), config, true));
+    }
+
+    private LaunchConfiguration.Builder optionsConfig() {
+        return new LaunchConfiguration.Builder()
+                .jarFile(tempDir.resolve("jar/client.jar"))
+                .assetsDirectory(tempDir.resolve("assets"))
+                .librariesDirectory(tempDir.resolve("libraries"))
+                .loader(VANILLA);
+    }
 }

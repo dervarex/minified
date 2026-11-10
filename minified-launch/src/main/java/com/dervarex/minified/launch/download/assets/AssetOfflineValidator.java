@@ -21,6 +21,7 @@ public final class AssetOfflineValidator {
 
     /**
      * Validates the Assets while the User is offline
+     * Needs a Cached Version JSON to work
      * @param version minecraft version to use
      * @param assetsDir directory where the assets have been downloaded to
      */
