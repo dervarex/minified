@@ -117,6 +117,8 @@ public class ForgeInstallerInjector {
         context.getEventBus().post(new InstallForgeEvent(InstallForgeEvent.Stage.RUNNING_INSTALLER, context.getLaunchConfiguration().getLoader().mcVersion(), context.getLaunchConfiguration().getLoader().loaderVersion()));
 
 
+        makeInstallerHeadless(urlClassLoader);
+
         Class<?> utilClass = urlClassLoader.loadClass("net.minecraftforge.installer.json.Util");
         Method loadInstallProfile = utilClass.getMethod("loadInstallProfile");
         Object profile = loadInstallProfile.invoke(null);
@@ -217,5 +219,16 @@ public class ForgeInstallerInjector {
             throw new FailedToRunForgeInstallerException(e);
         }
         context.getEventBus().post(new InstallForgeEvent(InstallForgeEvent.Stage.FINISHED, context.getLaunchConfiguration().getLoader().mcVersion(), context.getLaunchConfiguration().getLoader().loaderVersion()));
+    }
+
+    /**
+     * Makes the installer report errors through the progress callback
+     */
+    private static void makeInstallerHeadless(ClassLoader classLoader) {
+        try {
+            classLoader.loadClass("net.minecraftforge.installer.SimpleInstaller").getField("headless").setBoolean(null, true);
+        } catch (ReflectiveOperationException ignored) {
+            // older installers don't have the flag
+        }
     }
 }
