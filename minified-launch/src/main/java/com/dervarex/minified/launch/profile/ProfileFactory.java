@@ -29,13 +29,13 @@ import java.util.Objects;
 import java.util.function.Function;
 
 /**
- * Saves profiles as JSON and loads them again
+ * JSON storage for profiles
  * <p>
  * Format versions:
  * <ul>
- *     <li>1: only the launch configuration, files without a {@code formatVersion} field</li>
+ *     <li>1: only the launch configuration, no {@code formatVersion} field</li>
  *     <li>2: adds {@code formatVersion}, the {@code profile} metadata, the {@code files} list and the options
- *     fullscreen, extraGameArgs, environment and serverAddress. Version 1 files still load</li>
+ *     fullscreen, extraGameArgs, environment and serverAddress</li>
  * </ul>
  */
 @API(status = API.Status.STABLE)

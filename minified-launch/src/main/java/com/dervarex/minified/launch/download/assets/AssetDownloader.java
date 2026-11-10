@@ -33,7 +33,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
 /**
- * Downloads the assets
+ * Downloads the Assets Minecraft is using (mostly some random old screenshots, but minecraft needs them)
  */
 public class AssetDownloader {
 
