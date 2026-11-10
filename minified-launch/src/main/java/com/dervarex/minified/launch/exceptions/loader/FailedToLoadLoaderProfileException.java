@@ -14,6 +14,13 @@ public class FailedToLoadLoaderProfileException extends RuntimeException {
      */
     private final String loader;
 
+    /**
+     * Creates the exception
+     *
+     * @param message what went wrong
+     * @param loader  the loader in uppercase, like FABRIC
+     * @param cause   the original error
+     */
     public FailedToLoadLoaderProfileException(String message, String loader, Throwable cause) {
         super(message, cause);
         this.loader = loader;

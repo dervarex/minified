@@ -9,6 +9,9 @@ import org.apiguardian.api.API;
 
 import java.nio.file.Path;
 
+/**
+ * Loads the NeoForge profile JSON, from the cache if possible
+ */
 @API(status = API.Status.STABLE)
 public class NeoProfileJsonLoader {
     /**

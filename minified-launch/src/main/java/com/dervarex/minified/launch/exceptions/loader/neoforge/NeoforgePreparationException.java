@@ -7,6 +7,11 @@ import org.apiguardian.api.API;
  */
 @API(status = API.Status.STABLE)
 public class NeoforgePreparationException extends RuntimeException {
+    /**
+     * Creates the exception
+     *
+     * @param cause the original error
+     */
     public NeoforgePreparationException(Throwable cause) {
         super(cause);
     }

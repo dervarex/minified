@@ -16,24 +16,37 @@ public final class OfflineUser implements MinecraftAccount {
     private final MinecraftUUID uuid;
     private final String username;
 
+    /**
+     * Creates an offline user
+     *
+     * @param username the username, the UUID is made from it
+     */
     public OfflineUser(String username) {
         this.uuid = new MinecraftUUID(UUID.nameUUIDFromBytes(("OfflinePlayer:" + username).getBytes(StandardCharsets.UTF_8)));
         this.username = username;
     }
 
     /**
-     * @return {@link MinecraftUUID}, contains dashed and non dashed uuid
+     * {@return the offline UUID}
      */
     @Override
     public MinecraftUUID getMinecraftUUID() {
         return uuid;
     }
 
+    /**
+     * {@return the username}
+     */
     @Override
     public String username() {
         return username;
     }
 
+    /**
+     * {@return true if it's an offline user with the same name}
+     *
+     * @param o the other object
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -43,11 +56,17 @@ public final class OfflineUser implements MinecraftAccount {
                 && Objects.equals(username, other.username);
     }
 
+    /**
+     * {@return the hash code of the UUID and name}
+     */
     @Override
     public int hashCode() {
         return Objects.hash(uuid, username);
     }
 
+    /**
+     * {@return the UUID and name}
+     */
     @Override
     public String toString() {
         return "OfflineUser[" +

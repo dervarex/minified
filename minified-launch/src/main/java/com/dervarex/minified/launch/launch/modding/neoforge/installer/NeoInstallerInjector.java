@@ -1,5 +1,6 @@
 package com.dervarex.minified.launch.launch.modding.neoforge.installer;
 
+import com.dervarex.minified.launch.events.loader.LoaderInstallerOutputEvent;
 import com.dervarex.minified.launch.exceptions.loader.neoforge.FailedToRunNeoforgeInstallerException;
 import com.dervarex.minified.launch.events.loader.InstallNeoforgeEvent;
 import com.dervarex.minified.launch.exceptions.download.DownloadException;
@@ -26,6 +27,9 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.function.Consumer;
 
+/**
+ * Injects itself into the NeoForge installer and lets it do the work
+ */
 @API(status = API.Status.INTERNAL, consumers = {"com.dervarex.minified.launch.*"})
 public class NeoInstallerInjector {
     private static final String INSTALLER_FILE_NAME = "neoforge-installer.jar";
@@ -165,7 +169,7 @@ public class NeoInstallerInjector {
                     loader,
                     config.getJarFile().getParent().toFile(),
                     installerPath.toFile(),
-                    System.out::println,
+                    message -> context.getEventBus().post(new LoaderInstallerOutputEvent("NEOFORGE", message)),
                     context
             );
         } catch (ReflectiveOperationException | IOException e) {

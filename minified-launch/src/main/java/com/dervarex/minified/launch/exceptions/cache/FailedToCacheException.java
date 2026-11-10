@@ -7,6 +7,12 @@ import org.apiguardian.api.API;
  */
 @API(status = API.Status.STABLE)
 public class FailedToCacheException extends RuntimeException {
+    /**
+     * Creates the exception
+     *
+     * @param message what went wrong
+     * @param cause   the original error
+     */
     public FailedToCacheException(String message, Throwable cause) {
         super(message, cause);
     }

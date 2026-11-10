@@ -2,17 +2,24 @@ package com.dervarex.minified.launch.launch.modding.fabric;
 
 import com.dervarex.minified.launch.exceptions.loader.NoLoadersFoundException;
 import com.dervarex.minified.utils.ApiEndpoints;
+import com.dervarex.minified.utils.exceptions.HttpException;
 import com.dervarex.minified.utils.http.HttpUtil;
 import com.dervarex.minified.utils.json.JsonArray;
 import com.dervarex.minified.utils.json.JsonObject;
 import com.dervarex.minified.utils.json.JsonParser;
 import org.apiguardian.api.API;
 
+/**
+ * Fetches Fabric loader versions and profile JSONs
+ */
 @API(status = API.Status.STABLE)
 public class FabricLoaderFetcher {
 
     /**
-     * @return Latest FabricMC Loader Version
+     * {@return the latest Fabric loader version}
+     *
+     * @throws NoLoadersFoundException if Fabric lists no loaders
+     * @throws Exception if the request fails
      */
     @API(status = API.Status.STABLE)
     public static String getLatestLoaderVersion() throws Exception {
@@ -33,9 +40,12 @@ public class FabricLoaderFetcher {
     }
 
     /**
+     * {@return the profile JSON of the Fabric loader for the Minecraft version}
+     *
      * @param minecraftVersion minecraft version
      * @param loaderVersion FabricMC loader version
-     * @return the profile JSON for the fabric loader of the specified minecraft version
+     * @throws NoLoadersFoundException if Fabric doesn't have the loader for the Minecraft version
+     * @throws Exception if the request fails
      */
     @API(status = API.Status.STABLE)
     public static JsonObject getProfileJson(
@@ -51,14 +61,24 @@ public class FabricLoaderFetcher {
                         + loaderVersion
                         + "/profile/json";
 
-        return JsonParser
-                .parse(HttpUtil.get(url))
-                .asObject();
+        try {
+            return JsonParser
+                    .parse(HttpUtil.get(url))
+                    .asObject();
+        } catch (HttpException e) {
+            if (e.getStatusCode() == 400) {
+                throw new NoLoadersFoundException("No Fabric loader " + loaderVersion + " for Minecraft " + minecraftVersion, "FABRIC", e);
+            }
+            throw e;
+        }
     }
 
     /**
+     * {@return the profile JSON of the latest Fabric loader for the Minecraft version}
+     *
      * @param minecraftVersion minecraft version
-     * @return the latest profile JSON for the given minecraft version
+     * @throws NoLoadersFoundException if Fabric lists no loaders
+     * @throws Exception if a request fails
      */
     public static JsonObject getLatestProfile(
             String minecraftVersion

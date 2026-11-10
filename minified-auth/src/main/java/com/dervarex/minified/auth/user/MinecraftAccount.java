@@ -2,16 +2,19 @@ package com.dervarex.minified.auth.user;
 
 import org.apiguardian.api.API;
 
+/**
+ * A Minecraft account, online or offline
+ */
 @API(status = API.Status.STABLE)
 public interface MinecraftAccount {
 
     /**
-     * @return {@link MinecraftUUID}, contains dashed and non dashed uuid
+     * {@return the account's UUID}
      */
     MinecraftUUID getMinecraftUUID();
 
     /**
-     * @return the display name of the account
+     * {@return the display name}
      */
     String username();
 }

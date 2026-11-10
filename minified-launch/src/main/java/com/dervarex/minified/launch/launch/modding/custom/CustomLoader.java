@@ -24,6 +24,9 @@ public record CustomLoader(
         List<String> customGameArgs,
         List<String> customClasspathEntries
 ) implements Loader {
+    /**
+     * Copies the lists, null becomes an empty list
+     */
     public CustomLoader {
         customJvmArgs = customJvmArgs == null ? List.of() : List.copyOf(customJvmArgs);
         customGameArgs = customGameArgs == null ? List.of() : List.copyOf(customGameArgs);

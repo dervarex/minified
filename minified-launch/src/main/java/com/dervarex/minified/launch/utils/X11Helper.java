@@ -11,11 +11,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * Makes the game use X11 through Xwayland on Linux
+ */
 public class X11Helper {
     /**
      * Normalizes the child JVM graphics environment so Linux launches can
      * fall back to X11 when a local Xwayland display is available.
      * @param processBuilder the process builder for the child JVM,<p> which will be modified in-place to set DISPLAY and potentially XDG_SESSION_TYPE
+     * @param context internal launching context
      */
     public static void configureGraphicsEnvironment(
             ProcessBuilder processBuilder,
@@ -36,6 +40,10 @@ public class X11Helper {
     /**
      * Normalizes the child JVM graphics environment using the supplied X11
      * socket directory.
+     *
+     * @param processBuilder the process builder for the child JVM
+     * @param x11SocketDirectory the directory with the X11 sockets, usually {@code /tmp/.X11-unix}
+     * @param context internal launching context
      */
     public static void configureGraphicsEnvironment(
             ProcessBuilder processBuilder,
@@ -73,11 +81,6 @@ public class X11Helper {
             environment.remove("WAYLAND_DISPLAY");
             environment.put("XDG_SESSION_TYPE", "x11");
         }
-
-        System.out.println(
-                "Detected X11 display " + resolvedDisplay +
-                        " for Minecraft"
-        );
     }
 
     /**
@@ -129,6 +132,10 @@ public class X11Helper {
 
     /**
      * Replaces ${key} placeholders in the supplied arguments.
+     *
+     * @param arguments the args
+     * @param variables values for the placeholders
+     * @return the args with the placeholders replaced
      */
     public static List<String> substituteVariables(
             List<String> arguments,

@@ -12,6 +12,9 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Finds the version JSON the NeoForge installer wrote
+ */
 @API(status = API.Status.STABLE)
 public final class NeoVersionJson {
     private NeoVersionJson() {
@@ -19,6 +22,11 @@ public final class NeoVersionJson {
 
     /**
      * Resolves the local NeoForge version JSON as automatically as possible.
+     *
+     * @param gameDir the game directory
+     * @param loaderVersion neoforge loader version
+     * @throws IOException if the versions folder can't be read
+     * @return the version JSON
      */
     @API(status = API.Status.STABLE)
     public static JsonFile getVersionJson(Path gameDir, String loaderVersion) throws IOException {

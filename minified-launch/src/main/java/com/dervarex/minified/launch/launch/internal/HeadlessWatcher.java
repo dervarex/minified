@@ -1,5 +1,9 @@
 package com.dervarex.minified.launch.launch.internal;
 
+import com.dervarex.minified.events.EventBus;
+import com.dervarex.minified.launch.events.launch.GameOutputEvent;
+import com.dervarex.minified.launch.events.launch.HeadlessStopEvent;
+import com.dervarex.minified.launch.events.launch.HeadlessStopEvent.Reason;
 import com.dervarex.minified.launch.launch.LaunchConfiguration;
 import org.apiguardian.api.API;
 
@@ -47,14 +51,19 @@ public final class HeadlessWatcher {
     private final String[] markers;
     private final long timeoutSeconds;
     private final long gracePeriodNanos;
+    private final EventBus eventBus;
 
-    HeadlessWatcher(String[] markers, long timeoutSeconds, long gracePeriodNanos) {
+    HeadlessWatcher(String[] markers, long timeoutSeconds, long gracePeriodNanos, EventBus eventBus) {
         this.markers = markers;
         this.timeoutSeconds = timeoutSeconds;
         this.gracePeriodNanos = gracePeriodNanos;
+        this.eventBus = eventBus;
     }
 
     /**
+     * {@return a watcher with the markers and timeout of the launch configuration}
+     *
+     * @param launchConfig the launch configuration
      * @param logsNoMarkers true for versions before 1.6, they get the LWJGL window marker
      */
     public static HeadlessWatcher forLaunch(LaunchConfiguration launchConfig, boolean logsNoMarkers) {
@@ -63,12 +72,14 @@ public final class HeadlessWatcher {
                 ? launchConfig.getHeadlessMarker()
                 : legacyMarker ? LEGACY_HEADLESS_MARKER : DEFAULT_HEADLESS_MARKERS;
         long gracePeriod = legacyMarker ? LEGACY_HEADLESS_GRACE_PERIOD_NANOS : HEADLESS_GRACE_PERIOD_NANOS;
-        return new HeadlessWatcher(markersRaw.split(","), launchConfig.getHeadlessTimeoutSeconds(), gracePeriod);
+        return new HeadlessWatcher(markersRaw.split(","), launchConfig.getHeadlessTimeoutSeconds(), gracePeriod, launchConfig.getEventBus());
     }
 
     /**
      * Waits until the game logs one of the headless markers, then stops it
      *
+     * @param process the game's process
+     * @throws InterruptedException if the thread gets interrupted while waiting
      * @return 0 if a marker was reached without the game crashing, 124 on timeout, otherwise a non-zero exit code
      */
     public int watch(Process process) throws InterruptedException {
@@ -84,7 +95,8 @@ public final class HeadlessWatcher {
                 // lines left until we know if a crash report header belongs to a real crash or ist just forge pretending again
                 int crashReportLinesLeft = -1;
                 while ((line = reader.readLine()) != null) {
-                    System.out.println(line);
+                    // stderr is merged into stdout in headless mode
+                    eventBus.post(new GameOutputEvent(line, GameOutputEvent.Stream.STDOUT));
                     if (crashReportLinesLeft >= 0) {
                         if (line.contains(FAKE_CRASH_REPORT_DESCRIPTION)) {
                             crashReportLinesLeft = -1;
@@ -125,7 +137,7 @@ public final class HeadlessWatcher {
         boolean stoppedByUs = false;
         while (process.isAlive()) {
             if (crashed.get()) {
-                System.err.println("[minified-headless] game crashed, stopping process");
+                eventBus.post(new HeadlessStopEvent(Reason.CRASHED));
                 terminateProcess(process);
                 break;
             }
@@ -133,12 +145,12 @@ public final class HeadlessWatcher {
             // keep watching for a crash for a moment after the marker, then stop the game
             if (matched >= 0 && System.nanoTime() - matched > gracePeriodNanos) {
                 stoppedByUs = true;
+                eventBus.post(new HeadlessStopEvent(Reason.MARKER_REACHED));
                 terminateProcess(process);
                 break;
             }
             if (matched < 0 && System.nanoTime() > deadline) {
-                System.err.println("[minified-headless] timeout after "
-                        + timeoutSeconds + "s, killing process");
+                eventBus.post(new HeadlessStopEvent(Reason.TIMEOUT));
                 process.destroyForcibly();
                 process.waitFor();
                 return 124;
@@ -158,18 +170,18 @@ public final class HeadlessWatcher {
                 return 0;
             }
             // nothing closes the game in headless mode, so it died during the grace period
-            System.err.println("[minified-headless] game exited right after reaching a marker");
+            eventBus.post(new HeadlessStopEvent(Reason.EXITED_AFTER_MARKER));
             return exitCode != 0 ? exitCode : 1;
         }
-        System.err.println("[minified-headless] game exited before reaching a marker");
+        eventBus.post(new HeadlessStopEvent(Reason.EXITED_BEFORE_MARKER));
         return exitCode != 0 ? exitCode : 1;
     }
 
-    private static void terminateProcess(Process process) {
+    private void terminateProcess(Process process) {
         process.destroy();
         try {
             if (!process.waitFor(5, TimeUnit.SECONDS)) {
-                System.err.println("[minified-headless] graceful stop timed out, forcing kill");
+                eventBus.post(new HeadlessStopEvent(Reason.FORCE_KILLED));
                 process.destroyForcibly();
             }
         } catch (InterruptedException e) {

@@ -99,7 +99,7 @@ public final class JavaManager {
     }
 
     /**
-     * @return the configured root directory used for managed Java runtimes
+     * {@return the directory for managed Java runtimes}
      */
     @API(status = API.Status.STABLE)
     public static synchronized Path getBaseDir() {

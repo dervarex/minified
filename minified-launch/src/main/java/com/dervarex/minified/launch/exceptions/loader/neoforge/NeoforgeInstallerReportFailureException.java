@@ -7,6 +7,11 @@ import org.apiguardian.api.API;
  */
 @API(status = API.Status.STABLE)
 public class NeoforgeInstallerReportFailureException extends IllegalStateException {
+    /**
+     * Creates the exception
+     *
+     * @param s what the installer reported
+     */
     public NeoforgeInstallerReportFailureException(String s) {
         super(s);
     }

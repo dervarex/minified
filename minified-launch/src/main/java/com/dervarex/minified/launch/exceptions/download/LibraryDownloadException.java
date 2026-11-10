@@ -9,15 +9,34 @@ import org.apiguardian.api.API;
  */
 @API(status = API.Status.STABLE)
 public class LibraryDownloadException extends DownloadException {
+    /**
+     * Creates the exception
+     *
+     * @param message what went wrong
+     */
     public LibraryDownloadException(String message) {
         super(message);
     }
+    /**
+     * Creates the exception without a message
+     */
     public LibraryDownloadException() {
         super();
     }
+    /**
+     * Creates the exception
+     *
+     * @param message what went wrong
+     * @param cause   the original error
+     */
     public LibraryDownloadException(String message, Throwable cause) {
         super(message, cause);
     }
+    /**
+     * Creates the exception
+     *
+     * @param cause the original error
+     */
     public LibraryDownloadException(Throwable cause) {
         super(cause);
     }

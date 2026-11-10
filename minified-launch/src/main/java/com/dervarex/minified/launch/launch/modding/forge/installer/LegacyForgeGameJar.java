@@ -37,8 +37,10 @@ public final class LegacyForgeGameJar {
     }
 
     /**
+     * {@return the game jar to use instead of the vanilla one, or null if the vanilla one works}
+     *
      * @param loaderProfile the Forge version JSON
-     * @return the game jar to use instead of the vanilla one, or null if the vanilla one works
+     * @param config the launch configuration
      */
     public static Path resolve(JsonObject loaderProfile, LaunchConfiguration config) {
         if (!needsOwnGameJar(loaderProfile)) {
@@ -53,6 +55,9 @@ public final class LegacyForgeGameJar {
 
     /**
      * Builds the game jar returned by {@link #resolve}, if the version needs one. Has to run after the vanilla jar was downloaded
+     *
+     * @param loaderProfile the Forge version JSON
+     * @param config the launch configuration
      */
     public static void prepare(JsonObject loaderProfile, LaunchConfiguration config) {
         Path gameJar = resolve(loaderProfile, config);

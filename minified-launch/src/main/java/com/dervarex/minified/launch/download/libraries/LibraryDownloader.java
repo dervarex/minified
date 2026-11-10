@@ -50,6 +50,9 @@ import java.util.function.LongConsumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+/**
+ * Downloads the libraries and extracts the natives
+ */
 public class LibraryDownloader {
 
     private final ExecutorService pool;
@@ -60,6 +63,8 @@ public class LibraryDownloader {
             .build();
 
     /**
+     * Creates the downloader
+     *
      * @param downloadThreads the amount of threads to use for downloading
      */
     public LibraryDownloader(int downloadThreads) {

@@ -24,8 +24,21 @@ import org.apiguardian.api.API;
 
 import java.util.List;
 
+/**
+ * Builds the JVM and game args from the version JSON
+ */
 @API(status = API.Status.INTERNAL, consumers = {"com.dervarex.minified.launch.*"})
 public class ArgumentsBuilder {
+    /**
+     * {@return the JVM args}
+     *
+     * @param versionJson the vanilla version JSON
+     * @param launchConfig the launch configuration
+     * @param options the launch options to fill the placeholders with
+     * @param loader the loader
+     * @param version the minecraft version
+     * @param online is the user online?
+     */
     public static List<String> buildJvmArguments(
             JsonFile versionJson,
             LaunchConfiguration launchConfig,
@@ -99,6 +112,16 @@ public class ArgumentsBuilder {
 
         return X11Helper.substituteVariables(jvmArgs, options.getVariables());
     }
+    /**
+     * {@return the game args}
+     *
+     * @param versionJson the vanilla version JSON
+     * @param options the launch options to fill the placeholders with
+     * @param loader the loader
+     * @param version the minecraft version
+     * @param launchConfig the launch configuration
+     * @param online is the user online?
+     */
     public static List<String> buildGameArguments(
             JsonFile versionJson,
             LaunchOptions options,

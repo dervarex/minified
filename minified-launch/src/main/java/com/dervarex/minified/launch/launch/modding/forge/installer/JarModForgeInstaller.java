@@ -43,6 +43,11 @@ public final class JarModForgeInstaller {
     private JarModForgeInstaller() {
     }
 
+    /**
+     * Installs Forge
+     *
+     * @param config the launch configuration
+     */
     public static void install(LaunchConfiguration config) {
         String loaderVersion = config.getLoader().loaderVersion();
         Path gameDir = config.getJarFile().toAbsolutePath().getParent();

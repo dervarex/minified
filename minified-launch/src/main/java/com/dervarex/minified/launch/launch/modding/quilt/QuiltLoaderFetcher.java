@@ -3,6 +3,7 @@ package com.dervarex.minified.launch.launch.modding.quilt;
 import com.dervarex.minified.launch.exceptions.loader.NoLoadersFoundException;
 import com.dervarex.minified.launch.exceptions.version.FailedToFetchVersionsException;
 import com.dervarex.minified.utils.ApiEndpoints;
+import com.dervarex.minified.utils.exceptions.HttpException;
 import com.dervarex.minified.utils.http.HttpUtil;
 import com.dervarex.minified.utils.json.JsonArray;
 import com.dervarex.minified.utils.json.JsonObject;
@@ -14,29 +15,43 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+/**
+ * Fetches Quilt loader versions and profile JSONs
+ */
 @API(status = API.Status.STABLE)
 public class QuiltLoaderFetcher {
 
     /**
+     * {@return the latest Quilt loader version for the Minecraft version}
+     *
      * @param minecraftVersion minecraft version
-     * @return latest quilt loader version for specified minecraft version
+     * @throws NoLoadersFoundException if Quilt lists no loaders for it
+     * @throws Exception if the request fails
      */
     @API(status = API.Status.STABLE)
     public static String getLatestLoaderVersion(
             String minecraftVersion
     ) throws Exception {
 
-        JsonArray loaders = JsonParser
-                .parse(HttpUtil.get(
-                        ApiEndpoints.QUILT_LOADER_META_URL + "/" + minecraftVersion
-                ))
-                .asArray();
+        JsonArray loaders;
+        try {
+            loaders = JsonParser
+                    .parse(HttpUtil.get(
+                            ApiEndpoints.QUILT_LOADER_META_URL + "/" + minecraftVersion
+                    ))
+                    .asArray();
+        } catch (HttpException e) {
+            if (e.getStatusCode() == 404) {
+                throw new NoLoadersFoundException("No Quilt loaders found for Minecraft " + minecraftVersion, "QUILT", e);
+            }
+            throw e;
+        }
 
         if (loaders.size() == 0) {
             throw new NoLoadersFoundException(
                     "No Quilt loaders found for Minecraft "
                             + minecraftVersion,
-                    minecraftVersion
+                    "QUILT"
             );
         }
 
@@ -115,6 +130,14 @@ public class QuiltLoaderFetcher {
         return 0;
     }
 
+    /**
+     * {@return the profile JSON of the Quilt loader for the Minecraft version}
+     *
+     * @param minecraftVersion minecraft version
+     * @param loaderVersion quilt loader version
+     * @throws NoLoadersFoundException if Quilt doesn't have the loader for the Minecraft version
+     * @throws Exception if the request fails
+     */
     @API(status = API.Status.STABLE)
     public static JsonObject getProfileJson(
             String minecraftVersion,
@@ -129,11 +152,25 @@ public class QuiltLoaderFetcher {
                         + loaderVersion
                         + "/profile/json";
 
-        return JsonParser
-                .parse(HttpUtil.get(url))
-                .asObject();
+        try {
+            return JsonParser
+                    .parse(HttpUtil.get(url))
+                    .asObject();
+        } catch (HttpException e) {
+            if (e.getStatusCode() == 404) {
+                throw new NoLoadersFoundException("No Quilt loader " + loaderVersion + " for Minecraft " + minecraftVersion, "QUILT", e);
+            }
+            throw e;
+        }
     }
 
+    /**
+     * {@return the profile JSON of the latest Quilt loader for the Minecraft version}
+     *
+     * @param minecraftVersion minecraft version
+     * @throws NoLoadersFoundException if Quilt lists no loaders for it
+     * @throws Exception if a request fails
+     */
     @API(status = API.Status.STABLE)
     public static JsonObject getLatestProfile(
             String minecraftVersion

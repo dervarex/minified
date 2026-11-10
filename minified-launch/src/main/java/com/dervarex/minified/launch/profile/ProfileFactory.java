@@ -25,6 +25,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 
+/**
+ * Saves and loads a {@link LaunchConfiguration} as a profile file
+ */
 @API(status = API.Status.STABLE)
 public class ProfileFactory {
     private static final Map<String, Function<JsonObject, Loader>> LOADERS = Map.of(

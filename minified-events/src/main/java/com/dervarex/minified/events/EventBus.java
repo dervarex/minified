@@ -7,11 +7,21 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+/**
+ * Posts events to everyone subscribed to them
+ */
 @API(status = API.Status.STABLE)
 public final class EventBus {
     private final Map<Class<?>, List<EventListener<?>>> listeners = new ConcurrentHashMap<>();
 
     /**
+     * Creates an event bus without listeners
+     */
+    public EventBus() {}
+
+    /**
+     * Subscribes to an event
+     * <p>
      * Example usage:
      * <pre>{@code
      * // replace SomeEvent with any event you'd like to listen to
@@ -19,6 +29,10 @@ public final class EventBus {
      *     // Code here will get executed when the event gets triggered
      * });
      * }</pre>
+     *
+     * @param type     the event class
+     * @param listener gets called every time the event is posted
+     * @param <T>      the event type
      */
     @API(status = API.Status.STABLE)
     public <T extends Event> void subscribe(Class<T> type, EventListener<T> listener) {
@@ -32,6 +46,7 @@ public final class EventBus {
      * Additionally, forgetting to unsubscribe can eventually lead to memory leaks, which you usually do not want
      * @param type the listener class you subscribed to
      * @param listener the listener object got from subscribing
+     * @param <T> the event type
      */
     @API(status = API.Status.STABLE)
     public <T extends Event> void unsubscribe(
@@ -51,8 +66,12 @@ public final class EventBus {
      * Posting an Event Update
      * This one's mostly used internally for posting event updates,
      * but can be used by the Launcher to Stop the Game for example
-     * @param event
-     * @param <T>
+     * <p>
+     * If a listener throws, the other listeners still run and the exception goes to the
+     * {@link Thread.UncaughtExceptionHandler} of the posting thread
+     *
+     * @param event the event
+     * @param <T>   the event type
      */
     @SuppressWarnings("unchecked")
     @API(status = API.Status.STABLE)
@@ -62,8 +81,8 @@ public final class EventBus {
             try {
                 ((EventListener<T>) listener).onEvent(event);
             } catch (RuntimeException e) {
-                System.err.println("Listener for " + event.getClass().getSimpleName() + " threw:");
-                e.printStackTrace();
+                Thread thread = Thread.currentThread();
+                thread.getUncaughtExceptionHandler().uncaughtException(thread, e);
             }
         }
     }

@@ -59,6 +59,9 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Downloads everything and launches Minecraft
+ */
 @API(status = API.Status.STABLE)
 public class Launcher {
     /**
@@ -425,8 +428,14 @@ public class Launcher {
         return reader;
     }
 
+    /**
+     * Fetches a loader profile when it isn't cached
+     */
     @API(status = API.Status.INTERNAL, consumers = {"com.dervarex.minified.launch.*"})
     public interface ProfileSupplier {
+        /**
+         * {@return the loader profile}
+         */
         JsonObject get();
     }
 }

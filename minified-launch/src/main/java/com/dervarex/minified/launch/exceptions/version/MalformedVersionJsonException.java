@@ -7,6 +7,11 @@ import org.apiguardian.api.API;
  */
 @API(status = API.Status.STABLE)
 public class MalformedVersionJsonException extends IllegalStateException {
+    /**
+     * Creates the exception
+     *
+     * @param message what went wrong
+     */
     public MalformedVersionJsonException(String message) {
         super(message);
     }

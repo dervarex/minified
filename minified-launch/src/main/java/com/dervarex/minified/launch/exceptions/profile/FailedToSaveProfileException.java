@@ -7,6 +7,12 @@ import org.apiguardian.api.API;
  */
 @API(status = API.Status.STABLE)
 public class FailedToSaveProfileException extends RuntimeException {
+    /**
+     * Creates the exception
+     *
+     * @param message what went wrong
+     * @param t       the original error
+     */
     public FailedToSaveProfileException(String message, Throwable t) {
         super(message, t);
     }

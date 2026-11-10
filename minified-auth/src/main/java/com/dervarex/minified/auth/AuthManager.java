@@ -2,10 +2,13 @@ package com.dervarex.minified.auth;
 
 import com.dervarex.minified.auth.encryption.Encryptor;
 import com.dervarex.minified.auth.events.LoginStateChangeListener;
+import com.dervarex.minified.auth.events.login.DeviceCodeLoginFailedEvent;
+import com.dervarex.minified.auth.events.login.SessionRefreshFailedEvent;
 import com.dervarex.minified.auth.exceptions.AuthInitException;
 import com.dervarex.minified.auth.exceptions.LoginFailedException;
 import com.dervarex.minified.auth.exceptions.NoConnectionLoginFailedException;
 import com.dervarex.minified.auth.user.User;
+import com.dervarex.minified.events.Event;
 import com.dervarex.minified.events.EventBus;
 import com.dervarex.minified.utils.exceptions.NoConnectionException;
 import com.dervarex.minified.utils.network.NetworkUtil;
@@ -20,8 +23,6 @@ import org.apiguardian.api.API;
 
 import javax.crypto.SecretKey;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -34,6 +35,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
+/**
+ * Logs users in with their Microsoft account and saves the session encrypted
+ */
 public class AuthManager {
 
     private static final Map<String, User> session = new ConcurrentHashMap<>();
@@ -64,9 +68,16 @@ public class AuthManager {
         KEY_FILE = BASE_DIR.resolve("master.key");
         prepareKeyDirectories();
     }
+
+    /**
+     * Like {@link #init(Path, EventBus)}, but with a new {@link EventBus}
+     *
+     * @param baseDir the directory where the key and session files will be stored
+     * @throws AuthInitException if the directory can't be created or the master key can't be loaded or created
+     */
     @API(status = API.Status.STABLE)
-    public static void init(Path BaseDir) {
-        init(BaseDir, new EventBus());
+    public static void init(Path baseDir) {
+        init(baseDir, new EventBus());
     }
 
     /**
@@ -97,17 +108,29 @@ public class AuthManager {
         KEY_FILE = BASE_DIR.resolve("master.key");
         prepareKeyDirectories();
     }
+
+    /**
+     * Like {@link #init(String, EventBus)}, but with a new {@link EventBus}
+     *
+     * @param launcherName the launcher name used to create the application directory
+     * @throws AuthInitException if the directory can't be created or the master key can't be loaded or created
+     */
     @API(status = API.Status.STABLE)
     public static void init(String launcherName) {
         init(launcherName, new EventBus());
     }
 
+    // if init wasn't called yet, we can't tell anyone
+    private static void post(Event event) {
+        if (eventBus != null) {
+            eventBus.post(event);
+        }
+    }
+
     private static void prepareKeyDirectories() {
         try {
             if (!Files.exists(BASE_DIR)) Files.createDirectories(BASE_DIR);
-            System.out.println("Auth base dir ready at " + BASE_DIR);
             masterKey = Encryptor.loadOrCreateMasterKey(KEY_FILE, eventBus);
-            System.out.println("AuthManager initialized");
         } catch (Exception e) {
             // without the master key no session can be saved or loaded, better fail now than on the first login
             throw new AuthInitException("Failed to initialize the AuthManager in " + BASE_DIR, e);
@@ -141,6 +164,7 @@ public class AuthManager {
      *
      * @throws NoConnectionLoginFailedException if there is no internet connection
      * @throws LoginFailedException if the login failed for any other reason
+     * @return the logged-in user
      */
     @API(status = API.Status.STABLE)
     public static User login() {
@@ -157,9 +181,6 @@ public class AuthManager {
                                 loginState.status = LoginStatus.PENDING;
                                 loginState.message = "Waiting for user to authorize in browser";
                                 notifyStateChanged();
-                                System.out.println("Go to " + msa.getVerificationUri());
-                                System.out.println("Enter code " + msa.getUserCode());
-                                System.out.println("Direct URL: " + msa.getDirectVerificationUri());
                             }));
 
             User user = persistSession(javaSession);
@@ -167,21 +188,16 @@ public class AuthManager {
             loginState.username = user.username();
             loginState.message = "Login successful";
             notifyStateChanged();
-            System.out.println("Login successful for " + user.username());
             return user;
         } catch (NoConnectionException nce) {
             loginState.status = LoginStatus.ERROR;
             loginState.message = nce.getMessage();
             notifyStateChanged();
-            System.out.println(nce.getMessage());
             throw new NoConnectionLoginFailedException(nce.toUserFriendlyMessage(), nce);
         } catch (Exception e) {
             loginState.status = LoginStatus.ERROR;
             loginState.message = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
             notifyStateChanged();
-            StringWriter sw = new StringWriter();
-            e.printStackTrace(new PrintWriter(sw));
-            System.out.println("Login failed: " + sw);
             throw new LoginFailedException("Login failed", e);
         }
     }
@@ -233,7 +249,6 @@ public class AuthManager {
         synchronized (AuthManager.class) {
             // Already in progress?
             if (loginState.status == LoginStatus.PENDING || loginState.status == LoginStatus.STARTING) {
-                System.out.println("Login already in progress");
                 return GSON.toJson(loginState);
             }
             currentState = new LoginState();
@@ -244,7 +259,6 @@ public class AuthManager {
             latch = codeReadyLatch;
         }
         notifyStateChanged(currentState);
-        System.out.println("Starting device code login");
 
         new Thread(() -> {
             HttpClient httpClient = MinecraftAuth.createHttpClient();
@@ -260,7 +274,6 @@ public class AuthManager {
                             currentState.status = LoginStatus.PENDING;
                             currentState.message = "Waiting for user to authorize in browser";
                             notifyStateChanged(currentState);
-                            System.out.println("Waiting for user authorization");
                             //try { OSUtil.openBrowser(msa.getDirectVerificationUri()); } catch (Exception ignored) {}
                             latch.countDown();
                         })
@@ -272,41 +285,34 @@ public class AuthManager {
                 currentState.username = user.username();
                 currentState.message = "Login successful";
                 notifyStateChanged(currentState);
-                System.out.println("Login successful for " + user.username());
                 latch.countDown();
             } catch (NoConnectionException nce) {
                 currentState.status = LoginStatus.ERROR;
                 currentState.message = nce.getMessage();
                 notifyStateChanged(currentState);
-                System.out.println("Connectivity error: " + nce.getMessage());
                 latch.countDown();
             } catch (Exception e) {
-                StringWriter sw = new StringWriter();
-                e.printStackTrace(new PrintWriter(sw));
                 currentState.status = LoginStatus.ERROR;
                 currentState.message = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
                 notifyStateChanged(currentState);
-                System.out.println("Async login failed: " + currentState.message + "\n" + sw);
+                post(new DeviceCodeLoginFailedEvent(e));
                 latch.countDown();
             }
         }, "DeviceCodeLoginThread").start();
 
         try {
-            boolean ready = latch.await(2, TimeUnit.SECONDS);
-            if (!ready) {
-                System.out.println("Timed out waiting for code or login result");
-            }
+            // gives the code a moment to arrive, so the returned state already has it most of the time
+            latch.await(2, TimeUnit.SECONDS);
         } catch (InterruptedException ignored) {
         }
         return GSON.toJson(loginState);
     }
 
     /**
-     * @return The current login state as a JSON string, which can be used for UI display or debugging purposes.
+     * {@return the current login state as JSON}
      */
     @API(status=API.Status.STABLE)
     public static synchronized String getLoginStateJson() {
-        System.out.println("Login state requested");
         return GSON.toJson(loginState);
     }
 
@@ -330,7 +336,6 @@ public class AuthManager {
         loginState = new LoginState();
         codeReadyLatch = null;
         notifyStateChanged();
-        System.out.println("Login state reset");
     }
 
     /**
@@ -340,7 +345,6 @@ public class AuthManager {
      */
     @API(status = API.Status.STABLE)
     public static User loginWithSavedSession() {
-        System.out.println("Login with saved session");
         try {
             JsonObject saved = Encryptor.loadEncryptedSession(SESSION_FILE, masterKey, eventBus);
             if (saved == null) return null;
@@ -355,12 +359,9 @@ public class AuthManager {
 
             // Refresh saved token if it has changed
             User user = persistSession(refreshed);
-            System.out.println("Saved session OK for " + user.username());
             return user;
         } catch (Exception e) {
-            StringWriter sw = new StringWriter();
-            e.printStackTrace(new PrintWriter(sw));
-            System.out.println("Login/Refresh failed: " + sw);
+            post(new SessionRefreshFailedEvent(null, e));
             return null;
         }
     }
@@ -405,12 +406,9 @@ public class AuthManager {
                     MinecraftAuth.JAVA_DEVICE_CODE_LOGIN.fromJson(saved)
             );
             User user = persistSession(refreshed);
-            System.out.println("Saved session OK for " + user.username());
             return user;
         } catch (Exception e) {
-            StringWriter sw = new StringWriter();
-            e.printStackTrace(new PrintWriter(sw));
-            System.out.println("Login/Refresh failed for " + uuid + ": " + sw);
+            post(new SessionRefreshFailedEvent(uuid, e));
             return null;
         }
     }
@@ -470,32 +468,41 @@ public class AuthManager {
     }
 
     /**
-     * @return if there is a saved session on disk(uses the directories given in {@code init(BaseDir)}
+     * {@return true if a session is saved in the directory given to init}
      * <p>
-     * Note that this does not check if the session is still valid.
+     * Doesn't check if the session is still valid
      */
     @API(status = API.Status.STABLE)
     public static boolean hasSessionSaved() {
         boolean exists = SESSION_FILE.toFile().exists();
-        System.out.println("Has saved session: " + exists);
         return exists;
     }
 
     /**
-     * @return the currently logged-in user, or null if no session is active.
+     * {@return the logged-in user, or null if nobody is logged in}
      * <p>
-     * Note that this does not check if the session is still valid.
+     * Doesn't check if the session is still valid
      */
     @API(status = API.Status.STABLE)
     public static User getUser() {
         return session.values().stream().findFirst().orElse(null);
     }
 
+    /**
+     * Adds a listener that gets called on every login state change
+     *
+     * @param listener the listener to add
+     */
     @API(status = API.Status.STABLE)
     public static void addStateChangeListener(LoginStateChangeListener listener) {
         listeners.add(listener);
     }
 
+    /**
+     * Removes a listener added with {@link #addStateChangeListener(LoginStateChangeListener)}
+     *
+     * @param listener the listener to remove
+     */
     @API(status = API.Status.STABLE)
     public static void removeStateChangeListener(LoginStateChangeListener listener) {
         listeners.remove(listener);
@@ -511,6 +518,19 @@ public class AuthManager {
         }
     }
 
-    // Async login state management
-    public enum LoginStatus {IDLE, STARTING, PENDING, SUCCESS, ERROR}
+    /**
+     * Where the login currently is
+     */
+    public enum LoginStatus {
+        /** No login running */
+        IDLE,
+        /** The login thread started, but there's no code yet */
+        STARTING,
+        /** Waiting for the user to enter the code */
+        PENDING,
+        /** Logged in */
+        SUCCESS,
+        /** The login failed, see {@link LoginState#message} */
+        ERROR
+    }
 }

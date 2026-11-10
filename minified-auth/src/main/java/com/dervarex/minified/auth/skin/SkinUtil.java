@@ -96,18 +96,18 @@ public final class SkinUtil {
     }
 
     /**
-     * @param account the account to fetch the default model for
-     * @return the {@link SkinModel} Minecraft would assign the account by default
-     * (if it never set a skin), based on its UUID
+     * {@return the model Minecraft gives the account when it has no skin}
+     *
+     * @param account the account
      */
     public static SkinModel getDefaultModel(MinecraftAccount account) {
         return SkinModel.getDefault(account.getMinecraftUUID().getDashed());
     }
 
     /**
-     * @param uuid the UUID to fetch the default model for
-     * @return the {@link SkinModel} Minecraft would assign that UUID by default
-     * (if it never set a skin)
+     * {@return the model Minecraft gives the player when it has no skin}
+     *
+     * @param uuid the player's UUID
      */
     public static SkinModel getDefaultModel(UUID uuid) {
         return SkinModel.getDefault(uuid);

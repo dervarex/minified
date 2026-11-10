@@ -12,13 +12,27 @@ import org.apiguardian.api.API;
 @Getter
 @API(status = API.Status.STABLE)
 public class FailedToLoadLibrariesException extends RuntimeException {
+    /** The loader the libraries were loaded for */
     private final Loader loader;
 
+    /**
+     * Creates the exception
+     *
+     * @param message what went wrong
+     * @param loader  the loader
+     */
     public FailedToLoadLibrariesException(String message, Loader loader) {
         super(message);
         this.loader = loader;
     }
 
+    /**
+     * Creates the exception
+     *
+     * @param message what went wrong
+     * @param loader  the loader
+     * @param cause   the original error
+     */
     public FailedToLoadLibrariesException(String message, Loader loader, Throwable cause) {
         super(message, cause);
         this.loader = loader;

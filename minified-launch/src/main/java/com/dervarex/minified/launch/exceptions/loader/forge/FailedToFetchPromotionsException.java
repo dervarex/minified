@@ -8,10 +8,21 @@ import org.apiguardian.api.API;
 @API(status = API.Status.STABLE)
 public class FailedToFetchPromotionsException extends RuntimeException {
 
+    /**
+     * Creates the exception
+     *
+     * @param message what went wrong
+     */
     public FailedToFetchPromotionsException(String message) {
         super(message);
     }
 
+    /**
+     * Creates the exception
+     *
+     * @param message what went wrong
+     * @param cause   the original error
+     */
     public FailedToFetchPromotionsException(String message, Throwable cause) {
         super(message, cause);
     }

@@ -14,11 +14,24 @@ public class FailedToFetchVersionsException extends RuntimeException {
      */
     private final String loader;
 
+    /**
+     * Creates the exception
+     *
+     * @param message what went wrong
+     * @param loader  the loader in uppercase, like FABRIC
+     */
     public FailedToFetchVersionsException(String message, String loader) {
         super(message);
         this.loader = loader;
     }
 
+    /**
+     * Creates the exception
+     *
+     * @param message what went wrong
+     * @param loader  the loader in uppercase, like FABRIC
+     * @param cause   the original error
+     */
     public FailedToFetchVersionsException(String message, String loader, Throwable cause) {
         super(message, cause);
         this.loader = loader;
