@@ -22,6 +22,7 @@ import com.dervarex.minified.utils.ApiEndpoints;
 import com.dervarex.minified.utils.json.*;
 import org.apiguardian.api.API;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -185,6 +186,49 @@ public class ArgumentsBuilder {
                 options.getVariables(),
                 options.getFeatures()
         );
+    }
+
+    /**
+     * The game arguments coming from the launch configuration instead of the version JSON
+     *
+     * @param versionJson the vanilla version JSON
+     * @param launchConfig the launch configuration
+     * @param preOneSix versions before 1.6 take positional arguments, --fullscreen and --server don't exist there
+     * @return the arguments that go after the ones from {@link #buildGameArguments}
+     */
+    public static List<String> buildExtraGameArguments(
+            JsonFile versionJson,
+            LaunchConfiguration launchConfig,
+            boolean preOneSix
+    ) {
+        List<String> args = new ArrayList<>();
+
+        if (!preOneSix) {
+            if (launchConfig.isFullscreen()) {
+                args.add("--fullscreen");
+            }
+
+            String serverAddress = launchConfig.getServerAddress();
+            if (serverAddress != null && !supportsQuickPlayMultiplayer(versionJson)) {
+                int portSeparator = serverAddress.lastIndexOf(':');
+                // a second colon without brackets is an IPv6 address without a port
+                boolean hasPort = portSeparator > serverAddress.lastIndexOf(']')
+                        && (serverAddress.startsWith("[") || serverAddress.indexOf(':') == portSeparator);
+
+                args.add("--server");
+                args.add(hasPort ? serverAddress.substring(0, portSeparator) : serverAddress);
+                args.add("--port");
+                args.add(hasPort ? serverAddress.substring(portSeparator + 1) : "25565");
+            }
+        }
+
+        args.addAll(launchConfig.getExtraGameArgs());
+        return args;
+    }
+
+    private static boolean supportsQuickPlayMultiplayer(JsonFile versionJson) {
+        JsonValue arguments = versionJson.get("arguments");
+        return arguments != null && arguments.toJson().contains("\"is_quick_play_multiplayer\"");
     }
 
     /**

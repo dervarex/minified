@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Validates the Assets when the User is offline.
+ * Checks that all assets are there before an offline launch
  */
 public final class AssetOfflineValidator {
 

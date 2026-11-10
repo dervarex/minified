@@ -177,6 +177,15 @@ public final class LaunchOptions {
                         .setFeature(
                                 "is_demo_user",
                                 launchConfig.isDemoUser()
+                        )
+                        .setVariable(
+                                "quickPlayMultiplayer",
+                                launchConfig.getServerAddress()
+                        )
+
+                        .setFeature(
+                                "is_quick_play_multiplayer",
+                                launchConfig.getServerAddress() != null
                         );
     }
     /**

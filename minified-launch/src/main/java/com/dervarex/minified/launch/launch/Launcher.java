@@ -238,6 +238,7 @@ public class Launcher {
                             launchConfig,
                             context.isOnline()
                     );
+            gameArgs.addAll(ArgumentsBuilder.buildExtraGameArguments(versionJson, launchConfig, logsNoMarkers));
 
             ArrayList<String> command =
                     new ArrayList<>();
@@ -367,6 +368,7 @@ public class Launcher {
                 processBuilder,
                 context
         );
+        processBuilder.environment().putAll(launchConfig.getEnvironmentVariables());
 
         boolean capture = launchConfig.isCaptureGameOutput() && !launchConfig.isHeadless();
         if (launchConfig.isHeadless()) {

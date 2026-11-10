@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Validates the Libraries when the User is offline.
+ * Checks that all libraries are there before an offline launch
  */
 public final class OfflineLibraryValidator {
 
