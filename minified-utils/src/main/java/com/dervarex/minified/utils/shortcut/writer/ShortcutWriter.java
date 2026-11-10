@@ -5,10 +5,12 @@ import com.dervarex.minified.utils.shortcut.Shortcut;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import org.apiguardian.api.API;
 
 /**
  * Writes a {@link Shortcut} in the format of one os
  */
+@API(status = API.Status.STABLE)
 public interface ShortcutWriter {
 
     /**

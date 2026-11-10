@@ -22,6 +22,6 @@ import org.apiguardian.api.API;
  * @param incompatibility the incompatible dependency as Modrinth lists it on {@code declaredBy}
  * @param conflicting     the version in the result that matches it
  */
-@API(status = API.Status.EXPERIMENTAL)
+@API(status = API.Status.STABLE)
 public record DependencyConflictEvent(Version declaredBy, VersionDependency incompatibility, Version conflicting) implements Event {
 }

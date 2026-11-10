@@ -12,7 +12,7 @@ import org.apiguardian.api.API;
  * @param downloadedBytes the number of bytes downloaded so far
  * @param totalBytes      the total size of the file in bytes, or <b>-1</b> if unknown
  */
-@API(status = API.Status.EXPERIMENTAL)
+@API(status = API.Status.STABLE)
 public record DownloadProgressEvent(
         String filename,
         String url,

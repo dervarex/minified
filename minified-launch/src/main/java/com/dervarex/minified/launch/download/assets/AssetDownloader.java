@@ -31,10 +31,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
+import org.apiguardian.api.API;
 
 /**
  * Downloads the Assets Minecraft is using (mostly some random old screenshots, but minecraft needs them)
  */
+@API(status = API.Status.STABLE)
 public class AssetDownloader {
 
     private final ExecutorService pool;

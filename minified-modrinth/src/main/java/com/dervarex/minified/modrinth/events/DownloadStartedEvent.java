@@ -14,6 +14,6 @@ import java.nio.file.Path;
  * @param destination where the file will be saved
  * @param totalBytes  the size of the file in bytes as Modrinth reports it, or <b>-1</b> if unknown
  */
-@API(status = API.Status.EXPERIMENTAL)
+@API(status = API.Status.STABLE)
 public record DownloadStartedEvent(String filename, String url, Path destination, long totalBytes) implements Event {
 }

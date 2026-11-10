@@ -2,10 +2,12 @@ package com.dervarex.minified.utils.cli;
 
 import java.util.*;
 import java.util.function.Consumer;
+import org.apiguardian.api.API;
 
 /**
  * Command line argument parser
  */
+@API(status = API.Status.STABLE)
 public class Parser {
 
     private final Map<String, CommandHandler> commands = new LinkedHashMap<>();

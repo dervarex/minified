@@ -10,10 +10,12 @@ import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import org.apiguardian.api.API;
 
 /**
  * Checks that all assets are there before an offline launch
  */
+@API(status = API.Status.STABLE)
 public final class AssetOfflineValidator {
 
     private AssetOfflineValidator() {

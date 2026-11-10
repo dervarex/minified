@@ -12,7 +12,7 @@ import java.util.Objects;
  * @param projectId the project id on that platform, can be null
  * @param versionId the version id on that platform, can be null
  */
-@API(status = API.Status.EXPERIMENTAL)
+@API(status = API.Status.STABLE)
 public record ProfileFileSource(String platform, @Nullable String projectId, @Nullable String versionId) {
     /** The platform name for Modrinth */
     public static final String MODRINTH = "modrinth";

@@ -74,7 +74,7 @@ public class ProfileFactory {
      * @param profile the profile that should be saved
      * @param path the full path to the JSON file where it should be saved to
      */
-    @API(status = API.Status.EXPERIMENTAL)
+    @API(status = API.Status.STABLE)
     public static void save(Profile profile, Path path) {
         write(serialize(profile.metadata(), profile.configuration(), profile.files(), true), path);
     }
@@ -86,7 +86,7 @@ public class ProfileFactory {
      * @param profile the profile that should be shared
      * @param path the full path to the JSON file where it should be saved to
      */
-    @API(status = API.Status.EXPERIMENTAL)
+    @API(status = API.Status.STABLE)
     public static void export(Profile profile, Path path) {
         write(serialize(profile.metadata(), profile.configuration(), profile.files(), false), path);
     }
@@ -106,7 +106,7 @@ public class ProfileFactory {
      * @param path the path of the JSON file that was saved by {@link #save(Profile, Path)} or {@link #save(LaunchConfiguration, Path)}
      * @return the profile, files without a {@code profile} section get new metadata with a random id
      */
-    @API(status = API.Status.EXPERIMENTAL)
+    @API(status = API.Status.STABLE)
     public static Profile loadProfile(Path path) {
         return loadProfile(path, null);
     }
@@ -117,7 +117,7 @@ public class ProfileFactory {
      * @param environment the local paths. May be null
      * @return the profile
      */
-    @API(status = API.Status.EXPERIMENTAL)
+    @API(status = API.Status.STABLE)
     public static Profile loadProfile(Path path, ProfileEnvironment environment) {
         try {
             JsonFile profileJson = new JsonFile(path);

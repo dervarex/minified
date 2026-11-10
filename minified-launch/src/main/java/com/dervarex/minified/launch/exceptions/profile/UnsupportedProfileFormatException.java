@@ -7,7 +7,7 @@ import lombok.Getter;
  * The profile was saved by a newer version of minified, with a format this version can't read
  */
 @Getter
-@API(status = API.Status.EXPERIMENTAL)
+@API(status = API.Status.STABLE)
 public class UnsupportedProfileFormatException extends FailedToLoadProfileException {
     /** The format version of the file */
     private final int formatVersion;

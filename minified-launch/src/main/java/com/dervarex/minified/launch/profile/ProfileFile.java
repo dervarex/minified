@@ -29,7 +29,7 @@ import java.util.Objects;
  * @param enabled   disabled files are installed with a {@code .disabled}, the way most launchers toggle mods off
  * @param source    where the file comes from, can be null
  */
-@API(status = API.Status.EXPERIMENTAL)
+@API(status = API.Status.STABLE)
 public record ProfileFile(
         String path,
         @Nullable

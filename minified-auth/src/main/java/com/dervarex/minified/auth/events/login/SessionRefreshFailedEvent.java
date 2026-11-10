@@ -4,6 +4,7 @@ import com.dervarex.minified.events.Event;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
+import org.apiguardian.api.API;
 
 /**
  * Gets fired when a saved session couldn't be loaded or refreshed. <br>
@@ -12,5 +13,6 @@ import java.util.UUID;
  * @param uuid  the account that was asked for, null for {@code loginWithSavedSession()} without an account
  * @param cause why it failed
  */
+@API(status = API.Status.STABLE)
 public record SessionRefreshFailedEvent(@Nullable UUID uuid, Exception cause) implements Event {
 }

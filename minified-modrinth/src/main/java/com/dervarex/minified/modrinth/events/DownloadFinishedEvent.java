@@ -14,6 +14,6 @@ import java.nio.file.Path;
  * @param destination    where the file is saved
  * @param alreadyPresent true if the file already existed with a matching hash
  */
-@API(status = API.Status.EXPERIMENTAL)
+@API(status = API.Status.STABLE)
 public record DownloadFinishedEvent(String filename, String url, Path destination, boolean alreadyPresent) implements Event {
 }
