@@ -24,6 +24,8 @@ import java.util.Base64;
  */
 @API(status = API.Status.INTERNAL, consumers = {"com.dervarex.minified.auth.*"})
 public class Encryptor {
+
+    private Encryptor() {}
     private static final Gson GSON = new Gson();
 
     /**

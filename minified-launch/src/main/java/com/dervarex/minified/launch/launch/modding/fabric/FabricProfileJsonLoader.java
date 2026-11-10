@@ -12,6 +12,8 @@ import org.apiguardian.api.API;
  */
 @API(status = API.Status.STABLE)
 public class FabricProfileJsonLoader {
+
+    private FabricProfileJsonLoader() {}
     /**
      * {@return the Fabric profile JSON}
      *

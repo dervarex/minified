@@ -40,6 +40,8 @@ import java.util.function.Function;
  */
 @API(status = API.Status.STABLE)
 public class ProfileFactory {
+
+    private ProfileFactory() {}
     /**
      * The format version, gets changed if anything is incompatible with an older version
      *

@@ -11,6 +11,8 @@ import java.nio.file.Path;
  */
 @API(status = API.Status.STABLE)
 public class ForgeVersionJson {
+
+    private ForgeVersionJson() {}
     /**
      * {@return the version JSON of the Forge version}
      *

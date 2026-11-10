@@ -13,6 +13,8 @@ import org.apiguardian.api.API;
 @API(status = API.Status.STABLE)
 public class QuiltProfileJsonLoader {
 
+    private QuiltProfileJsonLoader() {}
+
     /**
      * {@return Quilt Profile JSON as JsonObject}
      *

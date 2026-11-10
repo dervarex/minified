@@ -12,6 +12,8 @@ import java.util.Map;
  */
 public class NbtWriter {
 
+    private NbtWriter() {}
+
     /**
      * Writes a compounds entries followed by TAG_End
      *

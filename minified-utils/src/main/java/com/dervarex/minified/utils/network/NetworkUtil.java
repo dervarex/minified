@@ -12,6 +12,8 @@ import java.util.concurrent.TimeUnit;
  */
 @API(status = API.Status.STABLE)
 public class NetworkUtil {
+
+    private NetworkUtil() {}
     private static final boolean fakeOffline = false; // used for debug purposes currently
     // a launch asks about 4 times in a row, no need to poke 3 servers every time
     private static final long REMEMBER_NANOS = TimeUnit.SECONDS.toNanos(15);

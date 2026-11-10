@@ -14,6 +14,8 @@ import java.nio.file.Path;
  */
 @API(status = API.Status.STABLE)
 public class NeoProfileJsonLoader {
+
+    private NeoProfileJsonLoader() {}
     /**
      * Loads the Neoforge Profile Json
      * @param version minecraft version

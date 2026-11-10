@@ -27,6 +27,8 @@ import java.util.Map;
  */
 @API(status = API.Status.EXPERIMENTAL)
 public class ProfileInstaller {
+
+    private ProfileInstaller() {}
     private static final Map<String, String> ALGORITHMS = Map.of(
             "sha1", "SHA-1",
             "sha256", "SHA-256",

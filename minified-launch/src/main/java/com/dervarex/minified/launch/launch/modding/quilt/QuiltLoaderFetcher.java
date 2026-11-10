@@ -21,6 +21,8 @@ import java.util.List;
 @API(status = API.Status.STABLE)
 public class QuiltLoaderFetcher {
 
+    private QuiltLoaderFetcher() {}
+
     /**
      * {@return the latest Quilt loader version for the Minecraft version}
      *

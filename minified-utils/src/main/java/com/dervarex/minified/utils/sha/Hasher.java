@@ -14,6 +14,8 @@ import java.security.NoSuchAlgorithmException;
  */
 @API(status=API.Status.STABLE)
 public class Hasher {
+
+    private Hasher() {}
     private static final char[] HEX = "0123456789abcdef".toCharArray();
 
     /**

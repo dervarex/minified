@@ -30,6 +30,8 @@ import java.util.List;
  */
 @API(status = API.Status.INTERNAL, consumers = {"com.dervarex.minified.launch.*"})
 public class ArgumentsBuilder {
+
+    private ArgumentsBuilder() {}
     /**
      * {@return the JVM args}
      *
