@@ -32,6 +32,12 @@ import java.util.function.Consumer;
  */
 @API(status = API.Status.INTERNAL, consumers = {"com.dervarex.minified.launch.*"})
 public class NeoInstallerInjector {
+    /**
+     * Creates the injector
+     */
+    public NeoInstallerInjector() {
+    }
+
     private static final String INSTALLER_FILE_NAME = "neoforge-installer.jar";
 
 

@@ -16,6 +16,12 @@ import org.apiguardian.api.API;
 @Getter
 @API(status = API.Status.STABLE)
 public class Stats {
+    /**
+     * Creates empty stats
+     */
+    public Stats() {
+    }
+
     @Setter
     private int dataVersion;
     private final Map<String, Map<String, Integer>> categories = new LinkedHashMap<>();

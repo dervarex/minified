@@ -16,6 +16,12 @@ import org.apiguardian.api.API;
 @Setter
 @API(status = API.Status.STABLE)
 public class EnderDragonFight {
+    /**
+     * Creates an empty dragon fight
+     */
+    public EnderDragonFight() {
+    }
+
     private int dataVersion;
     @Nullable
     private int[] gateways;

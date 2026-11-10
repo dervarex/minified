@@ -20,6 +20,12 @@ import org.apiguardian.api.API;
 @Setter
 @API(status = API.Status.STABLE)
 public class Player {
+    /**
+     * Creates empty player data
+     */
+    public Player() {
+    }
+
 
     @Nullable
     Advancements advancements;

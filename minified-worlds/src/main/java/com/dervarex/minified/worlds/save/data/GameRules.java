@@ -14,6 +14,12 @@ import org.apiguardian.api.API;
 @Getter
 @API(status = API.Status.STABLE)
 public class GameRules {
+    /**
+     * Creates empty game rules
+     */
+    public GameRules() {
+    }
+
     @Setter
     private int dataVersion;
     private final Map<String, Boolean> booleanGamerules = new LinkedHashMap<>();

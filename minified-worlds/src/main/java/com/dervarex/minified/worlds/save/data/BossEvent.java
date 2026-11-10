@@ -14,6 +14,12 @@ import org.apiguardian.api.API;
 @Setter
 @API(status = API.Status.STABLE)
 public class BossEvent {
+    /**
+     * Creates an empty boss bar
+     */
+    public BossEvent() {
+    }
+
     /** the name, null if it isn't plain text */
     @Nullable
     private String name;

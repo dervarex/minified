@@ -17,6 +17,12 @@ import org.apiguardian.api.API;
 @Getter
 @API(status = API.Status.STABLE)
 public class Advancements {
+    /**
+     * Creates empty advancements
+     */
+    public Advancements() {
+    }
+
     @Setter
     private int dataVersion;
     private final Map<String, Advancement> advancements = new LinkedHashMap<>();
@@ -70,6 +76,12 @@ public class Advancements {
     @Getter
     @Setter
     public static class Advancement {
+        /**
+         * Creates an empty advancement
+         */
+        public Advancement() {
+        }
+
         private boolean done;
         private final Map<String, String> criteria = new LinkedHashMap<>();
 

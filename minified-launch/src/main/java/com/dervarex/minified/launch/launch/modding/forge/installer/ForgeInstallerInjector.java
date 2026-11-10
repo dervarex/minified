@@ -35,6 +35,12 @@ import java.util.function.Consumer;
  */
 @API(status = API.Status.INTERNAL, consumers = {"com.dervarex.minified.launch.*"})
 public class ForgeInstallerInjector {
+    /**
+     * Creates the injector
+     */
+    public ForgeInstallerInjector() {
+    }
+
     private static void prepare(LaunchContext context) {
         context.getEventBus().post(new InstallForgeEvent(InstallForgeEvent.Stage.PREPARING, context.getLaunchConfiguration().getLoader().mcVersion(), context.getLaunchConfiguration().getLoader().loaderVersion()));
         Path gameDir = context.getLaunchConfiguration().getJarFile().getParent();

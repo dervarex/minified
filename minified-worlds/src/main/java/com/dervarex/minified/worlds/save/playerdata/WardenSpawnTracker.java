@@ -14,6 +14,12 @@ import org.apiguardian.api.API;
 @Setter
 @API(status = API.Status.STABLE)
 public class WardenSpawnTracker {
+    /**
+     * Creates an empty warden spawn tracker
+     */
+    public WardenSpawnTracker() {
+    }
+
     @Nullable
     private Integer cooldownTicks;
     @Nullable

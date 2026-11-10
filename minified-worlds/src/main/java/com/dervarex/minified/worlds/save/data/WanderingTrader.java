@@ -14,6 +14,12 @@ import org.apiguardian.api.API;
 @Setter
 @API(status = API.Status.STABLE)
 public class WanderingTrader {
+    /**
+     * Creates empty wandering trader data
+     */
+    public WanderingTrader() {
+    }
+
     private Integer dataVersion;
     @Nullable
     private Integer spawnChance;

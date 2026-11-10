@@ -3,7 +3,6 @@ package com.dervarex.minified.worlds.save.level;
 import com.dervarex.minified.utils.nbt.tag.NbtCompound;
 import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.jetbrains.annotations.Nullable;
 import org.apiguardian.api.API;
@@ -13,9 +12,14 @@ import org.apiguardian.api.API;
  */
 @Getter
 @Setter
-@NoArgsConstructor
 @API(status = API.Status.STABLE)
 public class Version {
+    /**
+     * Creates an empty version
+     */
+    public Version() {
+    }
+
     private int id;
     @Nullable
     private String name;

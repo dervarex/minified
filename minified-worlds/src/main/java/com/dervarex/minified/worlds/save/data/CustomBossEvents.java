@@ -15,6 +15,12 @@ import org.apiguardian.api.API;
 @Getter
 @API(status = API.Status.STABLE)
 public class CustomBossEvents {
+    /**
+     * Creates empty custom boss bars
+     */
+    public CustomBossEvents() {
+    }
+
     @Setter
     private int dataVersion;
     private final Map<String, BossEvent> events = new LinkedHashMap<>();

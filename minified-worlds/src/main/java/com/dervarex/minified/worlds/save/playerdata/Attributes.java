@@ -14,6 +14,12 @@ import org.apiguardian.api.API;
 @Setter
 @API(status = API.Status.STABLE)
 public class Attributes {
+    /**
+     * Creates empty attributes
+     */
+    public Attributes() {
+    }
+
     Attribute[] attributes;
 
     /**
@@ -55,6 +61,12 @@ public class Attributes {
     @Getter
     @Setter
     public static class Attribute {
+        /**
+         * Creates an empty attribute
+         */
+        public Attribute() {
+        }
+
         String id;
         double base;
         @Getter(AccessLevel.NONE)

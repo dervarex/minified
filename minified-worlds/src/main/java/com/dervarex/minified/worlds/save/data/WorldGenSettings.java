@@ -16,6 +16,12 @@ import org.apiguardian.api.API;
 @Getter
 @API(status = API.Status.STABLE)
 public class WorldGenSettings {
+    /**
+     * Creates empty world gen settings
+     */
+    public WorldGenSettings() {
+    }
+
     @Setter
     private int dataVersion;
     @Setter
@@ -88,6 +94,12 @@ public class WorldGenSettings {
     @Getter
     @Setter
     public static class Dimension {
+        /**
+         * Creates an empty dimension
+         */
+        public Dimension() {
+        }
+
         @Nullable
         private String type;
         @Nullable
@@ -137,6 +149,12 @@ public class WorldGenSettings {
     @Getter
     @Setter
     public static class Generator {
+        /**
+         * Creates an empty generator
+         */
+        public Generator() {
+        }
+
         @Nullable
         private String type;
         /** The noise settings id, null if they're written in the file */
@@ -191,6 +209,12 @@ public class WorldGenSettings {
     @Getter
     @Setter
     public static class BiomeSource {
+        /**
+         * Creates an empty biome source
+         */
+        public BiomeSource() {
+        }
+
         @Nullable
         private String type;
         @Nullable

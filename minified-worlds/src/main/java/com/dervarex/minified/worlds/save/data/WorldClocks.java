@@ -15,6 +15,12 @@ import org.apiguardian.api.API;
 @Getter
 @API(status = API.Status.STABLE)
 public class WorldClocks {
+    /**
+     * Creates empty world clocks
+     */
+    public WorldClocks() {
+    }
+
     @Setter
     private int dataVersion;
     private final Map<String, Long> clocks = new LinkedHashMap<>();

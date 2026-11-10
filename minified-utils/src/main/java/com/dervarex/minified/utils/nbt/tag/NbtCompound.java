@@ -13,6 +13,12 @@ import org.apiguardian.api.API;
  */
 @API(status = API.Status.STABLE)
 public final class NbtCompound implements NbtTag {
+    /**
+     * Creates an empty compound
+     */
+    public NbtCompound() {
+    }
+
     private final LinkedHashMap<String, NbtTag> entries = new LinkedHashMap<>();
 
     /**

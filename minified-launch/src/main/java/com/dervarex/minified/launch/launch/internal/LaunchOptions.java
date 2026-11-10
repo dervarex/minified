@@ -22,6 +22,12 @@ import java.util.UUID;
 @API(status = API.Status.INTERNAL, consumers = {"com.dervarex.minified.launch.*"})
 @Getter
 public final class LaunchOptions {
+    /**
+     * Creates empty launch options
+     */
+    public LaunchOptions() {
+    }
+
     private final Map<String, String> variables =
             new HashMap<>();
 

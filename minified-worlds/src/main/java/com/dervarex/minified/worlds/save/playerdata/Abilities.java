@@ -13,6 +13,12 @@ import org.apiguardian.api.API;
 @Setter
 @API(status = API.Status.STABLE)
 public class Abilities {
+    /**
+     * Creates the default abilities
+     */
+    public Abilities() {
+    }
+
     private float walkSpeed = 0.1f;
     private float flySpeed = 0.05f;
     private boolean mayfly;

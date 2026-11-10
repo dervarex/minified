@@ -165,6 +165,12 @@ public class HttpException extends Exception {
      * Builds an {@link HttpException}
      */
     public static class Builder {
+        /**
+         * Creates the builder
+         */
+        public Builder() {
+        }
+
         private int statusCode = -1;
         private String statusMessage = "";
         private Method method = Method.GET;

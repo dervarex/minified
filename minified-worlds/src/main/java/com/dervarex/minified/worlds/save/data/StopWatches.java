@@ -15,6 +15,12 @@ import org.apiguardian.api.API;
 @Getter
 @API(status = API.Status.STABLE)
 public class StopWatches {
+    /**
+     * Creates empty stopwatches
+     */
+    public StopWatches() {
+    }
+
     @Setter
     private int dataVersion;
     private final Map<String, Long> stopwatches = new LinkedHashMap<>();

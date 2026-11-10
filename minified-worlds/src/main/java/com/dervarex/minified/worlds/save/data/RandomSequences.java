@@ -15,6 +15,12 @@ import org.apiguardian.api.API;
 @Getter
 @API(status = API.Status.STABLE)
 public class RandomSequences {
+    /**
+     * Creates empty random sequences
+     */
+    public RandomSequences() {
+    }
+
     @Setter
     private int dataVersion;
     @Setter

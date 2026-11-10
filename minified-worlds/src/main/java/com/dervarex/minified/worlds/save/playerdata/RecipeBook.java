@@ -15,6 +15,12 @@ import org.apiguardian.api.API;
 @Setter
 @API(status = API.Status.STABLE)
 public class RecipeBook {
+    /**
+     * Creates an empty recipe book
+     */
+    public RecipeBook() {
+    }
+
     // maybe not the best solution but it sure is one
     private String[] recipes = new String[0];
     private String[] toBeDisplayed = new String[0];

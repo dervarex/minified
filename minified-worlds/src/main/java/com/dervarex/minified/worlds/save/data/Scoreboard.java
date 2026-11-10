@@ -21,6 +21,12 @@ import org.apiguardian.api.API;
 @Setter
 @API(status = API.Status.STABLE)
 public class Scoreboard {
+    /**
+     * Creates an empty scoreboard
+     */
+    public Scoreboard() {
+    }
+
 
     private int dataVersion;
     private final Map<String, String> displaySlots = new LinkedHashMap<>();
@@ -37,6 +43,12 @@ public class Scoreboard {
     @Getter
     @Setter
     public static class Objective {
+        /**
+         * Creates an empty objective
+         */
+        public Objective() {
+        }
+
         private String name;
         /** The display name, null if it isn't plain text */
         @Nullable
@@ -87,6 +99,12 @@ public class Scoreboard {
     @Getter
     @Setter
     public static class PlayerScore {
+        /**
+         * Creates an empty score
+         */
+        public PlayerScore() {
+        }
+
         private String name;
         private String objective;
         private int score;

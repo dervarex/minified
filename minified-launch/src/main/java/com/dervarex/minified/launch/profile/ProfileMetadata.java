@@ -66,6 +66,12 @@ public record ProfileMetadata(
      * Builds a {@link ProfileMetadata}
      */
     public static class Builder {
+        /**
+         * Creates the builder
+         */
+        public Builder() {
+        }
+
         private String id = UUID.randomUUID().toString();
         private String name;
         private String description;

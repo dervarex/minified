@@ -185,6 +185,12 @@ public class NoConnectionException extends Exception {
      * Builds a {@link NoConnectionException}
      */
     public static class Builder {
+        /**
+         * Creates the builder
+         */
+        public Builder() {
+        }
+
         private String actionContext = "unknown";
         private boolean dnsResolved;
         private boolean tcpAnyReachable;

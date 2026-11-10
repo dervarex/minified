@@ -14,6 +14,12 @@ import org.apiguardian.api.API;
 @Setter
 @API(status = API.Status.STABLE)
 public class Weather {
+    /**
+     * Creates empty weather
+     */
+    public Weather() {
+    }
+
     private Integer dataVersion;
     @Nullable
     private Boolean raining;

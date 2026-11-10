@@ -152,6 +152,12 @@ public class StopException extends RuntimeException {
      * Builds a {@link StopException}
      */
     public static class Builder {
+        /**
+         * Creates the builder
+         */
+        public Builder() {
+        }
+
         private String reason = "";
         private String code = "";
         private Severity severity = Severity.ERROR;

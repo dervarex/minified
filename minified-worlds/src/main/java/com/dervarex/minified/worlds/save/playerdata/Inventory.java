@@ -14,6 +14,12 @@ import org.apiguardian.api.API;
 @Setter
 @API(status = API.Status.STABLE)
 public class Inventory {
+    /**
+     * Creates an empty inventory
+     */
+    public Inventory() {
+    }
+
     InventoryItem[] items;
 
     /**
@@ -57,6 +63,12 @@ public class Inventory {
     @Getter
     @Setter
     public static class InventoryItem {
+        /**
+         * Creates an empty item
+         */
+        public InventoryItem() {
+        }
+
         String id;
         int count;
         byte slot;

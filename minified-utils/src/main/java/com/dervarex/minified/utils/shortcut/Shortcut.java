@@ -92,6 +92,12 @@ public final class Shortcut {
      * Builds a {@link Shortcut}, only the exec path is required
      */
     public static final class Builder {
+        /**
+         * Creates the builder
+         */
+        public Builder() {
+        }
+
 
         private String name;
         private Path shortcutPath;
