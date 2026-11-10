@@ -23,6 +23,7 @@ public class BossEvent {
     /** the name, null if it isn't plain text */
     @Nullable
     private String name;
+    /** If the boss bar is shown */
     private boolean visible;
 
     @Getter(AccessLevel.NONE)

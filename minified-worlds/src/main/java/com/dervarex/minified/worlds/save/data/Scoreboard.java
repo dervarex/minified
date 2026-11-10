@@ -28,9 +28,13 @@ public class Scoreboard {
     }
 
 
+    /** The data version of the Minecraft version that wrote it */
     private int dataVersion;
+    /** Which objective is shown in which slot */
     private final Map<String, String> displaySlots = new LinkedHashMap<>();
+    /** The objectives */
     private final List<Objective> objectives = new ArrayList<>();
+    /** The scores */
     private final List<PlayerScore> playerScores = new ArrayList<>();
 
     @Getter(AccessLevel.NONE)
@@ -49,11 +53,14 @@ public class Scoreboard {
         public Objective() {
         }
 
+        /** The objective's id */
         private String name;
         /** The display name, null if it isn't plain text */
         @Nullable
         private String displayName;
+        /** What counts towards the score */
         private String criteriaName;
+        /** How the score is shown, integer or hearts */
         @Nullable
         private String renderType;
 
@@ -105,9 +112,13 @@ public class Scoreboard {
         public PlayerScore() {
         }
 
+        /** The player or entity */
         private String name;
+        /** The objective's id */
         private String objective;
+        /** The score */
         private int score;
+        /** If /trigger can't change it */
         private boolean locked;
 
         @Getter(AccessLevel.NONE)

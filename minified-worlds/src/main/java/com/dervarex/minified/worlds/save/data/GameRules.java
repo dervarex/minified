@@ -20,9 +20,12 @@ public class GameRules {
     public GameRules() {
     }
 
+    /** The data version of the Minecraft version that wrote it */
     @Setter
     private int dataVersion;
+    /** The true/false game rules */
     private final Map<String, Boolean> booleanGamerules = new LinkedHashMap<>();
+    /** The number game rules */
     private final Map<String, Integer> integerGamerules = new LinkedHashMap<>();
 
     @Getter(AccessLevel.NONE)

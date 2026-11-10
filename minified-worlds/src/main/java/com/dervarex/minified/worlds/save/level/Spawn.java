@@ -20,10 +20,14 @@ public class Spawn {
     public Spawn() {
     }
 
+    /** The dimension */
     @Nullable
     private String dimension;
+    /** The pitch */
     private float pitch;
+    /** The yaw */
     private float yaw;
+    /** The x, y and z */
     @Nullable
     private int[] pos;
 

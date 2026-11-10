@@ -20,6 +20,7 @@ public class Inventory {
     public Inventory() {
     }
 
+    /** The stacks */
     InventoryItem[] items;
 
     /**
@@ -69,8 +70,11 @@ public class Inventory {
         public InventoryItem() {
         }
 
+        /** The item id */
         String id;
+        /** How many */
         int count;
+        /** The slot */
         byte slot;
         @Getter(AccessLevel.NONE)
         @Setter(AccessLevel.NONE)

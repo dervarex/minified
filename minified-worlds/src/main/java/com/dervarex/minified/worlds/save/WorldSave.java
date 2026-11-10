@@ -46,8 +46,10 @@ import org.apiguardian.api.API;
  */
 @API(status = API.Status.STABLE)
 public class WorldSave {
+    /** The world's folder */
     @Getter
     private final Path worldDirectory;
+    /** The level.dat */
     @Getter
     private final Level level;
     @Nullable
@@ -68,8 +70,10 @@ public class WorldSave {
     private final WorldClocks worldClocks;
     @Nullable
     private final WorldGenSettings worldGenSettings;
+    /** The players that have a .dat file */
     @Getter
     private final List<Player> players;
+    /** The session.lock we hold */
     @Getter
     private final SessionLock lock;
 

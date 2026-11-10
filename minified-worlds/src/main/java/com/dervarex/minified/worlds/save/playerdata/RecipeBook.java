@@ -22,7 +22,9 @@ public class RecipeBook {
     }
 
     // maybe not the best solution but it sure is one
+    /** The unlocked recipes */
     private String[] recipes = new String[0];
+    /** The recipes that are still highlighted as new */
     private String[] toBeDisplayed = new String[0];
 
     @Getter(AccessLevel.NONE)

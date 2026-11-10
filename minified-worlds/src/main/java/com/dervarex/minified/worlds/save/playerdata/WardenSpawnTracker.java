@@ -20,10 +20,13 @@ public class WardenSpawnTracker {
     public WardenSpawnTracker() {
     }
 
+    /** The ticks until the next warning can happen */
     @Nullable
     private Integer cooldownTicks;
+    /** The ticks since the last warning */
     @Nullable
     private Integer ticksSinceLastWarning;
+    /** The warning level, a warden spawns at 4 */
     @Nullable
     private Integer warningLevel;
 

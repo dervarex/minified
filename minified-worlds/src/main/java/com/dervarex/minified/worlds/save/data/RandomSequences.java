@@ -21,10 +21,13 @@ public class RandomSequences {
     public RandomSequences() {
     }
 
+    /** The data version of the Minecraft version that wrote it */
     @Setter
     private int dataVersion;
+    /** The salt mixed into every sequence */
     @Setter
     private int salt;
+    /** The state of each sequence by id */
     private final Map<String, long[]> sequences = new LinkedHashMap<>();
 
     @Getter(AccessLevel.NONE)

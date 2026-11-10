@@ -21,8 +21,10 @@ public class CustomBossEvents {
     public CustomBossEvents() {
     }
 
+    /** The data version of the Minecraft version that wrote it */
     @Setter
     private int dataVersion;
+    /** The boss bars by id */
     private final Map<String, BossEvent> events = new LinkedHashMap<>();
 
     @Getter(AccessLevel.NONE)

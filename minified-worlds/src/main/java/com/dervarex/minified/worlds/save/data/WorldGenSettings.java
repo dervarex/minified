@@ -22,14 +22,19 @@ public class WorldGenSettings {
     public WorldGenSettings() {
     }
 
+    /** The data version of the Minecraft version that wrote it */
     @Setter
     private int dataVersion;
+    /** The world seed */
     @Setter
     private long seed;
+    /** If a bonus chest spawns */
     @Setter
     private boolean bonusChest;
+    /** If structures generate */
     @Setter
     private boolean generateStructures;
+    /** The dimensions by id */
     private final Map<String, Dimension> dimensions = new LinkedHashMap<>();
 
     @Getter(AccessLevel.NONE)
@@ -100,8 +105,10 @@ public class WorldGenSettings {
         public Dimension() {
         }
 
+        /** The dimension type */
         @Nullable
         private String type;
+        /** The generator */
         @Nullable
         private Generator generator;
 
@@ -155,11 +162,13 @@ public class WorldGenSettings {
         public Generator() {
         }
 
+        /** The generator type */
         @Nullable
         private String type;
         /** The noise settings id, null if they're written in the file */
         @Nullable
         private String settings;
+        /** Where the biomes come from */
         @Nullable
         private BiomeSource biomeSource;
 
@@ -215,8 +224,10 @@ public class WorldGenSettings {
         public BiomeSource() {
         }
 
+        /** The biome source type */
         @Nullable
         private String type;
+        /** The biome preset */
         @Nullable
         private String preset;
 

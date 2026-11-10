@@ -20,11 +20,15 @@ public class Version {
     public Version() {
     }
 
+    /** The data version */
     private int id;
+    /** The version name */
     @Nullable
     private String name;
+    /** The series, main for normal releases */
     @Nullable
     private String series;
+    /** If it's a snapshot */
     private boolean snapshot;
 
     @Getter(AccessLevel.NONE)

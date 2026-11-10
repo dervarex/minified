@@ -21,8 +21,10 @@ public class StopWatches {
     public StopWatches() {
     }
 
+    /** The data version of the Minecraft version that wrote it */
     @Setter
     private int dataVersion;
+    /** The stopwatches by id */
     private final Map<String, Long> stopwatches = new LinkedHashMap<>();
 
     @Getter(AccessLevel.NONE)

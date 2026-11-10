@@ -23,8 +23,10 @@ public class Advancements {
     public Advancements() {
     }
 
+    /** The data version of the Minecraft version that wrote it */
     @Setter
     private int dataVersion;
+    /** The advancements by id */
     private final Map<String, Advancement> advancements = new LinkedHashMap<>();
 
     @Getter(AccessLevel.NONE)
@@ -82,7 +84,9 @@ public class Advancements {
         public Advancement() {
         }
 
+        /** If it's done */
         private boolean done;
+        /** When each criterion was done */
         private final Map<String, String> criteria = new LinkedHashMap<>();
 
         @Getter(AccessLevel.NONE)

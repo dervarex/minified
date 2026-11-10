@@ -20,6 +20,7 @@ public class Attributes {
     public Attributes() {
     }
 
+    /** The attributes */
     Attribute[] attributes;
 
     /**
@@ -67,7 +68,9 @@ public class Attributes {
         public Attribute() {
         }
 
+        /** The attribute id */
         String id;
+        /** The base value */
         double base;
         @Getter(AccessLevel.NONE)
         @Setter(AccessLevel.NONE)

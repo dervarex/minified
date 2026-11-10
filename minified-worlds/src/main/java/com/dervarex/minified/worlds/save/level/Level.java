@@ -25,6 +25,7 @@ public class Level {
     private Difficulty difficulty;
     /** If the world is hardcore ({@link difficulty} = hard then) */
     private boolean hardcore;
+    /** If the difficulty is locked */
     private boolean locked;
     /** The datapacks that are toggled on */
     @Nullable
@@ -38,24 +39,32 @@ public class Level {
     /** The version in which world was last played in */
     @Nullable
     private Version version;
+    /** The experiments that are on */
     @Nullable
     private String[] enabledFeatures; // only there when experiments are turned on
+    /** Every server software that ran the world */
     @Nullable
     private String[] serverBrands;
     /** If cheats are on */
     private boolean allowCommands;
+    /** The data version of the Minecraft version that wrote it */
     private int dataVersion;
     /** The default game mode, 0 survival, 1 creative, 2 adventure, 3 spectator */
     private int gameType;
+    /** If the world was set up already */
     private byte initialized;
+    /** When the world was last played, in milliseconds */
     private long lastPlayed;
     /** The world's name, like on the Select World screen */
     @Nullable
     private String levelName;
     /** The world time, in ticks */
     private long time;
+    /** The level.dat format version */
     private int nbtVersion;
+    /** If a modded game ever opened the world */
     private boolean modded;
+    /** The player that plays in singleplayer */
     @Nullable
     private UUID singleplayerUuid;
 
