@@ -87,7 +87,7 @@
   {"loader": "forge", "mcVersion": "1.16.5", "status": "pass", "message": "Reached main menu", "timestamp": "2026-10-03T09:07:48.631006139Z"},
   {"loader": "forge", "mcVersion": "1.17.1", "status": "pass", "message": "Reached main menu", "timestamp": "2026-10-03T09:07:47.032184247Z"},
   {"loader": "forge", "mcVersion": "1.18.2", "status": "pass", "message": "Reached main menu", "timestamp": "2026-10-03T09:07:41.905874326Z"},
-  {"loader": "forge", "mcVersion": "1.19.2", "status": "pass", "message": "Reached main menu", "timestamp": "2026-10-03T09:06:31.092479180Z"},
+  {"loader": "forge", "mcVersion": "1.19.2", "status": "fail", "message": "NonZeroExitCodeException: Minecraft exited with code 1", "timestamp": "2026-11-10T17:59:56.157332829Z", "run": "https://github.com/dervarex/minified/actions/runs/42870068091"},
   {"loader": "forge", "mcVersion": "1.19.4", "status": "pass", "message": "Reached main menu", "timestamp": "2026-10-03T09:07:29.578951871Z"},
   {"loader": "forge", "mcVersion": "1.20.1", "status": "pass", "message": "Reached main menu", "timestamp": "2026-10-03T09:07:49.223172943Z"},
   {"loader": "forge", "mcVersion": "1.20.4", "status": "pass", "message": "Reached main menu", "timestamp": "2026-10-03T09:06:48.991232577Z"},
