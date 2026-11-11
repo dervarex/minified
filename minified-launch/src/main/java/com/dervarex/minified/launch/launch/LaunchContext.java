@@ -14,13 +14,17 @@ import java.io.IOException;
 @API(status = API.Status.INTERNAL)
 public final class LaunchContext {
 
+    /** The user that plays */
     @Getter
     private final User user;
+    /** What gets launched */
     @Getter
     private final LaunchConfiguration launchConfiguration;
+    /** The event bus everything gets posted to */
     @Getter
     private final EventBus eventBus;
 
+    /** Whether we launch online */
     @Getter
     @Setter
     private boolean online;

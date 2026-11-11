@@ -14,6 +14,8 @@ import java.nio.file.Path;
  */
 @API(status = API.Status.STABLE)
 public class ForgeProfileJsonLoader {
+
+    private ForgeProfileJsonLoader() {}
     /**
      * Loads the Profile Json of Forge.
      * @param version minecraft version

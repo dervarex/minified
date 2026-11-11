@@ -21,6 +21,8 @@ import java.nio.file.Path;
  */
 @API(status = API.Status.INTERNAL, consumers = {"com.dervarex.minified.launch.*"})
 public class CacheManager {
+
+    private CacheManager() {}
     private static Path cacheRoot() {
         return JavaManager.getBaseDir().resolve("cache");
     }

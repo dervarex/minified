@@ -49,10 +49,12 @@ import java.util.function.Consumer;
 import java.util.function.LongConsumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import org.apiguardian.api.API;
 
 /**
  * Downloads the libraries and extracts the natives
  */
+@API(status = API.Status.STABLE)
 public class LibraryDownloader {
 
     private final ExecutorService pool;

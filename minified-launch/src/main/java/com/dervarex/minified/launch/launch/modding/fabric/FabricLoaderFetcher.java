@@ -15,6 +15,8 @@ import org.apiguardian.api.API;
 @API(status = API.Status.STABLE)
 public class FabricLoaderFetcher {
 
+    private FabricLoaderFetcher() {}
+
     /**
      * {@return the latest Fabric loader version}
      *

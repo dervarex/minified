@@ -11,6 +11,6 @@ import org.apiguardian.api.API;
  * @param url               the request that got rate limited
  * @param retryAfterSeconds how long Modrinth wants us to wait, or <b>0</b> if it doesn't want us to know
  */
-@API(status = API.Status.EXPERIMENTAL)
+@API(status = API.Status.STABLE, since = "v4.0.0")
 public record RateLimitedEvent(String url, long retryAfterSeconds) implements Event {
 }

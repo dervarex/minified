@@ -13,13 +13,13 @@ import org.apiguardian.api.API;
  * @param dependency the dependency as Modrinth lists it on the parent
  * @param reason     why it was left out
  */
-@API(status = API.Status.EXPERIMENTAL)
+@API(status = API.Status.STABLE)
 public record DependencySkippedEvent(Version parent, VersionDependency dependency, Reason reason) implements Event {
 
     /**
      * Why a dependency was left out.
      */
-    @API(status = API.Status.EXPERIMENTAL)
+    @API(status = API.Status.STABLE)
     public enum Reason {
         /** optional dependency, when optional ones weren't asked for */
         OPTIONAL,

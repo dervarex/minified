@@ -32,6 +32,12 @@ import java.util.function.Consumer;
  */
 @API(status = API.Status.INTERNAL, consumers = {"com.dervarex.minified.launch.*"})
 public class NeoInstallerInjector {
+    /**
+     * Creates the injector
+     */
+    public NeoInstallerInjector() {
+    }
+
     private static final String INSTALLER_FILE_NAME = "neoforge-installer.jar";
 
 
@@ -105,6 +111,8 @@ public class NeoInstallerInjector {
             throws ReflectiveOperationException {
         context.getEventBus().post(new InstallNeoforgeEvent(InstallNeoforgeEvent.Stage.RUNNING_INSTALLER, context.getLaunchConfiguration().getLoader().mcVersion(), context.getLaunchConfiguration().getLoader().loaderVersion()));
 
+        makeInstallerHeadless(loader);
+
         Class<?> utilClass = loader.loadClass("net.minecraftforge.installer.json.Util");
         Method loadInstallProfile = utilClass.getMethod("loadInstallProfile");
         Object profile = loadInstallProfile.invoke(null);
@@ -177,5 +185,16 @@ public class NeoInstallerInjector {
             throw new FailedToRunNeoforgeInstallerException(e);
         }
         context.getEventBus().post(new InstallNeoforgeEvent(InstallNeoforgeEvent.Stage.FINISHED, context.getLaunchConfiguration().getLoader().mcVersion(), context.getLaunchConfiguration().getLoader().loaderVersion()));
+    }
+
+    /**
+     * Makes the installer report errors through the progress callback
+     */
+    private static void makeInstallerHeadless(ClassLoader classLoader) {
+        try {
+            classLoader.loadClass("net.minecraftforge.installer.SimpleInstaller").getField("headless").setBoolean(null, true);
+        } catch (ReflectiveOperationException ignored) {
+            // older installers don't have the flag
+        }
     }
 }

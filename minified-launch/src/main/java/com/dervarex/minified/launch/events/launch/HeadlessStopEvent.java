@@ -1,6 +1,7 @@
 package com.dervarex.minified.launch.events.launch;
 
 import com.dervarex.minified.events.Event;
+import org.apiguardian.api.API;
 
 /**
  * Fired in headless mode when the game is stopped or stops on its own, before {@link GameStoppedEvent}. <br>
@@ -8,6 +9,7 @@ import com.dervarex.minified.events.Event;
  *
  * @param reason why the game stopped
  */
+@API(status = API.Status.STABLE)
 public record HeadlessStopEvent(Reason reason) implements Event {
 
     /**

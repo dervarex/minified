@@ -29,6 +29,8 @@ import java.util.function.LongConsumer;
  */
 @API(status = API.Status.STABLE)
 public class DownloadHelper {
+
+    private DownloadHelper() {}
     /**
      * Downloads a file asynchronously and verifies its SHA-1 checksum.
      * Existing files with a matching checksum are skipped.

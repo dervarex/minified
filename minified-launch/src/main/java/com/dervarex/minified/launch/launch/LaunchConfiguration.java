@@ -36,31 +36,47 @@ import java.util.Objects;
 @API(status = API.Status.STABLE)
 public class LaunchConfiguration {
     // Memory
+    /** The minimum RAM in MB */
     private int minRam = 2048;
+    /** The maximum RAM in MB */
     private int maxRam = 4096;
 
     // Downloads
+    /** How many files get downloaded at once */
     private int downloadThreads = 5;
 
     // Resolution
+    /** The window width */
     private int resolutionWidth = 1920;
+    /** The window height */
     private int resolutionHeight = 1080;
 
     // Launcher metadata
+    /** The launcher name the game gets told about */
     private String launcherName = "Launcher";
+    /** The launcher version the game gets told about */
     private String launcherVersion = "1.0.0";
 
     // Flags
+    /** Whether the demo gets launched */
     private boolean demoUser = false;
+    /** Whether the resolution was set */
     private boolean customResolution = false;
+    /** Whether the game starts in fullscreen */
     private boolean fullscreen = false;
 
     // Paths
+    /** Where the client jar goes */
     private Path jarFile;            // required
+    /** Where the libraries go */
     private Path librariesDirectory; // required
+    /** Where the assets go */
     private Path assetsDirectory;    // required
+    /** Where native libraries get extracted to */
     private Path nativesDirectory;   // optional, defaults to <jarFile's parent directory>/natives
+    /** Where the game runs */
     private Path gameDirectory;      // optional, defaults to <jarFile's parent directory>
+    /** Your own Java instead of the one we download */
     private Path customJavaExecutable;
 
     // Launch options
@@ -70,21 +86,29 @@ public class LaunchConfiguration {
     private final List<String> extraGameArgs = new ArrayList<>();
     @Getter(AccessLevel.NONE)
     private final Map<String, String> environmentVariables = new LinkedHashMap<>();
+    /** The server the game joins once it started, host or host:port */
     private String serverAddress = null; // host or host:port, joined right after the game started
+    /** The loader and Minecraft version */
     private Loader loader = null;
 
     // Game output
+    /** Whether the game's output gets posted as events */
     private boolean captureGameOutput = false;
 
     // Headless test options
+    /** Whether the game stops once it reached the main menu */
     private boolean headless = false;
+    /** How long a headless game gets to reach the main menu */
     private int headlessTimeoutSeconds = 180;
+    /** The log lines that count as reaching the main menu */
     private String headlessMarker = null;
 
     // User
+    /** The username in offline mode */
     private String offlineUsername = "Player";
 
     // Events
+    /** The event bus everything gets posted to */
     private EventBus eventBus;
 
     private LaunchConfiguration(EventBus eventBus) {

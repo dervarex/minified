@@ -15,8 +15,16 @@ import org.apiguardian.api.API;
 @Getter
 @API(status = API.Status.STABLE)
 public class WorldClocks {
+    /**
+     * Creates empty world clocks
+     */
+    public WorldClocks() {
+    }
+
+    /** The data version of the Minecraft version that wrote it */
     @Setter
     private int dataVersion;
+    /** The ticks of each dimension */
     private final Map<String, Long> clocks = new LinkedHashMap<>();
 
     @Getter(AccessLevel.NONE)

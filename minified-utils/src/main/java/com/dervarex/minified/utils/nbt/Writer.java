@@ -20,6 +20,8 @@ import java.util.zip.GZIPOutputStream;
  */
 public class Writer {
 
+    private Writer() {}
+
     /**
      * Writes the given NBT tree to a file, Gzip compressed (like the original Minecraft nbt files)
      * Goes through a temp file, so a crash halfway through doesn't leave you with half a level.dat

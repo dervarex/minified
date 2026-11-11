@@ -8,6 +8,8 @@ import org.apiguardian.api.API;
  */
 @API(status = API.Status.STABLE)
 public class ForgeInstallerFetcher {
+
+    private ForgeInstallerFetcher() {}
     /**
      * {@return the forge installer download url for the given loader version}
      *

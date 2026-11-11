@@ -16,16 +16,30 @@ import org.apiguardian.api.API;
 @Setter
 @API(status = API.Status.STABLE)
 public class EnderDragonFight {
+    /**
+     * Creates an empty dragon fight
+     */
+    public EnderDragonFight() {
+    }
+
+    /** The data version of the Minecraft version that wrote it */
     private int dataVersion;
+    /** The end gateways that exist */
     @Nullable
     private int[] gateways;
+    /** The dragon's UUID */
     @Nullable
     private int[] dragonUUID; // only there while a dragon is alive
+    /** Where the exit portal is */
     @Nullable
     private int[] exitPortalLocation; // x, y, z, missing until the exit portal exists
+    /** If Minecraft still has to scan for the fight's state */
     private boolean needsStateScanning;
+    /** The ticks into a dragon respawn */
     private int respawnTime;
+    /** If the dragon is dead right now */
     private boolean dragonKilled;
+    /** If the dragon was ever killed */
     private boolean previouslyKilled;
 
     @Getter(AccessLevel.NONE)

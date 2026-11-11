@@ -7,6 +7,12 @@ import org.apiguardian.api.API;
  */
 @API(status = API.Status.STABLE)
 public class Raids {
+    /**
+     * Creates empty raids
+     */
+    public Raids() {
+    }
+
     int nextId;
     int tick;
 }

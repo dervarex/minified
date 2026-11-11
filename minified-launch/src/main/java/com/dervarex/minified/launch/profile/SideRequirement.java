@@ -7,7 +7,7 @@ import java.util.Locale;
 /**
  * Whether a {@link ProfileFile} is needed on the client or on the server, same values as Modrinth's mrpack {@code env}
  */
-@API(status = API.Status.EXPERIMENTAL)
+@API(status = API.Status.STABLE)
 public enum SideRequirement {
     /** The file is needed */
     REQUIRED,

@@ -10,6 +10,7 @@ import org.apiguardian.api.API;
 @API(status = API.Status.STABLE)
 public class NonZeroExitCodeException extends RuntimeException {
 
+    /** The exit code the game stopped with */
     private final int exitCode;
 
     /**

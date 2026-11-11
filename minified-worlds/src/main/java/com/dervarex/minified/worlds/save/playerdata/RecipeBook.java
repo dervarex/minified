@@ -15,8 +15,16 @@ import org.apiguardian.api.API;
 @Setter
 @API(status = API.Status.STABLE)
 public class RecipeBook {
+    /**
+     * Creates an empty recipe book
+     */
+    public RecipeBook() {
+    }
+
     // maybe not the best solution but it sure is one
+    /** The unlocked recipes */
     private String[] recipes = new String[0];
+    /** The recipes that are still highlighted as new */
     private String[] toBeDisplayed = new String[0];
 
     @Getter(AccessLevel.NONE)

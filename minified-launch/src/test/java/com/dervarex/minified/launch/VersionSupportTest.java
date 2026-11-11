@@ -1,6 +1,7 @@
 package com.dervarex.minified.launch;
 
 import com.dervarex.minified.launch.events.launch.GameStoppedEvent;
+import com.dervarex.minified.launch.events.loader.LoaderInstallerOutputEvent;
 import com.dervarex.minified.launch.launch.LaunchConfiguration;
 import com.dervarex.minified.launch.launch.Launcher;
 import org.junit.jupiter.api.Tag;
@@ -33,11 +34,12 @@ class VersionSupportTest {
         String message;
         try {
             LaunchConfiguration config = TestEnvironment.config(tempDir);
-            if (loader.equalsIgnoreCase("forge")) {
+            if (loader.equalsIgnoreCase("forge") && hasEarlyWindow(mcVersion)) {
                 disableForgeEarlyWindow(config.getJarFile().toAbsolutePath().getParent());
             }
             AtomicInteger exitCode = new AtomicInteger(Integer.MIN_VALUE);
             config.getEventBus().subscribe(GameStoppedEvent.class, event -> exitCode.set(event.exitCode()));
+            config.getEventBus().subscribe(LoaderInstallerOutputEvent.class, event -> System.out.println(event.message()));
 
             Launcher.launchMinecraft(null, config);
 
@@ -69,6 +71,11 @@ class VersionSupportTest {
     private static String describe(Throwable t) {
         return t.getClass().getSimpleName()
                 + (t.getMessage() != null ? ": " + t.getMessage() : "");
+    }
+
+    private static boolean hasEarlyWindow(String mcVersion) {
+        String[] parts = mcVersion.split("\\.");
+        return !parts[0].equals("1") || Integer.parseInt(parts[1]) >= 20;
     }
 
     /**

@@ -15,7 +15,7 @@ import java.nio.file.Path;
  * @param expectedHash the hash Modrinth reports
  * @param actualHash   the hash of the existing file
  */
-@API(status = API.Status.EXPERIMENTAL)
+@API(status = API.Status.STABLE)
 public record OutdatedFileReplacedEvent(
         String filename,
         Path destination,

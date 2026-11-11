@@ -32,6 +32,8 @@ import java.util.Set;
  */
 @API(status = API.Status.INTERNAL, consumers = {"com.dervarex.minified.launch.*"})
 public class ClasspathBuilder {
+
+    private ClasspathBuilder() {}
     /**
      * {@return the classpath}
      *

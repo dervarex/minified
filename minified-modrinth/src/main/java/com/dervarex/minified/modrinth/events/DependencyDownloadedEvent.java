@@ -16,6 +16,6 @@ import java.nio.file.Path;
  * @param completed  how many dependencies are done, including this one
  * @param total      how many dependencies there are in total
  */
-@API(status = API.Status.EXPERIMENTAL)
+@API(status = API.Status.STABLE)
 public record DependencyDownloadedEvent(Version root, Version dependency, Path file, int completed, int total) implements Event {
 }

@@ -16,8 +16,16 @@ import org.apiguardian.api.API;
 @Getter
 @API(status = API.Status.STABLE)
 public class Stats {
+    /**
+     * Creates empty stats
+     */
+    public Stats() {
+    }
+
+    /** The data version of the Minecraft version that wrote it */
     @Setter
     private int dataVersion;
+    /** The stats by category, then by id */
     private final Map<String, Map<String, Integer>> categories = new LinkedHashMap<>();
 
     @Getter(AccessLevel.NONE)

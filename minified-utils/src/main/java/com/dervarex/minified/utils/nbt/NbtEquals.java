@@ -11,6 +11,8 @@ import java.util.Map;
  */
 public class NbtEquals {
 
+    private NbtEquals() {}
+
     /**
      * Compares two tags
      *

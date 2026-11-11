@@ -13,12 +13,25 @@ import org.apiguardian.api.API;
 @Setter
 @API(status = API.Status.STABLE)
 public class Abilities {
+    /**
+     * Creates the default abilities
+     */
+    public Abilities() {
+    }
+
+    /** The walking speed */
     private float walkSpeed = 0.1f;
+    /** The flying speed */
     private float flySpeed = 0.05f;
+    /** If the player can fly */
     private boolean mayfly;
+    /** If the player flies right now */
     private boolean flying;
+    /** If the player can't take damage */
     private boolean invulnerable;
+    /** If the player can place and break blocks */
     private boolean mayBuild = true;
+    /** If blocks break instantly */
     private boolean instabuild;
 
     @Getter(AccessLevel.NONE)

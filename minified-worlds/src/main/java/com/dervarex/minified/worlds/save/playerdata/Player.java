@@ -20,96 +20,141 @@ import org.apiguardian.api.API;
 @Setter
 @API(status = API.Status.STABLE)
 public class Player {
+    /**
+     * Creates empty player data
+     */
+    public Player() {
+    }
 
+
+    /** The advancements */
     @Nullable
     Advancements advancements;
 
+    /** The statistics */
     @Nullable
     Stats statistics;
 
+    /** The abilities */
     @Nullable
     Abilities abilities;
 
+    /** The recipe book */
     @Nullable
     RecipeBook recipeBook;
 
+    /** The ticks the hurt animation has left */
     @Nullable
     Short hurtTime;
 
+    /** The velocity */
     @Nullable
     ArrayList<Double> motion; // e.g. 0, -0.0784000015258789, 0
+    /** The x, y and z */
     @Nullable
     ArrayList<Double> position; // e.g. 360.1760070593703, 77, 195.91003479668723
+    /** The yaw and pitch */
     @Nullable
     ArrayList<Double> rotation; // e.g. 155.59056, 49.508533
 
+    /** The attributes */
     @Nullable
     Attributes attributes;
 
+    /** The UUID */
     @Nullable
     ArrayList<Integer> UUID; // 4 integers -> UUID (most/least significant bits split in halves)
 
+    /** The dimension */
     @Nullable
     String dimension;
+    /** How far the player has fallen */
     @Nullable
     Double fallDistance;
+    /** The absorption hearts */
     @Nullable
     Float absorptionAmount;
+    /** The health */
     @Nullable
     Float health;
+    /** The progress to the next level */
     @Nullable
     Float XpP; // percent needed to reach the next xp level
 
+    /** The inventory */
     @Nullable
     Inventory inventory;
 
+    /** The saturation */
     @Nullable
     Float foodSaturationLevel;
+    /** The ticks until knockback stops counting for fall damage */
     @Nullable
     Integer currentImpulseContextResetGraceTime;
+    /** When the player was last hurt by an entity */
     @Nullable
     Integer hurtByTimestamp;
+    /** The ticks until a portal works again */
     @Nullable
     Integer portalCooldown;
+    /** The score shown on the death screen */
     @Nullable
     Integer score;
+    /** The selected hotbar slot */
     @Nullable
     Integer selectedItemSlot;
+    /** The level */
     @Nullable
     Integer XPLevel;
+    /** The seed for enchantment offers */
     @Nullable
     Integer XPSeed;
+    /** All xp ever collected */
     @Nullable
     Integer XPTotal;
 
+    /** The warden spawn tracker */
     @Nullable
     WardenSpawnTracker wardenSpawnTracker;
 
+    /** The hunger */
     @Nullable
     Integer foodLevel;
+    /** The ticks since hunger last changed health */
     @Nullable
     Integer foodTickTimer;
+    /** The game mode, 0 survival, 1 creative, 2 adventure, 3 spectator */
     @Nullable
     Integer playerGameType;
+    /** If a mace hit spawns extra particles on landing */
     @Nullable
     Boolean spawnExtraParticlesOnFall;
+    /** The ticks the player has been dead */
     @Nullable
     Short deathTime;
+    /** The ticks the player keeps burning */
     @Nullable
     Short fire;
+    /** The air left */
     @Nullable
     Short air;
+    /** The ticks the player has slept */
     @Nullable
     Short sleepTimer;
+    /** If the player glides with an elytra */
     @Nullable
     Boolean fallFlying;
+    /** If the player can't take damage */
     @Nullable
     Boolean invulnerable;
+    /** The exhaustion */
     @Nullable
     Float foodExhaustionLevel;
+    /** If the player has seen the end credits */
     @Nullable
     Boolean seenCredits;
 
+    /** The data version of the Minecraft version that wrote it */
     Integer dataVersion;
 
     @Getter(AccessLevel.NONE)

@@ -9,7 +9,7 @@ import lombok.Getter;
  * Gets thrown when a file of a profile couldn't be downloaded or its hash doesn't match
  */
 @Getter
-@API(status = API.Status.EXPERIMENTAL)
+@API(status = API.Status.STABLE)
 public class FailedToInstallProfileFileException extends DownloadException {
     /** The file that failed */
     private final ProfileFile file;

@@ -14,7 +14,7 @@ import org.apiguardian.api.API;
  * @param dependency the dependency as Modrinth lists it on the parent
  * @param resolved   the version that will be used for it
  */
-@API(status = API.Status.EXPERIMENTAL)
+@API(status = API.Status.STABLE)
 public record DependencyResolvedEvent(Version parent, VersionDependency dependency, Version resolved) implements Event {
 
     /**
@@ -24,7 +24,7 @@ public record DependencyResolvedEvent(Version parent, VersionDependency dependen
      * @return true if Modrinth reports a status other than {@link VersionStatus#LISTED} for the resolved version,
      * false if it's listed or modrinth refused to tell us
      */
-    @API(status = API.Status.EXPERIMENTAL)
+    @API(status = API.Status.STABLE)
     public boolean notListed() {
         VersionStatus status = resolved.getStatus();
         return status != null && status != VersionStatus.LISTED;

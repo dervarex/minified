@@ -7,6 +7,12 @@ import org.apiguardian.api.API;
  */
 @API(status = API.Status.STABLE)
 public class WorldBorder {
+    /**
+     * Creates an empty world border
+     */
+    public WorldBorder() {
+    }
+
     int damagePerBlock;
     int centerZ;
     int centerX;

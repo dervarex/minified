@@ -14,9 +14,18 @@ import org.apiguardian.api.API;
 @Setter
 @API(status = API.Status.STABLE)
 public class WanderingTrader {
+    /**
+     * Creates empty wandering trader data
+     */
+    public WanderingTrader() {
+    }
+
+    /** The data version of the Minecraft version that wrote it */
     private Integer dataVersion;
+    /** The chance of the next spawn, in percent */
     @Nullable
     private Integer spawnChance;
+    /** The ticks until the next spawn try */
     @Nullable
     private Integer spawnDelay;
 

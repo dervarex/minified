@@ -28,6 +28,12 @@ import java.util.function.Consumer;
  * Downloads the Client Jar, the one which actually is minecraft
  */
 public class ClientDownloader {
+    /**
+     * Creates the downloader
+     */
+    public ClientDownloader() {
+    }
+
 
     /**
      * Downloads the Client JAR, which is the actual Game with everything in it.

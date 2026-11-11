@@ -64,6 +64,8 @@ import java.util.List;
  */
 @API(status = API.Status.STABLE)
 public class Launcher {
+
+    private Launcher() {}
     /**
      * Downloads required files and launches Minecraft.
      * Can be used in offline mode, will throw {@code OfflineModeNeedsNetworkException} if any assets, libraries or other stuff is not downloaded but needed

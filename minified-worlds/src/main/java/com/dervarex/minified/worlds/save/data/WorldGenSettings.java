@@ -16,14 +16,25 @@ import org.apiguardian.api.API;
 @Getter
 @API(status = API.Status.STABLE)
 public class WorldGenSettings {
+    /**
+     * Creates empty world gen settings
+     */
+    public WorldGenSettings() {
+    }
+
+    /** The data version of the Minecraft version that wrote it */
     @Setter
     private int dataVersion;
+    /** The world seed */
     @Setter
     private long seed;
+    /** If a bonus chest spawns */
     @Setter
     private boolean bonusChest;
+    /** If structures generate */
     @Setter
     private boolean generateStructures;
+    /** The dimensions by id */
     private final Map<String, Dimension> dimensions = new LinkedHashMap<>();
 
     @Getter(AccessLevel.NONE)
@@ -88,8 +99,16 @@ public class WorldGenSettings {
     @Getter
     @Setter
     public static class Dimension {
+        /**
+         * Creates an empty dimension
+         */
+        public Dimension() {
+        }
+
+        /** The dimension type */
         @Nullable
         private String type;
+        /** The generator */
         @Nullable
         private Generator generator;
 
@@ -137,11 +156,19 @@ public class WorldGenSettings {
     @Getter
     @Setter
     public static class Generator {
+        /**
+         * Creates an empty generator
+         */
+        public Generator() {
+        }
+
+        /** The generator type */
         @Nullable
         private String type;
         /** The noise settings id, null if they're written in the file */
         @Nullable
         private String settings;
+        /** Where the biomes come from */
         @Nullable
         private BiomeSource biomeSource;
 
@@ -191,8 +218,16 @@ public class WorldGenSettings {
     @Getter
     @Setter
     public static class BiomeSource {
+        /**
+         * Creates an empty biome source
+         */
+        public BiomeSource() {
+        }
+
+        /** The biome source type */
         @Nullable
         private String type;
+        /** The biome preset */
         @Nullable
         private String preset;
 

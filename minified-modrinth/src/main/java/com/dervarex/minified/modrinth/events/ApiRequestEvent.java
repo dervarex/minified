@@ -14,7 +14,7 @@ import java.time.Duration;
  * @param statusCode the HTTP status code, or <b>-1</b> if Modrinth couldn't be reached at all
  * @param duration   how long the request took
  */
-@API(status = API.Status.EXPERIMENTAL)
+@API(status = API.Status.STABLE)
 public record ApiRequestEvent(String method, String url, int statusCode, Duration duration) implements Event {
 
     /**

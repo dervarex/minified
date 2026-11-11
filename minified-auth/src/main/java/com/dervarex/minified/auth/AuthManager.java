@@ -40,6 +40,8 @@ import java.util.stream.Stream;
  */
 public class AuthManager {
 
+    private AuthManager() {}
+
     private static final Map<String, User> session = new ConcurrentHashMap<>();
     private static final Gson GSON = new Gson();
     private static final List<LoginStateChangeListener> listeners = new CopyOnWriteArrayList<>();

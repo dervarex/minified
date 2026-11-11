@@ -17,7 +17,7 @@ import java.util.UUID;
  * @param createdAt   when the profile was created, can be null
  * @param updatedAt   when the profile was last changed, can be null
  */
-@API(status = API.Status.EXPERIMENTAL)
+@API(status = API.Status.STABLE)
 public record ProfileMetadata(
         String id,
         String name,
@@ -66,6 +66,12 @@ public record ProfileMetadata(
      * Builds a {@link ProfileMetadata}
      */
     public static class Builder {
+        /**
+         * Creates the builder
+         */
+        public Builder() {
+        }
+
         private String id = UUID.randomUUID().toString();
         private String name;
         private String description;

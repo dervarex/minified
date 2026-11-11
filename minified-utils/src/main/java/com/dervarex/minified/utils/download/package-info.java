@@ -1,9 +1,6 @@
 /**
  * Downloading files with SHA-1 checks and progress
- * <ul>
- *     <li>{@link com.dervarex.minified.utils.download.DownloadHelper}: downloads files, sync or async, with or without SHA-1</li>
- *     <li>{@link com.dervarex.minified.utils.download.DownloadProgress}: adds up downloaded bytes across files into a progress from 0 to 1</li>
- * </ul>
+ * <p>
  * Start with {@link com.dervarex.minified.utils.download.DownloadHelper}, it's pretty much self-explanatory
  *
  * <h2>Downloading</h2>
@@ -20,11 +17,6 @@
  *     long total = downloaded.addAndGet(bytes);
  *     System.out.println("Downloaded " + total + " bytes so far");
  * });
- * }</pre>
- * Or let {@link com.dervarex.minified.utils.download.DownloadProgress} turn them into a progress from 0 to 1:
- * <pre>{@code
- * DownloadProgress progress = new DownloadProgress(totalBytes, value -> System.out.printf("%.1f%%%n", value * 100));
- * DownloadHelper.download(url, targetPath, expectedSha1, httpClient, progress::addBytes);
  * }</pre>
  * SHA-1 of files you already have: {@link com.dervarex.minified.utils.sha.Hasher#sha1(java.nio.file.Path)}
  */

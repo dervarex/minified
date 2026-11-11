@@ -14,7 +14,7 @@ import java.util.Objects;
  * @param configuration how the game is launched
  * @param files         files that {@link ProfileInstaller} puts into the game directory
  */
-@API(status = API.Status.EXPERIMENTAL)
+@API(status = API.Status.STABLE)
 public record Profile(ProfileMetadata metadata, LaunchConfiguration configuration, List<ProfileFile> files) {
     /**
      * Copies the file list, null becomes an empty list

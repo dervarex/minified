@@ -9,6 +9,7 @@
 # Pages that are not listed here are still generated, they are only reachable through links.
 
 Getting Started -> guides/getting-started
+Migrating to 4.0 -> guides/migrating-to-4
 @events
 @exceptions
 Modules

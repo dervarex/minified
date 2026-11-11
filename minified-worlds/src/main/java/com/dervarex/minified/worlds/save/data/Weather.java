@@ -14,15 +14,27 @@ import org.apiguardian.api.API;
 @Setter
 @API(status = API.Status.STABLE)
 public class Weather {
+    /**
+     * Creates empty weather
+     */
+    public Weather() {
+    }
+
+    /** The data version of the Minecraft version that wrote it */
     private Integer dataVersion;
+    /** If it rains */
     @Nullable
     private Boolean raining;
+    /** The ticks until rain starts or stops */
     @Nullable
     private Integer rainTime;
+    /** The ticks until a thunderstorm starts or stops */
     @Nullable
     private Integer thunderTime;
+    /** The ticks of clear weather left, from /weather clear */
     @Nullable
     private Integer clearWeatherTime;
+    /** If it thunders */
     @Nullable
     private Boolean thundering;
 

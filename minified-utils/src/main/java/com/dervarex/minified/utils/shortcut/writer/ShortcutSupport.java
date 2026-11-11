@@ -4,10 +4,12 @@ import com.dervarex.minified.utils.os.OS;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.apiguardian.api.API;
 
 /**
  * Helpers for the shortcut writers
  */
+@API(status = API.Status.STABLE)
 public final class ShortcutSupport {
 
     private ShortcutSupport() {}

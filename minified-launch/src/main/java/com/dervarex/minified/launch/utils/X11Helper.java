@@ -15,6 +15,8 @@ import java.util.Objects;
  * Makes the game use X11 through Xwayland on Linux
  */
 public class X11Helper {
+
+    private X11Helper() {}
     /**
      * Normalizes the child JVM graphics environment so Linux launches can
      * fall back to X11 when a local Xwayland display is available.

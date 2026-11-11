@@ -15,8 +15,16 @@ import org.apiguardian.api.API;
 @Getter
 @API(status = API.Status.STABLE)
 public class CustomBossEvents {
+    /**
+     * Creates empty custom boss bars
+     */
+    public CustomBossEvents() {
+    }
+
+    /** The data version of the Minecraft version that wrote it */
     @Setter
     private int dataVersion;
+    /** The boss bars by id */
     private final Map<String, BossEvent> events = new LinkedHashMap<>();
 
     @Getter(AccessLevel.NONE)

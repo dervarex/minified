@@ -18,7 +18,7 @@ import java.util.Objects;
  * @param customJavaExecutable can be null to let the launcher pick a Java version
  * @param offlineUsername      can be null to keep the one from the profile, or the default
  */
-@API(status = API.Status.EXPERIMENTAL)
+@API(status = API.Status.STABLE)
 public record ProfileEnvironment(
         Path jarFile,
         Path librariesDirectory,
