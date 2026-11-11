@@ -12,9 +12,15 @@
   <a href="LICENSE">
     <img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg?style=for-the-badge" alt="License">
   </a>
-    <a href="https://discord.gg/fhbcfMSvBy">
-        <img src="https://img.shields.io/discord/1518629359714570392?style=for-the-badge&logo=discord&label=Discord&color=5865F2" alt="Join the Minified Discord"/>
-    </a>
+  
+  <br>
+
+  <a href="https://discord.gg/fhbcfMSvBy">
+    <img src="https://img.shields.io/discord/1518629359714570392?style=for-the-badge&logo=discord&label=Discord&color=5865F2" alt="Join the Minified Discord"/>
+  </a>
+  &nbsp;&nbsp;
+  <a href="https://fluxer.gg/iXLSs5Wf">
+    <img src="https://img.shields.io/badge/Fluxer-Join_the_Community-5865F2?style=for-the-badge&labelColor=555555&logo=data:image/svg+xml;base64,PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+Rmx1eGVyPC90aXRsZT48cGF0aCBmaWxsPSIjNTg2NUYyIiBkPSJNMTIgMGM2LjYyNyAwIDEyIDUuMzczIDEyIDEyczUuMzczIDEyLTEyIDEyUzAgMTguNjI3IDAgMTIgNS4zNzMgMCAxMiAwTTguNzkgMTIuNDcxcS0xLjA5MiAwLTIuMDc4LjQ5My0uOTc1LjQ5My0xLjU4NiAxLjU3NS0uMzk1LjcxMi0uNTIgMS43MjZjLS4wNzguNjI2LjQ0OCAxLjEzNSAxLjA3OSAxLjEzNS42NDUgMCAxLjEyOC0uNTQzIDEuMjg0LTEuMTdxLjEzMy0uNTMxLjQyOS0uODQ0LjU2OC0uNiAxLjQzNS0uNi41OCAwIDEuMDYxLjI4OS40ODIuMjc5IDEuMjU0Ljk1NCAxLjE3OCAxLjAzOCAyLjA3OCAxLjUxLjkuNDYgMS45OTMuNDYxIDEuMDkzIDAgMi4wNzktLjQ5My45ODUtLjQ5MiAxLjU5Ni0xLjU3NS40MDQtLjcxNC41MjItMS43MzRjLjA3Mi0uNjIzLS40NTUtMS4xMjctMS4wODMtMS4xMjctLjY1IDAtMS4xMzQuNTQ5LTEuMzA3IDEuMTc2YTIuMSAyLjEgMCAwIDEtLjM4Mi43NzRxLS41MzUuNjY1LTEuNDY4LjY2NS0uNTc5IDAtMS4wNS0uMjc5LS40Ni0uMjktMS4yNjQtLjk2NC0xLjE5LS45OTYtMi4wOS0xLjQ3OWE0IDQgMCAwIDAtMS45ODItLjQ5M004Ljc5IDZxLTEuMDkyIDAtMi4wNzguNDkzLS45NzUuNDkyLTEuNTg2IDEuNTc1LS4zOTUuNzEyLS41MiAxLjcyNmMtLjA3OC42MjUuNDQ4IDEuMTM1IDEuMDc5IDEuMTM1LjY0NSAwIDEuMTI4LS41NDMgMS4yODQtMS4xN3EuMTMzLS41MzMuNDI5LS44NDUuNTY4LS42IDEuNDM1LS42LjU4IDAgMS4wNjEuMjkuNDgyLjI3OCAxLjI1NC45NTMgMS4xNzggMS4wNCAyLjA3OCAxLjUxLjkuNDYyIDEuOTkzLjQ2MnQyLjA3OS0uNDkzcS45ODUtLjQ5MyAxLjU5Ni0xLjU3NS40MDQtLjcxNi41MjItMS43MzRjLjA3Mi0uNjI0LS40NTUtMS4xMjctMS4wODMtMS4xMjctLjY1IDAtMS4xMzQuNTQ5LTEuMzA3IDEuMTc1YTIuMSAyLjEgMCAwIDEtLjM4Mi43NzVxLS41MzUuNjY0LTEuNDY4LjY2NC0uNTc5IDAtMS4wNS0uMjc4LS40Ni0uMjktMS4yNjQtLjk2NS0xLjE5LS45OTYtMi4wOS0xLjQ3OEE0IDQgMCAwIDAgOC43OSA2Ii8+PC9zdmc+&v=2" alt="Join the Fluxer Community"/>
 </p>
 
 <p align="center">
