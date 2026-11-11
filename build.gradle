@@ -5,7 +5,7 @@ plugins {
 
 allprojects {
     group = 'io.github.dervarex.minified'
-    version = '3.3.0'
+    version = '4.0.0'
 }
 
 configure(subprojects.findAll { it.name != 'docs' }) {
