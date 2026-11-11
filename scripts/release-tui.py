@@ -68,9 +68,17 @@ class Screen:
 
     def move(self, dr=0, dc=0):
         r, c = self.position()
-        r = (r + dr) % len(self.rows)
-        row = self.rows[r]
-        c = min(c, len(row) - 1) if dr else (c + dc) % len(row)
+        if dr:
+            r = (r + dr) % len(self.rows)
+            row = self.rows[r]
+            c = min(c, len(row) - 1)
+        else:
+            row = self.rows[r]
+            c = c + dc
+            if c < 0 or c >= len(row):
+                r = (r + (1 if c >= len(row) else -1)) % len(self.rows)
+                row = self.rows[r]
+                c = 0 if dc > 0 else len(row) - 1
         self.focus = row[c]
         self.typing = False
 
