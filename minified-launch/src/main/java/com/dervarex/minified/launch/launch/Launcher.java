@@ -22,6 +22,7 @@ import com.dervarex.minified.launch.launch.internal.CacheManager;
 import com.dervarex.minified.launch.launch.internal.HeadlessWatcher;
 import com.dervarex.minified.launch.launch.internal.ClasspathBuilder;
 import com.dervarex.minified.launch.launch.internal.LaunchOptions;
+import com.dervarex.minified.launch.launch.internal.LoggingConfig;
 import com.dervarex.minified.launch.launch.modding.Loader;
 import com.dervarex.minified.launch.launch.modding.custom.CustomLoader;
 import com.dervarex.minified.launch.launch.modding.fabric.FabricLoader;
@@ -216,6 +217,14 @@ public class Launcher {
             jvmArgs.add(
                     "-Dorg.lwjgl.librarypath=" + nativesDir
             );
+
+            // Log4Shell, Mojang's config fixes it for 1.7 to 1.18
+            jvmArgs.addAll(LoggingConfig.buildJvmArguments(
+                    versionJson,
+                    launchConfig,
+                    context.isOnline(),
+                    jvmArgs
+            ));
 
             boolean logsNoMarkers = isPreOneSix(versionJson);
             if (logsNoMarkers) {
