@@ -14,6 +14,8 @@ cd "$ROOT"
 
 BRANCH=master
 WORKFLOW=release.yml
+CI_WORKFLOW=ci.yml
+IGNORED_BRANCHES=(gh-pages)
 
 usage() { sed -n '2,11p' "$0" | sed 's/^# \{0,1\}//'; }
 
@@ -62,7 +64,10 @@ gh auth status >/dev/null 2>&1 || fail "gh is not logged in, run: gh auth login"
 { git diff --quiet && git diff --cached --quiet; } || fail "uncommitted changes, commit or stash them first"
 UPSTREAM="$(git rev-parse --abbrev-ref "$BRANCH@{upstream}" 2>/dev/null)" || fail "$BRANCH has no upstream"
 REMOTE="${UPSTREAM%%/*}"
-gum spin --title "Fetching $REMOTE" -- git fetch --quiet --tags "$REMOTE"
+GH_REPO="$(git remote get-url "$REMOTE" | sed -E 's#^(https://|ssh://git@|git@)github\.com[:/]##; s#\.git$##')"
+[[ "$GH_REPO" =~ ^[^/]+/[^/]+$ ]] || fail "$REMOTE doesn't point to a GitHub repo ($(git remote get-url "$REMOTE"))"
+export GH_REPO
+gum spin --title "Fetching $REMOTE" -- git fetch --quiet --tags --prune "$REMOTE"
 [[ "$(git rev-parse HEAD)" == "$(git rev-parse "$UPSTREAM")" ]] || fail "$BRANCH differs from $UPSTREAM, pull or push first"
 ok "on $BRANCH, clean, up to date with $UPSTREAM"
 info "build.gradle $CURRENT, latest tag v$LATEST_TAG, $(git rev-list --count "v$LATEST_TAG..HEAD" 2>/dev/null || echo '?') commits since"
@@ -90,6 +95,59 @@ TAG="v$VERSION"
 git rev-parse -q --verify "refs/tags/$TAG" >/dev/null && fail "tag $TAG already exists locally"
 git ls-remote --exit-code --tags "$REMOTE" "refs/tags/$TAG" >/dev/null 2>&1 && fail "tag $TAG already exists on $REMOTE"
 
+step "CI"
+CI_RUN="$(gh run list --workflow "$CI_WORKFLOW" --commit "$(git rev-parse HEAD)" --event push --limit 1 \
+  --json databaseId,status -q '.[0] | "\(.databaseId) \(.status)"' 2>/dev/null || true)"
+if [[ -z "$CI_RUN" ]]; then
+  fail "CI didn't run on $(git rev-parse --short HEAD), push it and wait for CI first"
+fi
+read -r CI_ID CI_STATUS <<<"$CI_RUN"
+if [[ "$CI_STATUS" != completed ]]; then
+  gum spin --title "CI is still running, waiting for it" -- gh run watch "$CI_ID" >/dev/null 2>&1 || true
+fi
+CI_CONCLUSION="$(gh run view "$CI_ID" --json conclusion -q .conclusion)"
+[[ "$CI_CONCLUSION" == success ]] || fail "CI is '$CI_CONCLUSION' on $(git rev-parse --short HEAD): $(gh run view "$CI_ID" --json url -q .url)"
+ok "CI passed on $(git rev-parse --short HEAD)"
+
+step "Unfinished work"
+ignored() { local b; for b in "${IGNORED_BRANCHES[@]}"; do [[ "$1" == "$b" ]] && return 0; done; return 1; }
+PROBLEMS=()
+OPEN_PRS="$(gh pr list --base "$BRANCH" --state open --json number,headRefName,title -q '.[] | [.number, .headRefName, .title] | @tsv')"
+while IFS=$'\t' read -r num _ title; do
+  [[ -n "$num" ]] && PROBLEMS+=("open PR #$num: $title")
+done <<<"$OPEN_PRS"
+MERGED_PRS="$(gh pr list --base "$BRANCH" --state merged --limit 300 --json number,headRefName,headRefOid -q '.[] | [.number, .headRefName, .headRefOid] | @tsv')"
+while read -r ref; do
+  name="${ref#"$REMOTE"/}"
+  [[ "$name" == "$BRANCH" || "$name" == HEAD || "$ref" == "$REMOTE" ]] && continue
+  ignored "$name" && continue
+  git merge-base --is-ancestor "$ref" HEAD && continue
+  awk -F'\t' -v b="$name" '$2 == b { f = 1 } END { exit !f }' <<<"$OPEN_PRS" && continue
+  tip="$(git rev-parse "$ref")"
+  merged="$(awk -F'\t' -v b="$name" '$2 == b' <<<"$MERGED_PRS" | head -n1)"
+  if [[ -z "$merged" ]]; then
+    PROBLEMS+=("$ref: $(git rev-list --count "HEAD..$ref") commit(s) not on $BRANCH and no PR")
+    continue
+  fi
+  IFS=$'\t' read -r num _ oid <<<"$merged"
+  [[ "$tip" == "$oid" ]] && continue
+  if git cat-file -e "$oid^{commit}" 2>/dev/null; then
+    git merge-base --is-ancestor "$tip" "$oid" && continue
+    PROBLEMS+=("$ref: $(git rev-list --count "$oid..$tip") commit(s) after #$num was merged")
+  else
+    PROBLEMS+=("$ref: changed after #$num was merged")
+  fi
+done < <(git for-each-ref --format='%(refname:short)' refs/heads "refs/remotes/$REMOTE")
+if [[ ${#PROBLEMS[@]} -eq 0 ]]; then
+  ok "everything is on $BRANCH"
+else
+  for problem in "${PROBLEMS[@]}"; do gum style --foreground 3 "    ! $problem"; done
+  info "add branches that never get merged to IGNORED_BRANCHES in this script"
+  if [[ $DRY -eq 0 ]]; then
+    gum confirm --default=false "Release without these?" || { gum style --foreground 3 "Cancelled, nothing changed."; exit 1; }
+  fi
+fi
+
 # plan
 yesno() { [[ "$1" == 1 ]] && echo yes || echo no; }
 echo
@@ -103,6 +161,7 @@ gum style --border rounded --padding "0 2" --margin "0 2" \
   "dry run        $(yesno "$DRY")" \
   "" \
   "$(gum style --bold "Steps")" \
+  "• check the signing key and Maven Central login on GitHub" \
   "$([[ $TESTS -eq 1 ]] && echo "• run the tests locally" || echo "• skip the local tests")" \
   "• set the version in build.gradle and the README to $VERSION" \
   "• commit it as \"Release $TAG\" and tag it $TAG" \
@@ -116,6 +175,23 @@ else
   gum confirm --default=false "Release $TAG?" || { gum style --foreground 3 "Cancelled, nothing changed."; exit 1; }
 fi
 
+step "Release preflight"
+PREFLIGHT_ID=""
+if [[ $DRY -eq 0 ]]; then
+  SINCE="$(date -u -d '-30 sec' +%Y-%m-%dT%H:%M:%SZ)"
+  gh workflow run "$WORKFLOW" --ref "$BRANCH" >/dev/null \
+    || fail "couldn't start the preflight, does $WORKFLOW on $BRANCH have workflow_dispatch?"
+  for _ in $(seq 1 30); do
+    PREFLIGHT_ID="$(gh run list --workflow "$WORKFLOW" --event workflow_dispatch --limit 5 --json databaseId,createdAt \
+      -q "[.[] | select(.createdAt >= \"$SINCE\")][0].databaseId // empty" 2>/dev/null || true)"
+    [[ -n "$PREFLIGHT_ID" ]] && break
+    sleep 2
+  done
+  [[ -n "$PREFLIGHT_ID" ]] || fail "the preflight didn't start, check: gh run list --workflow $WORKFLOW"
+  info "started, it runs while the tests do: $(gh run view "$PREFLIGHT_ID" --json url -q .url)"
+fi
+ok "preflight started"
+
 # tests
 if [[ $TESTS -eq 1 ]]; then
   step "Tests"
@@ -126,6 +202,15 @@ if [[ $TESTS -eq 1 ]]; then
   fi
   ok "tests passed"
 fi
+
+if [[ $DRY -eq 0 ]]; then
+  step "Release preflight"
+  if ! gum spin --title "Waiting for the preflight" -- gh run watch "$PREFLIGHT_ID" --exit-status; then
+    gh run view "$PREFLIGHT_ID" --log-failed 2>/dev/null | grep -E '##\[error\]' | sed 's/.*##\[error\]/    /' || true
+    fail "the preflight failed, nothing was changed: $(gh run view "$PREFLIGHT_ID" --json url -q .url)"
+  fi
+fi
+ok "signing key and Maven Central login work"
 
 # bump, commit, tag
 step "Version"

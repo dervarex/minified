@@ -1,11 +1,12 @@
 name: Release
 
-# Publishes all lib modules to Maven Central when a version tag is pushed
+# Publishes all lib modules to Maven Central when a version tag is pushed.
 
 on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -15,8 +16,8 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  publish:
-    name: Publish to Maven Central
+  preflight:
+    name: Preflight
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -33,6 +34,7 @@ jobs:
 
       # Maven Central releases cannot be changed or deleted, so we better be sure here
       - name: Check tag matches build.gradle version
+        if: github.event_name == 'push'
         run: |
           VERSION="$(./gradlew -q properties --property version --no-daemon | sed -n 's/^version: //p')"
           if [ "v$VERSION" != "$GITHUB_REF_NAME" ]; then
@@ -40,8 +42,90 @@ jobs:
             exit 1
           fi
 
+      - name: Check the signing key and the Maven Central login
+        env:
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+          CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+        run: |
+          for secret in SIGNING_KEY SIGNING_KEY_PASSWORD CENTRAL_USERNAME CENTRAL_PASSWORD; do
+            if [ -z "${!secret}" ]; then
+              echo "::error::The secret behind $secret is empty or missing"
+              exit 1
+            fi
+          done
+
+          # Central only accepts keys it can find on one of these keyservers
+          FPR="$(printf '%s\n' "$SIGNING_KEY" | gpg --batch --with-colons --import-options show-only --import 2>/dev/null | awk -F: '$1 == "fpr" { print $10; exit }')"
+          if [ -z "$FPR" ]; then
+            echo "::warning::Couldn't read the fingerprint of SIGNING_KEY, skipping the keyserver check"
+          elif curl -fsS -o /dev/null "https://keys.openpgp.org/vks/v1/by-fingerprint/$FPR"; then
+            echo "Signing key $FPR is on keys.openpgp.org"
+          elif curl -fsS -o /dev/null "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x$FPR"; then
+            echo "Signing key $FPR is on keyserver.ubuntu.com"
+          else
+            echo "::error::Signing key $FPR isn't on keys.openpgp.org or keyserver.ubuntu.com, so Maven Central would reject the release. Upload it with: gpg --keyserver keyserver.ubuntu.com --send-keys $FPR"
+            exit 1
+          fi
+
+          VERSION="0.0.0"
+          [ "$GITHUB_EVENT_NAME" = "push" ] && VERSION="${GITHUB_REF_NAME#v}"
+          TOKEN="$(printf '%s:%s' "$CENTRAL_USERNAME" "$CENTRAL_PASSWORD" | base64 -w0)"
+          STATUS="$(curl -sS -o central.json -w '%{http_code}' -H "Authorization: Bearer $TOKEN" \
+            "https://central.sonatype.com/api/v1/publisher/published?namespace=io.github.dervarex.minified&name=minified-launch&version=$VERSION")"
+          case "$STATUS" in
+            200)
+              if grep -q '"published"[[:space:]]*:[[:space:]]*true' central.json; then
+                echo "::error::$VERSION is already on Maven Central"
+                exit 1
+              fi
+              echo "Maven Central login works" ;;
+            401|403)
+              echo "::error::Maven Central rejected the login (HTTP $STATUS), check MAVEN_CENTRAL_USERNAME and MAVEN_CENTRAL_PASSWORD"
+              exit 1 ;;
+            *)
+              echo "::warning::Couldn't check the Maven Central login (HTTP $STATUS)" ;;
+          esac
+
+      - name: Sign everything without uploading
+        env:
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_KEY_PASSWORD }}
+        run: |
+          ./gradlew publishToMavenLocal --no-daemon
+          REPO="$HOME/.m2/repository/io/github/dervarex/minified"
+          UNSIGNED="$(find "$REPO" -type f \( -name '*.jar' -o -name '*.pom' -o -name '*.module' \) | while read -r file; do [ -f "$file.asc" ] || echo "$file"; done)"
+          if [ -z "$(find "$REPO" -name '*.asc' 2>/dev/null)" ] || [ -n "$UNSIGNED" ]; then
+            echo "::error::Not everything got signed:"
+            echo "${UNSIGNED:-no .asc files at all}"
+            exit 1
+          fi
+          echo "Everything is signed"
+
+  publish:
+    name: Publish to Maven Central
+    needs: preflight
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
+
       - name: Run tests (exclude manual)
-        run: ./gradlew test --no-daemon
+        run: |
+          ./gradlew test --no-daemon --continue && exit 0
+          echo "::warning::Tests failed, running the failed modules once more in case an API was just down"
+          ./gradlew test --no-daemon --continue
 
       - name: Publish and release
         run: ./gradlew publishAndReleaseToMavenCentral --no-daemon
