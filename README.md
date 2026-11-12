@@ -62,7 +62,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'io.github.dervarex.minified:minified-launch:3.3.0'
+    implementation 'io.github.dervarex.minified:minified-launch:4.0.0'
 }
 ```
 
