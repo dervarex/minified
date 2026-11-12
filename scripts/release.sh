@@ -104,7 +104,7 @@ gum style --border rounded --padding "0 2" --margin "0 2" \
   "" \
   "$(gum style --bold "Steps")" \
   "$([[ $TESTS -eq 1 ]] && echo "• run the tests locally" || echo "• skip the local tests")" \
-  "• set the version in build.gradle to $VERSION" \
+  "• set the version in build.gradle and the README to $VERSION" \
   "• commit it as \"Release $TAG\" and tag it $TAG" \
   "• push $BRANCH and $TAG to $REMOTE, which publishes to Maven Central" \
   "$([[ $WATCH -eq 1 ]] && echo "• watch the Release workflow" || echo "• don't watch the workflow")"
@@ -133,11 +133,14 @@ if [[ $DRY -eq 0 ]]; then
   sed -i "s/^\(\s*version = \)'$CURRENT'/\1'$VERSION'/" build.gradle
   UNDO+=("git checkout --quiet -- build.gradle")
   grep -q "version = '$VERSION'" build.gradle || { undo; fail "bumping build.gradle failed"; }
+  sed -i "s/\(io\.github\.dervarex\.minified:minified-launch:\)[0-9][0-9.]*/\1$VERSION/" README.md
+  UNDO+=("git checkout --quiet -- README.md")
+  grep -q "minified-launch:$VERSION'" README.md || { undo; fail "bumping the README failed"; }
 fi
-ok "build.gradle is $VERSION"
+ok "build.gradle and the README are $VERSION"
 
 if [[ $DRY -eq 0 ]]; then
-  git commit --quiet -m "Release $TAG" -- build.gradle
+  git commit --quiet -m "Release $TAG" -- build.gradle README.md
   UNDO=("git reset --quiet --keep HEAD~1")
 fi
 ok "committed $(git rev-parse --short HEAD)"
