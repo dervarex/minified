@@ -31,26 +31,7 @@ public class Hasher {
      * @throws IllegalStateException if the JVM does not support the SHA-1 algorithm (should not happen on any normal JVM)
      */
     public static String sha1(Path path) throws HashFileException {
-        MessageDigest digest;
-
-        try {
-            digest = MessageDigest.getInstance("SHA-1");
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("SHA-1 is not supported by this JVM", e);
-        }
-
-        try (InputStream in = Files.newInputStream(path)) {
-            byte[] buffer = new byte[8192];
-            int read;
-
-            while ((read = in.read(buffer)) != -1) {
-                digest.update(buffer, 0, read);
-            }
-        } catch (IOException e) {
-            throw new HashFileException(path, HashFileException.Phase.OPEN, e);
-        }
-
-        return bytesToHex(digest.digest());
+        return sha(path, 160);
     }
 
     /**
@@ -75,11 +56,13 @@ public class Hasher {
         if (hashbits != 1 && (hashbits <= 0 || hashbits % 8 != 0)) {
             throw new InvalidHashBitsException(hashbits);
         }
+
+        String algorithmName = (hashbits == 1) ? "SHA-1" : "SHA-" + hashbits;
         MessageDigest digest;
         try {
-            digest = MessageDigest.getInstance("SHA-" + hashbits);
+            digest = MessageDigest.getInstance(algorithmName);
         } catch (NoSuchAlgorithmException e) {
-            throw new UnsupportedHashAlgorithmException("SHA-" + hashbits, e);
+            throw new UnsupportedHashAlgorithmException(algorithmName, e);
         }
 
         try (InputStream in = Files.newInputStream(path)) {
@@ -88,8 +71,12 @@ public class Hasher {
 
             int read;
 
-            while ((read = in.read(buffer)) != -1) {
-                digest.update(buffer, 0, read);
+            try {
+                while ((read = in.read(buffer)) != -1) {
+                    digest.update(buffer, 0, read);
+                }
+            } catch (IOException e) {
+                throw new HashFileException(path, HashFileException.Phase.READ, e);
             }
         } catch (IOException e) {
             throw new HashFileException(path, HashFileException.Phase.OPEN, e);
