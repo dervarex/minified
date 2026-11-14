@@ -12,6 +12,7 @@ import com.dervarex.minified.events.Event;
 import com.dervarex.minified.events.EventBus;
 import com.dervarex.minified.utils.exceptions.NoConnectionException;
 import com.dervarex.minified.utils.network.NetworkUtil;
+import com.dervarex.minified.utils.os.OS;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import net.lenni0451.commons.httpclient.HttpClient;
@@ -95,14 +96,17 @@ public class AuthManager {
     @API(status = API.Status.STABLE)
     public static void init(String launcherName, EventBus eventBus) {
         AuthManager.eventBus = eventBus;
-        String os = System.getProperty("os.name").toLowerCase();
+        OS os = OS.getCurrentOS();
 
-        if (os.contains("win")) {
-            BASE_DIR = Path.of(System.getenv("APPDATA")); // windows
-        } else if (os.contains("mac")) {
-            BASE_DIR = Path.of(System.getProperty("user.home"), "Library", "Application Support"); // macos
-        } else {
-            BASE_DIR = Path.of(System.getProperty("user.home"), ".local", "share"); // linux
+        switch (os) {
+            case LINUX:
+                BASE_DIR = Path.of(System.getProperty("user.home"), ".local", "share");
+            case MACOS:
+                Path.of(System.getProperty("user.home"), "Library", "Application Support");
+                break;
+            case WINDOWS:
+                BASE_DIR = Path.of(System.getenv("APPDATA"));
+                break;
         }
         BASE_DIR = BASE_DIR.resolve(launcherName);
         SESSION_FILE = BASE_DIR.resolve("session.enc");
@@ -360,8 +364,7 @@ public class AuthManager {
                     MinecraftAuth.JAVA_DEVICE_CODE_LOGIN.refresh(httpClient, loaded);
 
             // Refresh saved token if it has changed
-            User user = persistSession(refreshed);
-            return user;
+            return persistSession(refreshed);
         } catch (Exception e) {
             post(new SessionRefreshFailedEvent(null, e));
             return null;
@@ -394,7 +397,7 @@ public class AuthManager {
      * for the most recent one
      *
      * @param uuid the account to log in with
-     * @return the logged in user, or null if there is no saved session for it or it could not be refreshed
+     * @return the logged-in user, or null if there is no saved session for it, or it could not be refreshed
      */
     @API(status = API.Status.STABLE, since = "v3.2.1")
     public static User loginWithSavedSession(UUID uuid) {
@@ -407,8 +410,7 @@ public class AuthManager {
                     httpClient,
                     MinecraftAuth.JAVA_DEVICE_CODE_LOGIN.fromJson(saved)
             );
-            User user = persistSession(refreshed);
-            return user;
+            return persistSession(refreshed);
         } catch (Exception e) {
             post(new SessionRefreshFailedEvent(uuid, e));
             return null;
@@ -476,8 +478,7 @@ public class AuthManager {
      */
     @API(status = API.Status.STABLE)
     public static boolean hasSessionSaved() {
-        boolean exists = SESSION_FILE.toFile().exists();
-        return exists;
+        return SESSION_FILE.toFile().exists();
     }
 
     /**
