@@ -1,5 +1,8 @@
 package com.dervarex.minified.utils.sha;
 
+import com.dervarex.minified.utils.exceptions.HashFileException;
+import com.dervarex.minified.utils.exceptions.InvalidHashBitsException;
+import com.dervarex.minified.utils.exceptions.UnsupportedHashAlgorithmException;
 import org.apiguardian.api.API;
 
 import java.io.IOException;
@@ -23,29 +26,12 @@ public class Hasher {
      * <p>Since the file is streamed using an 8 KiB buffer, this should work for large files too without nuking the memory.
      * @param path file to compute the SHA-1 hash of, may not be null
      * @return the SHA-1 hash of the file contents, as a lowercase hexadecimal string (40 characters)
-     * @throws IOException if the file can't be opened or read
+     * @throws HashFileException if the file can't be opened or read
      * @throws NullPointerException if {@code path} is {@code null}
-     * @throws IllegalStateException if the JVM does not support the SHA-1 algorithm (should not happen on any normal JVM)
+     * @throws UnsupportedHashAlgorithmException if the JVM does not support the SHA-1 algorithm (should not happen on any normal JVM)
      */
-    public static String sha1(Path path) throws IOException {
-        MessageDigest digest;
-
-        try {
-            digest = MessageDigest.getInstance("SHA-1");
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("SHA-1 is not supported by this JVM", e);
-        }
-
-        try (InputStream in = Files.newInputStream(path)) {
-            byte[] buffer = new byte[8192];
-            int read;
-
-            while ((read = in.read(buffer)) != -1) {
-                digest.update(buffer, 0, read);
-            }
-        }
-
-        return bytesToHex(digest.digest());
+    public static String sha1(Path path) throws HashFileException {
+        return sha(path, 1);
     }
 
     /**
@@ -60,14 +46,24 @@ public class Hasher {
      *
      * @param path file to compute the SHA hash of, may not be null
      * @param hashbits the SHA variant to use, e.g. {@code 1} for SHA-1 or {@code 256} for SHA-256
-     * @return the SHA-1 hash of the file contents, as a lowercase hexadecimal string
-     * @throws NoSuchAlgorithmException if your JVM doesn't support that hash algorithm
-     * @throws IOException if the file could not be opened or read
+     * @return the SHA hash of the file contents, as a lowercase hexadecimal string
+     * @throws UnsupportedHashAlgorithmException if your JVM doesn't support that hash algorithm
+     * @throws HashFileException if the file could not be opened or read
      * @throws NullPointerException if {@code path} is {@code null}
      */
-    public static String sha(Path path, int hashbits) throws Exception {
+    public static String sha(Path path, int hashbits) throws HashFileException {
 
-        MessageDigest digest = MessageDigest.getInstance("SHA-" + hashbits);
+        if (hashbits != 1 && (hashbits <= 0 || hashbits % 8 != 0)) {
+            throw new InvalidHashBitsException(hashbits);
+        }
+
+        String algorithmName = (hashbits == 1) ? "SHA-1" : "SHA-" + hashbits;
+        MessageDigest digest;
+        try {
+            digest = MessageDigest.getInstance(algorithmName);
+        } catch (NoSuchAlgorithmException e) {
+            throw new UnsupportedHashAlgorithmException(algorithmName, e);
+        }
 
         try (InputStream in = Files.newInputStream(path)) {
 
@@ -75,9 +71,15 @@ public class Hasher {
 
             int read;
 
-            while ((read = in.read(buffer)) != -1) {
-                digest.update(buffer, 0, read);
+            try {
+                while ((read = in.read(buffer)) != -1) {
+                    digest.update(buffer, 0, read);
+                }
+            } catch (IOException e) {
+                throw new HashFileException(path, HashFileException.Phase.READ, e);
             }
+        } catch (IOException e) {
+            throw new HashFileException(path, HashFileException.Phase.OPEN, e);
         }
         return bytesToHex(digest.digest());
     }
