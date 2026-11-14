@@ -61,8 +61,9 @@ published once to `/assets/` (favicon to `/favicon.svg`) and every version and c
 own copy over to the shared one. Pages built before a change to the engine get the new one too, so `site.js` has to keep
 working with the HTML of older builds. A local build keeps its own copy in `assets/`.
 
-Single commits get their own build in `/commit-<sha>/`, listed in `commits.json` under "Commit builds" in the version
-picker. "Request a commit build..." in the picker opens the "Documentation build" issue form, the `Commit docs`
-workflow builds that commit, answers with the link and closes the issue. A released commit gets the link to its
-release instead. Maintainers can also run the workflow by hand.
+Single commits get their own build in `/commit-<sha>/`, listed in `commits.json` under the "Commits" tab of the version
+picker. "Request a commit build" in that tab opens the "Documentation build" issue form, the `Commit docs` workflow
+builds that commit, answers with the link and closes the issue. A released commit gets the link to its release instead.
+Maintainers can also run the workflow by hand. With a `PROJECT_TOKEN` secret (a token with the `project` scope) the
+workflow also moves the issue to In Progress and Done on the project.
 Only commits on a branch or tag of this repository are built, the oldest builds are removed after 25.

@@ -99,7 +99,15 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       issues: write
+    env:
+      PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}
     steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/scripts/project-status.js
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+
       - uses: actions/github-script@v7
         env:
           SHA: ${{ needs.resolve.outputs.sha }}
@@ -111,6 +119,14 @@ jobs:
               issue_number: context.payload.issue.number,
               body: `Hey there!\nI'm building the documentation for \`${commit}\` now, shouldn't take long`,
             });
+
+      - name: Move to In Progress
+        if: env.PROJECT_TOKEN != ''
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.PROJECT_TOKEN }}
+          script: |
+            await require('./.github/scripts/project-status.js')({ github, context, status: 'In Progress' });
 
   build:
     name: Build documentation
@@ -215,8 +231,17 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       issues: write
+    env:
+      PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}
     steps:
-      - uses: actions/github-script@v7
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/scripts/project-status.js
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+
+      - id: result
+        uses: actions/github-script@v7
         env:
           SHA: ${{ needs.resolve.outputs.sha }}
           DIR: ${{ needs.resolve.outputs.dir }}
@@ -248,7 +273,10 @@ jobs:
               failed: `Building the documentation for \`${commit}\` failed, see ${run}`,
             };
             const reply = (name) => github.rest.issues.createComment({ ...context.repo, issue_number, body: messages[name] });
-            const close = (state_reason) => github.rest.issues.update({ ...context.repo, issue_number, state: 'closed', state_reason });
+            const close = async (state_reason) => {
+              await github.rest.issues.update({ ...context.repo, issue_number, state: 'closed', state_reason });
+              core.setOutput('closed', 'true');
+            };
 
             if (ERROR) {
               await reply(ERROR);
@@ -270,3 +298,11 @@ jobs:
               // left open so a maintainer sees it
               await reply('failed');
             }
+
+      - name: Move to Done
+        if: always() && steps.result.outputs.closed == 'true' && env.PROJECT_TOKEN != ''
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.PROJECT_TOKEN }}
+          script: |
+            await require('./.github/scripts/project-status.js')({ github, context, status: 'Done' });

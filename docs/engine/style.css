@@ -452,6 +452,141 @@ svg {
   color: var(--sl-color-gray-1);
 }
 
+/* ------------------------------------------------------------ version picker */
+
+.version-picker {
+  position: relative;
+}
+
+.version-button {
+  display: inline-flex;
+  align-items: center;
+  gap: .375rem;
+  padding: .625rem 0;
+  border: 0;
+  background: transparent;
+  color: var(--sl-color-gray-1);
+  font-size: var(--sl-text-sm);
+  cursor: pointer;
+}
+
+.version-button:hover {
+  color: var(--sl-color-gray-2);
+}
+
+.version-button svg {
+  position: static;
+  flex: none;
+}
+
+.version-menu {
+  position: absolute;
+  top: calc(100% + .25rem);
+  inset-inline-end: 0;
+  z-index: 40;
+  width: 16rem;
+  overflow: hidden;
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: .5rem;
+  background-color: var(--sl-color-bg-nav);
+  box-shadow: var(--sl-shadow-md);
+  font-size: var(--sl-text-sm);
+}
+
+.version-menu[hidden] {
+  display: none;
+}
+
+.version-tabs {
+  display: flex;
+  padding-inline: .5rem;
+  border-bottom: 1px solid var(--sl-color-gray-5);
+}
+
+.version-tabs [role="tab"] {
+  margin-bottom: -1px;
+  padding: 0 .75rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--sl-color-gray-3);
+  font-size: inherit;
+  line-height: 2.5;
+  cursor: pointer;
+}
+
+.version-tabs [role="tab"]:hover {
+  color: var(--sl-color-white);
+}
+
+.version-tabs [role="tab"][aria-selected="true"] {
+  border-color: var(--sl-color-text-accent);
+  color: var(--sl-color-white);
+  font-weight: 600;
+}
+
+/* both tabs have the same height, so switching doesn't make the menu jump */
+.version-menu [role="tabpanel"] {
+  display: flex;
+  flex-direction: column;
+  height: 15rem;
+}
+
+.version-menu [role="tabpanel"][hidden] {
+  display: none;
+}
+
+.version-list {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: .25rem 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.version-list a {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: .375rem 1rem;
+  color: var(--sl-color-gray-2);
+  text-decoration: none;
+}
+
+.version-list a:hover {
+  background-color: var(--sl-color-gray-5);
+  color: var(--sl-color-white);
+}
+
+.version-list a[aria-current="page"] {
+  color: var(--sl-color-text-accent);
+  font-weight: 600;
+}
+
+.version-note {
+  color: var(--sl-color-gray-3);
+  font-weight: 400;
+}
+
+.version-empty {
+  flex: 1;
+  margin: 0;
+  padding: 1rem;
+  color: var(--sl-color-gray-3);
+}
+
+.version-request {
+  padding: .625rem 1rem;
+  border-top: 1px solid var(--sl-color-gray-5);
+  color: var(--sl-color-text-accent);
+  text-decoration: none;
+}
+
+.version-request:hover {
+  background-color: var(--sl-color-gray-5);
+}
+
 /* ------------------------------------------------------------ sidebar */
 
 .sidebar {
