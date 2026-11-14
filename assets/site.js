@@ -311,7 +311,7 @@
   // Commit builds live in /commit-<sha>/ and are listed in commits.json
   const versionSelect = document.querySelector('[data-version-select]');
   const currentCommit = body.dataset.commit || '';
-  const repo = body.dataset.repo || '';
+  let repo = body.dataset.repo || '';
   const REQUEST = '#request-commit-build';
   if (versionSelect && location.protocol !== 'file:') {
     const getJson = (url) => fetch(url, { cache: 'no-cache' })
@@ -323,6 +323,8 @@
           // a local build has no versions.json, the picker just shows the built version
           return;
         }
+        // pages built before data-repo existed get it from versions.json
+        repo = repo || data.repo || '';
         const commits = commitData && Array.isArray(commitData.commits) ? commitData.commits : [];
         const current = currentCommit ? commits.find((c) => c.sha === currentCommit) : null;
         const option = (value, label, selected) => '<option value="' + escapeHtml(value) + '"' + (selected ? ' selected' : '') + '>'
@@ -343,6 +345,7 @@
         if (currentCommit ? !current : !data.versions.includes(currentVersion)) {
           versionSelect.insertAdjacentHTML('afterbegin', option('', currentCommit ? currentCommit.slice(0, 7) : 'v' + currentVersion, true));
         }
+        fitSelect(versionSelect);
 
         const banner = document.querySelector('.version-banner');
         const latestLink = data.latest ? 'The latest release is <a href="' + root + '../' + encodeURIComponent(data.latest) + '/' + currentPath
@@ -371,11 +374,26 @@
     versionSelect.addEventListener('change', () => {
       if (versionSelect.value === REQUEST) {
         versionSelect.selectedIndex = [...versionSelect.options].findIndex((o) => o.defaultSelected);
+        fitSelect(versionSelect);
         window.open(repo + '/issues/new?template=docs_build.yml', '_blank', 'noopener');
       } else if (versionSelect.value) {
         switchVersion(versionSelect.value);
       }
     });
+  }
+
+  function fitSelect(select) {
+    const style = getComputedStyle(select);
+    const probe = document.createElement('span');
+    probe.style.cssText = 'position:absolute;visibility:hidden;white-space:pre';
+    probe.style.font = style.font;
+    probe.style.fontSize = style.fontSize;
+    probe.style.fontFamily = style.fontFamily;
+    probe.style.fontWeight = style.fontWeight;
+    probe.textContent = select.options[select.selectedIndex] ? select.options[select.selectedIndex].text : '';
+    document.body.append(probe);
+    select.style.width = 'calc(' + Math.ceil(probe.getBoundingClientRect().width) + 'px + ' + style.paddingInlineStart + ' + ' + style.paddingInlineEnd + ')';
+    probe.remove();
   }
 
   // Opens the same page in another version, or that version's home page when the page doesn't exist there
