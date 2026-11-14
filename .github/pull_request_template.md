@@ -5,8 +5,8 @@
 <!-- Why did you change that? -->
 
 ## Related issue(s)
-<!-- Does this close any Issues? They get closed automatically once the PR is merged.
-     Write "part of #12" to only link an issue without closing it. -->
+<!-- Write "Closes #12" for every issue this PR fixes, it gets linked and closed once the PR is merged.
+     A plain "#12" only mentions the issue. -->
 
 
 
