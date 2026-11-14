@@ -60,6 +60,10 @@ jobs:
           if [ -z "$(git for-each-ref --count=1 --contains "$SHA" refs/remotes/origin refs/tags)" ]; then
             fail "Commit \`${SHA::7}\` isn't on any branch or tag of this repository."
           fi
+          if ! git cat-file -e "$SHA:docs/build.gradle" 2>/dev/null; then
+            FIRST="$(git log --diff-filter=A --format=%h -- docs/build.gradle | tail -n 1)"
+            fail "Commit \`${SHA::7}\` is older than the documentation generator, the first commit that can be built is \`$FIRST\`."
+          fi
           DIR="commit-${SHA::12}"
           EXISTS=false
           if [ -n "$(git ls-tree -d origin/gh-pages "$DIR" 2>/dev/null)" ]; then
@@ -186,8 +190,7 @@ jobs:
               state_reason = 'completed';
             } else {
               // left open so a maintainer sees it
-              body = `Building the documentation for \`${(SHA || '').slice(0, 7)}\` failed, see ${run}\n\n`
-                + 'Commits from before the documentation generator was added can\'t be built.';
+              body = `Building the documentation for \`${(SHA || '').slice(0, 7)}\` failed, see ${run}`;
             }
 
             await github.rest.issues.createComment({ ...context.repo, issue_number, body });
