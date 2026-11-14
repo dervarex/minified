@@ -20,6 +20,9 @@ public final class ShortcutSupport {
      * @param execPath the program
      */
     public static String deriveName(Path execPath) {
+        if (execPath.getFileName() == null) {
+            throw new IllegalArgumentException("execPath has no file name: " + execPath);
+        }
         String fileName = execPath.getFileName().toString();
         int dot = fileName.lastIndexOf('.');
         return dot > 0 ? fileName.substring(0, dot) : fileName;

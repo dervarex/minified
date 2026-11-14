@@ -157,7 +157,7 @@ public class Parser {
      * @return parser object
      */
     public Parser register(String arg, String helpText, NoArgCommand handler) {
-        commands.put(normalizeFlag(arg), new CommandHandler(arg, handler, 0, helpText));
+        commands.put(normalizeFlag(arg), new CommandHandler(normalizeFlag(arg), handler, 0, helpText));
         return this;
     }
 
@@ -170,7 +170,7 @@ public class Parser {
      * @return parser object
      */
     public Parser register(String arg, String helpText, Consumer<String> handler) {
-        commands.put(normalizeFlag(arg), new CommandHandler(arg, handler, 1, helpText));
+        commands.put(normalizeFlag(arg), new CommandHandler(normalizeFlag(arg), handler, 1, helpText));
         return this;
     }
 
@@ -183,7 +183,7 @@ public class Parser {
      * @return parser object
      */
     public Parser register(String arg, String helpText, TwoArgCommand<String, String> handler) {
-        commands.put(normalizeFlag(arg), new CommandHandler(arg, handler, 2, helpText));
+        commands.put(normalizeFlag(arg), new CommandHandler(normalizeFlag(arg), handler, 2, helpText));
         return this;
     }
 
@@ -196,7 +196,7 @@ public class Parser {
      * @return parser object
      */
     public Parser register(String arg, String helpText, ThreeArgCommand<String, String, String> handler) {
-        commands.put(normalizeFlag(arg), new CommandHandler(arg, handler, 3, helpText));
+        commands.put(normalizeFlag(arg), new CommandHandler(normalizeFlag(arg), handler, 3, helpText));
         return this;
     }
 
@@ -209,7 +209,7 @@ public class Parser {
      * @return parser object
      */
     public Parser registerVarArgs(String arg, String helpText, VarArgsCommand handler) {
-        commands.put(normalizeFlag(arg), new CommandHandler(arg, handler, -1, helpText));
+        commands.put(normalizeFlag(arg), new CommandHandler(normalizeFlag(arg), handler, -1, helpText));
         return this;
     }
 
@@ -265,26 +265,26 @@ public class Parser {
         return registerVarArgs(arg, "", handler);
     }
 
-    // ----------------------------------------------------------------
+    private String matchingPrefix(String arg) {
+        String best = null;
+        for (String prefix : prefixes) {
+            if (arg.startsWith(prefix) && (best == null || prefix.length() > best.length())) {
+                best = prefix;
+            }
+        }
+        return best;
+    }
 
     // normalize flags (remove prefixes)
     private String normalizeFlag(String arg) {
-        for (String prefix : prefixes) {
-            if (arg.startsWith(prefix)) {
-                return arg.substring(prefix.length());
-            }
-        }
-        return arg;
+        String prefix = matchingPrefix(arg);
+        return prefix == null ? arg : arg.substring(prefix.length());
     }
 
     // check and extract flag names
     private String extractFlag(String arg) {
-        for (String prefix : prefixes) {
-            if (arg.startsWith(prefix)) {
-                return arg.substring(prefix.length());
-            }
-        }
-        return null;
+        String prefix = matchingPrefix(arg);
+        return prefix == null ? null : arg.substring(prefix.length());
     }
 
     // Generate help message
@@ -301,9 +301,11 @@ public class Parser {
         List<String> argDescriptions = new ArrayList<>();
 
         // help arg
-        flagDisplays.add(formatFlagWithArgs("help", 0));
-        helpTexts.add("Show this help message");
-        argDescriptions.add("");
+        if (!commands.containsKey("help")) {
+            flagDisplays.add(formatFlagWithArgs("help", 0));
+            helpTexts.add("Show this help message");
+            argDescriptions.add("");
+        }
 
         // all registered commands
         for (CommandHandler cmd : commands.values()) {
@@ -368,7 +370,7 @@ public class Parser {
             for (String flagDisplay : flagDisplays) {
                 String[] parts = flagDisplay.split(", ");
                 for (String part : parts) {
-                    if (part.startsWith(prefix)) {
+                    if (prefix.equals(matchingPrefix(part))) {
                         maxWidth = Math.max(maxWidth, part.length());
                     }
                 }
@@ -385,10 +387,10 @@ public class Parser {
 
         for (int i = 0; i < parts.length; i++) {
             String part = parts[i];
-            String prefix = prefixes.stream()
-                    .filter(part::startsWith)
-                    .findFirst()
-                    .orElse("");
+            String prefix = matchingPrefix(part);
+            if (prefix == null) {
+                prefix = "";
+            }
 
             if (i > 0) {
                 aligned.append(" ");
@@ -426,7 +428,7 @@ public class Parser {
         // check for help flag
         for (String arg : args) {
             String flagName = extractFlag(arg);
-            if (flagName != null && flagName.equals("help")) {
+            if (flagName != null && flagName.equals("help") && !commands.containsKey("help")) {
                 showHelp();
                 return;
             }

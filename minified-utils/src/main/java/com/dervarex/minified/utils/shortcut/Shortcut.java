@@ -180,22 +180,38 @@ public final class Shortcut {
          * Without a shortcut path, it goes on the desktop, or into ~/.local/share/applications on Linux
          *
          * @throws IllegalStateException if the exec path is missing
+         * @throws IllegalArgumentException if the name is missing and the exec path has no file name
          * @return the shortcut
          */
         public Shortcut build() {
             if (execPath == null) {
                 throw new IllegalStateException("execPath is required");
             }
-            if (os == null) {
-                os = OS.getCurrentOS();
+            Builder resolved = copy();
+            if (resolved.os == null) {
+                resolved.os = OS.getCurrentOS();
             }
-            if (name == null || name.isBlank()) {
-                name = ShortcutSupport.deriveName(execPath);
+            if (resolved.name == null || resolved.name.isBlank()) {
+                resolved.name = ShortcutSupport.deriveName(execPath);
             }
-            if (shortcutPath == null) {
-                shortcutPath = ShortcutSupport.defaultShortcutPath(os, name);
+            if (resolved.shortcutPath == null) {
+                resolved.shortcutPath = ShortcutSupport.defaultShortcutPath(resolved.os, resolved.name);
             }
-            return new Shortcut(this);
+            return new Shortcut(resolved);
+        }
+
+        private Builder copy() {
+            Builder c = new Builder();
+            c.name = name;
+            c.shortcutPath = shortcutPath;
+            c.execPath = execPath;
+            c.directory = directory;
+            c.icon = icon;
+            c.os = os;
+            c.arguments = arguments;
+            c.terminal = terminal;
+            c.comment = comment;
+            return c;
         }
     }
 }

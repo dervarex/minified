@@ -12,7 +12,7 @@ import java.util.zip.InflaterInputStream;
  */
 public class Parser {
 
-    private Parser() {}
+    public Parser() {}
 
     static final int TAG_End = 0, TAG_Byte = 1, TAG_Short = 2, TAG_Int = 3,
             TAG_Long = 4, TAG_Float = 5, TAG_Double = 6, TAG_Byte_Array = 7,
