@@ -54,3 +54,8 @@ The `Docs` workflow publishes every version to its own directory on the `gh-page
 keeps `versions.json` for the version picker in the header and redirects the site root to the latest version.
 `/latest/<page>` links resolve to the latest version as well. A push to `master` rebuilds `/<version>-SNAPSHOT/` for the
 version currently set in the root `build.gradle`
+
+Single commits get their own build in `/commit-<sha>/`, listed in `commits.json` under "Commit builds" in the version
+picker. "Request a commit build..." in the picker opens the "Documentation build" issue form, the `Commit docs`
+workflow builds that commit, answers with the link and closes the issue. Maintainers can also run the workflow by hand.
+Only commits on a branch or tag of this repository are built, the oldest builds are removed after 25.

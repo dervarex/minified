@@ -47,6 +47,7 @@ tasks.register('docs', JavaExec) {
     inputs.files(externalClasspath)
     inputs.property('group', rootProject.group.toString())
     inputs.property('version', docsVersion)
+    inputs.property('commit', findProperty('docsCommit') ?: '')
     outputs.dir(siteDir)
 
     classpath = sourceSets.main.runtimeClasspath
@@ -69,7 +70,8 @@ tasks.register('docs', JavaExec) {
                 '--group', rootProject.group.toString(),
                 '--version', docsVersion,
                 '--repo', findProperty('docsRepo') ?: 'https://github.com/dervarex/minified',
-                '--ref', findProperty('docsRef') ?: 'master',
+                '--ref', findProperty('docsRef') ?: findProperty('docsCommit') ?: 'master',
+                '--commit', findProperty('docsCommit') ?: '',
                 '--classpath', externalClasspath.asPath,
         ] + moduleArgs + ((findProperty('docsStrict') ?: 'false').toString() != 'false' ? ['--strict'] : [])
     }

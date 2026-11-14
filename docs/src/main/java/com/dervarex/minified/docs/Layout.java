@@ -58,7 +58,9 @@ final class Layout {
                 .append("<script src=\"").append(root).append("assets/search-index.js\" defer></script>\n")
                 .append("<script src=\"").append(root).append("assets/site.js\" defer></script>\n")
                 .append("</head>\n<body data-root=\"").append(root).append("\" data-path=\"").append(Html.esc(page.path()))
-                .append("\" data-version=\"").append(Html.esc(site.config.version())).append("\">\n")
+                .append("\" data-version=\"").append(Html.esc(site.config.version()))
+                .append("\" data-commit=\"").append(Html.esc(site.config.commit()))
+                .append("\" data-repo=\"").append(Html.esc(site.config.repo())).append("\">\n")
                 .append("<a class=\"skip-link\" href=\"#_top\">Skip to content</a>\n");
 
         header(b, root);
@@ -111,6 +113,11 @@ final class Layout {
         return b.toString();
     }
 
+    private String versionLabel() {
+        String commit = site.config.commit();
+        return commit.isEmpty() ? "v" + site.config.version() : commit.substring(0, Math.min(7, commit.length()));
+    }
+
     private void header(StringBuilder b, String root) {
         b.append("<header class=\"header\"><div class=\"header-inner\">")
                 .append("<div class=\"title-wrapper\"><a href=\"").append(root).append("\" class=\"site-title\"><span>Minified</span></a></div>")
@@ -118,9 +125,8 @@ final class Layout {
                 .append(ICON_SEARCH).append("<span class=\"search-label\">Search</span><kbd class=\"search-kbd\"><kbd>Ctrl</kbd><kbd>K</kbd></kbd></button></div>")
                 .append("<div class=\"right-group\">")
                 .append("<label class=\"select-wrapper version-select\" title=\"Documentation version\">").append(ICON_VERSION)
-                .append("<span class=\"sr-only\">Version</span><select data-version-select><option value=\"")
-                .append(Html.esc(site.config.version())).append("\" selected>v").append(Html.esc(site.config.version()))
-                .append("</option></select>").append(ICON_CHEVRON).append("</label>")
+                .append("<span class=\"sr-only\">Version</span><select data-version-select><option selected>")
+                .append(Html.esc(versionLabel())).append("</option></select>").append(ICON_CHEVRON).append("</label>")
                 .append("<div class=\"social-icons\">")
                 .append("<a href=\"").append(GITHUB).append("\" rel=\"me\" class=\"social-link\">").append("<span class=\"sr-only\">GitHub</span>").append(ICON_GITHUB).append("</a>")
                 .append("<a href=\"").append(DISCORD).append("\" rel=\"me\" class=\"social-link\">").append("<span class=\"sr-only\">Discord</span>").append(ICON_DISCORD).append("</a>")

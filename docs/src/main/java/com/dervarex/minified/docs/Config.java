@@ -14,11 +14,12 @@ import java.util.List;
  * @param version  library version the site documents
  * @param repo     repository url, used for source links
  * @param ref      git ref source links point at
+ * @param commit   commit a commit build documents, empty for version builds
  * @param classpath external dependencies the documented sources compile against
  * @param modules  documented modules
  * @param strict   whether warnings fail the build
  */
-record Config(Path out, Path content, Path root, String group, String version, String repo, String ref,
+record Config(Path out, Path content, Path root, String group, String version, String repo, String ref, String commit,
               String classpath, List<ModuleSource> modules, boolean strict) {
 
     /**
@@ -33,7 +34,7 @@ record Config(Path out, Path content, Path root, String group, String version, S
 
     static Config parse(String[] args) {
         Path out = null, content = null, root = null;
-        String group = "io.github.dervarex.minified", version = "dev", repo = "", ref = "master", classpath = "";
+        String group = "io.github.dervarex.minified", version = "dev", repo = "", ref = "master", commit = "", classpath = "";
         boolean strict = false;
         List<ModuleSource> modules = new ArrayList<>();
         for (int i = 0; i < args.length; i++) {
@@ -45,6 +46,7 @@ record Config(Path out, Path content, Path root, String group, String version, S
                 case "--version" -> version = args[++i];
                 case "--repo" -> repo = args[++i];
                 case "--ref" -> ref = args[++i];
+                case "--commit" -> commit = args[++i];
                 case "--classpath" -> classpath = args[++i];
                 case "--strict" -> strict = true;
                 case "--module" -> {
@@ -57,6 +59,6 @@ record Config(Path out, Path content, Path root, String group, String version, S
         if (out == null || content == null || root == null || modules.isEmpty()) {
             throw new IllegalArgumentException("--out, --content, --root and at least one --module are required");
         }
-        return new Config(out, content, root, group, version, repo, ref, classpath, List.copyOf(modules), strict);
+        return new Config(out, content, root, group, version, repo, ref, commit, classpath, List.copyOf(modules), strict);
     }
 }

@@ -1,0 +1,18 @@
+name: Documentation build
+description: Build the documentation for a commit that isn't released yet
+title: "Documentation build"
+labels: ["docs build"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A bot will build the documentation for this commit, answer with the link and close the Issue.
+
+  - type: input
+    id: commit
+    attributes:
+      label: Commit
+      description: Commit hash or link to the commit
+      placeholder: 656d8f23
+    validations:
+      required: true

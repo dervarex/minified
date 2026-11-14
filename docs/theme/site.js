@@ -307,42 +307,75 @@
 
   // ---------------------------------------------------------------- versions
 
-  // Every version lives in its own directory next to versions.json, e.g. /3.1.0/ and /3.0.0/
+  // Every version lives in its own directory next to versions.json, e.g. /3.1.0/ and /3.0.0/.
+  // Commit builds live in /commit-<sha>/ and are listed in commits.json
   const versionSelect = document.querySelector('[data-version-select]');
+  const currentCommit = body.dataset.commit || '';
+  const repo = body.dataset.repo || '';
+  const REQUEST = '#request-commit-build';
   if (versionSelect && location.protocol !== 'file:') {
-    const versionsUrl = root + '../versions.json';
-    fetch(versionsUrl, { cache: 'no-cache' })
+    const getJson = (url) => fetch(url, { cache: 'no-cache' })
       .then((response) => (response.ok ? response.json() : null))
-      .then((data) => {
+      .catch(() => null);
+    Promise.all([getJson(root + '../versions.json'), getJson(root + '../commits.json')])
+      .then(([data, commitData]) => {
         if (!data || !Array.isArray(data.versions) || !data.versions.length) {
+          // a local build has no versions.json, the picker just shows the built version
           return;
         }
-        versionSelect.innerHTML = data.versions
-          .map((v) => '<option value="' + escapeHtml(v) + '"' + (v === currentVersion ? ' selected' : '') + '>v' + escapeHtml(v)
-            + (v === data.latest ? ' (latest)' : '') + '</option>')
-          .join('');
-        if (!data.versions.includes(currentVersion)) {
-          versionSelect.insertAdjacentHTML('afterbegin', '<option selected>v' + escapeHtml(currentVersion) + '</option>');
+        const commits = commitData && Array.isArray(commitData.commits) ? commitData.commits : [];
+        const current = currentCommit ? commits.find((c) => c.sha === currentCommit) : null;
+        const option = (value, label, selected) => '<option value="' + escapeHtml(value) + '"' + (selected ? ' selected' : '') + '>'
+          + escapeHtml(label) + '</option>';
+
+        let html = '<optgroup label="Releases">' + data.versions
+          .map((v) => option(v, 'v' + v + (v === data.latest ? ' (latest)' : ''), !currentCommit && v === currentVersion))
+          .join('') + '</optgroup>';
+        if (commits.length) {
+          html += '<optgroup label="Commit builds">' + commits
+            .map((c) => option(c.dir, c.sha.slice(0, 7) + ' (v' + c.version + ')', c === current))
+            .join('') + '</optgroup>';
         }
-        if (data.latest && data.latest !== currentVersion) {
-          const banner = document.querySelector('.version-banner');
+        if (repo) {
+          html += '<optgroup label="Other">' + option(REQUEST, 'Request a commit build...', false) + '</optgroup>';
+        }
+        versionSelect.innerHTML = html;
+        if (currentCommit ? !current : !data.versions.includes(currentVersion)) {
+          versionSelect.insertAdjacentHTML('afterbegin', option('', currentCommit ? currentCommit.slice(0, 7) : 'v' + currentVersion, true));
+        }
+
+        const banner = document.querySelector('.version-banner');
+        const latestLink = data.latest ? 'The latest release is <a href="' + root + '../' + encodeURIComponent(data.latest) + '/' + currentPath
+          + '">v' + escapeHtml(data.latest) + '</a>.' : '';
+        if (currentCommit) {
+          banner.innerHTML = 'You are reading the documentation of commit <a href="' + escapeHtml(repo) + '/commit/' + encodeURIComponent(currentCommit)
+            + '">' + escapeHtml(currentCommit.slice(0, 7)) + '</a>, which is not a release and may still change. ' + latestLink;
+        } else if (data.latest && data.latest !== currentVersion) {
           const snapshot = currentVersion.endsWith('-SNAPSHOT');
           banner.innerHTML = 'You are reading the documentation of Minified v' + escapeHtml(currentVersion)
             + (snapshot ? ', which is not released yet and may still change' : '')
-            + '. The latest ' + (snapshot ? 'release' : 'version') + ' is <a href="' + root + '../' + encodeURIComponent(data.latest) + '/' + currentPath + '" data-version-link="'
-            + escapeHtml(data.latest) + '">v' + escapeHtml(data.latest) + '</a>.';
-          banner.hidden = false;
-          banner.querySelector('a').addEventListener('click', (e) => {
+            + '. ' + latestLink;
+        } else {
+          return;
+        }
+        banner.hidden = false;
+        const link = data.latest && banner.querySelector('a[href^="' + root + '"]');
+        if (link) {
+          link.addEventListener('click', (e) => {
             e.preventDefault();
             switchVersion(data.latest);
           });
         }
-      })
-      .catch(() => {
-        // a local build has no versions.json, the picker just shows the built version
       });
 
-    versionSelect.addEventListener('change', () => switchVersion(versionSelect.value));
+    versionSelect.addEventListener('change', () => {
+      if (versionSelect.value === REQUEST) {
+        versionSelect.selectedIndex = [...versionSelect.options].findIndex((o) => o.defaultSelected);
+        window.open(repo + '/issues/new?template=docs_build.yml', '_blank', 'noopener');
+      } else if (versionSelect.value) {
+        switchVersion(versionSelect.value);
+      }
+    });
   }
 
   // Opens the same page in another version, or that version's home page when the page doesn't exist there
