@@ -343,6 +343,7 @@
         if (currentCommit ? !current : !data.versions.includes(currentVersion)) {
           versionSelect.insertAdjacentHTML('afterbegin', option('', currentCommit ? currentCommit.slice(0, 7) : 'v' + currentVersion, true));
         }
+        fitSelect(versionSelect);
 
         const banner = document.querySelector('.version-banner');
         const latestLink = data.latest ? 'The latest release is <a href="' + root + '../' + encodeURIComponent(data.latest) + '/' + currentPath
@@ -371,11 +372,26 @@
     versionSelect.addEventListener('change', () => {
       if (versionSelect.value === REQUEST) {
         versionSelect.selectedIndex = [...versionSelect.options].findIndex((o) => o.defaultSelected);
+        fitSelect(versionSelect);
         window.open(repo + '/issues/new?template=docs_build.yml', '_blank', 'noopener');
       } else if (versionSelect.value) {
         switchVersion(versionSelect.value);
       }
     });
+  }
+
+  function fitSelect(select) {
+    const style = getComputedStyle(select);
+    const probe = document.createElement('span');
+    probe.style.cssText = 'position:absolute;visibility:hidden;white-space:pre';
+    probe.style.font = style.font;
+    probe.style.fontSize = style.fontSize;
+    probe.style.fontFamily = style.fontFamily;
+    probe.style.fontWeight = style.fontWeight;
+    probe.textContent = select.options[select.selectedIndex] ? select.options[select.selectedIndex].text : '';
+    document.body.append(probe);
+    select.style.width = 'calc(' + Math.ceil(probe.getBoundingClientRect().width) + 'px + ' + style.paddingInlineStart + ' + ' + style.paddingInlineEnd + ')';
+    probe.remove();
   }
 
   // Opens the same page in another version, or that version's home page when the page doesn't exist there
