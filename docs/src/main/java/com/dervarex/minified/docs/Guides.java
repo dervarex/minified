@@ -31,7 +31,7 @@ final class Guides {
      * @param path      page path, derived from the file path like the former Starlight slugs
      * @param hideTitle  whether the page has no visible title, set with an empty {@code title}
      * @param showToc    whether the "On this page" list is shown, off with {@code tableOfContents: false}
-     * @param stylesheet additional stylesheet from the theme directory, or null
+     * @param stylesheet additional stylesheet from the engine directory, or null
      */
     record Guide(Path file, String path, String title, String description, String markdown, boolean hideTitle,
                  boolean showToc, String stylesheet) {

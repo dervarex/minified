@@ -69,7 +69,7 @@ final class Site {
      * @param path       directory path of the page, {@code ""} for the home page
      * @param section    sidebar section the page belongs to, used to expand the right sidebar group
      * @param hideTitle  whether the title panel is left out, like on the home page
-     * @param extraCss   additional stylesheet in the theme directory, may be null
+     * @param extraCss   additional stylesheet in the engine directory, may be null
      * @param eyebrow    html shown above the title, like the module and package of a type, may be null
      */
     record Page(String path, String title, String description, String body, List<TocEntry> toc,
@@ -398,10 +398,10 @@ final class Site {
     // ------------------------------------------------------------------ output
 
     private void copyTheme() throws IOException {
-        Path theme = config.content().getParent().resolve("theme");
+        Path engine = config.content().getParent().resolve("engine");
         Path target = config.out().resolve("assets");
         Files.createDirectories(target);
-        try (Stream<Path> files = Files.list(theme)) {
+        try (Stream<Path> files = Files.list(engine)) {
             for (Path file : files.toList()) {
                 if (file.getFileName().toString().equals("favicon.svg")) {
                     Files.copy(file, config.out().resolve("favicon.svg"), StandardCopyOption.REPLACE_EXISTING);

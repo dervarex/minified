@@ -34,7 +34,7 @@ tasks.register('docs', JavaExec) {
 
     def siteDir = layout.buildDirectory.dir('site')
     def contentDir = layout.projectDirectory.dir('content')
-    def themeDir = layout.projectDirectory.dir('theme')
+    def engineDir = layout.projectDirectory.dir('engine')
     def sourceDirs = libraryProjects.collect { it.sourceSets.main.java.srcDirs }.flatten()
     // jars of external dependencies only, the library sources themselves are documented from source
     def libraryBuildDirs = libraryProjects.collect { it.layout.buildDirectory.get().asFile.toPath() }
@@ -43,7 +43,7 @@ tasks.register('docs', JavaExec) {
 
     inputs.files(sourceDirs)
     inputs.dir(contentDir)
-    inputs.dir(themeDir)
+    inputs.dir(engineDir)
     inputs.files(externalClasspath)
     inputs.property('group', rootProject.group.toString())
     inputs.property('version', docsVersion)

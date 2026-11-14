@@ -28,15 +28,15 @@ Add `-PdocsStrict=true` to fail on warnings, which is what the `Docs` workflow d
 | `content/exceptions/<Exception>.md`  | Optional prose for an exception page. Fields, hierarchy and "Thrown by" come from the code               |
 | `content/modules/<module>.md`        | Optional introduction for a module page in the API reference                                             |
 | `content/sidebar.txt`                | Left navigation, see the comment at the top of the file                                                  |
-| `theme/`                             | Stylesheets, script and favicon, copied to the site as they are                                          |
+| `engine/`                            | Stylesheets, script and favicon, copied to the site as they are                                          |
 | `src/`                               | The generator, a javadoc doclet                                                                          |
 
 ## Writing guides
 
 Guides are Markdown with front matter (`title`, `description`, optionally `tableOfContents: false` and
-`stylesheet: <file in theme/>`). On top of regular Markdown they support what the old Starlight site had:
+`stylesheet: <file in engine/>`). On top of regular Markdown they support what the old Starlight site had:
 
-- raw HTML, including the `field-card`/`fields-grid`/`type-definition` components from `theme/components.css`
+- raw HTML, including the `field-card`/`fields-grid`/`type-definition` components from `engine/components.css`
 - asides: `:::note`, `:::tip`, `:::caution`, `:::danger`, optionally with a title like `:::note[Title]`, closed by `:::`
 - `<Tabs>` with `<TabItem label="Java">`, tabs with the same label switch together across the page
 - `{{version}}` is replaced with the library version everywhere, also inside code blocks
@@ -55,8 +55,11 @@ keeps `versions.json` for the version picker in the header and redirects the sit
 `/latest/<page>` links resolve to the latest version as well. A push to `master` rebuilds `/<version>-SNAPSHOT/` for the
 version currently set in the root `build.gradle`
 
-A released version stays as it was published. To put new guides or theme changes on it, run the `Docs` workflow by hand
-with that version: it builds the release's sources with `docs/` from `master`.
+The content of a released version is locked. The engine (everything in `engine/`) isn't part of a version, it's
+published once to `/assets/` (favicon to `/favicon.svg`) and every version and commit build links to it, so a push to
+`master` updates the look of every page. `publish-engine.sh` does that, and moves older builds that still carry their
+own copy over to the shared one. Pages built before a change to the engine get the new one too, so `site.js` has to keep
+working with the HTML of older builds. A local build keeps its own copy in `assets/`.
 
 Single commits get their own build in `/commit-<sha>/`, listed in `commits.json` under "Commit builds" in the version
 picker. "Request a commit build..." in the picker opens the "Documentation build" issue form, the `Commit docs`

@@ -311,7 +311,7 @@
   // Commit builds live in /commit-<sha>/ and are listed in commits.json
   const versionSelect = document.querySelector('[data-version-select]');
   const currentCommit = body.dataset.commit || '';
-  const repo = body.dataset.repo || '';
+  let repo = body.dataset.repo || '';
   const REQUEST = '#request-commit-build';
   if (versionSelect && location.protocol !== 'file:') {
     const getJson = (url) => fetch(url, { cache: 'no-cache' })
@@ -323,6 +323,8 @@
           // a local build has no versions.json, the picker just shows the built version
           return;
         }
+        // pages built before data-repo existed get it from versions.json
+        repo = repo || data.repo || '';
         const commits = commitData && Array.isArray(commitData.commits) ? commitData.commits : [];
         const current = currentCommit ? commits.find((c) => c.sha === currentCommit) : null;
         const option = (value, label, selected) => '<option value="' + escapeHtml(value) + '"' + (selected ? ' selected' : '') + '>'

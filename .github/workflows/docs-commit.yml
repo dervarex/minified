@@ -168,6 +168,15 @@ jobs:
           ref: gh-pages
           path: pages
 
+      - uses: actions/checkout@v4
+        with:
+          path: main
+          sparse-checkout: |
+            docs/engine
+            docs/publish-engine.sh
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+
       - name: Push gh-pages
         working-directory: pages
         env:
@@ -179,6 +188,7 @@ jobs:
             git reset --hard FETCH_HEAD
             rm -rf "$DIR"
             cp -r ../site "$DIR"
+            bash ../main/docs/publish-engine.sh ../main/docs/engine .
 
             BUILDS="$(cat commit-*/commit.json | jq -s 'sort_by(.built) | reverse')"
             for old in $(echo "$BUILDS" | jq -r --argjson keep "$KEEP" '.[$keep:][].dir'); do

@@ -2,8 +2,8 @@ name: Docs
 
 # Builds the documentation site and publishes it to the gh-pages branch. Every library version gets its own
 # directory (/3.1.0/, /3.2.0/, ...), versions.json lists them for the version picker and the site root
-# redirects to the latest release. A published release writes its version's dir.
-# Running it manually rebuilds the given release
+# redirects to the latest release. A published release writes its version's dir, after that its content is locked.
+# The engine (docs/engine) lives once in /assets/ for every version and is updated on every run
 
 on:
   push:
@@ -12,10 +12,6 @@ on:
     tags:
       - 'v*'
   workflow_dispatch:
-    inputs:
-      version:
-        description: Release to rebuild with the current guides and theme, e.g. 4.0.2 (empty builds master)
-        required: false
 
 permissions:
   contents: write
@@ -31,20 +27,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check out release
-        if: inputs.version != ''
-        env:
-          VERSION: ${{ inputs.version }}
-        run: |
-          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "::error::'$VERSION' is no version like 4.0.2"
-            exit 1
-          fi
-          git fetch --depth 1 origin tag "v$VERSION"
-          git checkout --detach "v$VERSION"
-          rm -rf docs
-          git checkout "$GITHUB_SHA" -- docs
-
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
@@ -57,7 +39,7 @@ jobs:
 
       # strict: stale guide references and broken links fail the build instead of being published
       - name: Generate site
-        run: ./gradlew :docs:docs -PdocsRef=${{ inputs.version != '' && format('v{0}', inputs.version) || github.sha }} -PdocsStrict=true --no-daemon
+        run: ./gradlew :docs:docs -PdocsRef=${{ github.sha }} -PdocsStrict=true --no-daemon
 
       - name: Check out gh-pages
         run: |
@@ -72,14 +54,14 @@ jobs:
           VERSION="$(cat docs/build/site/VERSION)"
           RELEASE="${VERSION%-SNAPSHOT}"
           if [ "$VERSION" != "$RELEASE" ] && [ -d "pages/$RELEASE" ]; then
-            echo "::notice::$RELEASE is already released and its documentation is locked, bump the version in build.gradle to publish a new snapshot"
-            exit 0
-          fi
-          rm -rf "pages/$VERSION"
-          cp -r docs/build/site "pages/$VERSION"
-          # the snapshot of a version is replaced by its release
-          if [ "$VERSION" = "$RELEASE" ]; then
-            rm -rf "pages/$VERSION-SNAPSHOT"
+            echo "::notice::$RELEASE is already released and its documentation is locked, only the engine gets updated"
+          else
+            rm -rf "pages/$VERSION"
+            cp -r docs/build/site "pages/$VERSION"
+            # the snapshot of a version is replaced by its release
+            if [ "$VERSION" = "$RELEASE" ]; then
+              rm -rf "pages/$VERSION-SNAPSHOT"
+            fi
           fi
           touch pages/.nojekyll
 
@@ -87,7 +69,8 @@ jobs:
           # latest is the newest release, a snapshot only while nothing has been released yet
           LATEST="$(echo "$VERSIONS" | grep -v -- '-SNAPSHOT$' | head -n 1 || true)"
           LATEST="${LATEST:-$(echo "$VERSIONS" | head -n 1)}"
-          echo "$VERSIONS" | jq -R . | jq -s --arg latest "$LATEST" '{latest: $latest, versions: .}' > pages/versions.json
+          echo "$VERSIONS" | jq -R . | jq -s --arg latest "$LATEST" --arg repo "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" \
+            '{latest: $latest, repo: $repo, versions: .}' > pages/versions.json
 
           cat > pages/index.html <<EOF
           <!doctype html>
@@ -132,6 +115,9 @@ jobs:
           </body>
           </html>
           EOF
+
+      - name: Update the engine
+        run: bash docs/publish-engine.sh docs/engine pages
 
       - name: Push gh-pages
         working-directory: pages
