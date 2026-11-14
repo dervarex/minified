@@ -6,6 +6,7 @@ import com.dervarex.minified.modrinth.SearchResult;
 import com.dervarex.minified.modrinth.exceptions.ModrinthNotFoundException;
 import com.dervarex.minified.modrinth.loaders.ModLoader;
 import com.sun.net.httpserver.HttpServer;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -23,6 +24,7 @@ class ProjectsClientTest {
     private final ProjectsClient projects = Modrinth.connect().projects();
 
     @Test
+    @Tag("manual")
     void getsAProjectBySlug() {
         Project iris = projects.get("iris");
 
@@ -34,6 +36,7 @@ class ProjectsClientTest {
     }
 
     @Test
+    @Tag("manual")
     void getsManyProjectsInTheAskedOrder() {
         List<String> slugs = projects.getMany("AANobbMI", "iris").stream().map(Project::getSlug).toList();
 
@@ -41,6 +44,7 @@ class ProjectsClientTest {
     }
 
     @Test
+    @Tag("manual")
     void searchFindsIris() {
         SearchResult<Project> result = projects.search(SearchRequest.builder().query("iris shaders").limit(5).build());
 
@@ -52,6 +56,7 @@ class ProjectsClientTest {
     }
 
     @Test
+    @Tag("manual")
     void unknownProjectsAreNotFound() {
         assertThrows(ModrinthNotFoundException.class, () -> projects.get("this-project-does-not-exist-hopefully-" + new Random().nextInt(10000))); // don't want anyone to troll us and actually create an project named like that
     }

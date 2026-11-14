@@ -4,12 +4,14 @@ import com.dervarex.minified.modrinth.Modrinth;
 import com.dervarex.minified.modrinth.VersionSearchOptions;
 import com.dervarex.minified.modrinth.exceptions.ModrinthNotFoundException;
 import com.dervarex.minified.modrinth.loaders.ModLoader;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Tag("manual")
 class VersionsClientTest {
 
     // iris 1.8.2 for 1.21.4, requires sodium joBzVWtR

@@ -15,6 +15,7 @@ import com.dervarex.minified.modrinth.projects.Environment;
 import com.dervarex.minified.utils.json.JsonParser;
 import com.sun.net.httpserver.HttpServer;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -162,6 +163,7 @@ class VersionTest {
     }
 
     @Test
+    @Tag("manual")
     void realIrisNeedsSodiumAndCanBeDownloaded(@TempDir Path tempDir) {
         Version iris = Modrinth.connect().versions().get("ZnhzDm36");
 

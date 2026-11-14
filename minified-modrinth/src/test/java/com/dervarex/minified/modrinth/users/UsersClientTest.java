@@ -4,6 +4,7 @@ import com.dervarex.minified.modrinth.Modrinth;
 import com.dervarex.minified.modrinth.exceptions.ModrinthNotFoundException;
 import com.dervarex.minified.utils.json.JsonObject;
 import com.dervarex.minified.utils.json.JsonParser;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -38,11 +39,13 @@ class UsersClientTest {
     }
 
     @Test
+    @Tag("manual")
     void getsAUserByUsername() {
         assertEquals("TEZXhE2U", users.get("jellysquid3").getId());
     }
 
     @Test
+    @Tag("manual")
     void getsManyUsersByIdOrUsername() {
         List<String> names = users.getMany("TEZXhE2U").stream().map(User::getUsername).toList();
         assertEquals(List.of("jellysquid3"), names);
@@ -50,6 +53,7 @@ class UsersClientTest {
     }
 
     @Test
+    @Tag("manual")
     void unknownUsersAreNotFound() {
         assertThrows(ModrinthNotFoundException.class, () -> users.get("no-such-user-" + System.nanoTime()));
     }

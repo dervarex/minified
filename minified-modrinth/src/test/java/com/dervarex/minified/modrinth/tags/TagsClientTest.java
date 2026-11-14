@@ -3,6 +3,7 @@ package com.dervarex.minified.modrinth.tags;
 import com.dervarex.minified.modrinth.Modrinth;
 import com.dervarex.minified.modrinth.projects.ProjectType;
 import com.dervarex.minified.utils.json.JsonParser;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -50,6 +51,7 @@ class TagsClientTest {
     }
 
     @Test
+    @Tag("manual")
     void everyTagRouteWorks() {
         assertTrue(tags.categories().stream().anyMatch(category -> category.getName().equals("optimization")));
         assertTrue(tags.loaders().stream().anyMatch(loader -> loader.getName().equals("fabric")));

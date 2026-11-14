@@ -2,6 +2,7 @@ package com.dervarex.minified.modrinth.teams;
 
 import com.dervarex.minified.modrinth.Modrinth;
 import com.dervarex.minified.utils.json.JsonParser;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -25,6 +26,7 @@ class TeamsClientTest {
     }
 
     @Test
+    @Tag("manual")
     void sodiumsTeamHasMembers() {
         Modrinth modrinth = Modrinth.connect();
         List<TeamMember> members = modrinth.teams().members(modrinth.projects().get("sodium").getTeam());
