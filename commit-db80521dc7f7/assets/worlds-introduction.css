@@ -1,0 +1,16 @@
+:root {
+  --sl-content-width: 100rem;
+}
+.code-frame,
+.code-frame pre,
+.code-frame code {
+  overflow-x: auto !important;
+  max-width: 100%;
+}
+.code-frame code {
+  font-size: 0.75rem;
+}
+
+.sl-markdown-content {
+  overflow-x: visible;
+}
