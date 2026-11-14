@@ -28,10 +28,10 @@ public class Hasher {
      * @return the SHA-1 hash of the file contents, as a lowercase hexadecimal string (40 characters)
      * @throws HashFileException if the file can't be opened or read
      * @throws NullPointerException if {@code path} is {@code null}
-     * @throws IllegalStateException if the JVM does not support the SHA-1 algorithm (should not happen on any normal JVM)
+     * @throws UnsupportedHashAlgorithmException if the JVM does not support the SHA-1 algorithm (should not happen on any normal JVM)
      */
     public static String sha1(Path path) throws HashFileException {
-        return sha(path, 160);
+        return sha(path, 1);
     }
 
     /**
@@ -46,7 +46,7 @@ public class Hasher {
      *
      * @param path file to compute the SHA hash of, may not be null
      * @param hashbits the SHA variant to use, e.g. {@code 1} for SHA-1 or {@code 256} for SHA-256
-     * @return the SHA-1 hash of the file contents, as a lowercase hexadecimal string
+     * @return the SHA hash of the file contents, as a lowercase hexadecimal string
      * @throws UnsupportedHashAlgorithmException if your JVM doesn't support that hash algorithm
      * @throws HashFileException if the file could not be opened or read
      * @throws NullPointerException if {@code path} is {@code null}
