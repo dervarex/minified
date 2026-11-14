@@ -8,6 +8,13 @@
       "built": "2026-11-14T13:28:43Z"
     },
     {
+      "sha": "4be96ba1125695919603dbed5a4ab463b31178e7",
+      "dir": "commit-4be96ba11256",
+      "version": "3.3.0-SNAPSHOT",
+      "date": "2026-10-30T15:02:24+01:00",
+      "built": "2026-11-14T15:20:59Z"
+    },
+    {
       "sha": "6fe5464a16b72228e8a32c121da4c8c4e97d3729",
       "dir": "commit-6fe5464a16b7",
       "version": "3.1.0",
