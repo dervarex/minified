@@ -2,7 +2,7 @@ module minified.minified.worlds.main {
     requires static lombok;
     requires static org.jetbrains.annotations;
     requires transitive minified.minified.utils.main;
-    requires org.apiguardian.api;
+    requires transitive org.apiguardian.api;
 
     exports com.dervarex.minified.worlds.block;
     exports com.dervarex.minified.worlds.chunk;

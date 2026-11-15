@@ -42,12 +42,12 @@ module minified.minified.launch.main {
     requires java.xml;
     requires static lombok;
     requires transitive minified.minified.auth.main;
-    requires minified.minified.events.main;
+    requires transitive minified.minified.events.main;
     requires minified.minified.java.main;
     requires org.jetbrains.annotations;
     requires org.jsoup;
     requires minified.minified.utils.main;
-    requires org.apiguardian.api;
+    requires transitive org.apiguardian.api;
 
     exports com.dervarex.minified.launch.launch;
     exports com.dervarex.minified.launch.launch.modding;

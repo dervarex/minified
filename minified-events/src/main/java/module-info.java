@@ -8,7 +8,7 @@
  * behind the Scenes, there's no way around them.
  */
 module minified.minified.events.main {
-    requires org.apiguardian.api;
+    requires transitive org.apiguardian.api;
     exports com.dervarex.minified.events.type.connection;
     exports com.dervarex.minified.events;
 }

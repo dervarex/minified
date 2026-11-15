@@ -10,13 +10,13 @@ module minified.minified.auth.main {
     requires com.google.gson;
 
     requires minified.minified.utils.main;
-    requires minified.minified.events.main;
+    requires transitive minified.minified.events.main;
     requires minified.minified.java.main;
 
     requires httpclient;
     requires MinecraftAuth;
 
-    requires static org.apiguardian.api;
+    requires static transitive org.apiguardian.api;
     requires static org.jetbrains.annotations;
 
     // Allow GSON to reflect data classes

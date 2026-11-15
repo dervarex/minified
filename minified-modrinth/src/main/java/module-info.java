@@ -2,7 +2,7 @@ module minified.minified.modrinth.main {
     requires java.net.http;
     requires minified.minified.utils.main;
     requires transitive minified.minified.events.main;
-    requires org.apiguardian.api;
+    requires transitive org.apiguardian.api;
 
     exports com.dervarex.minified.modrinth;
     exports com.dervarex.minified.modrinth.events;
