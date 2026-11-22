@@ -29,11 +29,14 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 /**
@@ -54,6 +57,8 @@ public class AuthManager {
     private static SecretKey masterKey;
     private static volatile LoginState loginState = new LoginState();
     private static volatile CountDownLatch codeReadyLatch = null;
+    /** The login started by {@link #startDeviceCodeLoginAsync()} / {@link #startDeviceCodeLogin}, if any. */
+    private static RunningLogin runningLogin;
 
     /**
      * Initializes the auth manager using the given directory.
@@ -244,74 +249,182 @@ public class AuthManager {
      * show the verification URL and user code while the login is pending.
      * Use {@link #login()} only in special cases where a synchronous, blocking call on a
      * dedicated background thread is preferred.
+     * <p>
+     * Note: despite the name, this waits up to two seconds for the code to arrive, so the returned state usually
+     * contains it already. Don't call it on a UI thread; {@link #startDeviceCodeLogin(Consumer)} returns right away.
      *
      * @return the initial login state as JSON, usually {@code STARTING} or {@code PENDING}
      */
     @API(status = API.Status.STABLE)
     public static String startDeviceCodeLoginAsync() {
-        final LoginState currentState;
-        final CountDownLatch latch;
-
+        RunningLogin login;
         synchronized (AuthManager.class) {
             // Already in progress?
             if (loginState.status == LoginStatus.PENDING || loginState.status == LoginStatus.STARTING) {
                 return GSON.toJson(loginState);
             }
-            currentState = new LoginState();
-            currentState.status = LoginStatus.STARTING;
-            currentState.message = "Starting device code login";
-            loginState = currentState;
-            codeReadyLatch = new CountDownLatch(1);
-            latch = codeReadyLatch;
+            login = prepareDeviceCodeLogin();
         }
-        notifyStateChanged(currentState);
-
-        new Thread(() -> {
-            HttpClient httpClient = MinecraftAuth.createHttpClient();
-            try {
-                NetworkUtil.ensureOnline("DeviceCodeLoginAsync");
-                StepFullJavaSession.FullJavaSession javaSession = MinecraftAuth.JAVA_DEVICE_CODE_LOGIN.getFromInput(
-                        httpClient,
-                        new StepMsaDeviceCode.MsaDeviceCodeCallback(msa -> {
-                            // expose code & URLs immediately
-                            currentState.userCode = msa.getUserCode();
-                            currentState.verificationUri = msa.getVerificationUri();
-                            currentState.directVerificationUri = msa.getDirectVerificationUri();
-                            currentState.status = LoginStatus.PENDING;
-                            currentState.message = "Waiting for user to authorize in browser";
-                            notifyStateChanged(currentState);
-                            //try { OSUtil.openBrowser(msa.getDirectVerificationUri()); } catch (Exception ignored) {}
-                            latch.countDown();
-                        })
-                );
-
-                User user = persistSession(javaSession);
-
-                currentState.status = LoginStatus.SUCCESS;
-                currentState.username = user.username();
-                currentState.message = "Login successful";
-                notifyStateChanged(currentState);
-                latch.countDown();
-            } catch (NoConnectionException nce) {
-                currentState.status = LoginStatus.ERROR;
-                currentState.message = nce.getMessage();
-                notifyStateChanged(currentState);
-                latch.countDown();
-            } catch (Exception e) {
-                currentState.status = LoginStatus.ERROR;
-                currentState.message = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
-                notifyStateChanged(currentState);
-                post(new DeviceCodeLoginFailedEvent(e));
-                latch.countDown();
-            }
-        }, "DeviceCodeLoginThread").start();
+        launch(login);
 
         try {
             // gives the code a moment to arrive, so the returned state already has it most of the time
-            latch.await(2, TimeUnit.SECONDS);
-        } catch (InterruptedException ignored) {
+            login.codeReady().await(2, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
         return GSON.toJson(loginState);
+    }
+
+    /**
+     * Starts the device-code login flow on a background thread and returns right away. Performs network I/O
+     * (Microsoft, Xbox, Minecraft services) and disk I/O (saving the encrypted session) on that thread.
+     * <p>
+     * {@code onCode} is called once, as soon as Microsoft has issued the code, with a snapshot of the state:
+     * {@link LoginState#userCode}, {@link LoginState#verificationUri} and {@link LoginState#directVerificationUri}
+     * are set. Use it to show the code or open the browser. It runs on the login thread.
+     * <p>
+     * If a login started by this method is already running, its future is returned and {@code onCode} is called
+     * for it too (right away if the code is already known).
+     * <pre>{@code
+     * AuthManager.startDeviceCodeLogin(state -> openBrowser(state.directVerificationUri))
+     *         .thenAccept(user -> System.out.println("Hi " + user.username()));
+     * }</pre>
+     *
+     * @param onCode called with the state once the code is there
+     * @return completes with the logged-in user; fails with {@link NoConnectionLoginFailedException} without an
+     * internet connection, with {@link LoginFailedException} for any other failure, or with
+     * {@link IllegalStateException} if a login started differently ({@link #login()},
+     * {@link #startDeviceCodeLoginAsync()}) is still running
+     */
+    @API(status = API.Status.EXPERIMENTAL)
+    public static CompletableFuture<User> startDeviceCodeLogin(Consumer<LoginState> onCode) {
+        Objects.requireNonNull(onCode, "onCode");
+        RunningLogin login;
+        boolean joined;
+        LoginState codeAlreadyOut = null;
+        synchronized (AuthManager.class) {
+            boolean busy = loginState.status == LoginStatus.PENDING || loginState.status == LoginStatus.STARTING;
+            if (busy && runningLogin != null && runningLogin.state() == loginState) {
+                login = runningLogin;
+                joined = true;
+            } else if (busy) {
+                return CompletableFuture.failedFuture(new IllegalStateException("Another login is already running"));
+            } else {
+                login = prepareDeviceCodeLogin();
+                joined = false;
+            }
+            if (login.state().status == LoginStatus.PENDING || login.state().status == LoginStatus.SUCCESS) {
+                codeAlreadyOut = new LoginState(login.state()); // no need to wait for it
+            } else {
+                login.codeCallbacks().add(onCode);
+            }
+        }
+        if (codeAlreadyOut != null) {
+            runCodeCallback(onCode, codeAlreadyOut); // app code runs outside the lock
+        }
+        if (!joined) {
+            launch(login);
+        }
+        return login.result();
+    }
+
+    /**
+     * Like {@link #startDeviceCodeLogin(Consumer)}, for when the code is shown through
+     * {@link #addStateChangeListener(LoginStateChangeListener) listeners} or {@link #getLoginState()} instead.
+     *
+     * @return completes with the logged-in user, see {@link #startDeviceCodeLogin(Consumer)}
+     */
+    @API(status = API.Status.EXPERIMENTAL)
+    public static CompletableFuture<User> startDeviceCodeLogin() {
+        return startDeviceCodeLogin(state -> {
+        });
+    }
+
+    /** A device-code login started by {@link #startDeviceCodeLoginAsync()} or {@link #startDeviceCodeLogin}. */
+    private record RunningLogin(LoginState state, CountDownLatch codeReady, CompletableFuture<User> result,
+                                List<Consumer<LoginState>> codeCallbacks) {
+    }
+
+    /** Sets up a new login as the current one. Caller holds the class lock. */
+    private static RunningLogin prepareDeviceCodeLogin() {
+        LoginState state = new LoginState();
+        state.status = LoginStatus.STARTING;
+        state.message = "Starting device code login";
+        loginState = state;
+        codeReadyLatch = new CountDownLatch(1);
+        runningLogin = new RunningLogin(state, codeReadyLatch, new CompletableFuture<>(), new CopyOnWriteArrayList<>());
+        return runningLogin;
+    }
+
+    /** Announces the login and runs it on its own thread. */
+    private static void launch(RunningLogin login) {
+        notifyStateChanged(login.state());
+        new Thread(() -> runDeviceCodeLogin(login), "DeviceCodeLoginThread").start();
+    }
+
+    private static void runDeviceCodeLogin(RunningLogin login) {
+        LoginState currentState = login.state();
+        HttpClient httpClient = MinecraftAuth.createHttpClient();
+        try {
+            NetworkUtil.ensureOnline("DeviceCodeLoginAsync");
+            StepFullJavaSession.FullJavaSession javaSession = MinecraftAuth.JAVA_DEVICE_CODE_LOGIN.getFromInput(
+                    httpClient,
+                    new StepMsaDeviceCode.MsaDeviceCodeCallback(msa -> {
+                        // expose code & URLs immediately
+                        currentState.userCode = msa.getUserCode();
+                        currentState.verificationUri = msa.getVerificationUri();
+                        currentState.directVerificationUri = msa.getDirectVerificationUri();
+                        currentState.status = LoginStatus.PENDING;
+                        currentState.message = "Waiting for user to authorize in browser";
+                        notifyStateChanged(currentState);
+                        List<Consumer<LoginState>> callbacks;
+                        synchronized (AuthManager.class) {
+                            callbacks = List.copyOf(login.codeCallbacks());
+                            login.codeCallbacks().clear();
+                        }
+                        for (Consumer<LoginState> callback : callbacks) {
+                            runCodeCallback(callback, new LoginState(currentState));
+                        }
+                        login.codeReady().countDown();
+                    })
+            );
+
+            User user = persistSession(javaSession);
+
+            currentState.status = LoginStatus.SUCCESS;
+            currentState.username = user.username();
+            currentState.message = "Login successful";
+            notifyStateChanged(currentState);
+            login.codeReady().countDown();
+            login.result().complete(user);
+        } catch (NoConnectionException nce) {
+            currentState.status = LoginStatus.ERROR;
+            currentState.message = nce.getMessage();
+            notifyStateChanged(currentState);
+            login.codeReady().countDown();
+            login.result().completeExceptionally(new NoConnectionLoginFailedException(nce.toUserFriendlyMessage(), nce));
+        } catch (Exception e) {
+            currentState.status = LoginStatus.ERROR;
+            currentState.message = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
+            notifyStateChanged(currentState);
+            post(new DeviceCodeLoginFailedEvent(e));
+            login.codeReady().countDown();
+            login.result().completeExceptionally(new LoginFailedException("Login failed", e));
+        }
+    }
+    private static void runCodeCallback(Consumer<LoginState> callback, LoginState snapshot) {
+        try {
+            callback.accept(snapshot);
+        } catch (RuntimeException e) {
+            report(e);
+        }
+    }
+
+    /** Hands an exception from app code to the thread's uncaught exception handler (prints it by default). */
+    private static void report(RuntimeException e) {
+        Thread thread = Thread.currentThread();
+        thread.getUncaughtExceptionHandler().uncaughtException(thread, e);
     }
 
     /**
@@ -341,6 +454,7 @@ public class AuthManager {
     public static synchronized void resetLoginState() {
         loginState = new LoginState();
         codeReadyLatch = null;
+        runningLogin = null;
         notifyStateChanged();
     }
 
@@ -515,9 +629,13 @@ public class AuthManager {
         notifyStateChanged(loginState);
     }
 
-    private static void notifyStateChanged(LoginState state) {
+    static void notifyStateChanged(LoginState state) {
         for (LoginStateChangeListener listener : listeners) {
-            listener.onStateChanged(state);
+            try {
+                listener.onStateChanged(new LoginState(state));
+            } catch (RuntimeException e) {
+                report(e);
+            }
         }
     }
 

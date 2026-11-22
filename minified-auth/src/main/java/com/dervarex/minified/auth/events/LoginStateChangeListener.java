@@ -15,9 +15,10 @@ import org.apiguardian.api.API;
 @API(status = API.Status.STABLE)
 public interface LoginStateChangeListener {
     /**
-     * Gets called when the login state changes
+     * Gets called when the login state changes, on the thread that changed it (usually the login thread, so
+     * hand the work to your UI thread if needed)
      *
-     * @param newState the new state
+     * @param newState a snapshot of the new state; it won't change afterwards, so it's safe to keep
      */
     void onStateChanged(LoginState newState);
 }

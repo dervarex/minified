@@ -23,6 +23,16 @@ public class LoginState {
     public volatile String username = null;
 
     /**
+     * {@return whether a login is running right now} ({@code STARTING} or {@code PENDING}), e.g. to disable a
+     * "Log in" button meanwhile
+     */
+    @API(status = API.Status.EXPERIMENTAL)
+    public boolean inProgress() {
+        AuthManager.LoginStatus current = status;
+        return current == AuthManager.LoginStatus.STARTING || current == AuthManager.LoginStatus.PENDING;
+    }
+
+    /**
      * Creates an idle login state
      */
     public LoginState() {}

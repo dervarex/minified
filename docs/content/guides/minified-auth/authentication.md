@@ -105,6 +105,32 @@ AuthManager.startDeviceCodeLoginAsync()
 `AuthManager.login()` runs the same device-code flow synchronously and returns the `User` directly instead of updating `LoginState` in the background - but it also throws `LoginFailedException` on failure rather than reporting it through `LoginState.status`. Only use it from a dedicated background thread; calling it from a UI thread blocks until the user finishes authorizing in the browser. `startDeviceCodeLoginAsync()` (shown above) is the recommended entry point for most launchers.
 :::
 
+:::note[Without polling]
+<Tabs>
+  <TabItem label="Java">
+
+```java
+AuthManager.startDeviceCodeLogin(state -> openBrowser(state.directVerificationUri))
+        .thenAccept(user -> System.out.println("Logged in as " + user.username()))
+        .exceptionally(error -> {
+            System.err.println("Login failed: " + error.getMessage());
+            return null;
+        });
+```
+
+  </TabItem>
+  <TabItem label="Kotlin">
+
+```kotlin
+AuthManager.startDeviceCodeLogin { state -> openBrowser(state.directVerificationUri) }
+    .thenAccept { user -> println("Logged in as ${user.username()}") }
+    .exceptionally { error -> System.err.println("Login failed: ${error.message}"); null }
+```
+
+  </TabItem>
+</Tabs>
+:::
+
 The login runs asynchronously. You can access its current state using:
 
 <Tabs>
@@ -277,7 +303,7 @@ AuthManager.addStateChangeListener(listener)
   </TabItem>
 </Tabs>
 
-The listener is invoked with the same `LoginState` snapshot every time `AuthManager` updates it - during `login()`, `startDeviceCodeLoginAsync()`, and `resetLoginState()`. Remove it once you no longer need updates (e.g. when the login UI closes), the same way you would unsubscribe from any other event in Minified:
+The listener is invoked with a fresh `LoginState` snapshot every time `AuthManager` updates it - during `login()`, `startDeviceCodeLoginAsync()`, `startDeviceCodeLogin()` and `resetLoginState()`. The snapshot doesn't change afterwards, so it's safe to keep. Listeners run on the thread that changed the state (usually the login thread); hand the work to your UI thread if your framework needs that. An exception thrown by a listener is reported to that thread's uncaught exception handler and doesn't affect the login. `newState.inProgress()` tells you whether a login is running (`STARTING` or `PENDING`). Remove it once you no longer need updates (e.g. when the login UI closes), the same way you would unsubscribe from any other event in Minified:
 
 <Tabs>
   <TabItem label="Java">
