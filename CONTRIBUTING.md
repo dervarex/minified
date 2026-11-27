@@ -106,18 +106,16 @@ What you'll have to confirm yourself:
 
 ## Code style
 
-- Base package is `com.dervarex.minified`; every module keeps its classes under
-  its own sub-package.
-- Follow the style of the surrounding code. If in doubt, use the IntelliJ default
-  Java formatting, I never changed anything so it should work.
-- Wildcard imports only if you're sure they actually are neccessary (probably not, so just don't)
-- Public API needs Javadoc: what the method does, what it throws, and whether it
-  performs network or disk I/O. (building and testing the code will reveal all still undocumented things)
+We're not really strict about that, just trying to keep stuff consistent.
+
+- Base package should be `com.dervarex.minified`.
+- Follow the style of the surrounding code, IntelliJ IDEA default settings are fine.
+- Avoid wildcard imports without a reason
+- Public API needs Javadoc.
 - Don't call a method doStuff() or idk()
 - Do not swallow exceptions.
-- Don't do any UI things in this library, seriously, this is a Backend Library, not a design framework.
-- Avoid adding third-party dependencies. If a change needs one, explain in the
-  issue why it cannot reasonably be implemented without it, json isn't one, we've got json at home (minifie-utils)
+- Don't do any UI things in this library, seriously, this is a Backend Library, not a design framework :)
+- Avoid adding third-party dependencies, we've got most things already in minified-utils, only a good reason justifies a library.
 - Public API gets an APIGuardian `@API` status, directly, through its class or
   `package-info.java`. New things should start as `EXPERIMENTAL` and get marked as Stable
   before the PR gets merged, check that with `scripts/api-review.py`, it'll help you a lot.
@@ -140,14 +138,15 @@ Inside of PRs, commit as many "fix typo" as you want, it'll get squashed anyways
 
 ## Branches and pull requests
 
-1. Fork the repository and create a branch off the main branch or where you'd like your PR to be merged into (main branch is recommended!)
-2. Keep the pull request focused on one topic. Large mixed PRs take much longer to review and are just unneccessary.
-3. In the description, explain **what** changed and **why**, and how you tested it
-   (Minecraft version, mod loader, OS, Java version).
-4. Resolve conflicts yourself, if in doubt you may always ask me :)
-5. Expect review comments and changes from my side, nobody writes perfect code, not even me.
+1. Fork the repository and create a branch, master is a good starting point
+2. Keep the pull request focused on one topic, makes reviewing easier and helps me understand what you tried to do.
+3. Tell me what you changed, why you changed it and how you tested it doesn't blow up everything.
+4. Try to resolve conflicts yourself, if you're not sure about something, ask me.
+5. I'll most likely leave some review comments or ask for changes, that's normal.
 
 Reformatting or renaming across files that are otherwise untouched will not be merged, unless you've got a good reason.
+
+Don't worry about getting everything perfectly right first try, no first Pull Request was perfect
 
 ### Merging
 
