@@ -2,11 +2,10 @@
 
 Thanks for your interest in contributing to Minified.
 
-This document explains how to set up the project, what kind of contributions are
-useful, and what to expect from the review process. If something is unclear, open an issue and ask.
+Here you'll learn, what kind of contributions are useful (most are!)
+and what to expect from the review process. If something is unclear, open an issue and ask, it's fine.
 
-By contributing, you agree that your contributions are licensed under the same
-license as this project, which in this case is Apache 2.0.
+By contributing, you agree that your contributions are licensed Apache 2.0.
 
 ---
 
@@ -28,24 +27,21 @@ license as this project, which in this case is Apache 2.0.
 
 ## Ways to contribute
 
-- **Bug reports** - reproducible issues with logs are the most valuable thing you
-  can send.
-- **Bug fixes** - small, focused pull requests are reviewed fastest.
-- **New features** - please open an issue first so the design and the scope can be
-  discussed before you write unnecessary code.
+Any contribution is appreciated!
+
+- **Bug reports** - reproducible issues with logs are really nice, they help a lot.
+- **Bug fixes** - small, focused pull requests are cool, and you'll officially be a contributor!
+- **New features** - please open an issue first so we can discuss it first before you write unnecessary code :)
 - **Documentation** - Javadoc on public API, README fixes, usage examples.
-- **Testing on other setups** - especially different Minecraft
-  versions and other operating systems than Arch Linux.
+- **Testing on other setups** - especially different operating systems than Arch Linux and NixOS.
 
 ---
 
 ## Project structure
 
-Minified is a multi-module project. Please keep changes inside the module they
-belong to and avoid introducing dependencies between modules that do not already
-exist.
+Minified is a multi-module project, so please keep things where they belong.
 
-| Module               | Responsibility                                          |
+| Module               | What it does                                          |
 | -------------------- | -------------------------------------------------------- |
 | `minified-auth`      | Account authentication                                   |
 | `minified-java`      | Java runtime discovery, download and management          |
@@ -54,10 +50,8 @@ exist.
 | `minified-modrinth`  | Modrinth integration (mods, modpacks)                    |
 
 
-
-Supported mod loaders: Vanilla, Forge, NeoForge, Fabric and Quilt. A change that
-touches version or argument handling should be checked against all of them, not
-only against the loader you personally use.
+Supported mod loaders: Vanilla, Forge, NeoForge, Fabric and Quilt.
+Please test all of them, or ask me to spin up the Version Matrix against your Pull Request, I'll help with fixing Issues.
 
 ---
 
@@ -65,11 +59,9 @@ only against the loader you personally use.
 
 ### Prerequisites
 
-- A JDK (version: see the build script, please match it, do not bump it in a PR
-  without discussion)
+- A JDK (version: see the build script)
 - Git
-- An IDE of your choice. The project is developed with IntelliJ IDEA, so its
-  project files and inspections are the closest thing to a reference setup.
+- An Code Editor or IDE of your choice. IntelliJ IDEA recommended, but using any other Program capable of editing Files works aswell.
 
 ### Getting the code
 
@@ -85,26 +77,29 @@ cd minified
 ### Platform support
 
 Linux is the primary target and the platform every change is expected to work on.
-Windows and macOS may work(and most likely will), but they are **not officially supported**, and have **not been tested** yet. Pull
-requests that improve behavior there are welcome as long as they do not
-complicate the Linux path or add platform-specific hacks to shared code.
+Windows and macOS may work(and most likely will), but they are **not officially supported**, and have **not been tested** yet.
+You surely can test it on your setups and tell me how it went.
+Pull Requests improving behavior for other Operating Systems are great, but please don't use some platform specific hacks or spaghetti code just because it "works".
 
 ---
 
 ## Building and testing
 
 ```bash
-./gradlew build          # compile all modules
-./gradlew test           # run the test suite
+./gradlew build                   # compile all modules
+./gradlew test                    # run the test suite
 ./gradlew :minified-launch:test   # run tests of a single module
 ```
 
-Before opening a pull request, please verify that:
+If you open a Pull Request, I can let Actions confirm that:
 
-- The full build passes.
+- The full build passes
+- All Tests Pass
+- The Version Matrix runs smoothly
+
+What you'll have to confirm yourself:
 - New logic is covered by tests where that is reasonably possible. Code that talks
-  to remote APIs should be testable without network access - extract the parsing
-  and path-building logic so it can be tested on its own.
+  to remote APIs should be a @Manual test (those are Integration tests if you're wondering, they don't run automatically)
 - No messy debug code, temporary solutions or platform-specific hacks are remaining.
 
 ---
@@ -114,19 +109,18 @@ Before opening a pull request, please verify that:
 - Base package is `com.dervarex.minified`; every module keeps its classes under
   its own sub-package.
 - Follow the style of the surrounding code. If in doubt, use the IntelliJ default
-  Java formatting.
-- No wildcard imports.
+  Java formatting, I never changed anything so it should work.
+- Wildcard imports only if you're sure they actually are neccessary (probably not, so just don't)
 - Public API needs Javadoc: what the method does, what it throws, and whether it
-  performs network or disk I/O. (yes, I forget that too)
-- Prefer explicit, descriptive names over abbreviations.
+  performs network or disk I/O. (building and testing the code will reveal all still undocumented things)
+- Don't call a method doStuff() or idk()
 - Do not swallow exceptions.
-- Keep the library free of UI concerns and of assumptions about a specific
-  launcher frontend.
+- Don't do any UI things in this library, seriously, this is a Backend Library, not a design framework.
 - Avoid adding third-party dependencies. If a change needs one, explain in the
-  issue why it cannot reasonably be implemented without it.
+  issue why it cannot reasonably be implemented without it, json isn't one, we've got json at home (minifie-utils)
 - Public API gets an APIGuardian `@API` status, directly, through its class or
   `package-info.java`. New things should start as `EXPERIMENTAL` and get marked as Stable
-  before the PR gets merged.
+  before the PR gets merged, check that with `scripts/api-review.py`, it'll help you a lot.
 
 ---
 
@@ -140,28 +134,26 @@ handle empty version list from the modrinth API
 add endpoint template for Adoptium feature releases
 ```
 
-Keep unrelated changes in separate commits.
+Inside of PRs, commit as many "fix typo" as you want, it'll get squashed anyways.
 
 ---
 
 ## Branches and pull requests
 
-1. Fork the repository and create a branch off the main branch or where you'd like your PR to be merged into.
-2. Keep the pull request focused on one topic. Large mixed PRs take much longer to
-   review and are more likely to be rejected.
+1. Fork the repository and create a branch off the main branch or where you'd like your PR to be merged into (main branch is recommended!)
+2. Keep the pull request focused on one topic. Large mixed PRs take much longer to review and are just unneccessary.
 3. In the description, explain **what** changed and **why**, and how you tested it
    (Minecraft version, mod loader, OS, Java version).
-4. Rebase on the latest main branch before requesting a review, and resolve
-   conflicts yourself.
-5. Expect review comments.
+4. Resolve conflicts yourself, if in doubt you may always ask me :)
+5. Expect review comments and changes from my side, nobody writes perfect code, not even me.
 
-Reformatting or renaming across files that are otherwise untouched will not be merged.
+Reformatting or renaming across files that are otherwise untouched will not be merged, unless you've got a good reason.
 
 ### Merging
 
-Pull requests or branches are merged with **squash merges**. All commits of a branch are
-combined into a single commit on the main branch, so the main history stays
-readable and free of "fix typo" or a trillion "add" commits.
+(skip this section if you're not a maintainer)
+
+Pull requests or branches are merged with **squash merges**
 
 Since only one commit per branch ends up in the history, its message must clearly describe what changed. Branch names should therefore be descriptive, for example:
 
@@ -171,7 +163,7 @@ Add Forum implementation
 
 ### Branch naming
 
-Branches are named after the minified module they focus on - for example, `minified-utils/nbt-parser`.
+Branches are usually named after the minified module they focus on, for example, `utils/nbt-parser`.
 This doesn't mean a branch is restricted to that module, you can still commit changes to files in other modules within the same branch.
 
 Additionally, branches may have prefixes instead of the module, here are a few good ones:
@@ -182,7 +174,7 @@ Additionally, branches may have prefixes instead of the module, here are a few g
 | build/  | Gradle-related changes or other scripts        | build/add-dependency |
 | docs/   | Documentation changes only                     | docs/readme          |
 
-That doesn't mean that you can't do your own prefixes though, something like `github/add-xyz-workflow` is allowed too, it just has to make sense.
+That doesn't mean that you can't do your own prefixes though, something like `github/add-xyz-workflow` is allowed too, it just has to make sense (`fix/bug` does not make sense)
 
 ---
 
@@ -191,49 +183,40 @@ That doesn't mean that you can't do your own prefixes though, something like `gi
 Please include:
 
 - Minified version (or commit hash)
-- Minecraft version and mod loader (Vanilla / Forge / NeoForge / Fabric / Quilt)
+- Minecraft version and mod loader (Vanilla / Forge / NeoForge / Fabric / Quilt) if applicable
 - Operating system and distribution
 - Java runtime version used to launch the game, and the one used to run the
   library, if they differ
 - What you expected to happen and what happened instead
-- Steps to reproduce, as minimal as you can make them
-- Relevant logs and stack traces, as text, not as screenshots
+- Steps to reproduce, don't wonder why I might compact it if you write a four page guide.
+- Relevant logs and stack traces, as text or screenshots, or encoded as sha256 if you don't want us to know, however you want :) (text is recommended)
 
-If the problem only occurs on Windows or macOS, say so explicitly, since those aren't supported currently.
+If the problem only occurs on Windows or macOS, please tell me, I'll make a VM for testing then.
 
 ---
 
 ## Feature requests and scope
 
-Minified is a library. It handles downloading, managing and launching, it does
-not implement launcher behavior or user interface logic. Two consequences:
-
 - Features that belong in the launcher on top of the library (for example the ui) are out of scope here.
 - CurseForge integration is out of scope. Modrinth is the supported mod platform: it covers most of what's needed, is focused on Minecraft, has a much cleaner API, and is generally considered safer. CurseForge has had a number of malware issues in the past, and popular mods have increasingly been leaving the platform.
 
-Ideas that fit well are things like better crash-report parsing, world/level data
-handling, and improvements to profile and runtime management.
-
-If you are unsure whether something belongs in the library or in the application
-using it, open an issue and ask before writing code.
+If you are unsure whether your feature fits into minified, open a Issue or Discussion and I'll help you.
 
 ---
 
 ## Working with external APIs
 
-Endpoint URLs are not scattered through the codebase. URL templates live centrally
+URL templates live centrally
 in `ApiEndpoints` (package `com.dervarex.minified.utils`). If your change needs a
-new remote endpoint, add the template there instead of inlining a URL.
+new remote endpoint, add the template there please, it's also great for documenting the endpoints.
 
 For example, Java runtimes are fetched through the Adoptium v3 API
 (`assets/feature_releases`) using templates defined in that class.
 
 When integrating an API:
 
-- Handle non-200 responses and malformed payloads explicitly.
-- Do not assume optional fields are present.
-- Avoid unnecessary requests; cache where it is safe to do so.
-- Respect the rate limits and terms of the service you are calling.
+- Expect rate limits :/ (and comply with the service's terms!)
+- Handle non-200 responses and weird answers.
 
 Just to mention it here, we've got a great `HttpException`, you can use that one to save a lot of work.
 
@@ -241,12 +224,11 @@ Just to mention it here, we've got a great `HttpException`, you can use that one
 
 ## Releases
 
+(skip if you're not a maintainer)
+
 Releases are published to Maven Central as `io.github.dervarex.minified:<module>:<version>`
 by the `Release` workflow (`.github/workflows/release.yml`)
-Releases may only be done by the maintainer:
-
-1. Bump `version` in the main `build.gradle` and merge that into `master`
-2. Tag the commit with the same version prefixed by `v` and push the tag
+Releases may only be done by the maintainer, `scripts/release.sh` helps with it
 
 We need these repository secrets:
 
@@ -254,18 +236,17 @@ We need these repository secrets:
 - `SIGNING_KEY` - the private GPG key (`gpg --export-secret-keys --armor <key id>`)
 - `SIGNING_KEY_PASSWORD` - its passphrase
 
+(signing hell, I just hope I didn't leak any of those)
+
 `./gradlew publishToMavenLocal` works without any of these, the artifacts are just not signed then, locally that doesn't matter
 
 ---
 
 ## AI
 
-Tools like Claude Code (and other AI coding assistants) are allowed and partially used in this project. This file itself was originally generated with the help of Claude - same goes for a big part of the docs added in v3. However, I have reviewed every line it generated, that's exactly what you should do too.
-**Important:** fully check and validate the exact logic, structure, and content of the documents before being relied upon.
+Tools like Claude Code (and other AI coding assistants) are allowed and partially used in this project.However, I have reviewed every line it generated, that's exactly what you should do aswell, it can generate useful things, but trust me it can mess up everything.
 
-As another example, Gemini has taught me how to set up a multi module Project using Gradle.
-> **remember:** AI is a powerful tool, but its output is a draft, not a guarantee, always verify the output
-
+For example, setting up maven central together with claude was really, really hard, for both of us, reading the manual might have been faster.
 
 ---
 ## Questions
